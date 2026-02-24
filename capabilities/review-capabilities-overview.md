@@ -1,15 +1,15 @@
-# Review: EA Capability Model - Capabilities Overview
+# Review: EA Capability Model – Capabilities Overview
 
 **Review Date:** 2026-02-24
-**Scope:** Deep review and validation of `capabilities-overview.md` and the 30 capability definitions + ARB
-**Sources:** TOGAF ADM & Architecture Capability Framework, Zachman Framework, FEAF, DoDAF, Gartner EA, BIZBOK, DAMA-DMBOK, SABSA, ITIL, CMMI/ACMM, MIT CISR, NASCIO
+**Scope:** Deep review and validation of the 30 capability definitions + ARB extracted from the EA Capability Model PDF
+**Sources:** TOGAF ADM & Architecture Capability Framework, Zachman Framework, FEAF, DoDAF, Gartner EA, BIZBOK, DAMA-DMBOK, SABSA, ITIL, CMMI/ACMM
 
 ---
 
 ## Table of Contents
 
 1. [Executive Summary](#1-executive-summary)
-2. [Overview File - Structural Review](#2-overview-file---structural-review)
+2. [Model Structure Review](#2-model-structure-review)
 3. [Domain Structure Validation](#3-domain-structure-validation)
 4. [Capability Gap Analysis](#4-capability-gap-analysis)
 5. [Overlap and Boundary Issues](#5-overlap-and-boundary-issues)
@@ -21,164 +21,74 @@
 
 ## 1. Executive Summary
 
-The EA Capability Model defines 30 capabilities across 8 domains, plus an Architecture Review Board (ARB) as a governance body. The model is comprehensive, well-structured, and shows strong alignment with major EA frameworks. The corrected model addresses several areas that are often missing from EA capability models, including:
+The EA Capability Model defines 30 capabilities across 8 domains, plus an Architecture Review Board (ARB) as a governance body. The model is pragmatic, well-structured, and covers the essential activities needed to set up and improve Enterprise Architecture in an organisation.
 
-- **Architecture Principles & Standards** (Cap 6) as a dedicated capability
-- **EA Value Management** (Cap 23) for demonstrating EA ROI
-- **Solution Design & Patterns** (Cap 12) bridging EA to delivery
-- **Architecture Decision Management** (Cap 27) as explicit governance
-- **Architecture Review Board** as a separate governance body with defined composition and operating model
+### Model Structure
 
-This review focuses on remaining gaps and improvement opportunities.
+| Domain | Capabilities | Numbers |
+|--------|-------------|---------|
+| Architecture Development – Common | 6 | 1–6 |
+| Architecture Development – Business Architecture | 3 | 7–9 |
+| Architecture Development – Application Architecture | 3 | 10–12 |
+| Architecture Development – Data Architecture | 3 | 13–15 |
+| Architecture Development – Technology Architecture | 3 | 16–18 |
+| Architecture Repository | 3 | 19–21 |
+| Architecture Management | 5 | 22–26 |
+| Architecture Governance, Communication & Change | 4 + ARB | 27–30 + ARB |
 
 ### Key Findings
 
 | Category | Count | Severity |
 |----------|-------|----------|
-| Missing from overview file (structural) | 6 items | High |
-| Capability gap candidates | 3 | Medium |
+| Structural completeness | Good | — |
+| Capability gap candidates | 4 | Medium |
 | Overlap/boundary issues needing clarification | 3 pairs | Medium |
-| Domain structure observations | 3 items | Low-Medium |
-| Framework alignment improvements | 4 items | Low-Medium |
+| Template consistency | Excellent | — |
+| Framework alignment opportunities | 4 items | Low–Medium |
 
 ---
 
-## 2. Overview File - Structural Review
+## 2. Model Structure Review
 
 ### 2.1 What's Good
 
-- Clear 8-domain / 30-capability structure with linked tables
-- Concise one-line descriptions for each capability
-- Links to individual capability files
-- Inclusion of the ARB as a distinct governance body
-- Section explaining the structure of individual capability files
-- Consistent template across all capabilities (Purpose, Scope, Key Activities, Inputs, Outputs, Roles, Maturity, KPIs, Dependencies, Tools)
+- Clear 8-domain / 30-capability structure
+- Pragmatic, action-oriented taglines for each capability
+- Consistent template across all capabilities: Definition, Objectives, Tasks, Inputs, Outputs, Roles, Common Issues, Pragmatic Approach, Additional Information
+- Inclusion of the ARB as a distinct governance body with Composition and Operating Model
+- "NEW PROPOSED DRAFT" markers on Cap 18 (Virtualization Architecture Modelling) and Cap 19 (Dashboards, Views, Reports) show maturity awareness
 
-### 2.2 Missing Elements
+### 2.2 Suggestions for the Overview
 
-#### 2.2.1 No Purpose, Scope, or Audience Statement (HIGH)
+#### 2.2.1 No Purpose, Scope, or Audience Statement
 
 The overview opens directly with the capability listing but never states:
 - **Why** this capability model exists (what problem it solves)
-- **Who** the target audience is (CIO, EA team, project teams, all of IT?)
+- **Who** the target audience is (CIO, EA team, project teams?)
 - **Scope** boundaries (what is in and out of scope)
-- **How** it relates to the organization's EA framework or strategy
 
-**Recommendation:** Add a "Purpose & Scope" section at the top:
+**Recommendation:** Add a "Purpose & Scope" section at the top of `capabilities-overview.md`.
 
-```markdown
-## Purpose & Scope
+#### 2.2.2 No Domain Relationship Model
 
-### Purpose
-This capability model defines the core capabilities required for a mature
-Enterprise Architecture practice. It serves as:
-- A **planning tool** for building and maturing the EA function
-- An **assessment framework** for measuring EA maturity
-- A **communication tool** for explaining EA scope to stakeholders
-- A **governance input** for aligning EA investment with organizational needs
+The 8 domains are listed sequentially, but there is no explanation of how they relate to each other. A reader cannot immediately understand that:
+- "Architecture Development – Common" contains cross-cutting process capabilities
+- The four domain architectures (Business, Application, Data, Technology) are the core content layers
+- "Architecture Repository" is a persistent data/knowledge layer
+- "Architecture Management" is an organisational/practice layer
+- "Governance, Communication & Change" is a control and engagement layer with the ARB as its formal body
 
-### Audience
-- Chief Architects and Architecture Managers (primary)
-- CIO / CTO and IT Leadership (strategic planning)
-- Enterprise and Domain Architects (operational guidance)
-- HR and L&D teams (skills and capability development)
+**Recommendation:** Add a domain relationship section explaining the layered model.
 
-### Scope
-This model covers the capabilities of the Enterprise Architecture function.
-It does not cover project-level solution delivery, IT operations, or
-general IT management capabilities that are outside the EA mandate.
-```
+#### 2.2.3 No Version, Date, or Change History
 
-#### 2.2.2 No Domain Relationship Model (HIGH)
+**Recommendation:** Add metadata (version, date, owner, status) to support governance of the model itself.
 
-The 8 domains are listed sequentially, but there is no explanation of how they relate to each other. A reader cannot understand that:
-- "Architecture Development - Common" is a cross-cutting process layer
-- The four domain architectures (Business, Application, Data, Technology) are the core content
-- "Architecture Repository" is a persistent knowledge/metamodel layer
-- "Architecture Management" is an organizational/practice layer
-- "Governance" is a control layer with the ARB as its formal body
+#### 2.2.4 No Glossary
 
-**Recommendation:** Add a domain relationship section with a conceptual diagram:
-
-```markdown
-## Domain Relationships
-
-The 8 domains form a layered architecture practice model:
-
-┌─────────────────────────────────────────────────────────────┐
-│                    GOVERNANCE + ARB                           │
-│  (Decisions, Compliance, Risk & Debt, Change & Config)       │
-├─────────────────────────────────────────────────────────────┤
-│               ARCHITECTURE MANAGEMENT                        │
-│  (Practice & Operating Model, Value, Skills, Innovation,     │
-│   Communication & Engagement)                                │
-├───────────┬───────────┬───────────┬─────────────────────────┤
-│ BUSINESS  │    APP    │   DATA    │     TECHNOLOGY           │
-│   ARCH    │   ARCH    │   ARCH    │      ARCH                │
-├───────────┴───────────┴───────────┴─────────────────────────┤
-│          ARCHITECTURE DEVELOPMENT - COMMON                   │
-│  (Stakeholders, Requirements, Current State, Target State,   │
-│   Gap Analysis & Roadmapping, Principles & Standards)        │
-├─────────────────────────────────────────────────────────────┤
-│              ARCHITECTURE REPOSITORY                         │
-│  (Metamodel & Taxonomy, Content Management,                  │
-│   Reference Architecture Library)                            │
-└─────────────────────────────────────────────────────────────┘
-```
-
-#### 2.2.3 No "How to Use This Model" Guidance (HIGH)
-
-**Recommendation:** Add usage guidance covering:
-- **As an assessment tool**: How to rate current maturity per capability (Level 1-5)
-- **As a planning tool**: How to identify priority capabilities based on strategy
-- **Suggested assessment process**: Who participates, how often, what the output is
-- **Prioritization guidance**: Which capabilities are foundational vs. advanced
-
-```markdown
-### Capability Prioritization Tiers
-- **Tier 1 - Foundation**: Stakeholder Management (1), Requirements Management (2),
-  Current State Assessment (3), Architecture Principles & Standards (6),
-  Metamodel & Taxonomy Management (19), EA Practice & Operating Model (22),
-  Architecture Decision Management (27), Architecture Review Board
-- **Tier 2 - Core**: Target State Design (4), Gap Analysis & Roadmapping (5),
-  Business Capability Modelling (7), Application Portfolio Management (10),
-  Data Modelling & Management (13), Infrastructure & Cloud Architecture (16),
-  Security & Compliance Architecture (17), Architecture Compliance & Assurance (28),
-  Risk & Technical Debt Management (29)
-- **Tier 3 - Advanced**: Value Stream Mapping (8), Organization & Process Modelling (9),
-  Application Integration & API Management (11), Solution Design & Patterns (12),
-  Data Governance & Quality (14), Data Analytics & BI Architecture (15),
-  Network & Communications Architecture (18), Architecture Content Management (20),
-  Reference Architecture Library (21), EA Value Management (23),
-  Architecture Skills & Talent Development (24), Innovation & Technology Radar (25),
-  Architecture Communication & Engagement (26), Change & Configuration Management (30)
-```
-
-#### 2.2.4 No Version, Date, or Change History (MEDIUM)
-
-**Recommendation:** Add a metadata header:
-
-```markdown
-| Attribute | Value |
-|-----------|-------|
-| Version | 1.0 |
-| Date | 2026-02-24 |
-| Owner | [Chief Architect / Architecture Manager] |
-| Status | Draft / Under Review / Approved |
-| Next Review | [Quarterly recommended] |
-```
-
-#### 2.2.5 No Glossary (MEDIUM)
-
-Terms used across capabilities without definition: technical debt, ADR, architecture fitness functions, transition architecture, heat mapping, ArchiMate, BPMN, RACI, SABSA, ATAM, TIME classification, FinOps, zero trust, metamodel, building blocks (ABB/SBB), etc.
+Terms used across capabilities without definition: ArchiMate, BPMN, RACI, TOGAF, ADR, heat mapping, FinOps, zero trust, metamodel, etc.
 
 **Recommendation:** Add a glossary section or separate glossary file.
-
-#### 2.2.6 No Framework References (MEDIUM)
-
-The model draws from TOGAF, CMMI, DAMA-DMBOK, and other frameworks but does not acknowledge this explicitly.
-
-**Recommendation:** Add a "Framework Alignment" section mapping the model to TOGAF ADM phases, BIZBOK, DAMA-DMBOK, etc. (see Section 7 of this review for the mapping).
 
 ---
 
@@ -186,170 +96,137 @@ The model draws from TOGAF, CMMI, DAMA-DMBOK, and other frameworks but does not 
 
 ### 3.1 Overall Assessment
 
-The 8-domain structure is well-balanced and aligns strongly with industry practice. Several design choices are particularly strong:
+The 8-domain structure is well-balanced and aligns with industry practice.
 
 | Strength | Detail |
 |----------|--------|
-| Separation of common process | "Architecture Development - Common" recognizes cross-cutting process capabilities |
-| Architecture Principles as dedicated capability | Cap 6 separates principles from standards — aligned with TOGAF Preliminary Phase |
-| Dedicated Repository domain | Metamodel, Content, and Reference Library are distinct and well-scoped |
-| EA Value Management | Cap 23 is a dedicated capability — addresses a critical gap in most EA models |
-| ARB as separate entity | Not buried in a capability but defined with composition, operating model, and charter |
+| Separation of common process | "Architecture Development – Common" recognises cross-cutting capabilities (Vision, Roadmap, Transformation, Requirements, Views, Technology Evaluation) |
+| Balanced domain architectures | Business, Application, Data, Technology each have 3 capabilities |
+| Dedicated Repository domain | Dashboards/Views, Data Quality, and Repository Maintenance are distinct concerns |
+| ARB as separate entity | Not buried in a capability but defined with Composition and Operating Model |
 
 ### 3.2 Domain Size Balance
 
 | Domain | Capabilities | Assessment |
 |--------|-------------|------------|
-| Architecture Development - Common | 6 | Well-balanced |
-| Business Architecture | 3 | Appropriate for EA scope |
-| Application Architecture | 3 | Good — Solution Design bridges to delivery |
-| Data Architecture | 3 | Good — aligns with DAMA-DMBOK at EA level |
-| Technology Architecture | 3 | Good — Network & Communications fills a common gap |
-| Architecture Repository | 3 | Well-scoped — Metamodel + Content + Reference Library |
-| Architecture Management | 5 | Slightly larger — see note below |
-| Governance | 4 + ARB | Appropriate |
+| Architecture Development – Common | 6 | Well-balanced — covers cross-cutting concerns |
+| Business Architecture | 3 | Appropriate — Value Drivers, Capability, Process |
+| Application Architecture | 3 | Good — Validation, App/Solution Modelling, Integration |
+| Data Architecture | 3 | Good — Business Objects, Data Architecture, Data Flow |
+| Technology Architecture | 3 | Good — System, Network, Virtualization |
+| Architecture Repository | 3 | Well-scoped — Dashboards, Data Quality, Maintenance |
+| Architecture Management | 5 | Largest domain — justified (see note) |
+| Governance, Communication & Change | 4 + ARB | Appropriate |
 
-**Observation:** Architecture Management (5 capabilities) is the largest domain. This is justified because it covers practice operations (22), value measurement (23), people development (24), technology innovation (25), and communication (26) — five genuinely distinct concerns. No consolidation is recommended.
+**Note on Architecture Management (5 capabilities):** This is the largest domain. It is justified because it covers five genuinely distinct concerns: Organisation Development (22), EA Performance Management (23), EA Process Development (24), EA Knowledge Management (25), and Stakeholder Management (26).
 
-### 3.3 Domain Naming
-
-The name "Architecture Development - Common" is functional but could be more intuitive. Alternatives:
-- **Core Architecture Process**
-- **Architecture Development Lifecycle**
-- **Cross-Cutting Architecture Capabilities**
-
-This is a minor concern — the current name is accurate.
-
-### 3.4 TOGAF ADM Phase Mapping
+### 3.3 TOGAF ADM Phase Mapping
 
 | TOGAF ADM Phase | Mapped Capabilities | Assessment |
 |----------------|---------------------|------------|
-| Preliminary (Framework & Principles) | Cap 6 (Principles & Standards), Cap 22 (Practice & Operating Model) | **Well covered** — Cap 6 is explicitly dedicated to this |
-| A - Architecture Vision | Cap 4 (Target State Design — includes vision), Cap 1 (Stakeholders) | **Partially covered** — see Gap Analysis |
-| B - Business Architecture | Caps 7, 8, 9 | Covered |
-| C - Information Systems (App) | Caps 10, 11, 12 | Covered |
-| C - Information Systems (Data) | Caps 13, 14, 15 | Covered |
-| D - Technology Architecture | Caps 16, 17, 18 | Covered |
-| E - Opportunities & Solutions | Caps 4, 5 (Target State + Gap Analysis) | Covered |
-| F - Migration Planning | Cap 5 (Gap Analysis & Roadmapping) | Covered |
-| G - Implementation Governance | Caps 27, 28, ARB | **Well covered** — ARB makes this explicit |
-| H - Architecture Change Management | Cap 30 (Change & Configuration Mgmt) | Covered |
-| Requirements Management (center) | Cap 2 | Covered |
+| Preliminary (Framework & Principles) | Cap 27 (Standards, Policies, Principles, Guidelines), Cap 22 (Organisation Development) | **Covered** |
+| A – Architecture Vision | Cap 1 (Architecture Vision Development) | **Well covered** — dedicated capability |
+| B – Business Architecture | Cap 7 (Strategic Value Driver Definition), Cap 8 (Capability Definition), Cap 9 (Process Modelling) | **Covered** |
+| C – Information Systems (App) | Cap 10 (Architecture Validation), Cap 11 (Application / Solution Architecture Modelling), Cap 12 (Integration Architecture Modelling) | **Covered** |
+| C – Information Systems (Data) | Cap 13 (Business Object Modelling), Cap 14 (Data Architecture Modelling), Cap 15 (Data Flow Modelling) | **Covered** |
+| D – Technology Architecture | Cap 16 (System Architecture Modelling), Cap 17 (Network Architecture Modelling), Cap 18 (Virtualization Architecture Modelling) | **Covered** |
+| E – Opportunities & Solutions | Cap 2 (Architecture Roadmap Development), Cap 5 (Architecture View Creation) | **Covered** |
+| F – Migration Planning | Cap 3 (Transformation Planning) | **Covered** |
+| G – Implementation Governance | Cap 30 (Architecture Compliance Evaluation), ARB | **Covered** |
+| H – Architecture Change Management | Cap 29 (Communication & Change Management) | **Covered** |
+| Requirements Management (centre) | Cap 4 (Architecture Requirements Management) | **Covered** |
 
 ---
 
 ## 4. Capability Gap Analysis
 
-The corrected model addresses many gaps that are commonly missing from EA capability models. The remaining gaps are:
+### 4.1 Potential Gaps to Consider
 
-### 4.1 Remaining Gaps to Consider
+#### 4.1.1 Security Architecture (MEDIUM PRIORITY)
 
-#### 4.1.1 Architecture Vision as Distinct Activity (MEDIUM PRIORITY)
+**Observation:** The model does not include a dedicated Security Architecture capability. Security concerns are implicitly addressed across multiple capabilities (e.g., Cap 17 Network Architecture mentions secure connectivity, Cap 18 Virtualization mentions security risks), but there is no explicit capability covering:
+- Security architecture principles and patterns
+- Identity and access management architecture
+- Security compliance and risk assessment from an architecture perspective
+- Zero trust architecture design
 
-**Observation:** TOGAF Phase A (Architecture Vision) is a distinct, early-stage activity focused on gaining stakeholder buy-in, defining scope, and articulating the high-level architecture aspiration before detailed design begins. Currently, Cap 4 (Target State Design) includes "Develop architecture vision aligned with business strategy" as an activity, which partially addresses this. However, visioning (high-level, stakeholder buy-in focused) and detailed target state design are different activities.
+**Recommendation:** Consider adding a Security Architecture capability in the Technology Architecture domain, or explicitly embedding security as a cross-cutting concern in the existing technology capabilities and Cap 27 (Standards, Policies, Principles, Guidelines).
 
-**Recommendation:** Either:
-- (a) Explicitly strengthen the "vision" activities in Cap 4 to clearly cover TOGAF Phase A concerns, or
-- (b) Add a dedicated "Architecture Vision & Strategy Alignment" capability if the organization treats this as a distinct, senior-level activity
+#### 4.1.2 Architecture Decision Management (MEDIUM PRIORITY)
 
-**Assessment:** This is a refinement, not a critical gap. The current model covers it within Cap 4.
+**Observation:** The model covers Standards, Policies, Principles, Guidelines (Cap 27) and Architecture Compliance Evaluation (Cap 30), but does not explicitly address the capture and governance of individual architecture decisions (e.g., Architecture Decision Records / ADRs).
 
-#### 4.1.2 Platform Architecture / Shared Services (LOW-MEDIUM PRIORITY)
+**Recommendation:** Consider strengthening Cap 27 to explicitly include decision capture and ADR management, or add decision governance as a task in the ARB operating model.
 
-**Observation:** The previous version had "Platform Architecture" covering container platforms, developer experience platforms, middleware, and shared services. The corrected model replaces this with "Network & Communications Architecture" (Cap 18). While network architecture is important (and was previously missing), platform/shared services architecture is also valuable.
+#### 4.1.3 Platform Architecture / Shared Services (LOW–MEDIUM PRIORITY)
 
-**What Platform Architecture would cover:**
-- Container orchestration (Kubernetes) and PaaS design
-- Internal developer platform (IDP) architecture
-- Middleware and shared services architecture
-- Developer experience (DevEx) platform design
-- Service mesh architecture
+**Observation:** Container platforms, developer experience platforms, middleware, and shared services are partially covered by Cap 16 (System Architecture Modelling) and Cap 18 (Virtualization Architecture Modelling), but no capability explicitly addresses platform engineering and internal developer platforms (IDPs).
 
-**Current coverage:** Partially covered by Infrastructure & Cloud Architecture (Cap 16) which includes "cloud-native architecture patterns (containers, serverless, managed services)" and by Solution Design & Patterns (Cap 12).
+**Recommendation:** Ensure Cap 16 or Cap 18 explicitly addresses platform and container architecture. Alternatively, consider whether Platform Architecture warrants a 4th capability in the Technology domain.
 
-**Recommendation:** Ensure Cap 16 (Infrastructure & Cloud Architecture) explicitly addresses platform and container architecture in its scope. Alternatively, consider whether Platform Architecture warrants a 4th capability in the Technology domain.
+#### 4.1.4 Sustainability & Green IT Architecture (LOW PRIORITY)
 
-#### 4.1.3 Sustainability & Green IT Architecture (LOW PRIORITY)
+**Observation:** Sustainability and environmental impact of architecture decisions (EU CSRD, ESG reporting, carbon-aware computing) are not mentioned in the model.
 
-**Observation:** Sustainability and environmental impact of architecture decisions is increasingly important (EU CSRD, ESG reporting, carbon-aware computing). The model does not mention sustainability.
-
-**Recommendation:** Rather than adding a standalone capability (premature for most organizations), embed sustainability as a cross-cutting concern:
-- Add sustainability principles to Cap 6 (Architecture Principles & Standards)
-- Include energy efficiency criteria in Cap 16 (Infrastructure & Cloud Architecture)
-- Add sustainability metrics to Cap 23 (EA Value Management)
-- Include sustainability review criteria in Cap 28 (Architecture Compliance & Assurance)
-
-### 4.2 Previously Identified Gaps Now Addressed
-
-The corrected model resolves several gaps that are commonly flagged in EA capability model reviews:
-
-| Previously Flagged Gap | How It's Now Addressed |
-|----------------------|----------------------|
-| Architecture Principles separate from Standards | Cap 6 (Architecture Principles & Standards) is a dedicated capability |
-| Solution Architecture / EA-to-delivery bridge | Cap 12 (Solution Design & Patterns) explicitly covers solution architecture and bridging to delivery teams |
-| EA Value Measurement / Metrics | Cap 23 (EA Value Management) is a dedicated capability with maturity assessment, ROI, and benefits tracking |
-| Architecture Decision Records / Decision Governance | Cap 27 (Architecture Decision Management) is a dedicated capability |
-| Architecture Review Board | Defined as a separate governance body with composition, operating model, and quorum |
-| Network Architecture | Cap 18 (Network & Communications Architecture) now covers this previously common gap |
-| Metamodel Management | Cap 19 (Metamodel & Taxonomy Management) is a dedicated capability |
-| Architecture Building Blocks (ABB/SBB) | Cap 21 (Reference Architecture Library) explicitly addresses ABBs and SBBs |
-| Technical Debt Management | Cap 29 (Risk & Technical Debt Management) combines risk and debt |
-| Architecture Contracts | Partially addressed through ARB operating model and Cap 27 decision governance |
+**Recommendation:** Rather than adding a standalone capability, embed sustainability as a cross-cutting concern:
+- Add sustainability principles to Cap 27 (Standards, Policies, Principles, Guidelines)
+- Include energy efficiency criteria in Cap 16 (System Architecture Modelling)
+- Add sustainability metrics to Cap 23 (EA Performance Management)
 
 ---
 
 ## 5. Overlap and Boundary Issues
 
-### 5.1 Application Integration & API Management (Cap 11) vs. Data Analytics & BI Architecture (Cap 15)
+### 5.1 Architecture Vision Development (Cap 1) vs. Architecture Roadmap Development (Cap 2)
 
-**Issue:** Both capabilities deal with data flows and integration. Cap 11 covers application-to-application integration and APIs; Cap 15 covers data pipelines, ETL/ELT, and analytics platforms. The boundary is reasonable but could be more explicit.
-
-**Recommendation:** Add explicit scope statements:
-- Cap 11: "Focuses on **transactional, real-time** integration between applications and services (APIs, events, messaging)"
-- Cap 15: "Focuses on **analytical** data integration (ETL/ELT, streaming for analytics, data lake/warehouse pipelines)"
-
-### 5.2 Architecture Decision Management (Cap 27) vs. Architecture Compliance & Assurance (Cap 28)
-
-**Issue:** Cap 27 governs decisions (ADRs, approval process); Cap 28 ensures compliance with standards post-decision. Both involve the ARB. Activities like "architecture review" could fit in either.
-
-**Recommendation:** Clarify the boundary:
-- Cap 27: **Before and during** design — capturing, reviewing, and approving architecture decisions
-- Cap 28: **After** decisions and during/after implementation — verifying compliance with approved decisions and standards
-
-### 5.3 Stakeholder Management (Cap 1) vs. Architecture Communication & Engagement (Cap 26)
-
-**Issue:** Both deal with stakeholder interaction. Cap 1 identifies and analyzes stakeholders; Cap 26 communicates to them.
+**Observation:** Both capabilities deal with future-state planning. Cap 1 focuses on creating a high-level view of the desired architecture, while Cap 2 focuses on the roadmap to get there. The boundary is logical but could benefit from explicit scope statements.
 
 **Recommendation:** Clarify:
-- Cap 1: The **analytical** capability — who are our stakeholders, what do they care about, how should we engage them?
-- Cap 26: The **delivery** capability — how do we effectively communicate architecture to diverse audiences?
+- Cap 1: **What** — defining the target architecture vision and gaining stakeholder buy-in
+- Cap 2: **How** — planning the sequenced path (roadmap) from current state to the vision
+
+### 5.2 Architecture Requirements Management (Cap 4) vs. Architecture View Creation (Cap 5)
+
+**Observation:** Cap 4 captures and manages requirements; Cap 5 creates views to communicate architecture to stakeholders. Both involve stakeholder interaction. Requirements inform views, and views can surface new requirements.
+
+**Recommendation:** Clarify:
+- Cap 4: The **analytical** capability — capturing, structuring, and tracking architecture requirements
+- Cap 5: The **communication** capability — creating visual representations that address specific stakeholder concerns
+
+### 5.3 Standards, Policies, Principles, Guidelines (Cap 27) vs. Architecture Compliance Evaluation (Cap 30)
+
+**Observation:** Cap 27 defines the guardrails; Cap 30 evaluates compliance with them. Both involve the ARB. The boundary is clear in principle but could overlap in practice.
+
+**Recommendation:** Clarify:
+- Cap 27: **Before** — defining, maintaining, and communicating the rules
+- Cap 30: **After** — evaluating whether implementations adhere to the rules
 
 ---
 
 ## 6. Consistency and Quality Issues
 
-### 6.1 Template Consistency (GOOD)
+### 6.1 Template Consistency (EXCELLENT)
 
-All 30 capability files + ARB follow a consistent template with identical sections in the same order:
-- Purpose, Scope, Key Activities, Inputs, Outputs/Deliverables, Roles & Responsibilities, Maturity Levels (5-level), Key Metrics/KPIs, Dependencies, Tools & Technologies
+All 30 capability files follow a consistent template with identical sections in the same order:
+- Definition, Objectives, Tasks, Inputs, Outputs, Roles, Common Issues with an Immature Capability, Pragmatic Approach – Essentials That Are Needed for Success, Additional Information
 
-The ARB additionally includes Composition and Operating Model sections, which is appropriate.
+The ARB additionally includes Composition and Operating Model sections, which is appropriate for a governance body.
 
-### 6.2 Maturity Level Naming (GOOD)
+### 6.2 Role Format Variation (MINOR)
 
-All files use numbered maturity levels (1-5) with names: Initial, Repeatable, Defined, Managed, Optimizing. This is consistent and enables scoring.
+Most capability files use RACI-style annotations (e.g., "Enterprise Architect (R)", "CIO (A)"), but a few files (e.g., Cap 7 Strategic Value Driver Definition) list roles without RACI indicators. This should be made consistent.
 
-**Observation:** The maturity level naming uses "Repeatable" at Level 2 rather than "Developing." This aligns with CMMI terminology, which is good. However, ensure this is a deliberate choice and consistently applied (it is).
+**Recommendation:** Ensure all capability files use RACI annotations for roles.
 
-### 6.3 Dependency Bidirectionality (NEEDS VERIFICATION)
+### 6.3 Draft Status (NOTED)
 
-Dependencies have been freshly defined in all capability files. A systematic bidirectionality check should be performed to ensure that if Capability A lists Capability B as a dependency, Capability B also lists Capability A. This was a significant issue in the previous version (~20 broken pairs).
+Capabilities 18 (Virtualization Architecture Modelling) and 19 (Dashboards, Views, Reports) are marked as "*NEW PROPOSED DRAFT*". These should be reviewed and either promoted to full status or explicitly tracked as needing further validation.
 
-**Recommendation:** Perform a systematic cross-check of all dependency declarations across all 31 files. An automated script could extract and compare all dependency pairs.
+### 6.4 Dependency Cross-References (NEEDS VERIFICATION)
 
-### 6.4 Maturity Level Specificity (MINOR)
+The current capability files do not include explicit dependency sections listing related capabilities. Adding cross-references would help readers understand how capabilities relate to each other.
 
-Maturity descriptions vary in specificity. Some are very concrete (e.g., Cap 15 Level 5: "Real-time analytics; data mesh / data products at scale; AI/ML embedded in operations") while others are more generic (e.g., "continuous improvement"). This is generally acceptable, but all Level 5 descriptions should include at least one concrete, observable indicator.
+**Recommendation:** Consider adding a "Dependencies" or "Related Capabilities" section to each file, and ensure bidirectional consistency.
 
 ---
 
@@ -359,126 +236,132 @@ Maturity descriptions vary in specificity. Some are very concrete (e.g., Cap 15 
 
 | TOGAF Concept | Current Coverage | Assessment |
 |---------------|-----------------|------------|
-| ADM Phases (A-H) | Well covered across Caps 1-6 and Governance | Good — minor gap on Vision (see 4.1.1) |
-| Architecture Content Framework | Covered through domain capabilities | Good |
-| Architecture Repository | Caps 19-21 (Metamodel, Content, Reference Library) | **Excellent** — stronger than many models |
-| Architecture Capability Framework | Caps 22-26 + ARB | **Excellent** |
-| Architecture Governance | Caps 27-30 + ARB | **Excellent** — ARB with operating model is strong |
-| Enterprise Continuum | Cap 19 (Metamodel) + Cap 21 (Reference Library) | Good |
-| Architecture Principles | Cap 6 (dedicated) | **Excellent** |
-| Architecture Contracts | Partially in ARB and Cap 27 | Could be more explicit |
-| Stakeholder Management | Cap 1 | Good |
-| Architecture Requirements | Cap 2 | Good |
-| Architecture Compliance | Cap 28 | Good |
+| ADM Phases (A–H) | Well covered across all domains (see Section 3.3) | **Good** |
+| Architecture Content Framework | Covered through domain architecture capabilities (7–18) | **Good** |
+| Architecture Repository | Cap 19 (Dashboards, Views, Reports), Cap 20 (Data Gathering & Data Quality), Cap 21 (Repository Support & Maintenance) | **Good** |
+| Architecture Capability Framework | Cap 22–26 (Architecture Management domain) | **Good** |
+| Architecture Governance | Cap 27–30 + ARB | **Good** |
+| Architecture Principles | Cap 27 (Standards, Policies, Principles, Guidelines) | **Covered** |
+| Architecture Contracts | Partially in ARB operating model | Could be more explicit |
+| Stakeholder Management | Cap 1 (Vision – stakeholder engagement) + Cap 26 (Stakeholder Management) | **Good** |
+| Architecture Requirements | Cap 4 (Architecture Requirements Management) | **Covered** |
+| Architecture Compliance | Cap 30 (Architecture Compliance Evaluation) | **Covered** |
 
-**Overall TOGAF alignment: ~90%**. This is strong. The main enhancement would be making Architecture Contracts more explicit.
+**Overall TOGAF alignment: ~85%.** Strong coverage. Main enhancements: make Architecture Contracts and Security Architecture more explicit.
 
 ### 7.2 BIZBOK Alignment
 
 | BIZBOK Concept | Current Coverage | Assessment |
 |---------------|-----------------|------------|
-| Business Capability Mapping | Cap 7 | Good |
-| Value Streams | Cap 8 | Good |
-| Organization Mapping | Cap 9 (Organization & Process Modelling) | **Good** — explicitly covers organizational modelling |
-| Information Mapping | Cap 13 (Data Modelling & Management) | Good |
-| Strategy Mapping | Cap 4 (Target State — includes strategy alignment) | Partial |
-| Initiative Mapping | Cap 5 (Gap Analysis & Roadmapping) | Good |
-| Stakeholder Mapping | Cap 1 | Good |
+| Business Capability Mapping | Cap 8 (Capability Definition) | **Covered** |
+| Value Streams | Cap 7 (Strategic Value Driver Definition) | **Partially covered** |
+| Organisation Mapping | Cap 9 (Process Modelling – includes organisational aspects) | **Partially covered** |
+| Information Mapping | Cap 13 (Business Object Modelling) | **Covered** |
+| Strategy Mapping | Cap 1 (Architecture Vision Development – strategy alignment) | **Covered** |
+| Initiative Mapping | Cap 2 (Architecture Roadmap Development), Cap 3 (Transformation Planning) | **Covered** |
+| Stakeholder Mapping | Cap 26 (Stakeholder Management) | **Covered** |
 
-**Overall BIZBOK alignment: ~85%**. Improved from previous version due to Cap 9 explicitly covering organizational modelling.
+**Overall BIZBOK alignment: ~80%.** Good coverage for an EA capability model. Value stream mapping could be more explicit.
 
 ### 7.3 DAMA-DMBOK Alignment
 
 | DAMA-DMBOK Area | Current Coverage | Assessment |
 |----------------|-----------------|------------|
-| Data Governance | Cap 14 (Data Governance & Quality) | Good |
-| Data Architecture | Cap 13 (Data Modelling & Management) | Good |
-| Data Modelling & Design | Cap 13 | Good |
-| Data Storage & Operations | Cap 16 (Infrastructure & Cloud Architecture) | Partial |
-| Data Security | Cap 14 + Cap 17 | Good |
-| Data Integration & Interoperability | Cap 15 (Data Analytics & BI Architecture) | Good |
-| Reference & Master Data | Cap 13 (explicitly mentioned) | Good |
-| Data Warehousing & BI | Cap 15 | Good |
-| Metadata Management | Cap 19 (Metamodel & Taxonomy) + Cap 13 | **Good** — metamodel capability strengthens this |
-| Data Quality | Cap 14 | Good |
+| Data Governance | Not explicitly covered as standalone | **Gap** – could be addressed in Cap 14 or Cap 27 |
+| Data Architecture | Cap 14 (Data Architecture Modelling) | **Covered** |
+| Data Modelling & Design | Cap 13 (Business Object Modelling), Cap 14 (Data Architecture Modelling) | **Covered** |
+| Data Integration & Interoperability | Cap 15 (Data Flow Modelling), Cap 12 (Integration Architecture Modelling) | **Covered** |
+| Reference & Master Data | Partially in Cap 13 | **Partial** |
+| Data Warehousing & BI | Not explicitly covered | **Gap** at EA level (may be out of scope) |
+| Metadata Management | Partially in Cap 20 (Data Gathering & Data Quality) | **Partial** |
+| Data Quality | Cap 20 (Data Gathering & Data Quality) | **Covered** |
 
-**Overall DAMA alignment: ~85%**. The Metamodel & Taxonomy Management capability (Cap 19) strengthens metadata management coverage.
+**Overall DAMA alignment: ~70%.** Appropriate for an EA-level model. Data governance and metadata management could be strengthened.
 
 ### 7.4 Gartner EA Alignment
 
-Gartner emphasizes four key EA practices:
+Gartner emphasises four key EA practices:
 
 | Gartner Practice | Coverage | Assessment |
 |-----------------|----------|------------|
-| EA as Strategy Execution | Cap 4 (Target State), Cap 5 (Gap Analysis & Roadmapping) | Good |
-| EA as Technology Optimization | Caps 10, 16, 17, 18 | Good |
-| EA as Business Transformation | Caps 7, 8, 9 | Good |
-| EA as Information/Data-centric | Caps 13, 14, 15 | Good |
-| EA Value Delivery | Cap 23 (EA Value Management) | **Excellent** — dedicated capability |
-
-### 7.5 Additional Framework Alignment
-
-| Framework | Key Concept | Coverage | Assessment |
-|-----------|------------|----------|------------|
-| Zachman | "Why" dimension (Motivation) | Cap 6 (Principles), Cap 4 (Strategy alignment) | Good |
-| Zachman | "Where" dimension (Network/Location) | Cap 18 (Network & Communications) | Good |
-| FEAF | Security Reference Model | Cap 17 (Security & Compliance Architecture) | Good — cross-cutting scope |
-| FEAF | Performance Reference Model | Cap 23 (EA Value Management) | Good |
-| DoDAF | Capability Viewpoint | Cap 7 (Business Capability Modelling) | Good |
-| SABSA | Security Architecture layers | Cap 17 | Good — covers all layers |
+| EA as Strategy Execution | Cap 1 (Vision), Cap 2 (Roadmap), Cap 3 (Transformation Planning) | **Good** |
+| EA as Technology Optimisation | Cap 6 (New Technology Evaluation), Caps 16–18 (Technology Architecture) | **Good** |
+| EA as Business Transformation | Cap 7 (Value Drivers), Cap 8 (Capability Definition), Cap 9 (Process Modelling) | **Good** |
+| EA as Information/Data-centric | Cap 13–15 (Data Architecture domain) | **Good** |
+| EA Value Delivery | Cap 23 (EA Performance Management) | **Covered** |
 
 ---
 
 ## 8. Recommendations Summary
 
-### Priority 1 - Must Do (Overview File Improvements)
+### Priority 1 – Overview Improvements
 
 | # | Recommendation | Effort |
 |---|---------------|--------|
 | R1 | Add Purpose, Scope, and Audience section to overview | Low |
 | R2 | Add Domain Relationship diagram/description to overview | Low |
-| R3 | Add "How to Use This Model" section with prioritization tiers | Medium |
-| R4 | Add Version, Date, Owner metadata to overview | Low |
-| R5 | Add Glossary (key terms used across capabilities) | Medium |
-| R6 | Add Framework References / Alignment section to overview | Low |
+| R3 | Add Version, Date, Owner metadata to overview | Low |
+| R4 | Add Glossary (key terms used across capabilities) | Medium |
 
-### Priority 2 - Should Do (Content Improvements)
+### Priority 2 – Content Improvements
 
 | # | Recommendation | Effort |
 |---|---------------|--------|
-| R7 | Verify bidirectional dependencies across all 31 files | Medium |
-| R8 | Clarify overlap boundaries for Cap 11/15, Cap 27/28, Cap 1/26 | Low |
-| R9 | Strengthen Architecture Vision coverage in Cap 4 (or add new capability) | Low |
-| R10 | Ensure Cap 16 explicitly covers platform/container/IDP architecture | Low |
+| R5 | Consider adding Security Architecture as cross-cutting concern or dedicated capability | Medium |
+| R6 | Strengthen Architecture Decision Management (in Cap 27 or ARB) | Low |
+| R7 | Ensure RACI annotations are consistent across all capability files | Low |
+| R8 | Clarify overlap boundaries for Cap 1/2, Cap 4/5, Cap 27/30 | Low |
+| R9 | Add cross-capability dependency references | Medium |
+| R10 | Finalise draft status on Cap 18 and Cap 19 | Low |
 
-### Priority 3 - Nice to Have (Future Enhancements)
+### Priority 3 – Future Enhancements
 
 | # | Recommendation | Effort |
 |---|---------------|--------|
-| R11 | Add Capability Dependency Matrix to overview | Medium |
-| R12 | Embed sustainability as cross-cutting concern (Caps 6, 16, 23, 28) | Low |
-| R13 | Make Architecture Contracts more explicit (expand Cap 27 or ARB) | Low |
-| R14 | Consider adding AI/ML Architecture as demand grows | Medium |
-| R15 | Consider adding Platform Architecture if not adequately covered in Cap 16 | Low |
+| R11 | Consider Platform Architecture capability as technology evolves | Low |
+| R12 | Embed sustainability as cross-cutting concern (Caps 16, 23, 27) | Low |
+| R13 | Make Architecture Contracts more explicit (expand ARB) | Low |
+| R14 | Strengthen data governance coverage (Cap 14 or new) | Medium |
+| R15 | Add "How to Use This Model" guidance with prioritisation tiers | Medium |
 
 ---
 
-## Appendix A: Review Checklist for Ongoing Maintenance
+## Appendix: Capability Quick Reference
 
-For future reviews of the capability model, use this checklist:
-
-- [ ] All capabilities have current, accurate descriptions
-- [ ] All dependency relationships are bidirectional
-- [ ] Maturity indicators are specific and observable at each level
-- [ ] No significant overlaps without explicit boundary statements
-- [ ] Overview file has current version, date, and owner
-- [ ] Framework alignment is up to date
-- [ ] Glossary includes all specialized terms used
-- [ ] New technology trends are reflected (AI, sustainability, quantum, etc.)
-- [ ] Domain structure still makes sense for the organization
-- [ ] Stakeholder feedback has been incorporated
-- [ ] ARB composition and operating model reflect current organization
+| # | Capability | Domain |
+|---|-----------|--------|
+| 1 | Architecture Vision Development | Architecture Development – Common |
+| 2 | Architecture Roadmap Development | Architecture Development – Common |
+| 3 | Transformation Planning | Architecture Development – Common |
+| 4 | Architecture Requirements Management | Architecture Development – Common |
+| 5 | Architecture View Creation | Architecture Development – Common |
+| 6 | New Technology Evaluation | Architecture Development – Common |
+| 7 | Strategic Value Driver Definition | Business Architecture |
+| 8 | Capability Definition | Business Architecture |
+| 9 | Process Modelling | Business Architecture |
+| 10 | Architecture Validation | Application Architecture |
+| 11 | Application / Solution Architecture Modelling | Application Architecture |
+| 12 | Integration Architecture Modelling | Application Architecture |
+| 13 | Business Object Modelling | Data Architecture |
+| 14 | Data Architecture Modelling | Data Architecture |
+| 15 | Data Flow Modelling | Data Architecture |
+| 16 | System Architecture Modelling | Technology Architecture |
+| 17 | Network Architecture Modelling | Technology Architecture |
+| 18 | Virtualization Architecture Modelling *DRAFT* | Technology Architecture |
+| 19 | Dashboards, Views, Reports *DRAFT* | Architecture Repository |
+| 20 | Data Gathering & Data Quality | Architecture Repository |
+| 21 | Repository Support & Maintenance | Architecture Repository |
+| 22 | Organisation Development | Architecture Management |
+| 23 | EA Performance Management | Architecture Management |
+| 24 | EA Process Development | Architecture Management |
+| 25 | EA Knowledge Management | Architecture Management |
+| 26 | Stakeholder Management | Architecture Management |
+| 27 | Standards, Policies, Principles, Guidelines | Governance, Communication & Change |
+| 28 | Architecture Training | Governance, Communication & Change |
+| 29 | Communication & Change Management | Governance, Communication & Change |
+| 30 | Architecture Compliance Evaluation | Governance, Communication & Change |
+| — | Architecture Review Board (ARB) | Governance, Communication & Change |
 
 ---
 
-*This review was conducted through deep research and analysis of the EA capability model against TOGAF ADM, TOGAF Architecture Capability Framework, Zachman Framework, FEAF, DoDAF, Gartner EA research, BIZBOK, DAMA-DMBOK, SABSA, ITIL, CMMI/ACMM, MIT CISR, and NASCIO maturity models.*
+*This review was conducted through analysis of the EA Capability Model against TOGAF ADM, TOGAF Architecture Capability Framework, Zachman Framework, FEAF, DoDAF, Gartner EA research, BIZBOK, DAMA-DMBOK, SABSA, ITIL, and CMMI/ACMM.*
