@@ -1,106 +1,98 @@
 # EA Capability Model - Overview
 
-This document provides an overview of the Enterprise Architecture capability model. The model defines 30 capabilities organized across 8 domains.
+This document provides an overview of the Enterprise Architecture capability model. The model defines 30 capabilities organized across 8 domains, plus the Architecture Review Board as a governance body.
 
 ## Domains and Capabilities
 
 ### 1. Architecture Development - Common
 
-Capabilities that apply across all architecture domains and support the overall architecture development process.
+Capabilities that apply across all architecture domains.
 
 | # | Capability | Description |
 |---|-----------|-------------|
-| 1 | [Stakeholder Management](./01-stakeholder-management.md) | Identify, classify, and engage stakeholders to understand concerns and ensure architecture alignment |
-| 2 | [Requirements Management](./02-requirements-management.md) | Elicit, document, and manage architecture requirements including functional, non-functional, and constraints |
-| 3 | [Architecture Modelling](./03-architecture-modelling.md) | Create, maintain, and communicate architecture models using standard notations and frameworks |
-| 4 | [Current State Assessment](./04-current-state-assessment.md) | Analyze and document the existing architecture landscape to establish a baseline |
-| 5 | [Target State Design](./05-target-state-design.md) | Define the desired future architecture state aligned with business strategy and goals |
-| 6 | [Roadmap Development](./06-roadmap-development.md) | Create transition plans and roadmaps for moving from current to target architecture states |
+| 1 | [Stakeholder Management](./01-stakeholder-management.md) | Identifying, managing, and engaging stakeholders in the architecture process |
+| 2 | [Requirements Management](./02-requirements-management.md) | Gathering, documenting, and managing architecture requirements |
+| 3 | [Current State Assessment](./03-current-state-assessment.md) | Documenting and analyzing the existing architecture landscape |
+| 4 | [Target State Design](./04-target-state-design.md) | Designing the future-state architecture aligned with business strategy |
+| 5 | [Gap Analysis & Roadmapping](./05-gap-analysis-and-roadmapping.md) | Identifying gaps between current and target states and planning transitions |
+| 6 | [Architecture Principles & Standards](./06-architecture-principles-and-standards.md) | Defining and maintaining guiding principles and standards for architecture work |
 
 ### 2. Business Architecture
 
-Capabilities focused on modeling and aligning business strategy, processes, and organizational structures.
-
 | # | Capability | Description |
 |---|-----------|-------------|
-| 7 | [Business Capability Modelling](./07-business-capability-modelling.md) | Define and map business capabilities to understand what the business does |
-| 8 | [Value Stream Mapping](./08-value-stream-mapping.md) | Identify and optimize end-to-end value streams that deliver value to stakeholders |
-| 9 | [Business Process Architecture](./09-business-process-architecture.md) | Design and document business processes that support business capabilities and value streams |
+| 7 | [Business Capability Modelling](./07-business-capability-modelling.md) | Defining, structuring, and analyzing business capabilities |
+| 8 | [Value Stream Mapping](./08-value-stream-mapping.md) | Mapping and analyzing end-to-end value delivery flows |
+| 9 | [Organization & Process Modelling](./09-organization-and-process-modelling.md) | Modelling organizational structures, roles, and business processes |
 
 ### 3. Application Architecture
 
-Capabilities for designing and managing the application landscape.
-
 | # | Capability | Description |
 |---|-----------|-------------|
-| 10 | [Application Portfolio Management](./10-application-portfolio-management.md) | Manage the lifecycle, rationalization, and optimization of the application portfolio |
-| 11 | [Integration Architecture](./11-integration-architecture.md) | Design integration patterns, APIs, and data flows between applications and systems |
-| 12 | [Application Design](./12-application-design.md) | Define application structure, components, and design patterns |
+| 10 | [Application Portfolio Management](./10-application-portfolio-management.md) | Maintaining oversight of the application landscape, lifecycle, and rationalization |
+| 11 | [Application Integration & API Management](./11-application-integration-and-api-management.md) | Designing and governing application integrations and APIs |
+| 12 | [Solution Design & Patterns](./12-solution-design-and-patterns.md) | Creating solution architectures and reusable design patterns |
 
 ### 4. Data Architecture
 
-Capabilities for managing data as a strategic asset.
-
 | # | Capability | Description |
 |---|-----------|-------------|
-| 13 | [Data Modelling](./13-data-modelling.md) | Create conceptual, logical, and physical data models to represent data structures |
-| 14 | [Data Governance](./14-data-governance.md) | Establish policies, standards, and processes for data quality, security, and lifecycle management |
-| 15 | [Data Integration & Analytics](./15-data-integration-and-analytics.md) | Design data flows, integration patterns, and analytics architectures |
+| 13 | [Data Modelling & Management](./13-data-modelling-and-management.md) | Designing data models and managing data assets |
+| 14 | [Data Governance & Quality](./14-data-governance-and-quality.md) | Ensuring data quality, ownership, and compliance |
+| 15 | [Data Analytics & BI Architecture](./15-data-analytics-and-bi-architecture.md) | Designing analytics platforms and BI capabilities |
 
 ### 5. Technology Architecture
 
-Capabilities for managing infrastructure and technology platforms.
-
 | # | Capability | Description |
 |---|-----------|-------------|
-| 16 | [Infrastructure Architecture](./16-infrastructure-architecture.md) | Design and manage compute, storage, network, and cloud infrastructure |
-| 17 | [Security Architecture](./17-security-architecture.md) | Define security controls, patterns, and frameworks across the technology landscape |
-| 18 | [Platform Architecture](./18-platform-architecture.md) | Design and manage technology platforms, middleware, and shared services |
+| 16 | [Infrastructure & Cloud Architecture](./16-infrastructure-and-cloud-architecture.md) | Designing infrastructure, cloud platforms, and hosting environments |
+| 17 | [Security & Compliance Architecture](./17-security-and-compliance-architecture.md) | Designing security controls and compliance frameworks across the technology landscape |
+| 18 | [Network & Communications Architecture](./18-network-and-communications-architecture.md) | Designing network topologies, communication protocols, and connectivity |
 
 ### 6. Architecture Repository
 
-Capabilities for maintaining architecture artifacts, standards, and knowledge.
-
 | # | Capability | Description |
 |---|-----------|-------------|
-| 19 | [Architecture Knowledge Management](./19-architecture-knowledge-management.md) | Capture, organize, and share architecture knowledge and decisions |
-| 20 | [Standards & Reference Architectures](./20-standards-and-reference-architectures.md) | Define, maintain, and govern architecture standards, patterns, and reference architectures |
-| 21 | [Architecture Tooling](./21-architecture-tooling.md) | Select, deploy, and manage tools that support architecture activities |
+| 19 | [Metamodel & Taxonomy Management](./19-metamodel-and-taxonomy-management.md) | Defining and maintaining the architecture metamodel and classification schemes |
+| 20 | [Architecture Content Management](./20-architecture-content-management.md) | Managing architecture artifacts, documents, and models in a structured repository |
+| 21 | [Reference Architecture Library](./21-reference-architecture-library.md) | Maintaining a library of reference architectures and reusable building blocks |
 
 ### 7. Architecture Management
 
-Capabilities for managing and evolving the architecture practice.
-
 | # | Capability | Description |
 |---|-----------|-------------|
-| 22 | [Architecture Practice Management](./22-architecture-practice-management.md) | Manage the architecture team, processes, and operating model |
-| 23 | [Architecture Communication](./23-architecture-communication.md) | Communicate architecture vision, decisions, and value to diverse audiences |
-| 24 | [Architecture Maturity Assessment](./24-architecture-maturity-assessment.md) | Assess and improve the maturity of architecture capabilities |
-| 25 | [Innovation & Emerging Technology](./25-innovation-and-emerging-technology.md) | Scout, evaluate, and integrate emerging technologies and innovation |
-| 26 | [Architecture Skills Development](./26-architecture-skills-development.md) | Develop and maintain architecture skills and competencies across the team |
+| 22 | [EA Practice & Operating Model](./22-ea-practice-and-operating-model.md) | Defining how the EA function is organized, staffed, and operated |
+| 23 | [EA Value Management](./23-ea-value-management.md) | Demonstrating and measuring the value delivered by the EA function |
+| 24 | [Architecture Skills & Talent Development](./24-architecture-skills-and-talent-development.md) | Building and maintaining architecture competencies and career paths |
+| 25 | [Innovation & Technology Radar](./25-innovation-and-technology-radar.md) | Scouting, evaluating, and tracking emerging technologies |
+| 26 | [Architecture Communication & Engagement](./26-architecture-communication-and-engagement.md) | Communicating architecture vision, decisions, and value to diverse audiences |
 
 ### 8. Governance
 
-Capabilities for governing architecture decisions and ensuring compliance.
-
 | # | Capability | Description |
 |---|-----------|-------------|
-| 27 | [Architecture Review & Approval](./27-architecture-review-and-approval.md) | Review and approve architecture deliverables and decisions |
-| 28 | [Compliance Management](./28-compliance-management.md) | Ensure architecture compliance with standards, regulations, and policies |
-| 29 | [Risk Management](./29-risk-management.md) | Identify, assess, and mitigate architecture-related risks |
-| 30 | [Change Management](./30-change-management.md) | Manage architecture changes and their impact across the enterprise |
+| 27 | [Architecture Decision Management](./27-architecture-decision-management.md) | Capturing, tracking, and governing architecture decisions |
+| 28 | [Architecture Compliance & Assurance](./28-architecture-compliance-and-assurance.md) | Ensuring architecture deliverables and implementations comply with standards |
+| 29 | [Risk & Technical Debt Management](./29-risk-and-technical-debt-management.md) | Identifying, assessing, and managing architecture risks and technical debt |
+| 30 | [Change & Configuration Management](./30-change-and-configuration-management.md) | Managing changes to architecture baselines and configurations |
 
-## Capability Details
+### Architecture Review Board (ARB)
 
-Each capability is documented in its own file with the following structure:
+| Capability | Description |
+|-----------|-------------|
+| [Architecture Review Board](./arb-architecture-review-board.md) | Formal governance body responsible for architecture oversight, reviews, and approvals |
 
-- **Description**: What the capability encompasses
-- **Objectives**: Key goals of the capability
-- **Key Activities**: Core activities performed within the capability
+## Capability Detail Structure
+
+Each capability is documented with:
+
+- **Purpose**: Why this capability exists
+- **Scope**: What is included and excluded
+- **Key Activities**: Core activities performed
 - **Inputs**: Information and artifacts consumed
-- **Outputs/Deliverables**: Artifacts and outcomes produced
-- **Maturity Indicators**: Signs of capability maturity at different levels
-- **Key Roles**: Roles involved in performing the capability
-- **Tools & Techniques**: Methods and tools commonly used
-- **KPIs/Metrics**: Measures of capability performance
-- **Relationships**: Dependencies and interactions with other capabilities
+- **Outputs / Deliverables**: Artifacts and outcomes produced
+- **Roles & Responsibilities**: Who is involved (RACI where applicable)
+- **Maturity Levels**: 5-level maturity progression (Initial → Repeatable → Defined → Managed → Optimizing)
+- **Key Metrics / KPIs**: How to measure capability performance
+- **Dependencies**: Relationships to other capabilities
+- **Tools & Technologies**: Supporting tools and platforms

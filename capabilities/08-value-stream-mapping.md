@@ -2,83 +2,86 @@
 
 **Domain:** Business Architecture
 
-## Description
+## Purpose
 
-Identify, document, and optimize end-to-end value streams that deliver value to customers and stakeholders. Value stream mapping provides a cross-functional view of how value flows through the organization.
+To identify, document, and analyze end-to-end value streams — the sequences of activities that deliver value to customers and stakeholders — enabling cross-functional optimization, waste reduction, and customer-centric architecture alignment.
 
-## Objectives
-
-- Identify and document all enterprise value streams
-- Understand how value is created and delivered to stakeholders
-- Identify waste, bottlenecks, and improvement opportunities
-- Enable cross-functional alignment and optimization
-
-## Key Activities
+## Scope
 
 - Value stream identification and scoping
 - Value stream mapping (current and future state)
-- Value stage definition and analysis
-- Stakeholder and customer journey mapping
-- Waste and bottleneck identification
-- Value stream performance measurement
-- Improvement opportunity identification and prioritization
-- Cross-functional alignment workshops
+- Value stage analysis and performance measurement
+- Cross-functional alignment and optimization
+
+## Key Activities
+
+- Identify and scope enterprise value streams
+- Map value stream stages and participating stakeholders
+- Define triggering events, inputs, outputs, and value items per stage
+- Map value stages to enabling business capabilities
+- Map value stages to supporting applications and data
+- Measure value stream performance (cycle time, lead time, value-add ratio)
+- Identify waste, bottlenecks, and improvement opportunities
+- Design future-state value streams
+- Conduct cross-functional alignment workshops
+- Link value streams to customer journeys
 
 ## Inputs
 
 - Business strategy and customer segments
-- Business capability model
-- Customer feedback and journey data
+- Business capability model (Cap 7)
+- Customer journey maps and feedback
 - Process performance data
 - Organizational structure
 
 ## Outputs / Deliverables
 
 - Value stream maps (current and future state)
-- Value stage definitions
-- Stakeholder value propositions
-- Waste and bottleneck analysis
+- Value stage definitions with capability mappings
+- Performance analysis (cycle time, waste, bottleneck reports)
 - Improvement opportunity register
+- Value stream-to-application mapping
 - Value stream performance dashboards
 
-## Maturity Indicators
+## Roles & Responsibilities
 
-| Level | Description |
-|-------|-------------|
-| Initial | No value stream awareness; silo-based view |
-| Developing | Key value streams identified; initial mapping done |
-| Defined | Value streams documented and maintained; used for analysis |
-| Managed | Value streams actively measured and optimized |
-| Optimizing | Value stream-centric organization; continuous flow optimization |
+| Role | Responsibility |
+|------|---------------|
+| Business Architect | Leads value stream identification and mapping |
+| Enterprise Architect | Ensures value streams align with enterprise architecture |
+| Process Owners | Provide operational input and validate mappings |
+| Customer Experience leads | Link value streams to customer journeys |
 
-## Key Roles
+## Maturity Levels
 
-- Business Architect
-- Enterprise Architect
-- Process Owner
-- Customer Experience Manager
-- Lean/Agile Coach
+| Level | Name | Description |
+|-------|------|-------------|
+| 1 | Initial | No value stream awareness; silo-based view of the business |
+| 2 | Repeatable | Key value streams identified; initial mappings completed |
+| 3 | Defined | Value streams documented with capability and application mappings; used for analysis |
+| 4 | Managed | Value stream performance actively measured; optimization initiatives tracked |
+| 5 | Optimizing | Value stream-centric operating model; continuous flow optimization; real-time performance monitoring |
 
-## Tools & Techniques
+## Key Metrics / KPIs
 
-- Value stream mapping notation and tools
-- Lean and Six Sigma techniques
-- Customer journey mapping
-- Workshop facilitation
-- Process mining tools
-
-## KPIs / Metrics
-
-- Number of value streams mapped
+- Number of value streams identified and mapped
 - Value stream cycle time and lead time
-- Value stream efficiency (value-add vs. waste ratio)
+- Value-add ratio (value-adding time vs. total time)
+- Number of improvement initiatives identified and implemented
 - Customer satisfaction per value stream
-- Improvement initiatives implemented
 
-## Relationships
+## Dependencies
 
-- **Business Capability Modelling** - Capabilities enable value stream stages
-- **Business Process Architecture** - Processes execute within value streams
-- **Application Portfolio Management** - Applications support value stream automation
-- **Roadmap Development** - Value stream improvements feed the roadmap
-- **Current State Assessment** - Value streams assessed as part of baseline
+- **Business Capability Modelling** (Cap 7) - Capabilities enable value stream stages
+- **Organization & Process Modelling** (Cap 9) - Processes execute within value streams
+- **Application Portfolio Management** (Cap 10) - Applications support value stream automation
+- **Current State Assessment** (Cap 3) - Value streams assessed as part of baseline
+- **Gap Analysis & Roadmapping** (Cap 5) - Value stream improvements feed the roadmap
+
+## Tools & Technologies
+
+- Value stream mapping tools and templates
+- Business architecture platforms (Capsifi, LeanIX)
+- Lean and Six Sigma tools
+- Customer journey mapping tools
+- Process mining tools (Celonis, Minit)

@@ -2,30 +2,33 @@
 
 **Domain:** Architecture Development - Common
 
-## Description
+## Purpose
 
-Elicit, document, analyze, and manage architecture requirements including functional requirements, non-functional requirements, constraints, and assumptions. This capability ensures that architecture decisions are traceable to business and technical requirements.
+To systematically elicit, document, analyze, prioritize, and manage architecture requirements — including functional requirements, non-functional requirements (quality attributes), constraints, and assumptions — ensuring traceability from business needs to architecture decisions.
 
-## Objectives
+## Scope
 
-- Capture complete and accurate architecture requirements
-- Maintain traceability between requirements and architecture decisions
-- Manage requirement changes and conflicts effectively
-- Ensure requirements are testable and verifiable
+- Architecture requirement elicitation and documentation
+- Functional and non-functional requirement management
+- Constraint and assumption tracking
+- Traceability between requirements and architecture artifacts
+- Requirement change control
 
 ## Key Activities
 
-- Requirements elicitation through interviews, workshops, and document analysis
-- Requirements classification (functional, non-functional, constraints)
-- Requirements documentation and specification
-- Requirements prioritization and conflict resolution
-- Traceability management between requirements and architecture artifacts
-- Requirements validation and verification
+- Elicit requirements through stakeholder interviews, workshops, and document analysis
+- Classify requirements (functional, non-functional, constraints, assumptions)
+- Document requirements using standard templates
+- Prioritize requirements (e.g., MoSCoW, weighted scoring)
+- Establish traceability between requirements and architecture decisions/artifacts
+- Manage requirement changes through a controlled process
+- Validate requirements with stakeholders
+- Resolve conflicting requirements
 
 ## Inputs
 
 - Stakeholder concerns and viewpoints
-- Business strategy and goals
+- Business strategy and objectives
 - Regulatory and compliance requirements
 - Existing system documentation
 - Industry standards and benchmarks
@@ -34,46 +37,47 @@ Elicit, document, analyze, and manage architecture requirements including functi
 
 - Architecture requirements specification
 - Requirements traceability matrix
-- Non-functional requirements catalog
+- Non-functional requirements (NFR) catalog
 - Constraints and assumptions register
 - Requirements change log
 
-## Maturity Indicators
+## Roles & Responsibilities
 
-| Level | Description |
-|-------|-------------|
-| Initial | Requirements captured informally; no traceability |
-| Developing | Basic requirements documentation; limited traceability |
-| Defined | Formal requirements process with templates; traceability established |
-| Managed | Requirements actively managed with change control; quality metrics tracked |
-| Optimizing | Requirements reuse; predictive analysis of requirement impacts |
+| Role | Responsibility |
+|------|---------------|
+| Enterprise Architect | Defines architecture-level requirements |
+| Business Analyst | Elicits and documents detailed requirements |
+| Solution Architect | Translates requirements into solution-level specs |
+| Domain Architects | Define domain-specific requirements |
 
-## Key Roles
+## Maturity Levels
 
-- Enterprise Architect
-- Business Analyst
-- Solution Architect
-- Requirements Engineer
+| Level | Name | Description |
+|-------|------|-------------|
+| 1 | Initial | Requirements gathered informally; no traceability |
+| 2 | Repeatable | Requirements documented per project; basic templates used |
+| 3 | Defined | Standard requirements process; traceability matrix maintained; NFR catalog exists |
+| 4 | Managed | Requirements actively managed with change control; coverage and quality metrics tracked |
+| 5 | Optimizing | Requirements reuse across initiatives; automated traceability; predictive impact analysis |
 
-## Tools & Techniques
+## Key Metrics / KPIs
 
-- Requirements management tools (e.g., Jira, DOORS)
-- Use case and user story techniques
-- Quality attribute workshops
-- MoSCoW prioritization
-- Traceability matrices
-
-## KPIs / Metrics
-
-- Percentage of requirements with traceability
+- Percentage of requirements with traceability to architecture artifacts
 - Requirements change rate
-- Requirements coverage in architecture artifacts
 - Number of unresolved requirement conflicts
-- Requirements quality score (completeness, consistency, testability)
+- Requirements coverage (% of stakeholder concerns addressed)
+- NFR compliance rate in delivered solutions
 
-## Relationships
+## Dependencies
 
-- **Stakeholder Management** - Requirements derived from stakeholder concerns
-- **Current State Assessment** - Current state informs gap-based requirements
-- **Target State Design** - Requirements drive target state definition
-- **Architecture Review & Approval** - Requirements validated during reviews
+- **Stakeholder Management** (Cap 1) - Requirements derived from stakeholder concerns
+- **Current State Assessment** (Cap 3) - Current state informs gap-based requirements
+- **Target State Design** (Cap 4) - Requirements drive target state definition
+- **Architecture Compliance & Assurance** (Cap 28) - Requirements validated during compliance checks
+
+## Tools & Technologies
+
+- Requirements management tools (Jira, DOORS, Azure DevOps)
+- Traceability matrices (spreadsheets, dedicated tools)
+- Workshop and collaboration tools
+- Quality attribute workshop (QAW) techniques

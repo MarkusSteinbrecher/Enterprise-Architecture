@@ -2,74 +2,79 @@
 
 **Domain:** Architecture Development - Common
 
-## Description
+## Purpose
 
-Identify, classify, and engage stakeholders to understand their concerns, requirements, and influence on the architecture. This capability ensures that architecture efforts are aligned with the needs of all relevant parties.
+To systematically identify, classify, engage, and manage stakeholders throughout the architecture lifecycle, ensuring their concerns are understood, addressed, and that architecture outcomes align with their needs and expectations.
 
-## Objectives
+## Scope
 
-- Identify all relevant stakeholders across the enterprise
-- Understand stakeholder concerns, goals, and influence levels
-- Ensure ongoing engagement and communication with stakeholders
-- Align architecture outcomes with stakeholder expectations
+- Stakeholder identification and classification
+- Stakeholder concern and viewpoint analysis
+- Engagement planning and execution
+- Stakeholder communication and feedback management
 
 ## Key Activities
 
-- Stakeholder identification and analysis
-- Stakeholder mapping and classification (e.g., power/interest grid)
-- Stakeholder engagement planning
-- Concern and viewpoint elicitation
-- Ongoing stakeholder relationship management
-- Conflict resolution between competing stakeholder interests
+- Identify stakeholders across business and IT
+- Classify stakeholders by influence, interest, and impact (e.g., power/interest grid)
+- Map stakeholder concerns to architecture viewpoints
+- Develop and execute stakeholder engagement plans
+- Conduct interviews, workshops, and surveys
+- Manage stakeholder expectations and conflicts
+- Collect and act on stakeholder feedback
+- Maintain a stakeholder register
 
 ## Inputs
 
 - Organizational charts and governance structures
-- Business strategy and objectives
+- Business strategy documents
+- Project/program charters
 - Previous stakeholder analyses
-- Project and program charters
 
 ## Outputs / Deliverables
 
-- Stakeholder map / register
-- Stakeholder engagement plan
+- Stakeholder register / map
 - Stakeholder concern catalog
+- Engagement plan
 - Communication plan
+- Feedback and satisfaction reports
 
-## Maturity Indicators
+## Roles & Responsibilities
 
-| Level | Description |
-|-------|-------------|
-| Initial | Stakeholders identified ad-hoc; no formal process |
-| Developing | Basic stakeholder register maintained; engagement is reactive |
-| Defined | Formal stakeholder management process; regular engagement cadence |
-| Managed | Stakeholder feedback actively incorporated; satisfaction measured |
-| Optimizing | Predictive stakeholder analysis; proactive engagement drives architecture direction |
+| Role | Responsibility |
+|------|---------------|
+| Enterprise Architect | Leads stakeholder identification and engagement |
+| Architecture Manager | Oversees stakeholder management process |
+| Domain Architects | Engage domain-specific stakeholders |
+| Business Relationship Manager | Supports business stakeholder engagement |
 
-## Key Roles
+## Maturity Levels
 
-- Enterprise Architect
-- Solution Architect
-- Architecture Manager
-- Business Relationship Manager
+| Level | Name | Description |
+|-------|------|-------------|
+| 1 | Initial | Stakeholders identified ad-hoc; no formal register or process |
+| 2 | Repeatable | Key stakeholders identified for major initiatives; basic register maintained |
+| 3 | Defined | Formal stakeholder management process; engagement plans created per initiative |
+| 4 | Managed | Stakeholder satisfaction measured; feedback loops active; concerns systematically tracked |
+| 5 | Optimizing | Proactive stakeholder engagement; predictive analysis of stakeholder needs; continuous relationship management |
 
-## Tools & Techniques
+## Key Metrics / KPIs
 
-- Stakeholder mapping tools (power/interest grid, RACI)
-- Interview and workshop facilitation
-- Survey and feedback mechanisms
-- Collaboration platforms
+- Number of stakeholders identified and engaged
+- Stakeholder satisfaction score
+- Percentage of stakeholder concerns addressed
+- Engagement plan coverage (% of initiatives with engagement plans)
 
-## KPIs / Metrics
+## Dependencies
 
-- Stakeholder satisfaction scores
-- Percentage of stakeholders actively engaged
-- Number of unresolved stakeholder concerns
-- Timeliness of stakeholder communication
+- **Requirements Management** (Cap 2) - Stakeholder concerns feed requirements
+- **Architecture Communication & Engagement** (Cap 26) - Communication approach shaped by stakeholder analysis
+- **Architecture Decision Management** (Cap 27) - Stakeholders involved in decision governance
+- **EA Practice & Operating Model** (Cap 22) - Engagement model defines stakeholder interfaces
 
-## Relationships
+## Tools & Technologies
 
-- **Requirements Management** - Stakeholder concerns feed into requirements
-- **Architecture Communication** - Stakeholder analysis informs communication approach
-- **Architecture Review & Approval** - Stakeholders participate in reviews
-- **Change Management** - Stakeholders impacted by architecture changes
+- Stakeholder mapping tools (power/interest grids, RACI matrices)
+- Survey and feedback platforms
+- Collaboration tools (Miro, Mural)
+- CRM / relationship management tools
