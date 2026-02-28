@@ -25,18 +25,15 @@ A **website** presenting findings — mapping traditional EA capabilities to the
 /
 ├── CLAUDE.md                  # This file — project instructions
 ├── BACKLOG.md                 # Activity tracking and backlog
-├── EA capability model.pdf    # Original source PDF
-├── capabilities/              # Extracted EA capabilities (30 capabilities + overview)
-├── reference/
-│   └── togaf/                 # TOGAF reference documentation
-├── research/                  # AI impact research and external sources
+├── local-docs/                # Local reference docs, git-ignored (TOGAF PDFs, PwC PDF, etc.)
+├── documentation/             # All created content (capabilities, research, analysis)
 └── website/                   # Website presenting findings (future)
 ```
 
 ## Conventions
 
-- Capability files are numbered `01-` through `30-` in `capabilities/`
-- Research documents go in `research/`
-- TOGAF reference material goes in `reference/togaf/`
+- All created content goes in `documentation/`
+- Local source documents (TOGAF PDFs, etc.) go in `local-docs/` (git-ignored)
+- Do not perform research autonomously — only when explicitly asked
 - Use markdown for all documentation
 - File names use lowercase kebab-case
