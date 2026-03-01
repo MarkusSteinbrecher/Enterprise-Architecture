@@ -53,5 +53,62 @@
         }
       }
     ]
-  }
+  },
+  "domain_summaries": [
+    {
+      "id": "ea-development-method",
+      "label": "EA Development",
+      "href": "ea-development-method.html",
+      "bullets": [
+        "Development cycles compress from <mark>quarters to weeks</mark> — human review capacity becomes the binding constraint",
+        "Every capability needs a <strong>delivery model classification</strong>: human, augmented, or agent-native",
+        "Requirements management becomes <strong>event-driven and agent-fed</strong>, not a periodic human intake process",
+        "Architecture Vision must declare the <strong>agent strategy</strong> before downstream phases begin"
+      ]
+    },
+    {
+      "id": "ea-governance",
+      "label": "Governance",
+      "href": "ea-governance.html",
+      "bullets": [
+        "Governance speed must <mark>match deployment speed</mark> or agents deploy ungoverned",
+        "Architecture Board shifts to <strong>exception-based governance</strong> — automated pre-checks clear conformant deployments",
+        "Every policy needs <strong>dual expression</strong>: human-readable for review, machine-executable for enforcement",
+        "Compliance becomes <strong>continuous and probabilistic</strong> — agents drift between checkpoint reviews"
+      ]
+    },
+    {
+      "id": "ea-repository",
+      "label": "Repository",
+      "href": "ea-repository.html",
+      "bullets": [
+        "Repository must add <mark>Agent Registry and Model Register</mark> as mandatory components",
+        "The metamodel needs <strong>Agent, Model, and Guardrail as first-class entities</strong>",
+        "Repository exposes <strong>APIs for programmatic query</strong> by agents and compliance automation",
+        "Landscape refresh becomes <strong>volatility-driven</strong>: continuous for AI, deliberate for stable systems"
+      ]
+    },
+    {
+      "id": "ea-roles-skills",
+      "label": "Roles & Skills",
+      "href": "ea-roles-skills.html",
+      "bullets": [
+        "EA function becomes a <mark>human-agent hybrid team</mark> with its own agents as reference implementation",
+        "Every architect role carries <strong>agent governance accountability</strong> — domain architects become more T-shaped, not obsolete",
+        "New roles required: <strong>AI/Agent Architect, Agent Governance Lead, Agent Operations Architect</strong>",
+        "The single &ldquo;AI and Expert Systems&rdquo; skill line must expand to <strong>eight agent-specific competencies</strong>"
+      ]
+    },
+    {
+      "id": "risk-security",
+      "label": "Risk & Security",
+      "href": "risk-security.html",
+      "bullets": [
+        "Traditional risk matrices <mark>cannot score non-deterministic AI failures</mark> — new categories needed for cascade failure, hallucination, emergent behaviour",
+        "AI introduces <strong>attack vectors invisible to traditional security</strong>: prompt injection, model extraction, data poisoning",
+        "AI systems <strong>drift out of compliance without any code change</strong> — continuous monitoring replaces milestone reviews",
+        "Zero Trust applied to agents: <strong>per-session auth, minimum privilege, time-limited tokens</strong>"
+      ]
+    }
+  ]
 }

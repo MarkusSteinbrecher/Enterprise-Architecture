@@ -984,6 +984,69 @@ a.dashboard-card:hover {
   margin-top: .35rem;
 }
 
+/* ── Overview: Domain Summaries ──────────────────────── */
+.domain-summaries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+.domain-summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow);
+  border-left: 3px solid var(--accent);
+  text-decoration: none;
+  color: var(--text);
+  transition: box-shadow .15s, border-color .15s;
+  display: flex;
+  flex-direction: column;
+}
+.domain-summary-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  border-left-color: var(--col-future, #1d4ed8);
+  text-decoration: none;
+}
+.domain-summary-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 .6rem;
+}
+.domain-summary-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 .75rem;
+  flex: 1;
+}
+.domain-summary-bullets li {
+  font-size: .82rem;
+  line-height: 1.5;
+  padding: .3rem 0 .3rem 1rem;
+  position: relative;
+  color: rgba(0,0,0,.7);
+}
+.domain-summary-bullets li::before {
+  content: '\2022';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+.domain-summary-bullets mark {
+  background: #fef08a;
+  padding: 0 .15em;
+  border-radius: 2px;
+}
+.domain-summary-link {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+@media (max-width: 640px) {
+  .domain-summaries-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Home: New Capabilities Grid ─────────────────────── */
 .capabilities-grid {
   display: grid;

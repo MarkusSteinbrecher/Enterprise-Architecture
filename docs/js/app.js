@@ -306,6 +306,7 @@ async function initOverview() {
   if (data) {
     renderOverviewFindings(data.findings);
     renderImpactMatrix(data.matrix);
+    renderDomainSummaries(data.domain_summaries);
   }
   if (capsData) renderCapabilities(capsData);
 }
@@ -349,6 +350,25 @@ function renderImpactMatrix(matrix) {
   html += '</tbody>';
 
   html += '</table>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderDomainSummaries(domains) {
+  const el = document.getElementById('domain-summaries');
+  if (!el || !domains || !domains.length) return;
+  let html = '<div class="domain-summaries-grid">';
+  for (const d of domains) {
+    html += `<a class="domain-summary-card" href="${d.href}">`;
+    html += `<h3 class="domain-summary-title">${d.label}</h3>`;
+    html += '<ul class="domain-summary-bullets">';
+    for (const b of d.bullets) {
+      html += `<li>${b}</li>`;
+    }
+    html += '</ul>';
+    html += `<span class="domain-summary-link">Explore ${d.label} &rarr;</span>`;
+    html += '</a>';
+  }
   html += '</div>';
   el.innerHTML = html;
 }
