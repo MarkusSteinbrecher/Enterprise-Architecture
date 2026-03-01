@@ -142,10 +142,10 @@ p:last-child { margin-bottom: 0; }
   align-items: center;
 }
 .top-nav-link {
-  font-size: .78rem;
+  font-size: .75rem;
   font-weight: 500;
   color: rgba(255,255,255,.7);
-  padding: .3rem .75rem;
+  padding: .3rem .55rem;
   border-radius: 100px;
   white-space: nowrap;
   transition: all .15s;
@@ -186,15 +186,6 @@ p:last-child { margin-bottom: 0; }
   padding: .35rem 0;
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
   z-index: 300;
-}
-/* Invisible bridge so mouse can travel from trigger to menu */
-.dropdown-menu::before {
-  content: '';
-  position: absolute;
-  top: -.5rem;
-  left: 0;
-  right: 0;
-  height: .5rem;
 }
 .top-nav-dropdown.open .dropdown-menu {
   display: block;
@@ -1758,12 +1749,6 @@ a.dashboard-card:hover {
   padding: 1.5rem;
   margin-bottom: 2rem;
 }
-.arch-diagram-layout {
-  display: grid;
-  grid-template-columns: 1fr 180px;
-  gap: 1rem;
-  align-items: stretch;
-}
 .arch-layers-stack {
   display: flex;
   flex-direction: column;
@@ -1875,63 +1860,81 @@ a.dashboard-card:hover {
   font-weight: 600;
   color: var(--text-secondary);
 }
-/* Cross-cutting concern vertical bars */
-.arch-cc-stack {
-  display: flex;
-  gap: 4px;
+/* Cross-cutting concerns — horizontal cards */
+.arch-cc-label-row {
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-muted);
+  margin-top: 1.25rem;
+  margin-bottom: .5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
 }
-.arch-cc-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+.arch-cc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .5rem;
 }
-.arch-cc-bar {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
+.arch-cc-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.arch-cc-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: .75rem .35rem;
-  border-radius: 6px;
+  gap: .6rem;
+  padding: .6rem .75rem;
   cursor: pointer;
-  transition: opacity .15s;
+  transition: background .15s;
+  border-left: 4px solid var(--cc-color);
+}
+.arch-cc-header:hover {
+  background: var(--bg);
+}
+.arch-cc-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.arch-cc-title {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--text);
   flex: 1;
-  min-height: 0;
 }
-.arch-cc-bar:hover {
-  opacity: .85;
+.arch-cc-header .finding-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  transition: transform .2s;
+  flex-shrink: 0;
 }
-.arch-cc-label {
-  font-size: .72rem;
-  font-weight: 700;
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  white-space: nowrap;
+.arch-cc-card.open .finding-chevron {
+  transform: rotate(180deg);
 }
 .arch-cc-detail {
   max-height: 0;
   overflow: hidden;
   transition: max-height .3s ease;
 }
-.arch-cc-item.open .arch-cc-detail {
-  max-height: 500px;
-  padding: .75rem .25rem;
+.arch-cc-card.open .arch-cc-detail {
+  max-height: 600px;
+  padding: .75rem;
+}
+.arch-cc-short {
+  font-size: .78rem;
+  color: var(--text-muted);
+  margin-bottom: .5rem;
 }
 .arch-cc-desc {
   font-size: .82rem;
   color: var(--text-secondary);
   line-height: 1.55;
-  margin-bottom: .5rem;
-}
-.arch-cc-components {
-  font-size: .8rem;
-  color: var(--text-secondary);
-  padding-left: 1.25rem;
-  line-height: 1.6;
-}
-.arch-cc-components li {
-  margin-bottom: .35rem;
+  margin-bottom: .75rem;
 }
 /* Source attribution cards */
 .arch-sources-grid {
@@ -1990,21 +1993,8 @@ a.dashboard-card:hover {
 
 /* ── Responsive: Layout ──────────────────────────────── */
 @media (max-width: 900px) {
-  .arch-diagram-layout {
+  .arch-cc-grid {
     grid-template-columns: 1fr;
-  }
-  .arch-cc-stack {
-    flex-direction: column;
-    gap: .5rem;
-  }
-  .arch-cc-bar {
-    writing-mode: horizontal-tb;
-    text-orientation: initial;
-    padding: .6rem .75rem;
-    min-height: auto;
-  }
-  .arch-cc-label {
-    font-size: .78rem;
   }
   .arch-layer-components {
     white-space: normal;

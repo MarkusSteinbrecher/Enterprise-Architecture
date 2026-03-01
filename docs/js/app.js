@@ -133,7 +133,7 @@ function renderTopNav() {
     hamburger.classList.toggle('open');
   });
 
-  /* ── Desktop dropdown: hover + click ── */
+  /* ── Desktop dropdown: click only ── */
   function positionDropdown(dd) {
     const menu = dd.querySelector('.dropdown-menu');
     const btn = dd.querySelector('.dropdown-trigger');
@@ -142,32 +142,18 @@ function renderTopNav() {
     menu.style.top = (r.bottom + 4) + 'px';
     menu.style.left = r.left + 'px';
   }
+  function closeAllDropdowns() {
+    nav.querySelectorAll('.top-nav-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
   nav.querySelectorAll('.top-nav-dropdown').forEach(dd => {
     const btn = dd.querySelector('.dropdown-trigger');
-    const menu = dd.querySelector('.dropdown-menu');
-    let hideTimer = null;
-    function showDD() { clearTimeout(hideTimer); dd.classList.add('open'); positionDropdown(dd); }
-    function hideDD() { hideTimer = setTimeout(() => dd.classList.remove('open'), 120); }
-
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const opening = !dd.classList.contains('open');
       closeAllDropdowns();
-      if (opening) showDD();
+      if (opening) { dd.classList.add('open'); positionDropdown(dd); }
     });
-    // Hover on trigger
-    dd.addEventListener('mouseenter', showDD);
-    dd.addEventListener('mouseleave', hideDD);
-    // Hover on fixed-position menu (outside trigger's DOM bounds)
-    if (menu) {
-      menu.addEventListener('mouseenter', showDD);
-      menu.addEventListener('mouseleave', hideDD);
-    }
   });
-
-  function closeAllDropdowns() {
-    nav.querySelectorAll('.top-nav-dropdown.open').forEach(d => d.classList.remove('open'));
-  }
   document.addEventListener('click', (e) => {
     closeAllDropdowns();
     if (!nav.contains(e.target)) { links.classList.remove('open'); hamburger.classList.remove('open'); }
@@ -984,17 +970,17 @@ function initArchitecturePage() {
   });
 
   /* Cross-cutting expand/collapse handlers */
-  el.querySelectorAll('.arch-cc-bar').forEach(bar => {
-    bar.addEventListener('click', () => {
-      bar.closest('.arch-cc-item').classList.toggle('open');
+  el.querySelectorAll('.arch-cc-header').forEach(hdr => {
+    hdr.addEventListener('click', () => {
+      hdr.closest('.arch-cc-card').classList.toggle('open');
     });
   });
 }
 
 function renderArchDiagram(layers, crossCutting) {
-  let html = '<div class="arch-diagram"><div class="arch-diagram-layout">';
+  let html = '<div class="arch-diagram">';
 
-  /* Layers stack (left) */
+  /* Layers stack */
   html += '<div class="arch-layers-stack">';
   for (const layer of layers) {
     html += `<div class="arch-layer-row" id="arch-${layer.id}">`;
@@ -1031,28 +1017,35 @@ function renderArchDiagram(layers, crossCutting) {
   }
   html += '</div>'; /* arch-layers-stack */
 
-  /* Cross-cutting concerns (right) */
-  html += '<div class="arch-cc-stack">';
+  /* Cross-cutting concerns — horizontal cards below the stack */
+  html += '<div class="arch-cc-label-row">Spans all layers</div>';
+  html += '<div class="arch-cc-grid">';
   for (const cc of crossCutting) {
-    html += `<div class="arch-cc-item" id="arch-cc-${cc.id}">`;
-    html += `<div class="arch-cc-bar" style="background:${cc.color}">`;
-    html += `<span class="arch-cc-label">${cc.label}</span>`;
+    html += `<div class="arch-cc-card" id="arch-cc-${cc.id}">`;
+    html += `<div class="arch-cc-header" style="--cc-color:${cc.color}">`;
+    html += `<div class="arch-cc-dot" style="background:${cc.color}"></div>`;
+    html += `<div class="arch-cc-title">${cc.label}</div>`;
+    html += chevronSVG();
     html += '</div>';
     html += '<div class="arch-cc-detail">';
+    html += `<p class="arch-cc-short">${cc.short}</p>`;
     html += `<p class="arch-cc-desc">${cc.description}</p>`;
     if (cc.components && cc.components.length) {
-      html += '<ul class="arch-cc-components">';
+      html += '<div class="arch-component-grid">';
       for (const c of cc.components) {
-        html += `<li><strong>${c.name}</strong> &mdash; ${c.description}</li>`;
+        html += `<div class="arch-component-card">`;
+        html += `<div class="arch-component-name">${c.name}</div>`;
+        html += `<div class="arch-component-desc">${c.description}</div>`;
+        html += '</div>';
       }
-      html += '</ul>';
+      html += '</div>';
     }
     html += '</div>';
     html += '</div>';
   }
-  html += '</div>'; /* arch-cc-stack */
+  html += '</div>'; /* arch-cc-grid */
 
-  html += '</div></div>'; /* arch-diagram-layout, arch-diagram */
+  html += '</div>'; /* arch-diagram */
   return html;
 }
 
