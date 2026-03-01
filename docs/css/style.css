@@ -994,78 +994,53 @@ a.dashboard-card:hover {
 .text-muted { color: var(--text-muted); font-style: italic; }
 
 @media (max-width: 900px) {
-  /* Hide sticky column headers — content stacks vertically */
+  /* Hide sticky column headers */
   .compare-header,
   .compare-header-3col { display: none !important; }
 
-  /* 3-col summaries: stack */
-  .compare-topic-summaries-3col { grid-template-columns: 1fr; }
-  .compare-topic-summaries-3col .compare-topic-trad,
-  .compare-topic-summaries-3col .compare-topic-changes {
+  /* Hide summaries in collapsed rows — just show topic name */
+  .compare-topic-summaries,
+  .compare-topic-summaries-3col { display: none; }
+
+  /* Expanded detail: stack columns vertically */
+  .compare-detail-grid,
+  .compare-detail-grid-3col { grid-template-columns: 1fr; }
+  .compare-detail-trad,
+  .compare-detail-changes {
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
-  /* Reset line-clamp box layout so ::before labels render correctly */
-  .compare-topic-summary {
-    display: block;
-    -webkit-line-clamp: unset;
-    overflow: visible;
-  }
-  /* 3-col labels */
-  .compare-topic-summaries-3col .compare-topic-trad::before {
+
+  /* Section labels in expanded detail */
+  .compare-detail-grid-3col .compare-detail-trad::before,
+  .compare-detail-grid .compare-detail-trad::before {
     content: 'Traditional EA';
     display: block;
-    font-weight: 700; color: var(--text); font-size: .68rem;
-    text-transform: uppercase; letter-spacing: .06em;
-    margin-bottom: .2rem;
-  }
-  .compare-topic-changes::before {
-    content: 'What Changes';
-    display: block;
-    font-weight: 700; color: var(--col-changes); font-size: .68rem;
-    text-transform: uppercase; letter-spacing: .06em;
-    margin-bottom: .2rem;
-  }
-  .compare-topic-future::before {
-    content: 'Agentic Organisation';
-    display: block;
-    font-weight: 700; color: var(--col-future); font-size: .68rem;
-    text-transform: uppercase; letter-spacing: .06em;
-    margin-bottom: .2rem;
-  }
-
-  /* 3-col detail: stack */
-  .compare-detail-grid-3col { grid-template-columns: 1fr; }
-  .compare-detail-changes { border-right: none; border-bottom: 1px solid var(--border); }
-  .compare-detail-trad { border-right: none; border-bottom: 1px solid var(--border); }
-
-  /* 3-col detail labels */
-  .compare-detail-grid-3col .compare-detail-trad::before {
-    content: 'Traditional EA';
-    display: block;
-    font-weight: 700; color: var(--text); font-size: .68rem;
+    font-weight: 700; color: var(--text); font-size: .72rem;
     text-transform: uppercase; letter-spacing: .06em;
     margin-bottom: .5rem;
+    padding-bottom: .35rem;
+    border-bottom: 2px solid var(--text);
   }
   .compare-detail-grid-3col .compare-detail-changes::before {
     content: 'What Changes';
     display: block;
-    font-weight: 700; color: var(--col-changes); font-size: .68rem;
+    font-weight: 700; color: var(--col-changes); font-size: .72rem;
     text-transform: uppercase; letter-spacing: .06em;
     margin-bottom: .5rem;
+    padding-bottom: .35rem;
+    border-bottom: 2px solid var(--col-changes);
   }
-  .compare-detail-grid-3col .compare-detail-future::before {
-    content: 'Agentic Organisation';
+  .compare-detail-grid-3col .compare-detail-future::before,
+  .compare-detail-grid .compare-detail-ai::before {
+    content: 'EA in an Agentic Organisation';
     display: block;
-    font-weight: 700; color: var(--col-future); font-size: .68rem;
+    font-weight: 700; color: var(--col-future); font-size: .72rem;
     text-transform: uppercase; letter-spacing: .06em;
     margin-bottom: .5rem;
+    padding-bottom: .35rem;
+    border-bottom: 2px solid var(--col-future);
   }
-
-  /* 2-col fallback (if any) */
-  .compare-topic-summaries { grid-template-columns: 1fr; }
-  .compare-topic-trad { border-right: none; border-bottom: 1px solid var(--border); }
-  .compare-detail-grid { grid-template-columns: 1fr; }
 
   .compare-row { grid-template-columns: 1fr; }
   .compare-cell-ai { border-left: none; border-top: 1px solid var(--border); }
