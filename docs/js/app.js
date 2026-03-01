@@ -355,6 +355,7 @@ function renderOverview(el) {
       </a>`;
     }
     html += '</div>';
+    html += renderCapabilityDiagram(pageData.subtopics);
   }
 
   html += '<div class="compare-table">';
@@ -522,6 +523,94 @@ function renderOverview(el) {
       setTimeout(() => row.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     }
   }
+}
+
+/* ── Capability Model Diagram ────────────────────────── */
+function renderCapabilityDiagram(subtopics) {
+  // Group subtopics by their group field
+  const groups = {};
+  const groupOrder = [];
+  for (const st of subtopics) {
+    if (!groups[st.group]) {
+      groups[st.group] = [];
+      groupOrder.push(st.group);
+    }
+    groups[st.group].push(st);
+  }
+
+  function impactClass(cat) {
+    return { A: 'cap-box-modify', B: 'cap-box-extend', C: 'cap-box-new' }[cat] || 'cap-box-modify';
+  }
+
+  function renderBoxes(groupName) {
+    if (!groups[groupName]) return '';
+    return groups[groupName].map(st => {
+      const cat = st.ai_impact ? st.ai_impact.impact_category : 'A';
+      return `<button class="cap-box ${impactClass(cat)}" onclick="scrollToTopic('${st.id}')" title="${st.label}">${st.label}</button>`;
+    }).join('');
+  }
+
+  let html = '<div class="cap-diagram">';
+  html += '<div class="cap-diagram-title">Enterprise Architecture Capabilities</div>';
+
+  // Top row: 3-column grid
+  html += '<div class="cap-diagram-top">';
+
+  // Left: Architecture Development (with sub-groups)
+  html += '<div class="cap-diagram-area cap-diagram-dev">';
+  html += '<div class="cap-area-title">Architecture Development</div>';
+  const devGroups = [
+    'Architecture Development \u2014 Common',
+    'Business Architecture',
+    'Application Architecture',
+    'Data Architecture',
+    'Technology Architecture'
+  ];
+  for (const g of devGroups) {
+    if (!groups[g]) continue;
+    const shortName = g.replace('Architecture Development \u2014 ', '');
+    html += '<div class="cap-subgroup">';
+    html += `<div class="cap-subgroup-title">${shortName}</div>`;
+    html += `<div class="cap-boxes">${renderBoxes(g)}</div>`;
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Middle: Architecture Repository
+  html += '<div class="cap-diagram-area cap-diagram-repo">';
+  html += '<div class="cap-area-title">Architecture Repository</div>';
+  html += `<div class="cap-boxes">${renderBoxes('Architecture Repository')}</div>`;
+  html += '</div>';
+
+  // Right: Architecture Management
+  html += '<div class="cap-diagram-area cap-diagram-mgmt">';
+  html += '<div class="cap-area-title">Architecture Management</div>';
+  html += `<div class="cap-boxes">${renderBoxes('Architecture Management')}</div>`;
+  html += '</div>';
+
+  html += '</div>'; // cap-diagram-top
+
+  // Governance row
+  html += '<div class="cap-diagram-area cap-diagram-gov">';
+  html += '<div class="cap-area-title">Governance, Communication &amp; Change</div>';
+  html += `<div class="cap-boxes">${renderBoxes('Governance, Communication & Change')}</div>`;
+  html += '</div>';
+
+  // Net-New row
+  html += '<div class="cap-diagram-area cap-diagram-new">';
+  html += '<div class="cap-area-title">Net-New for the Agentic Organisation</div>';
+  html += `<div class="cap-boxes">${renderBoxes('Net-New for the Agentic Organisation')}</div>`;
+  html += '</div>';
+
+  // Legend
+  html += '<div class="cap-diagram-legend">';
+  html += '<span class="cap-legend-item"><span class="cap-legend-swatch cap-box-modify"></span> Modify</span>';
+  html += '<span class="cap-legend-item"><span class="cap-legend-swatch cap-box-extend"></span> Extend</span>';
+  html += '<span class="cap-legend-item"><span class="cap-legend-swatch cap-box-new"></span> New</span>';
+  html += '</div>';
+
+  html += '</div>'; // cap-diagram
+  return html;
 }
 
 window.toggleTopic = function(id) {
