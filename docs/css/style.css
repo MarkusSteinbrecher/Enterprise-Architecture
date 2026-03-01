@@ -993,6 +993,55 @@ a.dashboard-card:hover {
 
 .text-muted { color: var(--text-muted); font-style: italic; }
 
+/* ── Operating Model: Component Link Cards ─────────── */
+.om-components {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.om-component-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow .15s, border-color .15s;
+  border-left: 3px solid var(--accent);
+}
+.om-component-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+.om-component-title {
+  font-size: .92rem;
+  font-weight: 600;
+  margin-bottom: .35rem;
+  color: var(--text);
+}
+.om-component-desc {
+  font-size: .82rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* ── Comparison Table: Group Headers ─────────────────── */
+.compare-group-header {
+  background: var(--text);
+  padding: .6rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,.15);
+}
+.compare-group-label {
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: rgba(255,255,255,.85);
+}
+
 @media (max-width: 900px) {
   /* Hide sticky column headers */
   .compare-header,

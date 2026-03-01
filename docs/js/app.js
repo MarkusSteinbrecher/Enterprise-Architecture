@@ -345,6 +345,18 @@ function renderOverview(el) {
   const isThreeCol = pageData.subtopics[0] && pageData.subtopics[0].changes;
   let html = '';
 
+  // Component link cards (for operating model page)
+  if (pageData.components && pageData.components.length) {
+    html += '<div class="om-components">';
+    for (const c of pageData.components) {
+      html += `<a class="om-component-card" href="${c.href}">
+        <div class="om-component-title">${c.label}</div>
+        <div class="om-component-desc">${c.description}</div>
+      </a>`;
+    }
+    html += '</div>';
+  }
+
   html += '<div class="compare-table">';
 
   // Table header
@@ -361,8 +373,14 @@ function renderOverview(el) {
     html += '</div>';
   }
 
-  // One row per subtopic
+  // One row per subtopic (with optional group headers)
+  let currentGroup = null;
   for (const st of pageData.subtopics) {
+    // Group header row when group changes
+    if (st.group && st.group !== currentGroup) {
+      currentGroup = st.group;
+      html += `<div class="compare-group-header"><span class="compare-group-label">${st.group}</span></div>`;
+    }
     const t = st.traditional;
     const tradText = (t && t.summary) ? t.summary : '';
 
