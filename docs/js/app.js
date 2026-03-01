@@ -86,16 +86,40 @@ function renderTopNav() {
   html += '<div class="top-nav-links">';
   let rightStarted = false;
   for (const link of siteData.nav) {
-    const isExternal = link.external || link.href.startsWith('http');
-    const active = !isExternal && link.id === page ? ' active' : '';
-    const target = isExternal ? ' target="_blank" rel="noopener"' : '';
     const pushRight = link.align === 'right' && !rightStarted;
     if (pushRight) rightStarted = true;
     const style = pushRight ? ' style="margin-left:auto"' : '';
-    html += `<a class="top-nav-link${active}" href="${link.href}"${target}${style}>${link.label}</a>`;
+
+    if (link.children) {
+      const childActive = link.children.some(c => c.id === page);
+      html += `<div class="top-nav-dropdown${childActive ? ' active' : ''}"${style}>`;
+      html += `<button class="top-nav-link dropdown-trigger${childActive ? ' active' : ''}">${link.label} \u25BE</button>`;
+      html += '<div class="dropdown-menu">';
+      for (const child of link.children) {
+        const cActive = child.id === page ? ' active' : '';
+        html += `<a class="dropdown-item${cActive}" href="${child.href}">${child.label}</a>`;
+      }
+      html += '</div></div>';
+    } else {
+      const isExternal = link.external || link.href.startsWith('http');
+      const active = !isExternal && link.id === page ? ' active' : '';
+      const target = isExternal ? ' target="_blank" rel="noopener"' : '';
+      html += `<a class="top-nav-link${active}" href="${link.href}"${target}${style}>${link.label}</a>`;
+    }
   }
   html += '</div>';
   nav.innerHTML = html;
+
+  // Dropdown toggle for mobile tap
+  nav.querySelectorAll('.dropdown-trigger').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      btn.closest('.top-nav-dropdown').classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    nav.querySelectorAll('.top-nav-dropdown.open').forEach(d => d.classList.remove('open'));
+  });
 }
 
 /* ── Home Page ───────────────────────────────────────── */
