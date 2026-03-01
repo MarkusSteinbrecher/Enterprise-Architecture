@@ -1005,6 +1005,12 @@ a.dashboard-card:hover {
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
+  /* Reset line-clamp box layout so ::before labels render correctly */
+  .compare-topic-summary {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
   /* 3-col labels */
   .compare-topic-summaries-3col .compare-topic-trad::before {
     content: 'Traditional EA';
