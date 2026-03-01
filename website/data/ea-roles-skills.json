@@ -1,0 +1,661 @@
+{
+  "id": "ea-roles-skills",
+  "title": "EA Roles & Skills",
+  "domain_ref": "07-ea-capability-organization",
+  "subtopics": [
+    {
+      "id": "ea-organisation",
+      "label": "EA Organisation",
+      "traditional": {
+        "togaf_reference": "TSG Leader's Guide, Ch 9; FC Part 5, Ch 2",
+        "summary": "Traditional EA defines how the team is structured using centralised, federated, or function-centric alignment models with integrated management systems.",
+        "body_html": "<h4>Definition</h4><p>The organisational design of the EA function, treating capability establishment as an architecture project with defined alignment models, team structures, and operating models.</p><h4>Responsibilities</h4><p>Three alignment models: <strong>strategy-centric</strong> (EA embedded in strategic planning), <strong>function-centric</strong> (EA part of functional verticals with consolidation), and <strong>IT-centric</strong> (EA aligned to IT). Core/extended team structure decomposes into General Business, Foundational, and Purpose capabilities. Integration with enterprise management systems: business strategy, solutions delivery, security, finance, and technology planning.</p><h4>Skills Required</h4><p>Organisational design, stakeholder management, governance design, capacity planning, coaching and mentoring, and the ability to articulate EA value through metrics across financial, risk reduction, and benefit realisation categories.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "ea-org-q1",
+            "text": "How well does your EA organisation model account for AI agent management responsibilities?",
+            "levels": {
+              "1": "No consideration of AI agents in EA organisational design; agents deployed without clear ownership",
+              "2": "Awareness that agent management is needed; informal ownership by individual teams",
+              "3": "Explicit agent management responsibilities assigned within EA; agent architecture function established as cross-cutting discipline",
+              "4": "Formal distributed accountability model: central agent standards, domain-level agent performance ownership, enterprise agent registry maintained",
+              "5": "Fully integrated human-agent organisation design with agent governance capacity modelled and scaled alongside agent deployment growth"
+            }
+          },
+          {
+            "id": "ea-org-q2",
+            "text": "To what extent does your EA function use AI tools to augment its own operations?",
+            "levels": {
+              "1": "EA function uses no AI tools; all architecture work is manual",
+              "2": "Individual architects use general-purpose AI tools informally",
+              "3": "Specific EA processes are systematically agent-augmented: repository maintenance, compliance scanning, impact analysis",
+              "4": "EA function operates as a human-agent team with defined agent roles, governed by the same standards it enforces enterprise-wide",
+              "5": "Agent-augmented EA practice serves as reference implementation; EA agents continuously improve architecture processes"
+            }
+          },
+          {
+            "id": "ea-org-q3",
+            "text": "Does your EA team own and maintain an enterprise agent registry?",
+            "levels": {
+              "1": "No agent registry exists; unknown how many agents are deployed enterprise-wide",
+              "2": "Partial inventory exists but is not owned by EA and lacks governance integration",
+              "3": "EA owns a comprehensive agent registry recording purpose, owner, autonomy level, data access, and governance status",
+              "4": "Registry is the authoritative source for all agent governance decisions; integrated with the architecture repository",
+              "5": "Living registry with real-time status, automated updates, dependency mapping, and lifecycle tracking"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Establish agent architecture as a cross-cutting discipline within the EA team, analogous to security architecture, with responsibility for enterprise-wide agent design standards.",
+            "max_level": 2
+          },
+          {
+            "text": "Create an enterprise agent registry owned by the EA team, documenting every deployed agent with its purpose, owner, autonomy level, data access, and governance status.",
+            "max_level": 2
+          },
+          {
+            "text": "Develop a capacity model that quantifies per-agent governance workload and projects total EA capacity requirements as agent deployment scales.",
+            "max_level": 3
+          },
+          {
+            "text": "Define an agent-augmented EA operating model specifying which EA activities are agent-assisted, what human oversight is required, and how the EA team governs its own agents.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Restructure the EA function as a <mark>human-agent hybrid team</mark> or lose visibility of your fastest-growing workforce.",
+        "key_shifts": [
+          "EA team must own the <strong>enterprise agent registry</strong> — the single source of truth for every deployed agent",
+          "Agent architecture becomes a <strong>cross-cutting discipline</strong> alongside security and data architecture",
+          "Capacity planning must model <strong>per-agent governance overhead</strong> at realistic growth rates",
+          "EA should use agents internally as a <strong>reference implementation</strong>, not just govern others"
+        ],
+        "what_breaks": [
+          "Alignment models that assume a <strong>purely human workforce</strong> cannot account for agent operating behaviours",
+          "Capacity planning based on headcount ignores <strong>governance workload scaling</strong> to hundreds of agents",
+          "<strong>No integration point</strong> exists between agent inventory and existing CMDB or service catalogues",
+          "Core/extended team structures with no <strong>cross-cutting agent function</strong> leave agent design ungoverned"
+        ],
+        "what_survives": [
+          "Strategy-centric, function-centric, and IT-centric alignment models remain <strong>valid organising principles</strong>",
+          "Core versus extended team decomposition applies — <strong>agent specialists</strong> join the extended team",
+          "Integration with enterprise management systems (strategy, finance, security) is <strong>unchanged in intent</strong>",
+          "The discipline of <strong>articulating EA value through metrics</strong> still anchors the function's mandate"
+        ]
+      },
+      "future_state": {
+        "summary": "The EA function operates as <mark>a governed human-agent team</mark> with an authoritative registry, scaled capacity, and its own agents as proof of concept.",
+        "description": "The EA team embeds <strong>agent architecture as a permanent cross-cutting discipline</strong> and maintains a live enterprise agent registry. EA's own agent-augmented operations serve as the reference implementation for the standards it enforces enterprise-wide.",
+        "key_practices": [
+          "Deploy an <strong>enterprise agent registry</strong>: every agent tagged with owner, sponsor, model version, and authority level",
+          "Add agent architecture as a <strong>named cross-cutting function</strong> with dedicated accountability within the EA team",
+          "Model <strong>governance capacity per agent</strong> and project agent growth to prevent EA becoming the bottleneck",
+          "Run at least two EA processes <strong>using agents internally</strong> before mandating governance standards to others"
+        ]
+      }
+    },
+    {
+      "id": "architect-roles",
+      "label": "Architect Roles",
+      "traditional": {
+        "togaf_reference": "TSG G249",
+        "summary": "Traditional EA defines Chief Architect, Enterprise Architect, Segment Architect (Business and Technical), and Solution Architect roles with structured responsibilities and KPIs.",
+        "body_html": "<h4>Definition</h4><p>A hierarchy of architecture roles from strategic leadership to solution delivery, each with defined responsibilities, stakeholder relationships, and performance metrics.</p><h4>Responsibilities</h4><p><strong>Chief Architect</strong>: strategic alignment, architecture landscape leadership, governance and risk oversight. <strong>Enterprise Architect</strong>: operating model design, architecture practices, principles and policies. <strong>Segment Architect</strong>: capability assessment, standards and policies within business or technical segments. <strong>Solution Architect</strong>: solution specification, compatibility assurance, security and privacy.</p><h4>Skills Required</h4><p>Progressive proficiency across Application, Architecture, Business, Change, Data, Generic, Legal, and Technology categories, with proficiency levels 1-4 mapped per role in a 71-subcategory skill matrix.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "roles-q1",
+            "text": "Has your organisation defined AI-specific architect roles with clear responsibilities?",
+            "levels": {
+              "1": "No AI-specific roles defined; AI responsibilities are ad hoc",
+              "2": "Informal AI responsibilities assigned to existing architects without formal role definition",
+              "3": "At least one AI-specific role formally defined (e.g., AI/Agent Architect) with documented responsibilities and skills",
+              "4": "Multiple AI roles defined and staffed: AI/Agent Architect, Agent Governance Lead, Agent Operations Architect with clear accountability",
+              "5": "Complete AI role taxonomy integrated into EA career framework with progression paths and performance criteria"
+            }
+          },
+          {
+            "id": "roles-q2",
+            "text": "How well have existing architect role definitions been updated to include agent governance responsibilities?",
+            "levels": {
+              "1": "Existing role definitions have not been updated; no mention of agent governance",
+              "2": "General awareness of agent governance needs but no formal updates to role definitions",
+              "3": "Role definitions updated: Chief Architect includes agent strategy, Enterprise Architect includes agent operating model, Segment Architect includes delivery model classification",
+              "4": "Updated roles actively used in hiring, performance management, and development planning with agent governance KPIs",
+              "5": "Role definitions continuously evolve based on agent maturity progression; agent governance responsibilities adapt to enterprise agent scale"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Define the AI/Agent Architect role with responsibilities for agent design patterns, interaction protocols, guardrail standards, and testing frameworks.",
+            "max_level": 2
+          },
+          {
+            "text": "Update existing role definitions: add agent strategy to Chief Architect, agent operating model to Enterprise Architect, delivery model classification to Segment Architect.",
+            "max_level": 3
+          },
+          {
+            "text": "Expand stakeholder maps for all architecture roles to include AI/ML engineering, data science, AI ethics officers, and workforce representatives.",
+            "max_level": 3
+          },
+          {
+            "text": "Staff Agent Governance Lead and Agent Operations Architect roles to cover behavioural compliance and production agent infrastructure respectively.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Every architect role now carries <mark>agent governance accountability</mark> — add it to job descriptions or accept ungoverned sprawl.",
+        "key_shifts": [
+          "Solution Architects must design for <strong>non-deterministic outputs</strong> with explicit guardrail layers",
+          "Segment Architects classify every capability as <strong>human-delivered, augmented, or agent-native</strong>",
+          "Chief Architect must articulate <strong>agent strategy to the board</strong> in business-risk terms",
+          "Embed agent responsibilities into <strong>existing roles first</strong>; create specialist roles as volume demands"
+        ],
+        "what_breaks": [
+          "No defined role owns <strong>agent behavioural compliance</strong> distinct from structural compliance",
+          "<strong>No mapping</strong> connects agent-era roles to platform engineering or MLOps teams already managing runtimes",
+          "<strong>No transition path</strong> exists from embedding responsibilities to staffing dedicated roles",
+          "KPIs for all architect roles ignore <strong>agent governance effectiveness</strong> entirely"
+        ],
+        "what_survives": [
+          "The role hierarchy — Chief, Enterprise, Segment, Solution — remains a <strong>sound accountability structure</strong>",
+          "Structured responsibilities and <strong>stakeholder relationships</strong> per role still organise the work",
+          "<strong>Progressive proficiency levels</strong> across skill categories apply unchanged to new AI skill clusters",
+          "The principle of role-specific KPIs extends naturally to include <strong>agent governance metrics</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "Architect roles include <mark>AI/Agent Architect and Agent Governance Lead</mark> with every existing role carrying explicit agent responsibilities.",
+        "description": "All traditional architect roles carry updated <strong>agent governance accountabilities</strong> in their job descriptions and KPIs. Dedicated AI/Agent Architect and Agent Governance Lead roles handle specialist concerns as agent volume grows.",
+        "key_practices": [
+          "Update every architect job description with <strong>agent responsibilities</strong>: strategy, operating model, delivery classification, guardrails",
+          "Define the <strong>AI/Agent Architect role</strong> covering agent design patterns, protocols, guardrail standards, and testing",
+          "Staff an <strong>Agent Governance Lead</strong> responsible for behavioural compliance, escalation policies, and cross-team standards",
+          "Expand <strong>stakeholder maps</strong> for all roles to include AI/ML engineering, data science, and AI ethics"
+        ]
+      }
+    },
+    {
+      "id": "skills-competencies",
+      "label": "Skills & Competencies",
+      "traditional": {
+        "togaf_reference": "TSG G198",
+        "summary": "The Architecture Skills Framework defines eight skill categories with 71 subcategories mapped across six architecture roles at four proficiency levels.",
+        "body_html": "<h4>Definition</h4><p>A structured framework for assessing, developing, and managing architecture competencies. Eight categories: Generic, Business, Enterprise Architecture, Data, Application, Technology, Legal, and Change skills.</p><h4>Responsibilities</h4><p>Generic skills cover leadership, communication, facilitation, and analytical thinking. Business skills cover strategic planning, industry knowledge, and stakeholder management. Architecture skills cover modelling, building block design, governance, and repository management. Technical skills span data management, application design, and infrastructure.</p><h4>Skills Required</h4><p>Four proficiency levels: Level 1 (Background), Level 2 (Aware), Level 3 (Knowledgeable), Level 4 (Expert). AI appears as a single subcategory — \"AI and Expert Systems\" — within the Application category.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "skills-q1",
+            "text": "Has your skills framework been extended with a dedicated AI skill category containing multiple subcategories?",
+            "levels": {
+              "1": "No AI skills in the framework, or a single generic AI line item",
+              "2": "AI mentioned in general terms; no decomposition into distinct competencies",
+              "3": "Dedicated AI category with subcategories: AI fundamentals, agent design, prompt engineering, agent governance, responsible AI, and agent testing",
+              "4": "AI skill subcategories have role-specific proficiency targets actively used in hiring and development planning",
+              "5": "AI skill requirements continuously updated as technology evolves; proficiency expectations adapt to enterprise agent maturity"
+            }
+          },
+          {
+            "id": "skills-q2",
+            "text": "Have you assessed the AI proficiency gap across your architecture team against required levels?",
+            "levels": {
+              "1": "No AI competency assessment has been conducted",
+              "2": "Informal awareness of AI skill gaps; no structured assessment against defined proficiency targets",
+              "3": "Formal assessment completed for all architects against role-specific AI proficiency requirements",
+              "4": "Assessment results drive individual development plans, hiring priorities, and cross-functional mentoring assignments",
+              "5": "Continuous proficiency tracking with adaptive programmes; proficiency expectations ratchet upward as AI capabilities mature"
+            }
+          },
+          {
+            "id": "skills-q3",
+            "text": "Does your organisation have structured AI competency development programmes for EA practitioners?",
+            "levels": {
+              "1": "No AI training programme exists for architects",
+              "2": "Ad hoc training: individual architects attend external courses or self-study",
+              "3": "Structured programme covering AI fundamentals, agent design, governance, and cost structures for all architects",
+              "4": "Differentiated programme with baseline AI literacy for all and deep specialisation tracks; cross-functional mentoring with AI practitioners",
+              "5": "Continuous learning programme integrated into career development with quarterly proficiency refreshes and experiential learning through sandbox environments"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Replace the single \"AI and Expert Systems\" skill line with a full AI category containing subcategories for AI fundamentals, agent design, prompt engineering, agent governance, responsible AI, and agent testing.",
+            "max_level": 2
+          },
+          {
+            "text": "Assess every architect's AI proficiency against role-specific targets; expect to find the gap is larger for AI skills than any traditional category.",
+            "max_level": 3
+          },
+          {
+            "text": "Establish cross-functional mentoring pairing architects with AI/ML practitioners to build experiential understanding alongside formal training.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement quarterly AI skill refreshes to keep pace with monthly technology evolution; treat AI proficiency as a perishable competency requiring active maintenance.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "One AI skill line across the framework is <mark>dangerously insufficient</mark> — architects are making agent decisions they are not qualified to make.",
+        "key_shifts": [
+          "Replace the single AI subcategory with a <strong>full cluster of eight agent-specific skill areas</strong>",
+          "Solution Architect AI proficiency must reach <strong>Level 3-4 within twelve months</strong>",
+          "<strong>Pair architects with AI engineers</strong> for skills transfer; classroom training alone will not close the gap",
+          "AI skills budget becomes a <strong>recurring operational cost</strong>, not a one-off training project"
+        ],
+        "what_breaks": [
+          "A single AI subcategory across 71 skill areas gives <strong>no granularity</strong> for hiring or assessment",
+          "<strong>Static annual training</strong> decays within months as model capabilities shift on a monthly cadence",
+          "<strong>No distinction</strong> between prompt engineering for architects versus developers leads to misapplied skills",
+          "Proficiency assessments treating AI as one line item cannot <strong>surface the gaps</strong> causing project failures"
+        ],
+        "what_survives": [
+          "The eight-category skills framework structure accommodates a new AI category <strong>without redesign</strong>",
+          "<strong>Four proficiency levels</strong> (Background through Expert) apply directly to new AI subcategories",
+          "Role-specific proficiency targets work the same way — just with more <strong>rows in the matrix</strong>",
+          "The principle of structured competency assessment remains essential and becomes <strong>more frequent</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "A <mark>full AI skill cluster with eight subcategories</mark> drives hiring, assessment, and continuous development across all architect roles.",
+        "description": "The architecture skills framework includes a <strong>dedicated AI category</strong> with subcategories for AI fundamentals, agent design, prompt engineering, guardrails, testing, responsible AI, multi-agent orchestration, and cost management. Proficiency is assessed quarterly through hands-on labs and cross-functional mentoring.",
+        "key_practices": [
+          "Decompose AI skills into <strong>eight subcategories</strong> with role-specific proficiency targets per architect role",
+          "Assess every architect against <strong>AI proficiency targets</strong> and build development plans to close gaps within twelve months",
+          "Establish <strong>cross-functional mentoring</strong> pairing architects with AI/ML practitioners for experiential learning",
+          "Run <strong>quarterly hands-on labs</strong> with production-representative sandboxes to maintain currency"
+        ]
+      }
+    },
+    {
+      "id": "ea-maturity",
+      "label": "EA Maturity",
+      "traditional": {
+        "togaf_reference": "TSG G203",
+        "summary": "The Architecture Capability Maturity Model (ACMM) assesses maturity across nine elements at six levels (0-5), complemented by CMMI frameworks.",
+        "body_html": "<h4>Definition</h4><p>Frameworks for evaluating and quantifying organisational maturity in Enterprise Architecture. The ACMM uses nine architecture elements — process, development, business linkage, senior management, operating unit participation, communication, IT security, governance, and IT investment — assessed at Levels 0-5.</p><h4>Responsibilities</h4><p>Maturity assessment produces weighted mean scores and per-element breakdowns reported to the CIO. CMMI provides complementary views: Development, Services, and Supplier Management. People CMM addresses workforce capability. Data Management Maturity (DMM) assesses data practices. SCAMPI provides formal appraisal methodology.</p><h4>Skills Required</h4><p>Maturity assessment, benchmarking against reference frameworks, continuous improvement programme design, and the ability to translate maturity gaps into actionable investment cases.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "maturity-q1",
+            "text": "Does your EA maturity assessment include agent-specific dimensions alongside traditional ones?",
+            "levels": {
+              "1": "Maturity assessment covers only traditional dimensions; AI is not assessed",
+              "2": "Awareness that AI maturity should be assessed; no formal dimensions defined",
+              "3": "Agent-specific maturity dimensions defined and assessed: agent governance, human-agent collaboration, data readiness as gate",
+              "4": "Combined maturity dashboard reporting both traditional and agent dimensions; gap between them drives investment priorities",
+              "5": "Integrated maturity model with continuous agent compliance monitoring and agent-augmented assessment processes"
+            }
+          },
+          {
+            "id": "maturity-q2",
+            "text": "How effectively does your maturity model account for data readiness as a prerequisite for agent architecture maturity?",
+            "levels": {
+              "1": "Data maturity and agent maturity are not linked; assessed independently if at all",
+              "2": "Informal recognition that data quality affects agent deployment; no formal dependency",
+              "3": "Data readiness formally defined as a maturity gate: agent architecture maturity capped by data management maturity",
+              "4": "Data readiness assessment integrated into agent deployment governance; data quality thresholds enforced before agent production release",
+              "5": "Continuous data fitness monitoring for all agent-consumed data; data quality improvements driven by agent performance feedback"
+            }
+          },
+          {
+            "id": "maturity-q3",
+            "text": "Does your maturity model define what Level 5 looks like for an agent-era EA function?",
+            "levels": {
+              "1": "No vision for agent-era EA maturity; Level 5 defined only in traditional terms",
+              "2": "General aspiration to use AI in EA practice; no structured maturity target",
+              "3": "Agent-era Level 5 defined: agent-augmented compliance, machine-readable architecture standards, continuous automated governance",
+              "4": "Maturity progression stages defined from traditional EA through AI-aware, AI-augmented, to agent-native EA practice",
+              "5": "Organisation actively progressing toward agent-native EA; architecture standards consumed by agents as operating constraints"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Extend your ACMM with agent-specific assessment criteria for each of the nine architecture elements at every maturity level.",
+            "max_level": 2
+          },
+          {
+            "text": "Add agent governance maturity and human-agent collaboration maturity as new dimensions alongside the traditional nine elements.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement a data readiness gate: formally require minimum data management maturity before agent architecture maturity can be assessed at Level 3 or above.",
+            "max_level": 3
+          },
+          {
+            "text": "Define a four-stage maturity progression — Traditional EA, AI-Aware EA, AI-Augmented EA, Agent-Native EA — with capabilities, skills, and tooling specified per stage.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Your Level 4 maturity score <mark>masks Level 1 agent governance readiness</mark> — report both or mislead the board.",
+        "key_shifts": [
+          "<strong>Dual-score maturity assessment</strong>: traditional EA and agent-era dimensions reported side by side",
+          "Data readiness becomes a <strong>hard prerequisite gate</strong> — no meaningful agent maturity without quality data",
+          "Start with <strong>three lightweight dimensions</strong> before attempting full ACMM extension",
+          "At Level 5, the EA function itself uses <strong>agents for compliance checking</strong> and documentation"
+        ],
+        "what_breaks": [
+          "Current maturity models with no agent governance dimension produce <strong>dangerously misleading scores</strong>",
+          "<strong>No data readiness gate</strong> lets organisations claim agent maturity while feeding agents unreliable data",
+          "The full ACMM requires <strong>90+ assessment cells</strong> — too heavy to adopt quickly for agent-era dimensions",
+          "Level 5 definitions describe traditional excellence without acknowledging <strong>agent-augmented practice</strong>"
+        ],
+        "what_survives": [
+          "The nine ACMM architecture elements remain valid — agent criteria <strong>extend them, not replace them</strong>",
+          "<strong>Weighted mean scoring</strong> and per-element breakdowns still communicate maturity effectively to CIOs",
+          "CMMI companion frameworks provide models for <strong>agent-specific variants</strong>",
+          "The discipline of <strong>translating maturity gaps into investment cases</strong> is unchanged and more critical"
+        ]
+      },
+      "future_state": {
+        "summary": "A <mark>dual-score maturity dashboard</mark> exposes the gap between traditional EA strength and agent-era readiness, driving targeted investment.",
+        "description": "The maturity model reports <strong>traditional and agent-era scores side by side</strong>, with data readiness enforced as a prerequisite gate. A four-stage progression — Traditional EA, AI-Aware, AI-Augmented, Agent-Native — gives organisations concrete milestones with defined exit criteria.",
+        "key_practices": [
+          "Extend each ACMM element with <strong>agent-specific criteria</strong> and add agent governance and human-agent collaboration dimensions",
+          "Implement a <strong>data readiness gate</strong>: cap agent maturity at Level 2 until data management reaches Level 3",
+          "Deploy a <strong>lightweight three-dimension starter</strong> assessment before attempting full extension",
+          "Define four-stage progression with <strong>explicit exit criteria</strong> so organisations know what AI-Aware requires"
+        ]
+      }
+    },
+    {
+      "id": "agent-service-management",
+      "label": "Agent Service Management",
+      "traditional": {
+        "togaf_reference": "FC Part 5, Ch 4-5 (Architecture Board, Contracts); FC Part 1, Ch 11 (Phase G)",
+        "summary": "Traditional EA governs architecture decisions and project delivery but has no framework for managing autonomous operational entities through their lifecycle.",
+        "body_html": "<h4>Definition</h4><p>No direct traditional EA equivalent. The closest concepts are the Architecture Board (governs decisions), Architecture Contracts (define obligations between partners), and Implementation Governance (monitors project delivery). All assume governance objects are passive and that the governance lifecycle ends at operational handover.</p><h4>Responsibilities</h4><p>Traditional governance covers architecture compliance, escalation and dispute resolution, and SLA monitoring within Architecture Contracts. ITSM provides the conceptual precedent for operational service management, but neither traditional EA frameworks nor ITSM addresses autonomous, non-deterministic entities.</p><h4>Skills Required</h4><p>Architecture governance skills provide a foundation, but agent service management requires new competencies in AI monitoring, non-deterministic performance evaluation, multi-dimensional versioning, and continuous lifecycle management.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "asm-q1",
+            "text": "Does your organisation have a formal agent deployment lifecycle with defined stage gates?",
+            "levels": {
+              "1": "No deployment lifecycle; agents are deployed directly by development teams",
+              "2": "Basic checks exist (security review, access provisioning) but no formal lifecycle process",
+              "3": "Formal lifecycle with design, build, test, deploy, and operate stages; entry/exit criteria and required approvals defined",
+              "4": "Standardised lifecycle integrated with agent registry, SLA definition, monitoring setup, and rollback capability",
+              "5": "Fully automated deployment pipeline with self-service capability, automated testing suites, canary deployments, and continuous compliance validation"
+            }
+          },
+          {
+            "id": "asm-q2",
+            "text": "How does your organisation manage agent versioning and updates?",
+            "levels": {
+              "1": "No agent versioning; unknown which model or configuration each agent runs",
+              "2": "Basic version tracking for some agents; no systematic configuration management",
+              "3": "Multi-dimensional versioning tracking model version, prompt version, guardrails, and tool access for all production agents",
+              "4": "Version management integrated with staged rollouts, canary deployments, and rollback capability to any known-good state",
+              "5": "Automated version governance with A/B testing between agent versions, behavioural regression testing, and provider update impact assessment"
+            }
+          },
+          {
+            "id": "asm-q3",
+            "text": "Does your organisation have agent-specific incident management and retirement processes?",
+            "levels": {
+              "1": "No agent-specific incident or retirement processes; generic ITSM applied without adaptation",
+              "2": "Agent incidents handled ad hoc; no defined containment, triage, or retirement criteria",
+              "3": "Agent incident management defined with automated containment, reasoning trace analysis, and post-incident guardrail updates; retirement criteria documented",
+              "4": "Integrated incident and lifecycle management: health scoring triggers proactive intervention; retirement process includes dependency analysis and succession planning",
+              "5": "Continuous fitness assessment with composite health scores; automated retirement triggers; dependency mapping prevents cascading failures"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Define a formal agent deployment lifecycle covering design, build, test, deploy, and operate stages with entry/exit criteria and required approvals at each stage.",
+            "max_level": 2
+          },
+          {
+            "text": "Implement multi-dimensional agent versioning that tracks model version, prompt version, guardrail definitions, and tool-access permissions as a combined configuration.",
+            "max_level": 3
+          },
+          {
+            "text": "Establish agent-specific incident management with automated containment, reasoning trace diagnostics, and post-incident guardrail updates distinct from generic ITSM.",
+            "max_level": 3
+          },
+          {
+            "text": "Define agent retirement criteria and implement governed decommissioning including dependency impact analysis, succession planning, and data disposition.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Without <mark>agent service management</mark>, you get orphaned agents burning cloud spend and no one accountable when they fail.",
+        "key_shifts": [
+          "<strong>Enterprise agent registry</strong> deployed first: owner, sponsor, model version, and cost code per agent",
+          "<strong>Standardised lifecycle</strong> with stage gates for deployment, versioning, monitoring, and retirement",
+          "<strong>Multi-dimensional versioning</strong> tracks model, prompt, guardrails, and tool access together",
+          "Agent SLAs cover <strong>decision accuracy, escalation rate, and cost-per-outcome</strong> — not just uptime"
+        ],
+        "what_breaks": [
+          "<strong>No lifecycle management</strong> framework exists for autonomous entities that persist beyond project delivery",
+          "<strong>No integration pattern</strong> connects agent service management to existing ITSM tooling",
+          "<strong>No business-ownership model</strong> assigns outcome accountability alongside technical ownership",
+          "Governance that ends at operational handover leaves running agents <strong>permanently outside oversight</strong>"
+        ],
+        "what_survives": [
+          "Architecture Board governance of decisions and escalation provides the <strong>template for agent governance</strong>",
+          "<strong>Architecture Contracts</strong> defining obligations between parties extend to agent SLAs",
+          "<strong>Implementation Governance</strong> patterns apply to agent deployment with adapted checkpoints",
+          "ITSM operational concepts (incident, change, problem) provide vocabulary with <strong>agent-specific adaptation</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "Every agent runs under <mark>governed lifecycle management</mark> with registered ownership, versioned configuration, and defined retirement criteria.",
+        "description": "Agent service management integrates with existing ITSM tooling rather than building a parallel operations universe. Every production agent has a registered owner, <strong>multi-dimensional version control</strong>, outcome-based SLAs, and a defined retirement path.",
+        "key_practices": [
+          "Deploy the <strong>agent registry first</strong>: tag every agent with technical owner, business sponsor, model version, and cost code",
+          "Define a <strong>standard agent lifecycle</strong> with stage gates for design, build, test, deploy, monitor, version, and retire",
+          "Implement <strong>multi-dimensional version control</strong> tracking model, prompt, guardrails, and tool access as combined config",
+          "Establish <strong>agent retirement criteria</strong> with dependency analysis to prevent orphaned agents and cascading failures"
+        ]
+      }
+    },
+    {
+      "id": "ai-literacy",
+      "label": "AI Literacy",
+      "traditional": {
+        "togaf_reference": "TSG G249; FC Part 5, Ch 3",
+        "summary": "The Skills Framework treats AI as a single subcategory within the Application category; governance assumes all participants share baseline technology understanding.",
+        "body_html": "<h4>Definition</h4><p>AI appears once in the traditional skills matrix as \"Artificial Intelligence (AI) and Expert Systems\" with Level 3 proficiency expected for Enterprise Architects and Level 2 for Solution Architects. The governance framework assumes all governance participants have sufficient technical understanding to evaluate proposals.</p><h4>Responsibilities</h4><p>The skills framework addresses only architecture roles. No framework exists for the AI literacy that business stakeholders, governance bodies, IT operations staff, and the broader workforce require. Governance board members are assumed to have sufficient understanding to evaluate architecture proposals involving any technology.</p><h4>Skills Required</h4><p>Static proficiency levels assessed periodically. No continuous learning mechanism exists for rapidly evolving technology domains. No AI-specific literacy requirements for non-architect roles.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "literacy-q1",
+            "text": "What percentage of your EA team has working AI literacy covering model types, agent architectures, and AI cost structures?",
+            "levels": {
+              "1": "Less than 10% — AI knowledge limited to one or two individuals",
+              "2": "10-30% — Some architects have self-directed AI knowledge; most have surface awareness only",
+              "3": "30-60% — Structured training delivered; majority can engage meaningfully with AI architecture decisions",
+              "4": "60-90% — AI literacy expected and measured; most architects independently evaluate AI proposals",
+              "5": "Over 90% — AI literacy is a demonstrated baseline; competency regularly assessed and reinforced through experiential learning"
+            }
+          },
+          {
+            "id": "literacy-q2",
+            "text": "Does your organisation extend AI literacy requirements beyond the architecture team to governance bodies and business stakeholders?",
+            "levels": {
+              "1": "No — AI literacy is not formally required for anyone",
+              "2": "AI literacy discussed for architects only; governance bodies and business stakeholders not addressed",
+              "3": "AI literacy programmes defined for governance board members and business stakeholders with role-appropriate content",
+              "4": "AI literacy prerequisite gates enforced: stakeholders demonstrate literacy before commissioning agents; board members complete training before reviewing agent proposals",
+              "5": "Organisation-wide AI literacy baseline assessment conducted semi-annually; heat map of gaps by unit, role, and competency dimension drives investment"
+            }
+          },
+          {
+            "id": "literacy-q3",
+            "text": "Does your AI literacy programme include continuous learning mechanisms and experiential components?",
+            "levels": {
+              "1": "No AI literacy programme exists",
+              "2": "One-time training delivered; no refresh mechanism",
+              "3": "Quarterly literacy refreshes calibrated to AI capability advances; curated knowledge programme translating advances into enterprise implications",
+              "4": "Experiential learning through sandbox environments with enterprise-relevant scenarios and intentional failure cases",
+              "5": "Community of practice, governed curriculum with currency reviews, and external engagement ensuring forward-looking awareness"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Conduct an AI literacy baseline assessment across the full EA team and key stakeholder groups: governance board members, business sponsors, and IT operations.",
+            "max_level": 2
+          },
+          {
+            "text": "Implement a structured AI literacy programme with role-appropriate content: AI foundations for architects, decision-making literacy for business stakeholders, operational literacy for IT support.",
+            "max_level": 3
+          },
+          {
+            "text": "Establish AI literacy as a prerequisite gate: require demonstrated literacy before stakeholders can commission agents and before governance bodies review agent proposals.",
+            "max_level": 3
+          },
+          {
+            "text": "Deploy experiential sandbox environments with enterprise-relevant scenarios and intentional failure cases so participants develop practical understanding of agent capabilities and limitations.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "AI literacy is a <mark>perishable enterprise competency</mark> — gate agent deployment on it or accept uninformed decisions at scale.",
+        "key_shifts": [
+          "Mandate <strong>AI literacy prerequisites</strong> before any stakeholder can commission or review an agent",
+          "Solution Architects must reach <strong>Level 4 AI proficiency</strong> — Level 2 is not safe for agent design",
+          "<strong>Quarterly capability briefings</strong> with hands-on sandboxes replace annual slide decks",
+          "Prompt engineering becomes a <strong>formal architecture discipline</strong>, not an ad-hoc developer skill"
+        ],
+        "what_breaks": [
+          "No AI literacy requirements exist for governance bodies, so boards <strong>rubber-stamp what they cannot evaluate</strong>",
+          "<strong>Annual static training</strong> is useless in a domain where model capabilities shift monthly",
+          "<strong>No production-representative sandbox</strong> environments exist for architects to build practical understanding",
+          "Treating AI literacy as a one-time project creates a <strong>growing gap</strong> between capabilities and comprehension"
+        ],
+        "what_survives": [
+          "The skills framework structure of categories, subcategories, and proficiency levels <strong>extends to AI literacy</strong>",
+          "<strong>Role-appropriate proficiency</strong> expectations work — boards need different literacy than solution architects",
+          "<strong>Governance participation prerequisites</strong> are the right principle, just underspecified for AI",
+          "The practice of <strong>assessing competency gaps</strong> and building development plans applies unchanged"
+        ]
+      },
+      "future_state": {
+        "summary": "AI literacy is an <mark>enforced prerequisite gate</mark> for agent commissioning, governance participation, and architecture sign-off.",
+        "description": "Every stakeholder who commissions, governs, or designs agents demonstrates <strong>role-appropriate AI literacy</strong> before exercising those authorities. Continuous learning through quarterly briefings and sandbox environments keeps literacy current as capabilities evolve.",
+        "key_practices": [
+          "Enforce <strong>AI literacy gates</strong>: demonstrated competency required before commissioning agents or reviewing proposals",
+          "Deploy <strong>production-representative sandbox</strong> environments with enterprise-relevant scenarios and failure cases",
+          "Run <strong>quarterly capability briefings</strong> calibrated to the latest AI advances with enterprise implications",
+          "Budget continuous AI literacy as a <strong>recurring operational cost</strong> and track via semi-annual heat maps"
+        ]
+      }
+    },
+    {
+      "id": "capability-model",
+      "label": "Capability Model",
+      "traditional": {
+        "togaf_reference": "TSG Leaders Guide, Ch 11",
+        "summary": "The Leaders Guide provides two sample EA capability models — purpose-aligned and domain-aligned — with a multi-year roadmap methodology.",
+        "body_html": "<h4>Definition</h4><p>EA capability models define what the architecture function does, organised by purpose (strategy, portfolio, projects, solution delivery) or by domain (business, data, application, technology, security). The Leaders Guide provides a roadmap methodology covering gap assessment, value mapping, and maturity progression.</p><h4>Responsibilities</h4><p>The purpose-aligned model includes Architecture to Support Strategy, Portfolio, Projects, and Solution Delivery plus Foundational and General Business capabilities. The roadmap links EA value drivers (cost reduction, revenue improvement, portfolio rationalisation) to enterprise value. Skills and team capacity management are explicit roadmap dimensions.</p><h4>Skills Required</h4><p>Capability modelling, gap analysis, value articulation through value driver diagrams, maturity assessment, and multi-year roadmap development for the EA function itself.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "capmodel-q1",
+            "text": "Has your EA capability model been restructured to include AI-specific capability clusters?",
+            "levels": {
+              "1": "No EA capability model exists, or it has not been updated for AI",
+              "2": "Awareness that AI capabilities are needed; some informal additions to the model",
+              "3": "Capability model extended with Agent Governance, AI Platform Governance, and Sovereignty and Compliance clusters; owners assigned",
+              "4": "All new capability clusters have defined maturity targets, development plans, and traceability to evidence-based findings and recommendations",
+              "5": "Living capability model with governed evolution, annual review cycles, and continuous alignment with enterprise AI strategy"
+            }
+          },
+          {
+            "id": "capmodel-q2",
+            "text": "Does your capability model define a maturity progression from traditional EA to agent-native EA practice?",
+            "levels": {
+              "1": "No maturity progression defined beyond traditional EA maturity",
+              "2": "General aspiration to adopt AI in EA practice; no structured progression stages",
+              "3": "Four-stage progression defined: Traditional EA, AI-Aware EA, AI-Augmented EA, Agent-Native EA with capabilities and skills specified per stage",
+              "4": "Three-horizon roadmap with dependency-aware sequencing actively guiding capability investment across the progression",
+              "5": "Organisation actively progressing through stages; reflexive governance ensures the EA function governs its own AI use by the standards it enforces"
+            }
+          },
+          {
+            "id": "capmodel-q3",
+            "text": "Does your EA value framework include agentic-specific value drivers alongside traditional ones?",
+            "levels": {
+              "1": "No EA value framework exists, or it measures only traditional value drivers",
+              "2": "AI mentioned in value communication but without specific metrics or KPIs",
+              "3": "Agentic value drivers defined and measured: agent deployment velocity, governance effectiveness, model efficiency, sovereignty assurance",
+              "4": "Agentic value drivers actively tracked and reported alongside traditional drivers; inform resource allocation decisions",
+              "5": "Real-time value dashboards demonstrate EA's contribution to safe, efficient, and sovereign AI adoption; EA positioned as enabler not cost centre"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Extend your EA capability model with three new clusters: Agent Governance, AI Platform Governance, and Sovereignty and Compliance, each with defined capabilities and owners.",
+            "max_level": 2
+          },
+          {
+            "text": "Define a four-stage maturity progression from Traditional EA to Agent-Native EA with capabilities, skills, tooling, and governance model specified per stage.",
+            "max_level": 3
+          },
+          {
+            "text": "Add agentic-specific value drivers to your EA value framework: agent deployment velocity, governance effectiveness, model efficiency, sovereignty assurance, and risk containment.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement capability-to-recommendation traceability so every new capability traces to research findings, recommendations, and framework components it extends.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "The EA capability model has <mark>no tier for governing AI agents</mark> — add three capability clusters or govern by accident.",
+        "key_shifts": [
+          "Three new capability clusters: <strong>Agent Governance, AI Platform Governance, Sovereignty and Compliance</strong>",
+          "<strong>Sequence delivery by dependency</strong>: Agent Governance first, then Platform, then Sovereignty",
+          "Four-stage maturity from Traditional EA to Agent-Native with <strong>explicit exit criteria</strong> per stage",
+          "EA value framework adds <strong>agent deployment velocity</strong>, governance effectiveness, and cost containment"
+        ],
+        "what_breaks": [
+          "<strong>No capability tier</strong> exists for governing AI agents or managing model portfolios in current models",
+          "<strong>No dependency sequencing</strong> tells organisations which capabilities to build first",
+          "<strong>No defined exit criteria</strong> separate AI-Aware from AI-Augmented, making progression unmeasurable",
+          "Value driver diagrams limited to cost reduction and portfolio rationalisation miss <strong>agent-specific value</strong>"
+        ],
+        "what_survives": [
+          "Purpose-aligned and domain-aligned organising principles accommodate <strong>new capability clusters naturally</strong>",
+          "The roadmap methodology — <strong>gap assessment, value mapping, maturity progression</strong> — applies directly",
+          "Skills and team capacity as explicit roadmap dimensions remain <strong>essential planning inputs</strong>",
+          "The discipline of <strong>linking EA capabilities to enterprise value drivers</strong> is unchanged and more important"
+        ]
+      },
+      "future_state": {
+        "summary": "The capability model includes <mark>three agent-era clusters with dependency-sequenced delivery</mark> and a four-stage progression to Agent-Native.",
+        "description": "The EA capability model adds Agent Governance, AI Platform Governance, and Sovereignty and Compliance as <strong>first-class clusters</strong> with defined owners and maturity targets. A four-stage progression gives organisations concrete milestones from current state to agent-native practice.",
+        "key_practices": [
+          "Add Agent Governance, AI Platform Governance, and Sovereignty and Compliance clusters with <strong>named owners</strong>",
+          "<strong>Sequence capability investment</strong>: agent registry and lifecycle first, then model portfolio, then sovereignty-by-design",
+          "Define <strong>exit criteria per maturity stage</strong> so organisations can verify they have moved from Traditional to AI-Aware",
+          "Extend the EA value framework with <strong>agentic metrics</strong>: deployment velocity, governance effectiveness, model efficiency"
+        ]
+      }
+    }
+  ]
+}

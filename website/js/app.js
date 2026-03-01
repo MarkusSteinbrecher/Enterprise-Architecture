@@ -1,0 +1,634 @@
+/* ── EA for the Agentic Organisation ─────────────────── */
+/* Single JS file: navigation, tabs, content, assessment  */
+
+/* ── State ───────────────────────────────────────────── */
+let siteData = null;
+let pageData = null;
+let currentSubtopic = null;
+let currentTab = 'overview';
+
+const STORAGE_KEY = 'ea-agentic-assessment';
+
+/* ── Init ────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
+  siteData = await loadJSON('data/site.json');
+  if (!siteData) return;
+
+  renderTopNav();
+
+  const page = getPageId();
+  if (page === 'home') {
+    await initHome();
+  } else if (page === 'overview') {
+    await initOverview();
+  } else {
+    await initConceptPage(page);
+  }
+});
+
+/* ── Utilities ───────────────────────────────────────── */
+function getPageId() {
+  const path = window.location.pathname.split('/').pop() || 'index.html';
+  if (path === 'index.html' || path === '') return 'home';
+  return path.replace('.html', '');
+}
+
+async function loadJSON(url) {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    return r.json();
+  } catch { return null; }
+}
+
+function getAssessment() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch { return {}; }
+}
+
+function saveAssessment(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function maturityColor(score) {
+  if (score <= 1.5) return 'var(--maturity-1)';
+  if (score <= 2.5) return 'var(--maturity-2)';
+  if (score <= 3.5) return 'var(--maturity-3)';
+  if (score <= 4.5) return 'var(--maturity-4)';
+  return 'var(--maturity-5)';
+}
+
+function impactBadge(cat) {
+  const labels = { A: 'Modify', B: 'Extend', C: 'New', U: 'Unchanged' };
+  const classes = { A: 'impact-modify', B: 'impact-extend', C: 'impact-new', U: 'impact-unchanged' };
+  return `<span class="impact-badge ${classes[cat] || 'impact-modify'}">${labels[cat] || cat}</span>`;
+}
+
+function chevronSVG() {
+  return '<svg class="finding-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>';
+}
+
+/* ── Top Navigation ──────────────────────────────────── */
+function renderTopNav() {
+  const nav = document.getElementById('top-nav');
+  if (!nav || !siteData) return;
+
+  const page = getPageId();
+  let html = `<a class="top-nav-brand" href="overview.html">${siteData.brand || 'EA for AI'}</a>`;
+  html += '<div class="top-nav-links">';
+  let rightStarted = false;
+  for (const link of siteData.nav) {
+    const isExternal = link.external || link.href.startsWith('http');
+    const active = !isExternal && link.id === page ? ' active' : '';
+    const target = isExternal ? ' target="_blank" rel="noopener"' : '';
+    const pushRight = link.align === 'right' && !rightStarted;
+    if (pushRight) rightStarted = true;
+    const style = pushRight ? ' style="margin-left:auto"' : '';
+    html += `<a class="top-nav-link${active}" href="${link.href}"${target}${style}>${link.label}</a>`;
+  }
+  html += '</div>';
+  nav.innerHTML = html;
+}
+
+/* ── Home Page ───────────────────────────────────────── */
+async function initHome() {
+  const [homeData, recsData, capsData] = await Promise.all([
+    loadJSON('data/home.json'),
+    loadJSON('data/recommendations.json'),
+    loadJSON('data/new-capabilities.json')
+  ]);
+
+  if (homeData) {
+    renderStats(homeData.stats);
+    renderFindings(homeData.findings);
+  }
+  if (recsData) renderRecommendations(recsData);
+  if (capsData) renderCapabilities(capsData);
+  renderDashboard();
+}
+
+function renderStats(stats) {
+  const el = document.getElementById('hero-stats');
+  if (!el || !stats) return;
+  el.innerHTML = stats.map(s =>
+    `<div class="stat-card"><div class="number">${s.value}</div><div class="label">${s.label}</div></div>`
+  ).join('');
+}
+
+function renderDashboard() {
+  const grid = document.getElementById('dashboard-grid');
+  if (!grid || !siteData) return;
+
+  const assessment = getAssessment();
+  const pages = siteData.nav.filter(n => n.id !== 'home' && n.id !== 'overview' && !n.external);
+
+  if (Object.keys(assessment).length === 0) {
+    grid.innerHTML = pages.map(p =>
+      `<a class="dashboard-card" href="${p.href}">
+        <div class="dashboard-card-header">
+          <span class="dashboard-card-title">${p.label}</span>
+          <span class="dashboard-card-score" style="color: var(--text-muted)">—</span>
+        </div>
+        <div class="dashboard-card-bar"><div class="dashboard-card-bar-fill" style="width:0"></div></div>
+        <div class="dashboard-card-label">Not assessed yet</div>
+      </a>`
+    ).join('');
+    return;
+  }
+
+  grid.innerHTML = pages.map(p => {
+    const pageAnswers = assessment[p.id] || {};
+    const scores = Object.values(pageAnswers).filter(v => typeof v === 'number');
+    if (scores.length === 0) {
+      return `<a class="dashboard-card" href="${p.href}">
+        <div class="dashboard-card-header">
+          <span class="dashboard-card-title">${p.label}</span>
+          <span class="dashboard-card-score" style="color: var(--text-muted)">—</span>
+        </div>
+        <div class="dashboard-card-bar"><div class="dashboard-card-bar-fill" style="width:0"></div></div>
+        <div class="dashboard-card-label">Not assessed yet</div>
+      </a>`;
+    }
+    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const pct = (avg / 5) * 100;
+    const color = maturityColor(avg);
+    return `<a class="dashboard-card" href="${p.href}">
+      <div class="dashboard-card-header">
+        <span class="dashboard-card-title">${p.label}</span>
+        <span class="dashboard-card-score" style="color:${color}">${avg.toFixed(1)}</span>
+      </div>
+      <div class="dashboard-card-bar"><div class="dashboard-card-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="dashboard-card-label">${scores.length} question${scores.length !== 1 ? 's' : ''} answered</div>
+    </a>`;
+  }).join('');
+}
+
+function renderFindings(findings) {
+  const el = document.getElementById('findings-list');
+  if (!el || !findings) return;
+  el.innerHTML = findings.map(f =>
+    `<div class="finding-card">
+      <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
+        <span class="finding-number">${f.id}</span>
+        <div class="finding-content">
+          <div class="finding-title">${f.title}</div>
+          <div class="finding-bottomline">${f.bottomline}</div>
+        </div>
+        ${chevronSVG()}
+      </div>
+      <div class="finding-body">${f.body}</div>
+    </div>`
+  ).join('');
+}
+
+function renderRecommendations(recs) {
+  const el = document.getElementById('rec-list');
+  if (!el || !recs) return;
+  el.innerHTML = recs.map(r => {
+    const badges = [];
+    if (r.priority) badges.push(`<span class="priority-badge priority-${r.priority.toLowerCase()}">${r.priority}</span>`);
+    if (r.effort) badges.push(`<span class="priority-badge" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0">${r.effort} effort</span>`);
+    return `<div class="rec-item">
+      <span class="rec-item-number">${r.id}</span>
+      <div class="rec-item-content">
+        <div class="rec-item-title">${r.title}</div>
+        <div class="rec-item-desc">${r.description}</div>
+        ${badges.length ? `<div class="rec-item-badges">${badges.join('')}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCapabilities(caps) {
+  const el = document.getElementById('capabilities-grid');
+  if (!el || !caps) return;
+  el.innerHTML = caps.map(c => {
+    const badge = c.priority ? `<span class="priority-badge priority-${c.priority.toLowerCase()}" style="margin-bottom:.5rem;display:inline-block">${c.priority} priority</span>` : '';
+    return `<div class="capability-card">
+      ${badge}
+      <div class="capability-card-title">${c.title}</div>
+      <div class="capability-card-desc">${c.description}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Overview Page ───────────────────────────────────── */
+async function initOverview() {
+  const [data, capsData] = await Promise.all([
+    loadJSON('data/overview.json'),
+    loadJSON('data/new-capabilities.json')
+  ]);
+  if (data) {
+    renderOverviewFindings(data.findings);
+    renderImpactMatrix(data.matrix);
+  }
+  if (capsData) renderCapabilities(capsData);
+}
+
+function renderOverviewFindings(findings) {
+  const el = document.getElementById('findings-summary');
+  if (!el || !findings) return;
+  el.innerHTML = '<div class="overview-findings">' + findings.map(f =>
+    `<div class="overview-finding">
+      <span class="overview-finding-id">${f.id}</span>
+      <span class="overview-finding-text">${f.summary}</span>
+    </div>`
+  ).join('') + '</div>';
+}
+
+function renderImpactMatrix(matrix) {
+  const el = document.getElementById('impact-matrix');
+  if (!el || !matrix) return;
+
+  let html = '<div class="impact-matrix-wrap">';
+  html += '<table class="impact-matrix-table">';
+
+  // Header
+  html += '<thead><tr>';
+  html += '<th>EA Objective</th>';
+  for (const dim of matrix.dimensions) {
+    html += `<th>${dim.label}<span class="matrix-th-subtitle">${dim.subtitle}</span></th>`;
+  }
+  html += '</tr></thead>';
+
+  // Body
+  html += '<tbody>';
+  for (const obj of matrix.objectives) {
+    html += '<tr>';
+    html += `<td>${obj.label}<span class="matrix-obj-subtitle">${obj.subtitle}</span></td>`;
+    for (const dim of matrix.dimensions) {
+      html += `<td>${obj.cells[dim.key]}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody>';
+
+  html += '</table>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+/* ── Concept Page ────────────────────────────────────── */
+async function initConceptPage(pageId) {
+  pageData = await loadJSON(`data/${pageId}.json`);
+  if (!pageData) return;
+
+  renderSidebar(pageData.subtopics);
+  initTabs();
+  renderContent();
+}
+
+function renderSidebar(subtopics) {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  let html = '<div class="sidebar-section">';
+  html += '<div class="sidebar-heading">Topics</div>';
+  for (const st of subtopics) {
+    html += `<a class="sidebar-link" href="#${st.id}" data-subtopic="${st.id}" onclick="event.preventDefault();scrollToTopic('${st.id}')">${st.label}</a>`;
+  }
+  html += '</div>';
+  sidebar.innerHTML = html;
+}
+
+function initTabs() {
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTab = btn.dataset.tab;
+      renderContent();
+    });
+  });
+}
+
+function scrollToTopic(id) {
+  const row = document.getElementById('topic-' + id);
+  if (row) {
+    row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Expand if collapsed
+    if (!row.classList.contains('open')) row.classList.add('open');
+  }
+  // Highlight sidebar
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.classList.toggle('active', link.dataset.subtopic === id);
+  });
+}
+
+function selectSubtopic(id) {
+  currentSubtopic = pageData.subtopics.find(s => s.id === id);
+  if (!currentSubtopic) return;
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.classList.toggle('active', link.dataset.subtopic === id);
+  });
+  if (currentTab === 'assessment') renderContent();
+}
+
+function renderContent() {
+  const el = document.getElementById('tab-content');
+  if (!el) return;
+
+  switch (currentTab) {
+    case 'overview':
+      renderOverview(el);
+      break;
+    case 'assessment':
+      renderAssessmentPage(el);
+      break;
+  }
+}
+
+/* ── Overview: All topics in one comparison table ────── */
+function renderOverview(el) {
+  const isThreeCol = pageData.subtopics[0] && pageData.subtopics[0].changes;
+  let html = '';
+
+  html += '<div class="compare-table">';
+
+  // Table header
+  if (isThreeCol) {
+    html += '<div class="compare-header compare-header-3col">';
+    html += '<div class="compare-col-header compare-col-trad"><span class="compare-col-label">Traditional EA</span></div>';
+    html += '<div class="compare-col-header compare-col-changes"><span class="compare-col-label">What Changes</span></div>';
+    html += '<div class="compare-col-header compare-col-future"><span class="compare-col-label">EA in an Agentic Organisation</span></div>';
+    html += '</div>';
+  } else {
+    html += '<div class="compare-header">';
+    html += '<div class="compare-col-header compare-col-trad"><span class="compare-col-label">Traditional EA</span></div>';
+    html += '<div class="compare-col-header compare-col-ai"><span class="compare-col-label">EA for the Agentic Organisation</span></div>';
+    html += '</div>';
+  }
+
+  // One row per subtopic
+  for (const st of pageData.subtopics) {
+    const t = st.traditional;
+    const tradText = (t && t.summary) ? t.summary : '';
+
+    html += `<div class="compare-topic-row" id="topic-${st.id}">`;
+
+    if (isThreeCol) {
+      const ch = st.changes;
+      const fs = st.future_state;
+      const changesText = (ch && ch.summary) ? ch.summary : '';
+      const futureText = (fs && fs.summary) ? fs.summary : '';
+
+      // Heading row with three summaries
+      html += `<div class="compare-topic-header" onclick="toggleTopic('${st.id}')">`;
+      html += `<div class="compare-topic-label">${st.label}</div>`;
+      html += '<div class="compare-topic-summaries compare-topic-summaries-3col">';
+      html += `<div class="compare-topic-summary compare-topic-trad">${tradText}</div>`;
+      html += `<div class="compare-topic-summary compare-topic-changes">${changesText}</div>`;
+      html += `<div class="compare-topic-summary compare-topic-future">${futureText}</div>`;
+      html += '</div>';
+      html += '</div>';
+
+      // Expanded detail
+      html += '<div class="compare-topic-detail">';
+      html += '<div class="compare-detail-grid compare-detail-grid-3col">';
+
+      // Traditional column
+      html += '<div class="compare-detail-col compare-detail-trad">';
+      if (t && t.body_html) html += `<div class="content-body">${t.body_html}</div>`;
+      if (t && t.key_concepts && t.key_concepts.length) {
+        html += '<div class="key-concepts" style="margin-top:.75rem">';
+        html += t.key_concepts.map(c => `<span class="key-concept-tag">${c}</span>`).join('');
+        html += '</div>';
+      }
+      html += '</div>';
+
+      // Changes column
+      html += '<div class="compare-detail-col compare-detail-changes">';
+      if (ch) {
+        const sections = [
+          { key: 'key_shifts', title: 'Key Shifts', cls: 'changes' },
+          { key: 'what_breaks', title: 'What No Longer Works', cls: 'breaks' },
+          { key: 'what_survives', title: 'What Still Applies', cls: 'survives' }
+        ];
+        for (const s of sections) {
+          if (ch[s.key] && ch[s.key].length) {
+            html += `<div class="impact-section">
+              <div class="impact-section-title">${s.title}</div>
+              <ul class="impact-list ${s.cls}">
+                ${ch[s.key].map(item => `<li>${item}</li>`).join('')}
+              </ul>
+            </div>`;
+          }
+        }
+      }
+      html += '</div>';
+
+      // Future State column
+      html += '<div class="compare-detail-col compare-detail-future">';
+      if (fs) {
+        if (fs.description) html += `<div class="content-body"><p>${fs.description}</p></div>`;
+        if (fs.key_practices && fs.key_practices.length) {
+          html += `<div class="impact-section">
+            <div class="impact-section-title">Key Practices</div>
+            <ul class="impact-list future-practices">
+              ${fs.key_practices.map(item => `<li>${item}</li>`).join('')}
+            </ul>
+          </div>`;
+        }
+      }
+      html += '</div>';
+
+      html += '</div>'; // detail-grid
+      html += '</div>'; // detail
+
+    } else {
+      // Two-column layout (legacy)
+      const ai = st.ai_impact;
+      const aiText = (ai && ai.summary) ? ai.summary : '';
+      const isNew = ai && ai.impact_category === 'C';
+
+      html += `<div class="compare-topic-header" onclick="toggleTopic('${st.id}')">`;
+      html += `<div class="compare-topic-label">${st.label}${isNew ? ' <span class="impact-badge impact-new">New</span>' : ''}</div>`;
+      html += '<div class="compare-topic-summaries">';
+      html += `<div class="compare-topic-summary compare-topic-trad">${tradText}</div>`;
+      html += `<div class="compare-topic-summary compare-topic-ai">${aiText}</div>`;
+      html += '</div>';
+      html += '</div>';
+
+      html += '<div class="compare-topic-detail">';
+      html += '<div class="compare-detail-grid">';
+
+      html += '<div class="compare-detail-col compare-detail-trad">';
+      if (t && t.body_html) html += `<div class="content-body">${t.body_html}</div>`;
+      if (t && t.key_concepts && t.key_concepts.length) {
+        html += '<div class="key-concepts" style="margin-top:.75rem">';
+        html += t.key_concepts.map(c => `<span class="key-concept-tag">${c}</span>`).join('');
+        html += '</div>';
+      }
+      html += '</div>';
+
+      html += '<div class="compare-detail-col compare-detail-ai">';
+      if (ai && ai.body_html) html += `<div class="content-body">${ai.body_html}</div>`;
+      if (ai) {
+        const lists = [
+          { key: 'what_changes', title: 'What Changes', cls: 'changes' },
+          { key: 'what_breaks', title: 'What No Longer Works', cls: 'breaks' },
+          { key: 'what_survives', title: 'What Still Applies', cls: 'survives' },
+          { key: 'gaps', title: 'What Is Missing', cls: 'gaps' }
+        ];
+        for (const s of lists) {
+          if (ai[s.key] && ai[s.key].length) {
+            html += `<div class="impact-section">
+              <div class="impact-section-title">${s.title}</div>
+              <ul class="impact-list ${s.cls}">
+                ${ai[s.key].map(item => `<li>${item}</li>`).join('')}
+              </ul>
+            </div>`;
+          }
+        }
+      }
+      html += '</div>';
+
+      html += '</div>'; // detail-grid
+      html += '</div>'; // detail
+    }
+
+    html += '</div>'; // topic-row
+  }
+
+  html += '</div>'; // compare-table
+  el.innerHTML = html;
+
+  // Open from hash
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    const row = document.getElementById('topic-' + hash);
+    if (row) {
+      row.classList.add('open');
+      setTimeout(() => row.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }
+}
+
+window.toggleTopic = function(id) {
+  const row = document.getElementById('topic-' + id);
+  if (row) row.classList.toggle('open');
+  // Update sidebar highlight
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.classList.toggle('active', link.dataset.subtopic === id && row.classList.contains('open'));
+  });
+};
+
+window.scrollToTopic = scrollToTopic;
+window.selectSubtopic = selectSubtopic;
+
+/* ── Assessment Page (all subtopics listed) ──────────── */
+function renderAssessmentPage(el) {
+  const pageId = getPageId();
+  const assessment = getAssessment();
+  const pageAnswers = assessment[pageId] || {};
+
+  // Overall score
+  const allQids = [];
+  for (const st of pageData.subtopics) {
+    const a = st.assessment;
+    if (a && a.questions) allQids.push(...a.questions.map(q => q.id));
+  }
+  const allAnswered = allQids.filter(qid => typeof pageAnswers[qid] === 'number');
+
+  let html = '';
+  if (allAnswered.length > 0) {
+    const avg = allAnswered.reduce((s, qid) => s + pageAnswers[qid], 0) / allAnswered.length;
+    const pct = (avg / 5) * 100;
+    const color = maturityColor(avg);
+    html += `<div class="maturity-summary">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem">
+        <h4 style="margin:0">${pageData.title} — Overall Maturity</h4>
+        <span style="font-size:.82rem;color:var(--text-muted)">${allAnswered.length} of ${allQids.length} answered</span>
+      </div>
+      <div class="maturity-bar-wrap">
+        <div class="maturity-bar"><div class="maturity-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="maturity-score" style="color:${color}">${avg.toFixed(1)}</div>
+      </div>
+      <div class="maturity-label">${maturityLabel(avg)}</div>
+    </div>`;
+  }
+
+  html += '<p class="assessment-intro">Rate your organisation\'s current maturity for each area. Responses are saved locally and inform the dashboard on the home page.</p>';
+
+  // Render per-subtopic
+  for (const st of pageData.subtopics) {
+    const a = st.assessment;
+    if (!a || !a.questions || !a.questions.length) continue;
+
+    html += `<h3 style="margin:1.5rem 0 .75rem">${st.label}</h3>`;
+
+    for (const q of a.questions) {
+      const selected = pageAnswers[q.id];
+      html += `<div class="assessment-question" data-qid="${q.id}">
+        <div class="assessment-question-text">${q.text}</div>
+        <div class="assessment-options">`;
+      for (let level = 1; level <= 5; level++) {
+        const desc = q.levels[level] || '';
+        const isSelected = selected === level;
+        html += `<label class="assessment-option${isSelected ? ' selected' : ''}">
+          <input type="radio" name="${q.id}" value="${level}" ${isSelected ? 'checked' : ''} onchange="handleAssessmentChange('${q.id}', ${level})">
+          <span class="assessment-option-label">
+            <span class="assessment-option-level">Level ${level}</span>
+            <span class="assessment-option-desc">${desc}</span>
+          </span>
+        </label>`;
+      }
+      html += '</div></div>';
+    }
+
+    // Contextual actions
+    if (a.actions && a.actions.length) {
+      const stQids = a.questions.map(q => q.id);
+      const stAnswered = stQids.filter(qid => typeof pageAnswers[qid] === 'number');
+      if (stAnswered.length > 0) {
+        const avg = stAnswered.reduce((s, qid) => s + pageAnswers[qid], 0) / stAnswered.length;
+        const relevant = a.actions.filter(act => {
+          if (act.max_level && avg > act.max_level) return false;
+          if (act.min_level && avg < act.min_level) return false;
+          return true;
+        });
+        if (relevant.length) {
+          html += `<div class="actions-box">
+            <h4>Recommended Actions</h4>
+            <ul class="actions-list">
+              ${relevant.map(act => `<li>${act.text}</li>`).join('')}
+            </ul>
+          </div>`;
+        }
+      }
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+function maturityLabel(score) {
+  if (score <= 1.5) return 'Initial — Ad hoc, no formal approach';
+  if (score <= 2.5) return 'Developing — Some practices emerging';
+  if (score <= 3.5) return 'Defined — Standardised practices in place';
+  if (score <= 4.5) return 'Managed — Measured and optimised';
+  return 'Optimised — Continuous improvement, industry-leading';
+}
+
+/* Global handler for assessment radio changes */
+window.handleAssessmentChange = function(questionId, level) {
+  const pageId = getPageId();
+  const assessment = getAssessment();
+  if (!assessment[pageId]) assessment[pageId] = {};
+  assessment[pageId][questionId] = level;
+  saveAssessment(assessment);
+
+  // Re-render to update score bar and actions
+  renderAssessmentPage(document.getElementById('tab-content'));
+
+  // Update selected state visually
+  const questionEl = document.querySelector(`[data-qid="${questionId}"]`);
+  if (questionEl) {
+    questionEl.querySelectorAll('.assessment-option').forEach(opt => {
+      opt.classList.toggle('selected', opt.querySelector('input').checked);
+    });
+  }
+};
+

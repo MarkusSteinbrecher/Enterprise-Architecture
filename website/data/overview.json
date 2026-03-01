@@ -1,0 +1,57 @@
+{
+  "findings": [
+    { "id": "F1", "summary": "Governance cycles run on quarters; AI deploys in weeks. Decisions are made on stale information." },
+    { "id": "F2", "summary": "Task-specific models outperform general-purpose ones at lower cost. Design for interchange, not lock-in." },
+    { "id": "F3", "summary": "Multi-agent systems are the emerging pattern — but bring cascade failures and feedback loops without precedent." },
+    { "id": "F4", "summary": "Automating a broken process produces an automated broken process. Redesign for agent strengths first." },
+    { "id": "F5", "summary": "70% of AI value lies in revenue processes, but most portfolios target productivity. The metrics don't match." },
+    { "id": "F6", "summary": "AI agents need onboarding, performance management, and retirement. They are workforce participants, not tools." },
+    { "id": "F7", "summary": "Only 22% of organisations have AI-ready infrastructure. The brain was built without the nervous system." },
+    { "id": "F8", "summary": "AI agents operate on explicit knowledge. Most organisations have never codified how they actually work." },
+    { "id": "F9", "summary": "Sovereignty is a first-order design input. Organisations treating it as post-hoc compliance will build in the wrong place." }
+  ],
+  "matrix": {
+    "dimensions": [
+      { "key": "speed", "label": "Speed", "subtitle": "Governance lags deployment" },
+      { "key": "predictability", "label": "Predictability", "subtitle": "Probabilistic, context-dependent" },
+      { "key": "scale", "label": "Scale", "subtitle": "Models × agents × pipelines" },
+      { "key": "readability", "label": "Machine Readability", "subtitle": "Prose standards, machine consumers" },
+      { "key": "observability", "label": "Observability", "subtitle": "Semantic failure is invisible" }
+    ],
+    "objectives": [
+      {
+        "label": "Assess",
+        "subtitle": "Current state & readiness",
+        "cells": {
+          "speed": "Maturity scores are quarterly snapshots. Agent risk profiles change weekly. By the time the board sees the assessment, the state it describes no longer exists.",
+          "predictability": "Pass/fail compliance cannot assess a system that is 99.5% compliant. Assessment must become statistical — distributions and confidence intervals, not checkboxes.",
+          "scale": "Scope expands from dozens of applications to hundreds of models, agents, and data pipelines, each versioned independently. Manual inventory is no longer viable.",
+          "readability": "You cannot assess what has not been written down. Most organisations have never codified how they actually work — and agents need that codification to operate.",
+          "observability": "Risk registers have no entry for 'agent produces confidently wrong output that passes every health check.' Assessments report green while agent risks are entirely unaddressed."
+        }
+      },
+      {
+        "label": "Plan",
+        "subtitle": "Target state & roadmaps",
+        "cells": {
+          "speed": "Roadmaps compress from years to sprints. Target architectures must be event-driven specifications that adapt, not fixed blueprints awaiting milestone review.",
+          "predictability": "Architecture defines guardrails, blast-radius boundaries, and escalation paths — not step-by-step prescriptions that assume deterministic execution.",
+          "scale": "Artifacts multiply faster than architects can review. Without auto-generation and automated validation, planning becomes the bottleneck that blocks delivery.",
+          "readability": "Target architectures must be machine-readable specifications agents can consume, not slide decks only humans read. Every capability needs a delivery model: human, augmented, or agent-native.",
+          "observability": "Every deployment plan must include semantic monitoring and kill switches. The failure mode is an agent that returns correct-looking results while causing business harm — undetectable by traditional means."
+        }
+      },
+      {
+        "label": "Govern",
+        "subtitle": "Standards & compliance",
+        "cells": {
+          "speed": "If governance takes longer than deployment, it governs the past. Policy-as-code running in deployment pipelines is the only option that matches agent deployment cadence.",
+          "predictability": "Non-deterministic outputs break audit trails. Compliance must shift from point-in-time review to continuous probabilistic monitoring with statistical thresholds.",
+          "scale": "Governance workload scales linearly with agents but governance capacity does not. Automate routine compliance or the EA function becomes the bottleneck to every AI initiative.",
+          "readability": "Governance rules that exist only as PDFs are unenforceable at agent speed. Every policy needs dual expression: human-readable for review, machine-executable for enforcement.",
+          "observability": "When an agent makes a confident wrong decision, the accountability chain — model provider to operator to business owner — must already be defined. You cannot trace what you did not instrument."
+        }
+      }
+    ]
+  }
+}

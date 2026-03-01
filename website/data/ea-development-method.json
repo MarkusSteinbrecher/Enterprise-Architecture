@@ -1,0 +1,751 @@
+{
+  "title": "EA Development Method",
+  "description": "How the Architecture Development Method must evolve from phased cycles to continuous, event-driven architecture development for the agentic enterprise.",
+  "subtopics": [
+    {
+      "id": "ea-development-overview",
+      "label": "EA Development Overview",
+      "traditional": {
+        "togaf_reference": "FC Part 1, Ch 1; FC Part 3, Chs 1-3",
+        "summary": "The ADM is an iterative cycle for developing Enterprise Architecture across vision, four domains, opportunities, migration, governance, and change management.",
+        "body_html": "<h4>Why</h4><p>Organisations need a structured, repeatable method that ensures comprehensive coverage of all architecture concerns and integrates with existing architectural assets.</p><h4>What</h4><p>A cycle of phases from Architecture Vision through Change Management, plus continuous Requirements Management. Supports three iteration types (landscape, development, capability), four named iteration cycles, and six engagement types. Outputs are versioned, reviewed, and approved through governance.</p><h4>How</h4><p>Designed as a generic reference method adaptable to enterprise context. Phases can be reordered based on maturity. Scope is controlled across four dimensions: breadth, depth, time period, and architecture domains. Architecture is developed at Strategic, Segment, and Capability levels via hierarchical ADM processes.</p><h4>Who</h4><p>Enterprise architects, domain architects, and solution architects, governed by the Architecture Board which ensures ADM compliance across all phases.</p>",
+        "key_concepts": [
+          "Iterative phased cycle",
+          "Four scoping dimensions",
+          "Three architecture levels",
+          "Enterprise Continuum",
+          "Architecture governance"
+        ]
+      },
+      "changes": {
+        "summary": "The ADM shifts from <mark>periodic human-driven cycles to continuous agent-assisted architecture</mark> where the bottleneck moves from production to review.",
+        "key_shifts": [
+          "Cycle cadence compresses from quarters to weeks, making <strong>human review capacity the binding constraint</strong>",
+          "Requirements Management becomes <strong>event-driven and agent-fed</strong>, not a periodic human intake process",
+          "Version control must handle <strong>high-volume agent drafts</strong> alongside governed human approvals",
+          "Scoping must define <strong>agent involvement boundaries</strong> per architecture effort upfront"
+        ],
+        "what_breaks": [
+          "Manual artifact versioning <strong>collapses under agent-generated volume</strong> and speed",
+          "Quarterly governance checkpoints <strong>cannot keep pace</strong> with compressed delivery cycles",
+          "Fixed phase sequencing fails when <strong>agent capability maturity</strong> determines what is feasible first"
+        ],
+        "what_survives": [
+          "Strategic/Segment/Capability levels become more important for <strong>scoping agent involvement</strong>",
+          "Phase structure and <strong>governance intent remain sound</strong> as a reference framework",
+          "The principle of adapting the method to enterprise context is <strong>unchanged but urgent</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Continuous architecture with human-gated decisions</mark> — agents maintain the landscape, humans direct strategy and handle exceptions.",
+        "description": "Agents monitor the live architecture, <strong>detect drift</strong>, and draft content continuously. Human architects review, govern, and direct strategy through tiered governance that automates routine validation and reserves human judgement for material decisions.",
+        "key_practices": [
+          "Define <strong>agent and human roles per ADM phase</strong> in a documented execution model",
+          "Implement tiered review: <strong>automated checks for routine agent updates</strong>, human sign-off for material changes",
+          "Map <strong>AI regulatory requirements</strong> (EU AI Act, NIST AI RMF) to specific ADM phase checkpoints",
+          "Tag every artifact with <strong>provenance metadata</strong> showing how and by whom it was produced"
+        ]
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "adm-q1",
+            "text": "Our ADM cycle includes defined roles for AI agents alongside human architects.",
+            "levels": {
+              "1": "No agent involvement in architecture work; all activities are human-performed.",
+              "2": "Agents used ad hoc by individual architects for research or drafting.",
+              "3": "Defined agent roles per ADM phase with documented execution model.",
+              "4": "Agents execute discovery, baseline, and gap analysis systematically with human governance.",
+              "5": "Continuous agent-assisted architecture with automated validation and human-gated decisions."
+            }
+          },
+          {
+            "id": "adm-q2",
+            "text": "Our governance framework addresses agent-generated architecture artifacts with tiered review.",
+            "levels": {
+              "1": "No governance distinction between human and agent-generated content.",
+              "2": "Awareness that agents produce artifacts but no formal governance process.",
+              "3": "Tiered review process: automated checks for agent content, human review for material changes.",
+              "4": "Provenance metadata tracked on all artifacts; review rigour calibrated by source and impact.",
+              "5": "Fully integrated governance with real-time agent monitoring, automated compliance, and exception-based human review."
+            }
+          },
+          {
+            "id": "adm-q3",
+            "text": "Our ADM integrates with AI-specific governance and regulatory frameworks.",
+            "levels": {
+              "1": "No awareness of AI governance frameworks in architecture practice.",
+              "2": "AI governance requirements acknowledged but not integrated into ADM phases.",
+              "3": "Explicit AI governance checkpoints defined per ADM phase.",
+              "4": "AI regulatory compliance (EU AI Act, NIST AI RMF) woven into ADM deliverables.",
+              "5": "Continuous regulatory monitoring with automated compliance checking across all agent-related architecture."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Document which ADM activities agents currently perform and identify gaps in the execution model.",
+            "max_level": 2
+          },
+          {
+            "text": "Implement provenance metadata on architecture artifacts distinguishing human, agent, and collaborative production.",
+            "max_level": 3
+          },
+          {
+            "text": "Establish tiered governance with automated validation gates for agent-produced content.",
+            "max_level": 4
+          },
+          {
+            "text": "Map AI governance framework requirements to specific ADM phases and integrate compliance checking.",
+            "min_level": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "architecture-vision",
+      "label": "Architecture Vision",
+      "traditional": {
+        "togaf_reference": "FC Part 1, Ch 3",
+        "summary": "The Architecture Vision develops a high-level aspirational vision of target capabilities and secures approval for a Statement of Architecture Work.",
+        "body_html": "<h4>Why</h4><p>Establishes the architecture engagement scope, secures sponsorship, and aligns stakeholders before committing resources to detailed architecture development across domains.</p><h4>What</h4><p>Produces an Architecture Vision, approved Statement of Architecture Work, refined business goals and principles, capability assessment, and initial stakeholder map. Uses business scenarios to discover requirements and articulate the vision. Evaluates readiness for business transformation.</p><h4>How</h4><p>Eleven steps from establishing the project through identifying stakeholders, confirming goals, evaluating capabilities, assessing readiness, defining scope, elaborating principles, developing the vision, defining KPIs, identifying risks, and securing approval. Techniques include business scenarios, stakeholder management, architecture principles, and business transformation readiness assessment.</p><h4>Who</h4><p>Enterprise architects working with sponsors, key stakeholders, and the Architecture Board. Stakeholder mapping identifies involvement levels and concerns for the Communications Plan.</p>",
+        "key_concepts": [
+          "Statement of Architecture Work",
+          "Business scenarios",
+          "Stakeholder management",
+          "Capability assessment",
+          "Transformation readiness"
+        ]
+      },
+      "changes": {
+        "summary": "The vision must declare <mark>which capabilities will be human, augmented, or agent-native</mark> before downstream phases default to human-only design.",
+        "key_shifts": [
+          "Stakeholder maps must add <strong>AI platform teams, legal, HR, and workforce planning</strong> as first-class participants",
+          "Business scenarios must include <strong>agent-involved variants</strong> with failure and escalation paths",
+          "Readiness assessment adds <strong>agent-specific factors</strong>: data quality, regulatory clearance, organisational willingness",
+          "Architecture Principles must cover <strong>agent transparency, human override rights, and accountability</strong>"
+        ],
+        "what_breaks": [
+          "Visions silent on agents produce <strong>human-only architectures</strong> that are outdated on delivery",
+          "Traditional stakeholder maps <strong>miss the groups whose buy-in</strong> agent deployment actually requires",
+          "Standard readiness assessments score green while <strong>agent-specific readiness is entirely unaddressed</strong>"
+        ],
+        "what_survives": [
+          "Establishing scope before detailed work remains <strong>essential and becomes more so</strong>",
+          "Business scenarios technique <strong>extends naturally</strong> to agent-involved variants",
+          "The principles template (name, statement, rationale, implications) <strong>needs no structural change</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "The Architecture Vision produces an <mark>Agent Deployment Ambition Statement</mark> forcing leadership to commit on agent scope, readiness, and workforce impact.",
+        "description": "The Architecture Vision positions agent deployment as a <strong>strategic decision, not a technology afterthought</strong>. Agent readiness, AI capability scanning, and workforce impact assessment run alongside traditional Architecture Vision activities.",
+        "key_practices": [
+          "Produce an <strong>Agent Deployment Ambition Statement</strong>: augment selectively, redesign targeted areas, or transform comprehensively",
+          "Scan current AI capabilities to separate <strong>production-ready from aspirational</strong> before committing scope",
+          "Define <strong>agent-governing principles</strong> covering transparency, human override, and accountability",
+          "Assess <strong>workforce impact at vision stage</strong> so communications address resistance before it builds"
+        ]
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "vision-q1",
+            "text": "Our Architecture Vision explicitly addresses agent deployment scope and ambition level.",
+            "levels": {
+              "1": "Architecture Vision makes no mention of AI agents or delivery model choices.",
+              "2": "Agent deployment acknowledged as a possibility but not scoped or committed.",
+              "3": "Vision includes explicit agent deployment ambition with capability areas identified.",
+              "4": "Agent Deployment Ambition Statement produced with workforce impact assessment and readiness scores.",
+              "5": "Vision fully integrates agent strategy with business scenarios, readiness assessment, and AI landscape scan."
+            }
+          },
+          {
+            "id": "vision-q2",
+            "text": "Our stakeholder management includes agent-era stakeholder groups with their specific concerns.",
+            "levels": {
+              "1": "Stakeholder map includes only traditional EA stakeholders.",
+              "2": "AI/technology teams consulted informally but not mapped as formal stakeholders.",
+              "3": "Expanded stakeholder map includes AI teams, legal, HR, and operational managers.",
+              "4": "Agent-specific concerns (reliability, job impact, regulatory compliance) formally captured per group.",
+              "5": "Communications Plan proactively addresses workforce concerns and agent governance transparency."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Add an Agent Deployment Ambition Statement to your next Architecture Vision document.",
+            "max_level": 2
+          },
+          {
+            "text": "Extend your stakeholder map template to include AI platform teams, legal/compliance, HR, and front-line managers.",
+            "max_level": 3
+          },
+          {
+            "text": "Define agent-governing Architecture Principles using the standard name/statement/rationale/implications template.",
+            "max_level": 4
+          },
+          {
+            "text": "Integrate AI landscape scanning and agent readiness assessment into standard Architecture Vision activities.",
+            "min_level": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "business-architecture",
+      "label": "Business Architecture",
+      "traditional": {
+        "togaf_reference": "FC Part 1, Ch 4",
+        "summary": "Business Architecture develops the Target Business Architecture describing how the enterprise must operate to achieve business goals set in the vision.",
+        "body_html": "<h4>Why</h4><p>Translates the Architecture Vision into a detailed business operating model: capabilities, value streams, processes, roles, and organisational structure that achieve strategic goals.</p><h4>What</h4><p>Produces baseline and target business architectures covering organisation structure, business functions, capabilities, services, processes, roles, and data models. Gap analysis identifies roadmap components. Outputs include correlation matrices and technical requirements for downstream domains.</p><h4>How</h4><p>Eight steps from selecting reference models and viewpoints through baseline development, target development, gap analysis, roadmap definition, impact resolution, stakeholder review, and finalisation. Key techniques include capability mapping, value stream mapping, organisation mapping, information mapping, and process modeling (BPMN/IDEF).</p><h4>Who</h4><p>Business architects working with business stakeholders, process owners, and capability owners. Stakeholder review ensures fitness for purpose against original motivation.</p>",
+        "key_concepts": [
+          "Capability mapping",
+          "Value stream mapping",
+          "Organisation mapping",
+          "Process modeling",
+          "Gap analysis"
+        ]
+      },
+      "changes": {
+        "summary": "Every capability needs a <mark>delivery model classification — human, augmented, or agent-native</mark> — determining investment, workforce, and governance decisions downstream.",
+        "key_shifts": [
+          "Capability maps add a <strong>delivery model dimension</strong> with agent readiness scoring per capability",
+          "Process models design for <strong>agent strengths</strong> — parallel execution, consistency — not mimicked human workflows",
+          "Gap analysis classifies each gap by closure method: <strong>build, automate, or assign to agent</strong>",
+          "Organisation models represent <strong>agents as workforce participants</strong> with defined accountability chains"
+        ],
+        "what_breaks": [
+          "Human-only process design misses <strong>agent-native delivery opportunities</strong> that competitors will exploit",
+          "Undocumented processes block agent deployment — <strong>baseline gaps become hard prerequisites</strong>",
+          "Traditional role definitions cannot represent <strong>hybrid human-agent teams</strong> or escalation paths"
+        ],
+        "what_survives": [
+          "Capability mapping gains importance as the <strong>anchor point for delivery model classification</strong> decisions",
+          "Value stream mapping extends naturally to show <strong>human, augmented, and agent-native stages</strong>",
+          "Logical data modeling applies unchanged, though <strong>scope expands to include agent entities</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "Business Architecture produces <mark>delivery model classifications and agent readiness scores</mark> that drive investment sequencing and workforce transition planning.",
+        "description": "Every business capability carries a <strong>target delivery model with readiness scores</strong> across data quality, process documentation, rule formalisability, and regulatory clearance. Human-agent interaction patterns define handoffs, escalation, and feedback loops per process.",
+        "key_practices": [
+          "Classify each capability by <strong>delivery model with readiness scores</strong> across data, process, rules, and regulation",
+          "Design <strong>agent-native processes</strong> for agent strengths, not digitised versions of human workflows",
+          "Define <strong>human-agent interaction patterns</strong>: handoff triggers, escalation paths, and feedback loops",
+          "Sequence <strong>workforce transition by capability area</strong> with role changes, reskilling, and change management"
+        ]
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "bus-q1",
+            "text": "Our business capability model includes delivery model classification for each capability.",
+            "levels": {
+              "1": "No delivery model classification; all capabilities assumed to be human-delivered.",
+              "2": "Informal awareness of which capabilities could be automated but no formal classification.",
+              "3": "Each capability formally classified as human, augmented, or agent-native with rationale.",
+              "4": "Agent readiness scores (data quality, process documentation, regulatory) assessed per capability.",
+              "5": "Delivery model classification drives investment sequencing, workforce planning, and governance design."
+            }
+          },
+          {
+            "id": "bus-q2",
+            "text": "Our business process designs explicitly include human-agent interaction patterns and agent failure modes.",
+            "levels": {
+              "1": "All processes designed for human-only execution.",
+              "2": "Some processes informally involve agents but interaction patterns are not designed.",
+              "3": "Agent-native processes designed for agent strengths with documented handoff points.",
+              "4": "Agent failure scenarios (hallucination, scope drift) modelled as first-class alternative flows.",
+              "5": "Continuous monitoring of human-agent interaction effectiveness with feedback-driven process refinement."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Add a delivery model column to your capability map: human, augmented, or agent-native per capability.",
+            "max_level": 2
+          },
+          {
+            "text": "Assess agent readiness per capability across data quality, process documentation, and regulatory dimensions.",
+            "max_level": 3
+          },
+          {
+            "text": "Design explicit human-agent interaction patterns for your top three agent-native capabilities.",
+            "max_level": 4
+          },
+          {
+            "text": "Embed workforce transition planning into Business Architecture delivery alongside technical outputs.",
+            "min_level": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "application-architecture",
+      "label": "Application Architecture",
+      "traditional": {
+        "togaf_reference": "FC Part 1, Ch 7",
+        "summary": "Application Architecture develops the Target Application Architecture that enables the Business Architecture through application components, services, and integration.",
+        "body_html": "<h4>Why</h4><p>Defines the application landscape needed to deliver business capabilities: which applications exist, what functions they provide, how they integrate, and what gaps must be closed.</p><h4>What</h4><p>Produces baseline and target application architectures with portfolio catalogs, matrices mapping applications to business services and data, and diagrams showing integration, deployment, and operational views. Gap analysis identifies roadmap components with interoperability and technical requirements for Technology Architecture.</p><h4>How</h4><p>Nine steps from selecting reference models and viewpoints through baseline and target development, gap analysis, roadmap definition, impact resolution, stakeholder review, and finalisation. The modeling process decomposes complex applications, removes duplicate functionality, and maps logical to physical application components.</p><h4>Who</h4><p>Application architects working with development teams, integration specialists, and business analysts. Uses the III-RM reference model for integrated information infrastructure.</p>",
+        "key_concepts": [
+          "Application Portfolio",
+          "Application-to-service mapping",
+          "Interoperability requirements",
+          "III-RM reference model",
+          "Logical/physical decomposition"
+        ]
+      },
+      "changes": {
+        "summary": "Agents are <mark>first-class portfolio entries requiring orchestration and observability architecture</mark> — unmanaged agents become shadow IT at machine speed.",
+        "key_shifts": [
+          "Agents cataloged as <strong>portfolio entries</strong> with owner, model, tools, and autonomy level or they proliferate ungoverned",
+          "New architectural views needed: <strong>agent interaction, orchestration topology, and deployment patterns</strong>",
+          "Interoperability extends to <strong>agent-to-application, agent-to-agent, and agent-to-human</strong> interaction protocols",
+          "Non-functional requirements expand to include <strong>inference latency, guardrail response time, and trace completeness</strong>"
+        ],
+        "what_breaks": [
+          "Portfolio management excluding agents allows <strong>uncontrolled proliferation</strong> with no cost or risk visibility",
+          "API-centric interoperability standards miss agent orchestration patterns like <strong>delegation and multi-step reasoning</strong>",
+          "Availability-focused monitoring misses agent failure modes: <strong>hallucination, scope drift, and reasoning errors</strong>"
+        ],
+        "what_survives": [
+          "Application decomposition applies with greater force to <strong>right-sizing agent scope</strong> and responsibilities",
+          "Portfolio management discipline extends directly to agents with additional <strong>agent-specific attributes</strong>",
+          "Platform-independent business logic descriptions enable <strong>switching delivery models</strong> without rewriting rules"
+        ]
+      },
+      "future_state": {
+        "summary": "Agents are managed as <mark>portfolio entries with centralised guardrail and observability infrastructure</mark>, not per-agent custom code.",
+        "description": "Every agent has a <strong>defined owner, lifecycle state, and operational SLAs</strong> within the application portfolio. Guardrail enforcement, orchestration, and observability are shared platform services ensuring consistent governance across all agents.",
+        "key_practices": [
+          "Catalog every agent with <strong>purpose, model, tools, autonomy level, guardrails</strong>, and owning team",
+          "Select agent orchestration patterns per business function: <strong>single-agent, multi-agent, or human-in-the-loop</strong>",
+          "Implement <strong>guardrails as platform infrastructure</strong>: input validation, output checks, scope constraints, cost controls",
+          "Build observability for <strong>reasoning traces, tool call monitoring</strong>, cost per interaction, and decision audit trails"
+        ]
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "app-q1",
+            "text": "Our Application Portfolio includes autonomous agents as formally managed entries.",
+            "levels": {
+              "1": "No agents in the portfolio; agents deployed informally by individual teams.",
+              "2": "Some agents known informally but not cataloged or governed as applications.",
+              "3": "Agents cataloged with owner, purpose, model, and tools; managed through standard portfolio governance.",
+              "4": "Agent lifecycle managed: development, staged deployment, monitoring, and retirement criteria defined.",
+              "5": "Full agent portfolio management with version tracking, guardrail compliance, cost monitoring, and automated drift detection."
+            }
+          },
+          {
+            "id": "app-q2",
+            "text": "We have defined agent guardrail and observability architecture as shared platform services.",
+            "levels": {
+              "1": "No guardrails or observability for agent applications.",
+              "2": "Individual agents have ad hoc guardrails; no shared infrastructure.",
+              "3": "Centralised guardrail framework deployed covering input validation, output checks, and scope constraints.",
+              "4": "Full observability stack: reasoning traces, tool call monitoring, decision audit trails, and cost tracking.",
+              "5": "Automated guardrail compliance monitoring with real-time alerting and regulatory audit capability."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Audit current agent deployments and create initial portfolio entries with owner, purpose, and model details.",
+            "max_level": 2
+          },
+          {
+            "text": "Define standard agent catalog attributes: autonomy level, guardrails, tools accessed, data consumed/produced.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement centralised guardrail infrastructure as a shared platform service rather than per-agent code.",
+            "max_level": 4
+          },
+          {
+            "text": "Build agent observability covering reasoning traces, cost per interaction, and regulatory audit trails.",
+            "min_level": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "data-architecture",
+      "label": "Data Architecture",
+      "traditional": {
+        "togaf_reference": "FC Part 1, Ch 6",
+        "summary": "Data Architecture develops the Target Data Architecture defining how enterprise data is structured, managed, governed, and made available to support the Business Architecture.",
+        "body_html": "<h4>Why</h4><p>Data is the foundation for all enterprise capabilities. The Data Architecture ensures data is defined, structured, and governed to support business operations, decision-making, and regulatory compliance.</p><h4>What</h4><p>Produces baseline and target data architectures covering data entities, logical and physical data components, data management policies, and data governance structures. Gap analysis identifies data remediation and migration requirements. Addresses data at rest, in motion, in use, and as open data.</p><h4>How</h4><p>Steps mirror other domain phases: select reference models and viewpoints, develop baseline and target descriptions, perform gap analysis, define roadmap components, resolve impacts, review with stakeholders, and finalise. Key techniques include data structure analysis, data management, data migration, and data governance across structure, management system, and people dimensions.</p><h4>Who</h4><p>Data architects and data stewards working with business data owners, application teams, and compliance officers. Data governance bodies manage data entity standards and lifecycle.</p>",
+        "key_concepts": [
+          "Data entities and components",
+          "Data at rest/motion/use",
+          "Data governance",
+          "Data migration",
+          "Data quality"
+        ]
+      },
+      "changes": {
+        "summary": "Data quality shifts from <mark>reporting concern to agent deployment gate</mark> — poor data now propagates errors at machine speed.",
+        "key_shifts": [
+          "Data architecture must cover <strong>unstructured data</strong>: chunking strategies, embedding pipelines, and vector stores",
+          "Data quality monitoring must run <strong>continuously</strong> because agents surface and amplify issues in real time",
+          "Agent-generated data needs <strong>clear ownership rules and validation</strong> before entering trusted stores",
+          "Data lineage must track how agents <strong>transform, combine, and propagate data</strong> across chains"
+        ],
+        "what_breaks": [
+          "Periodic data quality reviews are <strong>too slow</strong> — agents hit bad data and fail within minutes",
+          "Structured-data-only architectures miss the <strong>unstructured knowledge</strong> agents need via RAG",
+          "Existing governance cannot handle the <strong>volume and velocity</strong> of agent-created data artifacts"
+        ],
+        "what_survives": [
+          "Entity-to-logical-to-physical modelling extends to <strong>non-relational and vector stores</strong>",
+          "Core governance dimensions — structure, management, people — apply with <strong>agent-specific extensions</strong>",
+          "Data migration disciplines inform <strong>vector store population and embedding pipeline design</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "Data Architecture maps <mark>agent data dependencies with quality SLAs per use-case</mark>, gating deployment on data fitness.",
+        "description": "Every agent use-case has <strong>declared data dependencies</strong> with quality thresholds and latency requirements. Unstructured data architecture — chunking, embedding, vector storage, retrieval — is governed alongside traditional data assets.",
+        "key_practices": [
+          "Map each agent use-case to required data entities with <strong>measurable quality and latency thresholds</strong>",
+          "Implement <strong>continuous data quality monitoring</strong> with automated alerting when agent-grade SLAs breach",
+          "Define <strong>unstructured data standards</strong>: chunking strategies, embedding model selection, and retrieval testing",
+          "Assign <strong>ownership of agent-generated data</strong> with validation rules before trusted store entry"
+        ]
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "data-q1",
+            "text": "We have formal data quality thresholds defined per agent use-case with automated monitoring.",
+            "levels": {
+              "1": "No data quality measurement specific to agent consumption.",
+              "2": "General awareness that agents need good data but no formal thresholds or monitoring.",
+              "3": "Data quality thresholds defined per agent use-case; periodic measurement in place.",
+              "4": "Automated continuous monitoring with alerts when quality drops below agent-grade thresholds.",
+              "5": "Data quality SLAs enforced with automated agent suspension when thresholds are breached."
+            }
+          },
+          {
+            "id": "data-q2",
+            "text": "Our Data Architecture includes unstructured data management for agent RAG patterns.",
+            "levels": {
+              "1": "No architecture for unstructured data; agents have no access to enterprise knowledge bases.",
+              "2": "Ad hoc document ingestion for individual agent projects; no enterprise architecture.",
+              "3": "Defined chunking, embedding, and vector store architecture for key knowledge domains.",
+              "4": "Enterprise-wide unstructured data pipeline with freshness management and retrieval quality monitoring.",
+              "5": "Comprehensive unstructured data architecture with automated ingestion, quality scoring, and relevance tuning."
+            }
+          },
+          {
+            "id": "data-q3",
+            "text": "We have governance processes for data that agents generate, including ownership and validation.",
+            "levels": {
+              "1": "Agent-generated data not governed; no awareness of agents as data producers.",
+              "2": "Awareness that agents produce data but no formal governance or ownership.",
+              "3": "Agent-generated data has defined owners and validation rules before entering trusted stores.",
+              "4": "Automated validation of agent-generated data with human review for high-impact outputs.",
+              "5": "Full lifecycle governance of agent-generated data: quality assurance, audit trails, retention policies."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Map your top agent use-cases to their data dependencies and measure current quality against agent requirements.",
+            "max_level": 2
+          },
+          {
+            "text": "Define formal data quality SLAs per agent use-case and implement automated monitoring.",
+            "max_level": 3
+          },
+          {
+            "text": "Build an unstructured data architecture covering chunking, embedding, vector storage, and retrieval pipelines.",
+            "max_level": 4
+          },
+          {
+            "text": "Establish agent-generated data governance: validation rules, ownership, and trusted store entry conditions.",
+            "min_level": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "technology-architecture",
+      "label": "Technology Architecture",
+      "traditional": {
+        "togaf_reference": "FC Part 1, Ch 8",
+        "summary": "Technology Architecture develops the Target Technology Architecture defining the infrastructure, platforms, and technology services that deliver business, data, and application building blocks.",
+        "body_html": "<h4>Why</h4><p>Translates architecture requirements from Phases B and C into technology infrastructure: compute, storage, network, platforms, and services that enable the target application and data architectures.</p><h4>What</h4><p>Produces baseline and target technology architectures covering technology components, platform decompositions, environments, processing loads, physical communications, hardware specifications, and stakeholder views. Gap analysis drives the technology roadmap. Evaluates emerging technologies for transformation opportunities.</p><h4>How</h4><p>Nine steps from selecting reference models and viewpoints through baseline and target development, gap analysis, roadmap definition, impact resolution, stakeholder review, and finalisation. The modeling process defines technology taxonomies, inventories deployed technology, and performs sizing, costing, and capacity planning.</p><h4>Who</h4><p>Technology architects and infrastructure architects working with platform engineering, operations, and security teams. Uses the standard reference models (TRM and III-RM) as reference models.</p>",
+        "key_concepts": [
+          "Technology taxonomy",
+          "Platform decomposition",
+          "Capacity planning",
+          "Emerging technology assessment",
+          "Service portfolio composition"
+        ]
+      },
+      "changes": {
+        "summary": "A <mark>new AI platform layer — model serving, orchestration, vector databases, guardrails</mark> — introduces fundamentally different cost and capacity models.",
+        "key_shifts": [
+          "Technology taxonomy must add <strong>AI-specific categories</strong>: inference, embedding, vector search, orchestration, guardrails",
+          "Capacity planning shifts from concurrent users to <strong>token volume, GPU burst utilisation</strong>, and variable latency",
+          "Vendor evaluation must account for <strong>rapid market churn and high lock-in risk</strong> in immature AI tooling",
+          "DR plans must cover <strong>model provider dependencies</strong>, agent state, and multi-model failover"
+        ],
+        "what_breaks": [
+          "Concurrent-user capacity planning fails for inference workloads that <strong>scale with token volume</strong>",
+          "Review boards <strong>without AI expertise</strong> approve infrastructure inadequate for agent workloads",
+          "Standard DR plans restoring servers and databases miss <strong>model provider and agent state dependencies</strong>"
+        ],
+        "what_survives": [
+          "Service portfolio composition applies directly to <strong>assembling AI service stacks</strong>",
+          "Technology taxonomy and inventory practices extend to <strong>cover AI platform components</strong>",
+          "Service boundary analysis remains valid with <strong>agent-specific granularity trade-offs</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "An <mark>enterprise AI platform is defined as shared infrastructure</mark> with cost governance, model lifecycle management, and containment controls.",
+        "description": "The AI platform is a <strong>formally governed technology layer</strong> covering model serving, agent runtimes, vector databases, and orchestration. Cost governance tracks inference spend per agent use-case with defined budgets and alerts.",
+        "key_practices": [
+          "Define the AI platform as distinct <strong>shared infrastructure</strong> with clear ownership and an operating model",
+          "Implement cost governance with <strong>token budgets, GPU utilisation targets</strong>, and per-agent spend alerting",
+          "Build <strong>model lifecycle management</strong>: version registry, staged rollouts, and behaviour regression testing",
+          "Deploy <strong>agent containment first</strong>: network segmentation, resource quotas, tool access policies, kill switches"
+        ]
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "tech-q1",
+            "text": "We have a defined enterprise AI platform architecture as shared technology infrastructure.",
+            "levels": {
+              "1": "No AI platform; individual teams use personal API keys and ad hoc cloud resources.",
+              "2": "Some shared AI resources exist but no formal platform architecture.",
+              "3": "Enterprise AI platform defined covering model serving, orchestration, and observability.",
+              "4": "Platform includes cost governance, model lifecycle management, and standard agent runtime environments.",
+              "5": "Fully governed AI platform with containment controls, automated compliance, and cross-provider failover."
+            }
+          },
+          {
+            "id": "tech-q2",
+            "text": "Our capacity planning and cost governance specifically address AI/agent workload patterns.",
+            "levels": {
+              "1": "No AI-specific capacity planning; GPU costs unknown or unmanaged.",
+              "2": "AI costs tracked at aggregate level but not per agent or use-case.",
+              "3": "Capacity planning includes GPU, inference costs, and token budgets per agent use-case.",
+              "4": "Automated cost alerting with budget enforcement and cost-performance optimisation per agent.",
+              "5": "Predictive capacity planning with dynamic resource allocation and cross-provider cost optimisation."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Inventory all AI infrastructure including shadow deployments: API keys, GPU instances, model endpoints.",
+            "max_level": 2
+          },
+          {
+            "text": "Define an AI platform architecture with standard components for model serving, orchestration, and observability.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement AI cost governance with per-agent token budgets and automated alerting.",
+            "max_level": 4
+          },
+          {
+            "text": "Build model lifecycle management with version registries, staged rollout, and behaviour regression testing.",
+            "min_level": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "opportunities-solutions",
+      "label": "Opportunities & Solutions",
+      "traditional": {
+        "togaf_reference": "FC Part 1, Ch 9",
+        "summary": "Opportunities & Solutions generates the Architecture Roadmap and Implementation and Migration Plan by consolidating gap analysis from Business through Technology Architecture into sequenced work packages and Transition Architectures.",
+        "body_html": "<h4>Why</h4><p>Translates architecture analysis into an actionable delivery plan: which work gets done, in what order, grouped into which projects, with what dependencies and risk mitigations.</p><h4>What</h4><p>Produces the Architecture Roadmap with work packages, Transition Architectures, and draft Implementation and Migration Plan. Consolidates gaps, solutions, and dependencies from all domain architectures. Defines Solution Building Blocks and confirms readiness for business transformation.</p><h4>How</h4><p>Eleven steps: confirm change attributes, determine business constraints, consolidate gap analysis, review requirements across functions, reconcile interoperability, refine dependencies, confirm readiness and risk, formulate migration strategy (greenfield/revolutionary/evolutionary), identify work packages, identify Transition Architectures, and create the roadmap. Three implementation approaches: greenfield, revolutionary, evolutionary.</p><h4>Who</h4><p>Enterprise architects working with programme managers, portfolio managers, and business sponsors. Senior management approves business value assessment weightings.</p>",
+        "key_concepts": [
+          "Architecture Roadmap",
+          "Transition Architectures",
+          "Work packages",
+          "Consolidated Gaps matrix",
+          "Implementation Factor Catalog"
+        ]
+      },
+      "changes": {
+        "summary": "Agent deployments need <mark>pilot-gate-scale delivery patterns</mark> because agent behaviour in production cannot be predicted from design alone.",
+        "key_shifts": [
+          "Shared agent platform (compute, guardrails, observability) must be a <strong>prerequisite work package</strong> before any capability agent",
+          "Transition Architectures must define <strong>stable human-agent coexistence states</strong>, not just intermediate target states",
+          "Evolutionary delivery dominates — <strong>expand-from-pilot replaces big-bang</strong> for every agent capability",
+          "Dependency analysis must include <strong>data quality, governance readiness, and regulatory clearance</strong> per jurisdiction"
+        ],
+        "what_breaks": [
+          "Linear work package sequencing fails — agents require <strong>pilot-validate-scale stages</strong> with conditional progression",
+          "Fixed-timeline roadmaps collapse when scale-out decisions <strong>depend on pilot outcome data</strong>",
+          "Constraint analysis misses <strong>jurisdiction-by-jurisdiction regulatory variation</strong> for agent deployment"
+        ],
+        "what_survives": [
+          "Greenfield, revolutionary, and evolutionary approaches remain valid — <strong>evolutionary becomes the default</strong>",
+          "Consolidated Gaps matrix extends directly with a <strong>delivery-model classification column</strong>",
+          "Grouping work packages by dependency logic transfers <strong>without structural change</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "Roadmaps include <mark>conditional gates where pilot results determine scale-out</mark>, with rollback and dual-running designed as architectural requirements.",
+        "description": "Agent platform infrastructure is sequenced as a foundational work package before any capability-specific agents. Every agent work package follows <strong>pilot-gate-scale</strong> with measurable pass criteria, and each transition state includes rollback to human fallback.",
+        "key_practices": [
+          "Sequence a <strong>foundational Agent Platform work package</strong>: compute, guardrails, observability, and governance tooling",
+          "Define <strong>measurable gate criteria</strong> (accuracy, error rate, latency) before any agent scales beyond pilot",
+          "Design <strong>coexistence routing</strong>: which requests go to agents, which to humans, and how handoffs work",
+          "Build <strong>rollback into every transition</strong> including human re-mobilisation timelines and fallback capacity"
+        ]
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "opp-q1",
+            "text": "Our Architecture Roadmap separates foundational agent infrastructure from capability-specific agent deployments.",
+            "levels": {
+              "1": "No agent infrastructure planning; agents deployed ad hoc without shared platform.",
+              "2": "Awareness of shared infrastructure needs but no dedicated foundation work package.",
+              "3": "Dedicated agent infrastructure work package sequenced before capability-specific deployments.",
+              "4": "Infrastructure includes platform, guardrails, observability, and governance with readiness gates.",
+              "5": "Fully integrated roadmap with conditional decision points, coexistence design, and rollback strategies."
+            }
+          },
+          {
+            "id": "opp-q2",
+            "text": "Our agent deployment work packages follow a pilot-gate-scale pattern with explicit validation criteria.",
+            "levels": {
+              "1": "Agent deployments proceed directly to production without piloting.",
+              "2": "Informal pilots run but without defined success criteria or formal gates.",
+              "3": "Pilot-gate-scale pattern defined with quantitative validation criteria per work package.",
+              "4": "Validation gates enforce data quality, accuracy, governance compliance, and user acceptance.",
+              "5": "Automated validation with continuous monitoring; scale-out decisions data-driven and governance-approved."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Create a dedicated Agent Infrastructure Foundation work package in your next Architecture Roadmap.",
+            "max_level": 2
+          },
+          {
+            "text": "Define pilot-gate-scale delivery pattern with explicit validation criteria for agent work packages.",
+            "max_level": 3
+          },
+          {
+            "text": "Design coexistence architecture for the transition period: routing, handoffs, and parallel monitoring.",
+            "max_level": 4
+          },
+          {
+            "text": "Integrate AI regulatory compliance sequencing as a first-class roadmap constraint.",
+            "min_level": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "migration-planning",
+      "label": "Migration Planning",
+      "traditional": {
+        "togaf_reference": "FC Part 1, Ch 10",
+        "summary": "Migration Planning finalises the Architecture Roadmap and Implementation and Migration Plan, prioritising work packages through business value assessment and coordinating with the enterprise change portfolio.",
+        "body_html": "<h4>Why</h4><p>Converts the draft roadmap into an approved, actionable migration plan coordinated with the enterprise's overall change portfolio and prioritised by business value and risk.</p><h4>What</h4><p>Produces the finalised Architecture Roadmap, approved Implementation and Migration Plan, project charters, Transition Architecture state descriptions, and implementation governance model. Uses business value assessment (value-risk matrix) and cost-benefit analysis to prioritise. Architecture Contract governs implementation.</p><h4>How</h4><p>Steps include confirming management framework interactions, assigning business value, estimating resource requirements, planning Transition Architectures, generating the implementation roadmap, and completing the Architecture Development cycle. Key techniques include business value assessment, cost-benefit analysis, implementation factor catalog, architecture definition increments table, and transition state evolution table.</p><h4>Who</h4><p>Enterprise architects working with programme managers, PMO, finance, and senior sponsors. Architecture Contract requires sign-off from sponsoring organisation and development teams.</p>",
+        "key_concepts": [
+          "Business value assessment",
+          "Cost-benefit analysis",
+          "Architecture Contract",
+          "Transition state evolution",
+          "Implementation governance"
+        ]
+      },
+      "changes": {
+        "summary": "Migration plans become <mark>parallel-track instruments managing human, agent, and hybrid streams</mark> with readiness gates and time-boxed dual-running periods.",
+        "key_shifts": [
+          "Business value assessment adds agent-specific dimensions: <strong>throughput, consistency, availability, and scaling economics</strong>",
+          "Risk criteria must capture <strong>model accuracy degradation</strong>, regulatory exposure, and risks that shift mid-implementation",
+          "Resource planning must cover <strong>compute budget, model licensing, AI/ML talent</strong>, and ongoing governance overhead",
+          "Architecture Contracts require agent-specific terms: <strong>accuracy SLAs, drift monitoring, and rollback triggers</strong>"
+        ],
+        "what_breaks": [
+          "Single-track migration plans cannot coordinate <strong>human and agent streams running at different speeds</strong>",
+          "Traditional cost-benefit models undercount governance overhead and <strong>overestimate early agent productivity</strong>",
+          "Implementation governance scoped to delivery completion fails — agents need <strong>continuous operational governance</strong>"
+        ],
+        "what_survives": [
+          "Business value assessment extends naturally with <strong>agent-specific value and risk dimensions</strong>",
+          "Implementation factor catalog absorbs <strong>agent-specific factors</strong> without structural change",
+          "Transition state evolution table works with an added <strong>agent-readiness state marker</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "Migration plans enforce <mark>sequenced readiness gates and time-boxed dual-running</mark> with explicit cutover triggers from human to agent delivery.",
+        "description": "Each agent migration passes <strong>ordered gates</strong> — data quality, governance approval, monitoring deployment, pilot validation — before entering a time-boxed dual-running period. Implementation governance extends beyond delivery into continuous agent operation.",
+        "key_practices": [
+          "Sequence readiness gates in order: <strong>data quality, governance sign-off, monitoring live, pilot passed, users trained</strong>",
+          "Time-box dual-running periods with <strong>metric-based cutover triggers</strong>",
+          "Extend Architecture Contracts with <strong>agent terms</strong>: accuracy SLAs, monitoring obligations, and rollback criteria",
+          "Scope implementation governance to include <strong>post-deployment</strong>: drift detection, model updates, and regulatory compliance"
+        ]
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "mig-q1",
+            "text": "Our migration plans include formal readiness gates specific to agent deployment prerequisites.",
+            "levels": {
+              "1": "No agent-specific gates; agents deployed without prerequisite validation.",
+              "2": "Informal awareness of prerequisites but no formal gating framework.",
+              "3": "Formal readiness gates defined: data quality, governance, monitoring, pilot validation.",
+              "4": "Gates enforced with quantitative thresholds and documented evidence before progression.",
+              "5": "Automated readiness assessment with continuous monitoring and gate enforcement integrated into delivery pipeline."
+            }
+          },
+          {
+            "id": "mig-q2",
+            "text": "Our migration plans include dual-running periods with defined cutover and rollback criteria.",
+            "levels": {
+              "1": "Agent deployment is direct cutover with no parallel running or rollback plan.",
+              "2": "Some parallel running occurs but without defined metrics or cutover triggers.",
+              "3": "Dual-running periods planned with explicit cutover metrics and rollback criteria.",
+              "4": "Rollback plans include workforce re-mobilisation, human fallback capacity, and communication protocols.",
+              "5": "Continuous performance comparison during dual-running with automated cutover recommendation and governance approval."
+            }
+          },
+          {
+            "id": "mig-q3",
+            "text": "Our Architecture Contracts include agent-specific terms for ongoing operational governance.",
+            "levels": {
+              "1": "Architecture Contracts do not mention agents or their operational requirements.",
+              "2": "Agent deployment acknowledged in contracts but no specific terms or SLAs.",
+              "3": "Contracts include agent performance SLAs, monitoring requirements, and rollback criteria.",
+              "4": "Contracts require continuous governance: drift detection, model version management, regulatory compliance.",
+              "5": "Dynamic contracts with automated compliance monitoring and trigger-based governance escalation."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Define a formal agent readiness gating framework with mandatory prerequisites before production deployment.",
+            "max_level": 2
+          },
+          {
+            "text": "Plan dual-running periods for your next agent deployment with explicit cutover metrics and rollback triggers.",
+            "max_level": 3
+          },
+          {
+            "text": "Extend Architecture Contract templates with agent-specific terms: accuracy SLAs, monitoring, rollback, governance.",
+            "max_level": 4
+          },
+          {
+            "text": "Build continuous agent governance into implementation planning: drift detection, model updates, regulatory tracking.",
+            "min_level": 3
+          }
+        ]
+      }
+    }
+  ]
+}

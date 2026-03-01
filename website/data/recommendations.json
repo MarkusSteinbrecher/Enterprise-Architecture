@@ -1,0 +1,98 @@
+[
+  {
+    "id": "rec-01",
+    "title": "Measure Governance Cycle Time",
+    "description": "Calculate elapsed time from architecture proposal to approved decision. Compare against AI deployment cadence. This single metric quantifies the urgency of governance reform.",
+    "priority": "High",
+    "effort": "Low",
+    "dependencies": []
+  },
+  {
+    "id": "rec-02",
+    "title": "Create AI Agent Registry",
+    "description": "Document every deployed agent: role, capabilities, access permissions, data inputs, decision authority, performance metrics, and accountable human owner.",
+    "priority": "High",
+    "effort": "Low",
+    "dependencies": []
+  },
+  {
+    "id": "rec-03",
+    "title": "Audit AI Use Cases for Model Right-Sizing",
+    "description": "Catalogue current AI use cases by task complexity. Run head-to-head evaluations of fine-tuned smaller models versus frontier models on top production use cases.",
+    "priority": "High",
+    "effort": "Medium",
+    "dependencies": []
+  },
+  {
+    "id": "rec-04",
+    "title": "Infrastructure Readiness Assessment",
+    "description": "Map each planned AI workload to compute, network, storage, and integration requirements. Compare against current capacity to identify the investment gap.",
+    "priority": "High",
+    "effort": "Medium",
+    "dependencies": []
+  },
+  {
+    "id": "rec-05",
+    "title": "Classify AI Investments by Value Type",
+    "description": "Survey C-suite expectations. Classify current AI portfolio by value type (productivity vs revenue). Surface and resolve the expectation gap.",
+    "priority": "High",
+    "effort": "Low",
+    "dependencies": []
+  },
+  {
+    "id": "rec-06",
+    "title": "Assess Process Readiness Before Agent Deployment",
+    "description": "For every proposed agent deployment: is the process documented with quantitative data? Has the workflow been redesigned for agent strengths?",
+    "priority": "High",
+    "effort": "Medium",
+    "dependencies": ["rec-01"]
+  },
+  {
+    "id": "rec-07",
+    "title": "Design Model Abstraction Layer",
+    "description": "Implement standardised interfaces and vendor-neutral APIs. The litmus test: can you swap your primary LLM provider within eight hours?",
+    "priority": "Medium",
+    "effort": "Medium",
+    "dependencies": ["rec-03"]
+  },
+  {
+    "id": "rec-08",
+    "title": "Protocol Abstraction for Agent Communication",
+    "description": "Design a communication abstraction layer decoupling agent implementations from protocol specifics (MCP, A2A, or proprietary).",
+    "priority": "Medium",
+    "effort": "Medium",
+    "dependencies": ["rec-02"]
+  },
+  {
+    "id": "rec-09",
+    "title": "Establish AI FinOps Discipline",
+    "description": "Define standard cost categories for AI operations. Implement cost tracking per use case. Set budget thresholds and escalation triggers.",
+    "priority": "Medium",
+    "effort": "Medium",
+    "dependencies": ["rec-05"]
+  },
+  {
+    "id": "rec-10",
+    "title": "Pilot Operating Model Codification",
+    "description": "Make one high-volume process's operating logic explicit and machine-readable — decision rules, exception paths, governance controls in a format an AI agent could interpret.",
+    "priority": "Medium",
+    "effort": "High",
+    "dependencies": ["rec-06"]
+  },
+  {
+    "id": "rec-11",
+    "title": "Map Sovereignty Requirements",
+    "description": "Audit current and planned AI workloads for data residency, model provenance, and jurisdictional constraints. Assess whether infrastructure can satisfy them.",
+    "priority": "Medium",
+    "effort": "Medium",
+    "dependencies": ["rec-04"]
+  },
+  {
+    "id": "rec-12",
+    "title": "Distributed Tracing and Blast-Radius Controls",
+    "description": "Before deploying your second agent, implement distributed tracing across agent interactions and define blast-radius controls for cascade failure prevention.",
+    "priority": "Medium",
+    "effort": "High",
+    "dependencies": ["rec-02", "rec-08"]
+  }
+]

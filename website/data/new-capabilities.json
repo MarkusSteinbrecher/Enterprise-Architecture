@@ -1,0 +1,72 @@
+[
+  {
+    "id": "agent-lifecycle-management",
+    "title": "Agent Lifecycle Management",
+    "description": "Onboarding, monitoring, versioning, retraining, and retiring AI agents as enterprise workforce participants. Includes agent registry and performance management.",
+    "priority": "High",
+    "findings": ["F3", "F6"]
+  },
+  {
+    "id": "model-portfolio-management",
+    "title": "Model Portfolio Management",
+    "description": "Managing the enterprise's portfolio of AI models: selection, benchmarking, cost tracking, vendor diversification, right-sizing, and deprecation planning.",
+    "priority": "High",
+    "findings": ["F2"]
+  },
+  {
+    "id": "ai-finops",
+    "title": "AI FinOps",
+    "description": "Financial governance for AI operations: inference cost tracking, fine-tuning budgets, infrastructure cost allocation, budget thresholds, and escalation triggers.",
+    "priority": "High",
+    "findings": ["F5", "F7"]
+  },
+  {
+    "id": "continuous-architecture-compliance",
+    "title": "Continuous Architecture Compliance",
+    "description": "Automated, continuous compliance checking integrated into CI/CD pipelines. Policy-as-code with automated enforcement at deployment time.",
+    "priority": "High",
+    "findings": ["F1"]
+  },
+  {
+    "id": "sovereignty-by-design",
+    "title": "Sovereignty by Design",
+    "description": "Data residency, model provenance, and jurisdictional constraints as first-order architecture design inputs that constrain infrastructure decisions.",
+    "priority": "Medium",
+    "findings": ["F9"]
+  },
+  {
+    "id": "enterprise-as-code",
+    "title": "Enterprise as Code",
+    "description": "Codifying implicit operating models — workflows, decision rules, governance logic — as executable code readable by both humans and AI agents.",
+    "priority": "Medium",
+    "findings": ["F8"]
+  },
+  {
+    "id": "agent-communication-architecture",
+    "title": "Agent Communication Architecture",
+    "description": "Protocol abstraction layer for agent-to-agent communication, decoupled from specific protocols (MCP, A2A, ACP). The defining architectural bet for 2026–2028.",
+    "priority": "Medium",
+    "findings": ["F3"]
+  },
+  {
+    "id": "ai-infrastructure-readiness",
+    "title": "AI Infrastructure Readiness Assessment",
+    "description": "Structured assessment of compute, network, storage, and integration capacity against planned AI workloads. Only 22% of organisations are currently ready.",
+    "priority": "High",
+    "findings": ["F7"]
+  },
+  {
+    "id": "agent-risk-observability",
+    "title": "Agent Risk and Observability",
+    "description": "Distributed tracing, blast-radius controls, circuit breakers, and cascade failure detection for non-deterministic autonomous agent systems.",
+    "priority": "High",
+    "findings": ["F3", "F6"]
+  },
+  {
+    "id": "ai-value-progression",
+    "title": "AI Value Progression Management",
+    "description": "Framework for planning the platform transition from productivity (phase one) to revenue (phase two) AI, with differentiated KPIs and aligned leadership expectations.",
+    "priority": "Medium",
+    "findings": ["F5"]
+  }
+]

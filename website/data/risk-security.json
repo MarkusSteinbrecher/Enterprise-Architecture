@@ -1,0 +1,604 @@
+{
+  "id": "risk-security",
+  "title": "Risk, Security & Compliance",
+  "description": "How risk management, security architecture, and compliance frameworks must evolve when AI agents become autonomous participants in enterprise systems.",
+  "subtopics": [
+    {
+      "id": "risk-framework",
+      "label": "Risk Management Framework",
+      "traditional": {
+        "togaf_reference": "FC Part 2, Ch 9",
+        "summary": "Traditional EA provides a structured risk management technique integrated throughout the ADM.",
+        "body_html": "<h4>Risk Category</h4><p>Architecture risk — the risk that architecture decisions produce outcomes that fail to meet enterprise objectives or introduce unacceptable exposure.</p><h4>Assessment</h4><p>A five-stage process: risk classification (categorising by area), risk identification (workshops and analysis), risk assessment (effect × frequency matrix producing risk ratings), risk mitigation (countermeasures and contingency plans), and risk monitoring (tracking residual risk through implementation).</p><h4>Controls</h4><p>Risk owners assigned for each identified risk. Countermeasures defined with contingency plans. Residual risk tracked through Implementation Governance and Change Management. Risk management embedded as an ADM-integrated activity, not a separate stream.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "rs-rf-01",
+            "text": "To what extent has your organisation extended its risk register with AI-specific risk categories?",
+            "levels": {
+              "1": "Risk register contains only traditional IT and business risks; AI risks are not captured",
+              "2": "A few AI risk categories have been added informally but without structured taxonomy or ownership",
+              "3": "Formal AI risk categories (hallucination, cascade failure, prompt injection, scope violation) are defined in the risk register with assigned owners",
+              "4": "AI risk categories are systematically assessed using scenario-based methods and reviewed regularly by architecture governance",
+              "5": "Probabilistic risk models continuously assess AI risks; risk register is dynamically updated based on observed failure patterns and near-misses"
+            }
+          },
+          {
+            "id": "rs-rf-02",
+            "text": "How does your organisation assess and quantify risks from non-deterministic AI systems?",
+            "levels": {
+              "1": "Traditional effect-by-frequency matrices are used without adaptation for AI systems",
+              "2": "The limitations of traditional matrices for AI risk are acknowledged; ad hoc workarounds are used",
+              "3": "Scenario-based risk assessments are conducted for major AI deployments, supplementing matrix-based approaches",
+              "4": "Probabilistic risk assessment methods are applied systematically to AI systems, including multi-agent interaction modelling",
+              "5": "Predictive risk models anticipate emerging risks from agent interaction patterns before they manifest; assessments are continuously validated against actual failure data"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Add AI-specific risk categories to your enterprise risk register: agent cascade failure, model hallucination, prompt injection, data poisoning, agent scope violation, and feedback loop risk. Assign a risk owner for each.",
+            "max_level": 2
+          },
+          {
+            "text": "Pilot scenario-based risk assessment for your highest-risk AI deployment, modelling at least three specific failure scenarios with estimated likelihood and business impact.",
+            "max_level": 3
+          },
+          {
+            "text": "Establish a standing AI risk agenda item in architecture governance, with automated reporting on agent performance anomalies and risk threshold breaches.",
+            "max_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Traditional risk matrices <mark>cannot score non-deterministic AI failures</mark> — an agent's risk profile changes with every prompt.",
+        "key_shifts": [
+          "New risk categories required: <strong>cascade failure, hallucination, emergent behaviour</strong>, feedback loops",
+          "Scenario-based assessment supplements the matrix — <strong>frequency is unknowable</strong> for non-deterministic systems",
+          "<strong>Continuous monitoring</strong> replaces periodic review; agent risk profiles shift at runtime",
+          "Risk owners must understand <strong>AI failure modes</strong>, not just business process failures"
+        ],
+        "what_breaks": [
+          "Static risk matrices produce <strong>meaningless scores</strong> for systems whose failure probability depends on runtime context",
+          "Risk registers that treat AI as standard IT miss <strong>entire categories of agent-specific failure</strong>",
+          "Spreadsheet-based risk management cannot handle the <strong>velocity of AI risk profile changes</strong>",
+          "Periodic risk reviews discover agent failures <strong>months after business damage</strong> has occurred"
+        ],
+        "what_survives": [
+          "The <strong>five-stage risk process</strong> (classify, identify, assess, mitigate, monitor) remains structurally sound",
+          "<strong>Risk ownership and accountability</strong> principles apply directly to AI systems",
+          "Countermeasure and contingency planning logic transfers to <strong>agent containment strategies</strong>",
+          "<strong>ADM-integrated risk management</strong> is more important than ever with agent-augmented architecture"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Scenario-driven, continuously monitored risk management</mark> where AI-specific categories and runtime telemetry replace static matrices.",
+        "description": "Risk registers include <strong>agent-specific categories</strong> with scenario-based assessment replacing fixed-probability scoring. Continuous monitoring feeds runtime risk signals into governance, and risk owners are trained on AI failure modes.",
+        "key_practices": [
+          "Add <strong>agent-specific risk categories</strong> to the enterprise register: cascade failure, hallucination, prompt injection, scope violation",
+          "Pilot <strong>scenario-based assessment</strong> on the highest-exposure AI deployment before scaling",
+          "Establish <strong>automated risk threshold monitoring</strong> with governance escalation for agent anomalies",
+          "Train risk owners on <strong>AI failure modes</strong> so they can evaluate agent risks without relying solely on AI teams"
+        ]
+      }
+    },
+    {
+      "id": "security-architecture",
+      "label": "Security Architecture",
+      "traditional": {
+        "togaf_reference": "TSG Risk and Security",
+        "summary": "Traditional EA treats security as a cross-cutting concern spanning all architecture domains and ADM phases.",
+        "body_html": "<h4>Risk Category</h4><p>Enterprise security risk — threats to the confidentiality, integrity, and availability of enterprise systems and data from external attackers, insider threats, and system vulnerabilities.</p><h4>Assessment</h4><p>The TSG provides phase-by-phase guidance for incorporating security into each ADM phase. Threats are identified, controls are defined, and compliance is verified. Security maps to industry security frameworks and standards.</p><h4>Controls</h4><p>Security designed into every architecture component as a cross-cutting property, not a layer added afterwards. Defence-in-depth with access controls, encryption, monitoring, and incident response.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "rs-sa-01",
+            "text": "Has your organisation developed an AI-specific threat model that covers prompt injection, model extraction, data poisoning, and adversarial attacks?",
+            "levels": {
+              "1": "No AI-specific threat modelling; AI systems are secured using standard application security measures only",
+              "2": "AI-specific threats are informally acknowledged but not systematically analysed or documented",
+              "3": "A comprehensive AI threat model exists with identified attack vectors and mapped controls for each",
+              "4": "AI security monitoring is integrated into the enterprise security operations centre with automated detection for prompt injection and model behaviour anomalies",
+              "5": "Adaptive AI security with automated threat detection and response; security properties verified continuously; AI security integrated into CI/CD as automated gates"
+            }
+          },
+          {
+            "id": "rs-sa-02",
+            "text": "To what extent do your AI agents operate under Zero Trust principles with per-session authentication and minimum-privilege access?",
+            "levels": {
+              "1": "AI agents have standing access to enterprise systems with broad permissions",
+              "2": "Some access restrictions exist but agents generally have persistent credentials and wide-scope permissions",
+              "3": "Zero Trust applied to agent access: per-session authentication, time-limited tokens, minimum required permissions for all production agents",
+              "4": "Continuous authorisation evaluation for all agents; agent-to-agent communication authenticated at every interaction; automated privilege escalation detection",
+              "5": "Dynamic, context-aware access management where agent permissions adapt based on task requirements, risk level, and real-time trust assessment"
+            }
+          },
+          {
+            "id": "rs-sa-03",
+            "text": "How mature is your organisation's ability to detect and respond to AI-specific security incidents?",
+            "levels": {
+              "1": "No AI-specific incident response capability; AI incidents handled as general IT security events",
+              "2": "Some awareness of AI-specific attack vectors among security teams; no dedicated playbooks",
+              "3": "AI-specific incident response playbooks defined for major threat categories; security team trained on AI attack vectors",
+              "4": "Automated detection of AI-specific attacks integrated into SOC operations; real-time model behaviour monitoring for extraction and poisoning indicators",
+              "5": "Proactive threat hunting for AI-specific attack patterns; automated containment and recovery; continuous red-teaming of AI systems"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Develop an AI threat model covering prompt injection (direct and indirect), model extraction, data poisoning, adversarial inputs, and agent impersonation. Map each threat to existing and required controls.",
+            "max_level": 2
+          },
+          {
+            "text": "Apply Zero Trust principles to all deployed AI agents: per-session authentication, minimum-privilege access, time-limited tokens, and authenticated agent-to-agent communication.",
+            "max_level": 3
+          },
+          {
+            "text": "Create AI-specific incident response playbooks and integrate AI security monitoring into enterprise security operations.",
+            "max_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "AI introduces <mark>attack vectors invisible to traditional security</mark> — prompt injection hijacks agent behaviour without triggering a single alert.",
+        "key_shifts": [
+          "<strong>AI threat model</strong> required: prompt injection, model extraction, data poisoning, adversarial inputs",
+          "Zero Trust applied to agents: <strong>per-session auth, minimum privilege</strong>, time-limited tokens",
+          "Agent-to-agent communication needs <strong>mutual authentication</strong> — trust no agent by default",
+          "<strong>Semantic attack detection</strong> required; traditional WAF and SIEM miss AI-specific threats entirely"
+        ],
+        "what_breaks": [
+          "Perimeter security models cannot detect attacks that arrive as <strong>valid natural language</strong>",
+          "Enterprise IAM with <strong>standing credentials</strong> is incompatible with agent Zero Trust requirements",
+          "Security teams <strong>without AI expertise</strong> cannot threat-model systems they do not understand",
+          "Supply chain security models have <strong>no framework for third-party model API risk</strong>"
+        ],
+        "what_survives": [
+          "<strong>Defence-in-depth</strong> principles apply — agents need layered controls just as traditional systems do",
+          "Incident response structure (detect, contain, eradicate, recover) transfers to <strong>AI-specific playbooks</strong>",
+          "The practice of <strong>mapping threats to controls</strong> and verifying coverage remains essential",
+          "<strong>Cross-cutting security architecture</strong> integrated across ADM phases is more critical than ever"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Zero Trust agent security with semantic attack detection</mark> — every session authenticated, scoped, and monitored for meaning-level threats.",
+        "description": "Every agent operates under Zero Trust with <strong>per-session authentication</strong>, minimum-privilege access, and time-limited tokens. Semantic attack detection supplements traditional SIEM to catch prompt injection, model extraction, and adversarial inputs.",
+        "key_practices": [
+          "Develop an <strong>AI threat model</strong> mapping prompt injection, model extraction, data poisoning, and adversarial inputs to controls",
+          "Enforce <strong>per-session authentication</strong> and minimum-privilege access for all production agents",
+          "Integrate <strong>AI-specific security monitoring</strong> into the SOC with playbooks for semantic attack categories",
+          "Establish <strong>supply chain security assessment</strong> for third-party model APIs including data provenance requirements"
+        ]
+      }
+    },
+    {
+      "id": "compliance-framework",
+      "label": "Compliance Framework",
+      "traditional": {
+        "togaf_reference": "FC Part 5, Ch 6",
+        "summary": "Architecture compliance uses graduated conformance levels and structured review at project milestones.",
+        "body_html": "<h4>Risk Category</h4><p>Compliance risk — the risk that implementations deviate from architecture standards, creating technical debt, security exposure, or regulatory violation.</p><h4>Assessment</h4><p>Reviews at project initiation, initial design, and major changes. Graduated conformance levels: Irrelevant, Consistent, Compliant, Conformant, Fully Conformant. Structured checklists covering hardware, middleware, applications, information management, security, and system management.</p><h4>Controls</h4><p>Formal dispensation (waiver) process for approved deviations with documented justification. Compliance assessments stored in the Governance Repository.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "rs-cf-01",
+            "text": "Has your organisation extended its architecture compliance checklists with AI-specific sections?",
+            "levels": {
+              "1": "No AI-specific items in compliance checklists; AI systems reviewed against the same criteria as traditional systems",
+              "2": "Some AI-specific items informally considered during reviews but not formally documented in checklists",
+              "3": "Formal AI-specific checklist sections defined for model governance, agent behaviour, data sovereignty, and AI ethics",
+              "4": "AI compliance checklists are automated and integrated into deployment pipelines; compliance-as-code enforced for major requirements",
+              "5": "Continuous automated compliance monitoring across the full AI system lifecycle with real-time dashboards and automated alerting on compliance drift"
+            }
+          },
+          {
+            "id": "rs-cf-02",
+            "text": "How effectively does your compliance process handle AI systems that can drift out of compliance without code changes?",
+            "levels": {
+              "1": "Compliance is assessed only at project milestones; no monitoring between reviews",
+              "2": "The risk of drift-based non-compliance is acknowledged; some manual periodic checks exist",
+              "3": "Scheduled compliance re-assessments are conducted for high-risk AI systems between project milestones",
+              "4": "Continuous compliance monitoring detects model drift, data distribution changes, and regulatory updates with automated alerting",
+              "5": "Adaptive compliance where regulatory changes trigger automated impact assessment and control adjustment; AI systems self-document compliance evidence"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Add AI-specific sections to your architecture compliance checklists: model governance, agent behaviour, data sovereignty, and AI ethics. Review against these sections for all current AI deployments.",
+            "max_level": 2
+          },
+          {
+            "text": "Implement scheduled compliance re-assessments for deployed AI systems between project milestones, focusing on model drift, data distribution changes, and evolving regulatory requirements.",
+            "max_level": 3
+          },
+          {
+            "text": "Pilot compliance-as-code for one high-risk AI system, automating compliance checks within the deployment pipeline and establishing continuous monitoring for post-deployment drift.",
+            "max_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "AI systems <mark>drift out of compliance without any code change</mark> — milestone reviews catch this months too late.",
+        "key_shifts": [
+          "<strong>Continuous compliance monitoring</strong> replaces milestone reviews for AI systems",
+          "AI-specific checklist sections added: <strong>model governance, bias monitoring</strong>, data sovereignty, explainability",
+          "Dispensation process must be <strong>lighter-weight</strong> — AI best practices change monthly",
+          "Graduated conformance levels map directly to <strong>AI Act risk classification tiers</strong>"
+        ],
+        "what_breaks": [
+          "Milestone-based reviews miss <strong>model drift</strong>, data distribution shifts, and regulatory changes between checkpoints",
+          "Compliance ownership models fail when drift <strong>crosses team boundaries</strong> without a code deployment",
+          "Heavy dispensation processes cannot keep pace with <strong>monthly shifts in AI best practices</strong>",
+          "Standard checklists covering hardware, middleware, and applications have <strong>no AI-specific items</strong>"
+        ],
+        "what_survives": [
+          "<strong>Graduated conformance levels</strong> (Irrelevant through Fully Conformant) map naturally to AI risk tiers",
+          "Formal dispensation with <strong>documented justification</strong> remains necessary for approved deviations",
+          "Structured compliance checklists are the right mechanism — they just need <strong>AI-specific sections</strong>",
+          "<strong>Governance Repository</strong> as the compliance record system applies to AI compliance evidence"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Compliance-as-code with continuous drift detection</mark> — AI systems monitored between milestones and self-documenting conformance.",
+        "description": "Compliance is <strong>continuously monitored</strong> through automated checks that detect model drift, data distribution changes, and regulatory updates. graduated conformance levels are mapped to AI Act risk tiers, and high-risk systems run compliance-as-code in the deployment pipeline.",
+        "key_practices": [
+          "Map every AI system to a <strong>graduated conformance level</strong> aligned with its AI Act risk classification",
+          "Implement <strong>continuous compliance monitoring</strong> for high-risk AI systems that detects drift between milestones",
+          "Pilot <strong>compliance-as-code</strong> for one high-risk system, automating checks within the deployment pipeline",
+          "Create a <strong>lightweight dispensation process</strong> for AI-specific deviations with quarterly expiry and re-evaluation"
+        ]
+      }
+    },
+    {
+      "id": "ai-threat-landscape",
+      "label": "AI Threat Landscape",
+      "traditional": {
+        "togaf_reference": "TSG Risk and Security",
+        "summary": "The traditional threat model covers external attackers, insider threats, system vulnerabilities, and data breaches.",
+        "body_html": "<h4>Risk Category</h4><p>External and internal threats to enterprise systems — the conventional threat landscape that security architecture is designed to address.</p><h4>Assessment</h4><p>Threat identification through structured analysis, mapping threats to assets, evaluating likelihood and impact, and identifying control gaps. Integrated with industry security standards.</p><h4>Controls</h4><p>Defence-in-depth: perimeter security, access controls, encryption, network segmentation, monitoring, and incident response. All assume deterministic systems with known input/output behaviour.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "rs-tl-01",
+            "text": "Does your organisation have documented threat models that cover AI-specific attack vectors (prompt injection, model extraction, data poisoning, adversarial attacks)?",
+            "levels": {
+              "1": "No awareness or documentation of AI-specific threat vectors",
+              "2": "AI-specific threats are informally understood by some team members but not documented in formal threat models",
+              "3": "AI-specific threat models are documented with identified attack vectors, risk ratings, and mapped controls for each category",
+              "4": "Threat models are actively maintained, regularly tested through red-team exercises, and integrated with enterprise security operations",
+              "5": "Continuous AI threat intelligence feeds inform proactive defence; automated red-teaming validates defences; threat models evolve based on observed attack patterns"
+            }
+          },
+          {
+            "id": "rs-tl-02",
+            "text": "How effectively does your organisation defend against prompt injection attacks across deployed AI agents?",
+            "levels": {
+              "1": "No prompt injection defences in place; agents process all inputs without filtering or validation",
+              "2": "Basic input filtering exists for some agents but indirect injection vectors are not addressed",
+              "3": "Systematic prompt injection defences deployed across all production agents, covering both direct and indirect injection vectors",
+              "4": "Automated prompt injection detection with real-time monitoring and alerting; regular testing of defences against evolving attack techniques",
+              "5": "Adaptive prompt injection defence that learns from attempted attacks; layered defences including input validation, output verification, and behavioural anomaly detection"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Catalogue all deployed AI agents and assess each for exposure to the four primary AI threat categories: prompt injection, model extraction, data poisoning, and adversarial inputs.",
+            "max_level": 2
+          },
+          {
+            "text": "Implement prompt injection defences for all production agents, addressing both direct injection (malicious user input) and indirect injection (malicious content in processed data sources).",
+            "max_level": 3
+          },
+          {
+            "text": "Establish an AI-specific red-team capability that regularly tests deployed agents against evolving AI attack techniques and feeds findings back into threat models.",
+            "max_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "The most dangerous AI threat is <mark>an agent that is confidently wrong</mark> — it passes every health check while causing business harm.",
+        "key_shifts": [
+          "<strong>Semantic monitoring</strong> evaluates output correctness — prerequisite for all other AI threat controls",
+          "Agent misconduct categories defined: <strong>confident errors, scope violations, value misalignment</strong>",
+          "Supply chain security extends to <strong>training data provenance</strong> and third-party model integrity",
+          "Threat models must include <strong>agent-to-agent vectors</strong> — agents attacking or misleading other agents"
+        ],
+        "what_breaks": [
+          "System health monitoring (uptime, error rates, latency) cannot detect <strong>confidently wrong outputs</strong>",
+          "SOC playbooks have no escalation path for agent misconduct that produces <strong>successful HTTP responses</strong>",
+          "Supply chain risk models cannot assess <strong>training data provenance</strong> for third-party models",
+          "Traditional threat classification has no category for <strong>emergent misbehaviour</strong> in multi-agent systems"
+        ],
+        "what_survives": [
+          "Structured <strong>threat identification and control mapping</strong> remains the right analytical approach",
+          "<strong>Defence-in-depth</strong> layering applies to AI threats — no single control is sufficient",
+          "Integration with <strong>industry security standards</strong> provides a foundation to extend for AI threats",
+          "Likelihood-and-impact thinking still applies, but <strong>likelihood assessment methods</strong> must change"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Semantic monitoring as the security foundation</mark> — every customer-facing and decision-making agent has output correctness evaluation.",
+        "description": "Semantic monitoring — evaluating whether agent output is correct and appropriate — is deployed for all customer-facing and decision-making agents. <strong>Agent misconduct</strong> is classified, monitored, and escalated through playbooks purpose-built for threats that produce no system errors.",
+        "key_practices": [
+          "Deploy <strong>semantic monitoring</strong> for customer-facing and decision-making agents first — highest risk, highest value",
+          "Create <strong>agent misconduct classification</strong> with response playbooks for confident errors, scope violations, misalignment",
+          "Establish <strong>supply chain security assessment</strong> for third-party model providers including data provenance verification",
+          "Conduct regular <strong>red-team exercises</strong> specifically targeting AI threat vectors across deployed agent chains"
+        ]
+      }
+    },
+    {
+      "id": "agent-risk",
+      "label": "Agent Risk & Cascade Failures",
+      "traditional": {
+        "togaf_reference": "FC Part 2, Ch 9 (extended)",
+        "summary": "Traditional risk management assumes deterministic systems where failure modes are predictable from component specs.",
+        "body_html": "<h4>Risk Category</h4><p>System failure risk — the risk that architecture components fail to perform as specified, with impacts assessable from component specifications and interaction patterns.</p><h4>Assessment</h4><p>Component-level risk analysis: each component examined for failure modes, probability, and impact. Interaction risks assessed from integration specifications and known dependencies.</p><h4>Controls</h4><p>Redundancy, failover, error handling, monitoring, and escalation procedures. All assume failures are detectable through system metrics (errors, timeouts, resource exhaustion).</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "rs-ar-01",
+            "text": "Has your organisation implemented blast-radius controls that limit the scope of damage from any single agent failure?",
+            "levels": {
+              "1": "No blast-radius controls; agents can access and affect systems without defined boundaries",
+              "2": "Blast-radius limits are informally defined for some critical agents but not technically enforced",
+              "3": "Blast-radius controls are defined and enforced for all production agents: data access limits, action scope limits, financial authority caps, and affected system boundaries",
+              "4": "Automated blast-radius enforcement with real-time monitoring of scope violations; cascade failure scenarios analysed for all multi-agent deployments",
+              "5": "Self-adjusting blast-radius controls that tighten automatically based on risk signals; predictive cascade failure detection identifies emerging risks before they manifest"
+            }
+          },
+          {
+            "id": "rs-ar-02",
+            "text": "How does your organisation detect and respond to agent cascade failures where errors propagate through agent chains?",
+            "levels": {
+              "1": "No cascade failure detection; agent failures detected only through downstream business impact",
+              "2": "Basic awareness of cascade risk; some manual monitoring of critical agent chains",
+              "3": "Distributed tracing across agent interactions enables identification of error propagation paths; circuit breakers implemented for critical agent chains",
+              "4": "Real-time cascade failure detection with automated containment; semantic drift detection supplements syntactic monitoring; incident forensics can reconstruct full interaction chains",
+              "5": "Predictive models anticipate cascade failures based on early warning signals; self-healing agent networks with automated isolation and recovery; continuous learning from near-misses"
+            }
+          },
+          {
+            "id": "rs-ar-03",
+            "text": "Can your organisation detect when an AI agent is producing confidently wrong outputs that appear correct to traditional monitoring?",
+            "levels": {
+              "1": "Only system-level monitoring (uptime, error rates, latency); no capability to evaluate output correctness",
+              "2": "Awareness that agents can be confidently wrong; ad hoc manual spot-checking of outputs for some agents",
+              "3": "Semantic monitoring deployed for high-risk agents with defined quality metrics: accuracy, consistency, coherence, and scope adherence",
+              "4": "Systematic semantic monitoring across all production agents with automated anomaly detection and alerting on output quality degradation",
+              "5": "Continuous output verification with ground-truth validation where available; agents that cross-check each other's outputs; automated escalation to human oversight for anomalous patterns"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Define blast-radius controls for every deployed agent: what data it can access, what actions it can take, what financial authority it has, and what downstream systems it can affect. Implement technical enforcement for the highest-risk agents first.",
+            "max_level": 2
+          },
+          {
+            "text": "Implement distributed tracing across all multi-agent interactions to enable cascade failure detection and root cause analysis. Deploy circuit breakers for critical agent chains.",
+            "max_level": 3
+          },
+          {
+            "text": "Deploy semantic monitoring for all production agents that evaluates output quality against defined metrics, with automated alerting on confidence drops, reasoning anomalies, and scope violations.",
+            "max_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "One agent error propagates through a chain and <mark>cascade failures are invisible until business damage surfaces</mark> — every API call succeeds.",
+        "key_shifts": [
+          "Cascade failures propagate through <strong>shared context, not API errors</strong> — invisible to monitoring",
+          "<strong>Blast-radius controls</strong> required: cost circuit breakers, authority caps, scope limiters, rollback",
+          "Feedback loop detection needed — agents consuming each other's outputs <strong>amplify errors exponentially</strong>",
+          "<strong>Emergent behaviour risk</strong> requires scenario analysis mapped to business process impact"
+        ],
+        "what_breaks": [
+          "Component-level failure analysis misses <strong>cascade risk</strong> that exists only in agent interaction patterns",
+          "Monitoring that relies on error codes and timeouts detects <strong>zero cascade failures</strong>",
+          "Infrastructure redundancy and failover do nothing when the failure is <strong>semantically wrong output</strong>",
+          "Incident response cannot reconstruct root cause without <strong>distributed tracing</strong> across agent chains"
+        ],
+        "what_survives": [
+          "Risk assessment at <strong>integration points</strong> is critical — agent interactions are the new integration points",
+          "Redundancy and failover principles extend to agent containment through <strong>circuit breakers</strong>",
+          "Escalation procedures remain necessary but must trigger on <strong>semantic signals</strong>, not just system alerts",
+          "Mapping <strong>failure modes to business impact</strong> applies directly to agent cascade scenarios"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Containment-first agent architecture</mark> — every agent has blast-radius limits, cost circuit breakers, and cascade detection before production.",
+        "description": "Every production agent operates within defined <strong>blast-radius boundaries</strong>: data access limits, action scope limits, financial authority caps, and downstream system boundaries. Distributed tracing across agent chains enables cascade failure detection and circuit breakers halt propagation.",
+        "key_practices": [
+          "Define <strong>blast-radius controls</strong> for every agent: data access scope, action limits, financial authority caps, affected systems",
+          "Deploy <strong>cost circuit breakers</strong> first — simplest control, highest ROI in preventing runaway agent damage",
+          "Map <strong>agent interaction chains</strong> to business processes to identify cascade risk paths proactively",
+          "Implement <strong>distributed tracing</strong> across all multi-agent workflows with semantic drift detection at each hop"
+        ]
+      }
+    },
+    {
+      "id": "agent-observability",
+      "label": "Agent Observability",
+      "traditional": {
+        "togaf_reference": "TSG Microservices (by analogy)",
+        "summary": "Distributed tracing from microservices tracks request flow across services using request IDs and timing.",
+        "body_html": "<h4>Risk Category</h4><p>Diagnostic risk — the risk of being unable to determine root cause when distributed systems produce incorrect outcomes.</p><h4>Assessment</h4><p>Microservices observability provides the closest precedent: distributed tracing tracks request flow, logging captures events, metrics track system health. Failure diagnosis follows the request trace.</p><h4>Controls</h4><p>Correlation IDs, structured logging, metrics dashboards, alerting on system health thresholds, and distributed trace analysis for root cause investigation.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "rs-ao-01",
+            "text": "Does your organisation have distributed tracing that tracks semantic content and reasoning across multi-agent interactions — not just request flow and timing?",
+            "levels": {
+              "1": "No agent-specific tracing; standard APM tools track system metrics only",
+              "2": "Basic agent-specific logging exists for some high-risk agents; confidence scores tracked for individual agents but not across chains",
+              "3": "Distributed tracing covers all production agent interactions, capturing reasoning traces, confidence scores, input/output summaries, and context mutations",
+              "4": "Full semantic tracing operational with queryable interaction histories; any business outcome can be traced back through its complete agent interaction chain",
+              "5": "Observability data feeds automated agent tuning and routing decisions; predictive models identify emerging risks from interaction pattern analysis"
+            }
+          },
+          {
+            "id": "rs-ao-02",
+            "text": "How mature are your observability dashboards and alerting for agent-specific failure signatures?",
+            "levels": {
+              "1": "Standard infrastructure dashboards only; no visibility into agent reasoning or interaction patterns",
+              "2": "Some ad hoc dashboards for individual agent performance; no unified view or agent-specific alerting",
+              "3": "Unified observability dashboards presenting agent-level and system-level health; alerting rules tuned to agent-specific failure signatures (confidence drops, reasoning anomalies, context corruption)",
+              "4": "Real-time dashboards with automated anomaly detection across agent interaction patterns; feedback loop and deadlock detection operational",
+              "5": "Self-learning observability that automatically identifies new failure signatures and adjusts alerting thresholds; near-miss detection feeds continuous improvement"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Instrument your highest-risk multi-agent workflow with semantic tracing that captures reasoning traces, confidence scores, and context mutations at each step in the agent chain.",
+            "max_level": 2
+          },
+          {
+            "text": "Build a unified agent observability dashboard that presents both system-level and semantic-level health indicators, with alerting rules for confidence drops, reasoning anomalies, and interaction pattern deviations.",
+            "max_level": 3
+          },
+          {
+            "text": "Establish incident forensics protocols that can reconstruct full agent interaction chains, including context states and decision points, for any agent-involved incident.",
+            "max_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Without <mark>semantic-level tracing</mark>, you cannot answer \"why did the agent do that?\" when a customer complains or a regulator asks.",
+        "key_shifts": [
+          "<strong>Semantic tracing</strong> captures meaning and correctness, not just request flow and timing",
+          "<strong>Causal chain tracking</strong> across multi-agent interactions enables root cause analysis",
+          "Traces must be queryable: \"<strong>show every decision</strong> influenced by this data source\"",
+          "Agent observability is <strong>build-not-buy</strong> today — no major APM vendor supports it natively"
+        ],
+        "what_breaks": [
+          "Traditional APM tracking request flow and latency reveals <strong>nothing about output correctness</strong>",
+          "Incident forensics cannot reconstruct <strong>agent decision chains</strong> without semantic trace data",
+          "<strong>Regulatory accountability</strong> is impossible to demonstrate without causal provenance records",
+          "Teams that attempt <strong>full observability without phasing</strong> deliver nothing useful"
+        ],
+        "what_survives": [
+          "<strong>Correlation IDs</strong> and distributed tracing patterns extend naturally to agent interaction chains",
+          "Structured logging discipline applies — agents just need <strong>richer semantic payloads</strong>",
+          "Alerting on threshold breaches transfers to <strong>agent-specific failure signatures</strong>",
+          "The principle of <strong>instrumenting before optimising</strong> is more important than ever with agents"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Full semantic tracing across agent chains</mark> — every business outcome traceable through the complete reasoning path that produced it.",
+        "description": "Every agent logs inputs, outputs, model version, and reasoning trace. Distributed tracing links multi-agent interactions into <strong>queryable causal chains</strong>, enabling both real-time anomaly detection and post-incident forensic reconstruction.",
+        "key_practices": [
+          "Start with <strong>minimum viable observability</strong>: log every agent's inputs, outputs, and model version — 80% of forensic value",
+          "Add <strong>distributed tracing</strong> across agent chains with causal linking before investing in semantic analysis",
+          "Build <strong>queryable interaction histories</strong> so any business outcome can be traced to its full reasoning chain",
+          "Establish <strong>incident forensics protocols</strong> that reconstruct agent decision chains including context and model versions"
+        ]
+      }
+    },
+    {
+      "id": "ai-compliance",
+      "label": "AI Regulatory Compliance",
+      "traditional": {
+        "togaf_reference": "FC Part 5, Ch 6; TSG Risk and Security",
+        "summary": "Traditional EA maps architecture compliance to industry standards and provides compliance review processes.",
+        "body_html": "<h4>Risk Category</h4><p>Regulatory compliance risk — the risk that deployed systems violate applicable laws, regulations, and industry standards.</p><h4>Assessment</h4><p>Compliance assessed through architecture reviews mapped to external standards. The TSG Risk and Security guide maps EA to security frameworks. Compliance is verified at project milestones using structured checklists.</p><h4>Controls</h4><p>Architecture standards aligned to regulatory requirements. Compliance reviews at milestones. Dispensation process for approved deviations. Governance repository maintains compliance records.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "rs-ac-01",
+            "text": "Has your organisation inventoried and classified all deployed AI systems against applicable AI-specific regulations (EU AI Act, NIST AI RMF, ISO 42001)?",
+            "levels": {
+              "1": "No inventory of AI systems against regulatory requirements; compliance addressed reactively if at all",
+              "2": "AI systems are partially inventoried; some awareness of applicable regulations but no systematic classification",
+              "3": "All AI systems inventoried and classified by regulatory risk level; documentation requirements identified per system; human oversight mechanisms in place for high-risk systems",
+              "4": "Comprehensive algorithmic compliance framework operational with automated classification, monitoring, and reporting; bias detection implemented for high-risk systems",
+              "5": "Adaptive compliance where regulatory changes trigger automated impact assessment and control adjustment; AI systems self-document compliance evidence across their lifecycle"
+            }
+          },
+          {
+            "id": "rs-ac-02",
+            "text": "How does your organisation track and respond to changes in AI-specific regulatory requirements across relevant jurisdictions?",
+            "levels": {
+              "1": "No systematic tracking of AI regulatory changes; compliance gaps discovered reactively",
+              "2": "Informal awareness of major regulatory developments; no structured process for assessing impact on deployed AI systems",
+              "3": "Regulatory change tracking process established with impact assessment for new or evolving AI regulations; compliance roadmap maintained",
+              "4": "Proactive regulatory change management with automated impact assessment; compliance-as-code implemented for major regulatory requirements",
+              "5": "Regulatory intelligence feeds inform architecture planning; automated compliance adjustment when regulations change; active participation in regulatory development processes"
+            }
+          },
+          {
+            "id": "rs-ac-03",
+            "text": "To what extent has your organisation implemented transparency and explainability capabilities for AI systems that require them?",
+            "levels": {
+              "1": "No transparency or explainability capabilities for AI systems",
+              "2": "Basic documentation exists for some AI systems but no systematic explainability architecture",
+              "3": "Explainability requirements defined per AI system risk classification; transparency mechanisms implemented for high-risk systems; decision audit trails maintained",
+              "4": "Automated explainability generation for all regulated AI systems; decision provenance tracked end-to-end; transparency reports generated on demand",
+              "5": "Real-time explainability integrated into all AI system outputs; stakeholder-appropriate explanations generated automatically; continuous validation of explanation accuracy"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Inventory all deployed AI systems and classify each against applicable regulations: EU AI Act risk classification, NIST AI RMF applicability, ISO 42001 scope, and GDPR automated decision-making obligations.",
+            "max_level": 2
+          },
+          {
+            "text": "Establish a regulatory change tracking process for AI-specific regulations with systematic impact assessment for each change against your deployed and planned AI systems.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement explainability and transparency mechanisms for all high-risk AI systems, including decision audit trails, automated documentation, and human oversight mechanisms required by applicable regulations.",
+            "max_level": 3
+          },
+          {
+            "text": "Develop a unified algorithmic compliance framework synthesising requirements from EU AI Act, NIST AI RMF, ISO 42001, and GDPR into organisation-specific policies, with compliance-as-code automation for major requirements.",
+            "max_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "EU AI Act fines reach 7% of global turnover — <mark>most organisations have no AI compliance posture</mark> and regulations are tightening.",
+        "key_shifts": [
+          "Every AI system must be classified by <strong>regulatory risk tier</strong> (EU AI Act, GDPR, sector-specific)",
+          "<strong>Continuous compliance monitoring</strong> replaces milestone reviews — model drift creates violations silently",
+          "Explainability must serve <strong>multiple audiences</strong>: regulators, customers, and internal technical teams",
+          "<strong>Regulatory change management</strong> is now a standing capability — the landscape shifts quarterly"
+        ],
+        "what_breaks": [
+          "Milestone-based compliance verification misses violations from <strong>model drift between reviews</strong>",
+          "Organisations without an <strong>AI system inventory</strong> cannot comply with regulations for uncatalogued systems",
+          "Single-audience explainability fails regulators, customers, and technical teams needing <strong>different detail levels</strong>",
+          "Static regulatory mapping cannot track AI-specific regulations <strong>shifting across jurisdictions quarterly</strong>"
+        ],
+        "what_survives": [
+          "Architecture standards aligned to <strong>regulatory requirements</strong> remain the right governance mechanism",
+          "<strong>Structured compliance reviews</strong> with checklists extend to AI-specific regulations",
+          "The <strong>dispensation process</strong> for approved deviations applies to AI regulatory requirements",
+          "<strong>Governance Repository</strong> as the compliance evidence store is essential for AI audit trails"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Unified algorithmic compliance framework</mark> synthesising EU AI Act, NIST AI RMF, ISO 42001, and GDPR into automated, monitored controls.",
+        "description": "Every AI system is inventoried, classified by <strong>regulatory risk tier</strong>, and monitored continuously for compliance drift. Explainability is architected for multiple audiences with automated evidence generation across the system lifecycle.",
+        "key_practices": [
+          "Inventory and classify all deployed AI systems against <strong>EU AI Act risk tiers</strong> and GDPR automated decision-making rules",
+          "Fix <strong>GDPR automated decision-making violations</strong> first — that is already law with active enforcement",
+          "Build <strong>multi-audience explainability</strong>: regulator audit trails, customer explanations, and technical decision attribution",
+          "Establish a standing <strong>regulatory change management</strong> function assessing AI regulation changes quarterly"
+        ]
+      }
+    }
+  ]
+}

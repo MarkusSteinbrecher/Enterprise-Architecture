@@ -1,0 +1,624 @@
+{
+  "id": "ea-repository",
+  "title": "EA Repository & Content",
+  "description": "Architecture Repository structure, content framework, and the evolution toward machine-readable, agent-consumable architecture knowledge.",
+  "subtopics": [
+    {
+      "id": "architecture-repository",
+      "label": "Architecture Repository",
+      "traditional": {
+        "togaf_reference": "FC Part 4, Ch 7",
+        "summary": "The Architecture Repository is the persistent store for all architecture content, organised into seven governed areas.",
+        "body_html": "<h4>Purpose</h4><p>Serves as the institutional memory of the architecture function — a governed collection of architecture outputs that the enterprise draws on for future work. It manages the huge volume of architectural output created by a mature Architecture Capability.</p><h4>Structure</h4><p>Seven defined areas: Architecture Metamodel, Architecture Capability, Architecture Landscape, Standards Information Base, Reference Library, Governance Repository, and Architecture Requirements Repository. Also includes the Solutions Landscape for deployed SBBs and integration with external enterprise repositories.</p><h4>How It's Used</h4><p>Populated through ADM phases, maintained through governance processes, and consumed by architects during all architecture activities. Content is classified along the Enterprise Continuum from foundation to organisation-specific. External reference models and standards are curated alongside internal content.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "repo-structure-01",
+            "text": "Our Architecture Repository is structured with defined areas, governed content, and clear ownership.",
+            "levels": {
+              "1": "No formal repository exists; architecture content is scattered across personal drives and wikis",
+              "2": "A central location exists but content is loosely organised with inconsistent structure",
+              "3": "Repository follows a defined structure with governed areas, content ownership, and regular updates",
+              "4": "Repository is comprehensive with automated feeds supplementing manual curation; content quality is measured",
+              "5": "Repository is a live system with continuous automated updates, drift detection, and API-based access for both humans and automated consumers"
+            }
+          },
+          {
+            "id": "repo-structure-02",
+            "text": "We have visibility into all AI agents and models deployed across the enterprise through dedicated registries.",
+            "levels": {
+              "1": "No central visibility; teams deploy AI agents and models independently with no enterprise tracking",
+              "2": "Informal inventory exists but is incomplete and manually maintained with limited attributes",
+              "3": "Dedicated Agent Registry and Model Register established with core attributes; registration required before production deployment",
+              "4": "Registries continuously updated with automated collection of cost, performance, and deployment data; governance integrated",
+              "5": "Registries serve as the authoritative control plane for AI component lifecycle with automated management, portfolio optimisation, and continuous compliance"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Establish a basic Architecture Repository with defined areas and content ownership, even using simple tools like a shared drive with clear folder structure and naming conventions.",
+            "max_level": 2
+          },
+          {
+            "text": "Create an Agent Registry and Model Register as new repository areas — start with a spreadsheet tracking identity, owner, role, deployment location, and status for each AI component.",
+            "max_level": 3
+          },
+          {
+            "text": "Connect at least one automated data source (cloud inventory API, CI/CD pipeline, or infrastructure-as-code state) to your repository to pilot continuous updating.",
+            "min_level": 3
+          },
+          {
+            "text": "Implement API-based access to repository content so that AI agents and compliance automation can consume architecture data programmatically.",
+            "min_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "The repository must add <mark>agent and model registries</mark> and shift from periodic curation to live, API-accessible infrastructure.",
+        "key_shifts": [
+          "<strong>Agent Registry and Model Register</strong> become mandatory repository components with named owners",
+          "Repository exposes <strong>APIs for programmatic query</strong> by agents and compliance automation",
+          "At least one <strong>automated feed replaces manual curation</strong> for agent-related content",
+          "Governance Repository tracks <strong>continuous agent compliance</strong>, not just milestone reviews"
+        ],
+        "what_breaks": [
+          "Agents deploy invisibly without a registry, creating <strong>unmanaged shadow AI</strong> at machine speed",
+          "Manual curation produces content that is <strong>stale before it is published</strong>",
+          "No <strong>guardrail specification library</strong> means agent behaviour constraints are ad hoc per team",
+          "<strong>Milestone-based governance reviews</strong> miss continuous agent state changes"
+        ],
+        "what_survives": [
+          "<strong>Seven governed repository areas</strong> remain a sound organising principle for architecture content",
+          "Content classification along the <strong>Enterprise Continuum</strong> still applies to agent-related assets",
+          "The principle of <strong>institutional memory</strong> through governed storage is more critical, not less",
+          "Repository population through <strong>ADM phases</strong> continues alongside new automated feeds"
+        ]
+      },
+      "future_state": {
+        "summary": "The repository operates as <mark>live infrastructure with API access</mark>, serving both human architects and autonomous agents.",
+        "description": "The Architecture Repository is a continuously updated, <strong>programmatically accessible store</strong> where agent registries, model inventories, and guardrail libraries sit alongside traditional architecture content. Automated feeds from cloud inventory and CI/CD pipelines keep volatile content current.",
+        "key_practices": [
+          "<strong>Register every agent</strong> with owner, model dependency, data access scope, and risk tier before production deployment",
+          "Expose repository content through <strong>governed APIs</strong> so agents and compliance tools query it programmatically",
+          "Connect at least one <strong>automated feed</strong> — cloud inventory or CI/CD pipeline — before attempting full integration",
+          "Maintain a <strong>Guardrail Specification Library</strong> as a standard repository area governing agent behaviour constraints"
+        ]
+      }
+    },
+    {
+      "id": "enterprise-metamodel",
+      "label": "Enterprise Metamodel",
+      "traditional": {
+        "togaf_reference": "FC Part 4, Ch 2-5",
+        "summary": "The metamodel defines entities, attributes, and relationships that constitute an enterprise architecture across four domains.",
+        "body_html": "<h4>Purpose</h4><p>Provides a shared vocabulary for describing the enterprise — defining what kinds of things exist (entities), how they relate (relationships), and how to present them (artifacts and building blocks). Designed explicitly for organisational extension.</p><h4>Structure</h4><p>Core entities across four domains: business (actor, role, organisation unit, function, service, process, event, capability), data (data entity, logical/physical components), application (logical/physical components, IS services), and technology (technology component, service, node). Artifacts organised as catalogues, matrices, and diagrams. Building blocks as ABBs (architecture specifications) and SBBs (solution implementations).</p><h4>How It's Used</h4><p>The metamodel structures all architecture content produced during ADM phases. ABBs capture requirements-level architecture; SBBs map to specific implementations. The Content Framework organises artifacts into catalogues (lists), matrices (relationship grids), and diagrams (visual renderings). Every entity carries metadata supporting query and analysis.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "metamodel-01",
+            "text": "Our architecture metamodel includes AI-specific entities (agents, models, guardrails) alongside traditional entities.",
+            "levels": {
+              "1": "No formal metamodel exists, or the metamodel only covers traditional entities with no AI representation",
+              "2": "AI components are documented informally but not as defined metamodel entities with governed attributes",
+              "3": "Agent and AI Model defined as formal metamodel entities with core attributes; used in architecture documentation",
+              "4": "Full AI entity coverage (agents, models, guardrails, prompts, interaction patterns, capability profiles) with typed relationships to traditional entities",
+              "5": "AI entities fully integrated into the metamodel with automated discovery, lifecycle tracking, and machine-readable schema definitions"
+            }
+          },
+          {
+            "id": "metamodel-02",
+            "text": "We produce AI-specific architecture artifacts (agent catalogs, model portfolios, interaction diagrams) using established artifact patterns.",
+            "levels": {
+              "1": "No AI-specific architecture artifacts exist; AI deployments are undocumented at the architecture level",
+              "2": "Some teams produce informal AI documentation but not using standard artifact templates",
+              "3": "Standard templates exist for Agent Catalog, Capability/Delivery Model Matrix, and at least one AI-specific diagram",
+              "4": "Full set of AI artifacts produced consistently across the enterprise, integrated with traditional artifacts",
+              "5": "AI artifacts generated semi-automatically from registry data, published in both human-readable and machine-readable formats"
+            }
+          },
+          {
+            "id": "metamodel-03",
+            "text": "Our building block framework (ABBs and SBBs) extends to AI components, enabling model portability and agent interchangeability.",
+            "levels": {
+              "1": "Building block concepts are not applied to AI components; models and agents are selected ad hoc",
+              "2": "Some awareness of the need to separate capability requirements from specific AI product choices",
+              "3": "Agent ABBs and Model ABBs defined for key use cases; SBBs mapped to specific implementations with documented rationale",
+              "4": "Systematic ABB/SBB management for AI components; model interchange tested and validated; SBB refresh cycles managed",
+              "5": "ABB/SBB framework drives automated model selection and agent provisioning; interchange is routine and low-risk"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Add Agent and AI Model as formal entities in your metamodel, even if initially captured in a spreadsheet — define the core attributes and start documenting what you have.",
+            "max_level": 2
+          },
+          {
+            "text": "Create standard artifact templates for an Agent Deployment Catalog and Capability/Delivery Model Matrix following established catalog and matrix patterns.",
+            "max_level": 3
+          },
+          {
+            "text": "Define Agent ABBs and Model ABBs for your top three AI use cases, separating required capabilities from specific product or model selections.",
+            "max_level": 3
+          },
+          {
+            "text": "Publish metamodel content in structured data formats (YAML/JSON) alongside human-readable documentation to enable machine consumption by architecture agents.",
+            "min_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "The metamodel needs <mark>Agent, Model, and Guardrail as first-class entities</mark> to make AI visible to architecture governance.",
+        "key_shifts": [
+          "<strong>Agent, AI Model, and Guardrail</strong> added as governed metamodel entities with defined attributes",
+          "Business services classified by <strong>delivery model</strong>: human, augmented, or agent-native",
+          "<strong>ABB/SBB separation</strong> enables model portability when vendors shift pricing quarterly",
+          "<strong>Agent Catalog</strong> and Capability/Delivery Model Matrix become standard architecture artifacts"
+        ],
+        "what_breaks": [
+          "Forcing agents into Actor or Application Component loses <strong>autonomy level, tool access, and oversight model</strong>",
+          "No <strong>Guardrail entity</strong> means autonomous agent behaviour boundaries are ungoverned",
+          "SBB lifecycle management designed for stable products cannot handle <strong>quarterly model refresh cycles</strong>",
+          "Artifact templates with <strong>no agent viewpoints</strong> leave AI deployments undocumented"
+        ],
+        "what_survives": [
+          "The <strong>four-domain structure</strong> (business, data, application, technology) extends naturally to accommodate AI",
+          "<strong>ABB/SBB distinction</strong> becomes more critical — it is exactly what enables model switching",
+          "<strong>Catalog/matrix/diagram</strong> artifact pattern applies directly to agent-specific content",
+          "The metamodel's design for <strong>organisational extension</strong> means adding entities follows established practice"
+        ]
+      },
+      "future_state": {
+        "summary": "A <mark>unified metamodel with AI-native entities</mark> makes agents, models, and guardrails as visible and governed as any application.",
+        "description": "The enterprise metamodel treats Agent, AI Model, and Guardrail as <strong>first-class entities</strong> with typed relationships to traditional business, data, and technology entities. ABBs define required AI capabilities while SBBs map to specific model configurations, making vendor switching a managed change.",
+        "key_practices": [
+          "Define <strong>Agent and AI Model entities</strong> with core attributes: autonomy level, model dependency, tool access, oversight model",
+          "Classify every business service by <strong>delivery model</strong> — human, augmented, or agent-native — in the metamodel",
+          "Separate <strong>Agent ABBs from SBBs</strong> so model switching is a governed substitution, not a redesign",
+          "Publish metamodel definitions in <strong>machine-readable formats</strong> (YAML/JSON) alongside human documentation"
+        ]
+      }
+    },
+    {
+      "id": "architecture-landscape",
+      "label": "Architecture Landscape",
+      "traditional": {
+        "togaf_reference": "FC Part 4, Ch 6; FC Part 3, Ch 3",
+        "summary": "The Architecture Landscape captures current-state and target-state representations across all domains, organised by the Enterprise Continuum.",
+        "body_html": "<h4>Purpose</h4><p>Provides the enterprise-wide view of architecture across business, data, application, and technology domains — showing where the enterprise is today and where it needs to be. The Enterprise Continuum classifies assets from Foundation through Industry to Organisation-Specific.</p><h4>Structure</h4><p>Three landscape levels — Strategic, Segment, and Capability architectures — each at different breadth and depth. Organised along four dimensions: breadth (subject matter), depth (detail level), time (baseline to target), and recency (currency of content). The Architecture Continuum classifies architecture building blocks; the Solutions Continuum classifies solution building blocks.</p><h4>How It's Used</h4><p>Gap analysis between baseline and target drives architecture roadmaps. Landscape-level views inform investment decisions, identify duplication, and guide rationalisation. The Enterprise Continuum enables re-use from generic patterns to specific implementations. Different parts of the enterprise may be at different ADM cycle points.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "landscape-01",
+            "text": "Our Architecture Landscape includes agent content at strategic, segment, and capability levels alongside traditional domain views.",
+            "levels": {
+              "1": "No architecture landscape exists, or it covers only traditional infrastructure with no AI representation",
+              "2": "AI components appear informally in technology architecture views but are not systematically represented across landscape levels",
+              "3": "Agent content defined at each landscape level: strategic agent strategy, segment agent interaction contracts, capability delivery model classification",
+              "4": "Agent landscape content continuously updated from automated sources; cross-segment agent impact mapped and governed",
+              "5": "Agent landscape is a live digital twin with automated drift detection, volatility-driven refresh, and sovereignty constraint enforcement"
+            }
+          },
+          {
+            "id": "landscape-02",
+            "text": "Our landscape supports differentiated refresh cycles, with volatile AI content updating more frequently than stable business architecture.",
+            "levels": {
+              "1": "Landscape content is static or updated only during major architecture reviews",
+              "2": "Some technology content is updated more frequently but without a defined differentiated cadence",
+              "3": "Defined refresh schedules exist: continuous for infrastructure, monthly for AI components, quarterly for business architecture",
+              "4": "Technology and AI landscape content auto-updates from runtime sources; drift detection alerts when deployed state diverges from target",
+              "5": "Fully automated landscape maintenance for volatile domains with governed change management for stable content; self-healing drift resolution"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Add agent content to your existing architecture landscape, starting with a capability/delivery model overlay showing which capabilities are targeted for agent-native delivery.",
+            "max_level": 2
+          },
+          {
+            "text": "Define differentiated refresh schedules for landscape content: establish a volatility classification (stable, evolving, volatile) and match maintenance cadence to actual change rates.",
+            "max_level": 3
+          },
+          {
+            "text": "Pilot a digital architecture twin for one technology domain by connecting automated feeds from cloud inventory or deployment pipelines to your landscape.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "The landscape needs a <mark>delivery model overlay and volatility-driven refresh</mark> replacing uniform update cycles.",
+        "key_shifts": [
+          "<strong>Capability/delivery model overlay</strong> shows human vs. augmented vs. agent-native per capability",
+          "<strong>Volatility classification</strong> drives differentiated refresh: continuous for AI, deliberate for business",
+          "<strong>Cross-segment agent impact mapping</strong> added — agents routinely cross functional boundaries",
+          "Enterprise Continuum published in <strong>structured format</strong> for programmatic re-use queries"
+        ],
+        "what_breaks": [
+          "<strong>18-month target architectures</strong> are meaningless for AI components that evolve quarterly",
+          "<strong>Uniform update cadence</strong> wastes effort on stable content while volatile content goes stale",
+          "Segment-level architecture misses agents that operate across <strong>multiple functional boundaries</strong>",
+          "No <strong>delivery model classification</strong> leaves leadership unable to answer which capabilities agents will run"
+        ],
+        "what_survives": [
+          "<strong>Strategic/Segment/Capability</strong> landscape levels remain valuable for scoping agent impact",
+          "<strong>Gap analysis</strong> between baseline and target still drives roadmaps — the method survives, the cadence changes",
+          "The Enterprise Continuum's classification from foundation to organisation-specific applies to <strong>AI patterns</strong>",
+          "Four scoping dimensions (breadth, depth, time, recency) become <strong>more important with AI volatility</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "A <mark>volatility-aware living landscape</mark> with delivery model overlays answers leadership's workforce and investment questions in real time.",
+        "description": "The Architecture Landscape tags every capability with its <strong>current and target delivery model</strong> and refreshes content at cadences matched to actual change rates. Volatile AI content auto-updates from runtime sources while stable business architecture follows deliberate governance cycles.",
+        "key_practices": [
+          "Build a <strong>capability/delivery model overlay</strong> showing current and target state for human, augmented, and agent-native",
+          "Tag every landscape asset as <strong>stable, evolving, or volatile</strong> and match maintenance effort accordingly",
+          "Map <strong>cross-segment agent dependencies</strong> so agents spanning functional boundaries are visible in landscape views",
+          "Pilot a <strong>digital architecture twin</strong> for one technology domain by connecting automated feeds to the landscape"
+        ]
+      }
+    },
+    {
+      "id": "standards-catalog",
+      "label": "Standards & Reference Library",
+      "traditional": {
+        "togaf_reference": "FC Part 4, Ch 3 & Ch 5",
+        "summary": "Architecture artifacts (views, viewpoints, catalogs, matrices, diagrams) and building blocks (ABBs, SBBs) standardise architecture content.",
+        "body_html": "<h4>Purpose</h4><p>Architecture artifacts provide the notation and templates for documenting architecture. Viewpoints establish conventions for constructing views that address specific stakeholder concerns. Building blocks package functionality as re-usable, replaceable, well-specified components. Standards catalogs document approved technologies and their lifecycle status.</p><h4>Structure</h4><p>Artifacts organised as catalogs (lists of building blocks), matrices (relationship grids between entities), and diagrams (graphical renderings). Views are created by selecting viewpoints from a reusable library and generating views as templates. Building blocks classified as ABBs (architecture requirements) and SBBs (solution implementations), with a lifecycle from Proposed through Active to Retired.</p><h4>How It's Used</h4><p>Architects select viewpoints based on stakeholder concerns, produce views using artifact templates, and compose building blocks into target architectures. The Technology Standards Catalog and Technology Portfolio Catalog govern approved technologies. Standards conformance is checked during governance reviews. The building block design process identifies re-usable, new, and purchased components.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "standards-01",
+            "text": "Our Standards Information Base includes AI-specific standards covering model evaluation, agent governance, and responsible AI requirements.",
+            "levels": {
+              "1": "No formal standards exist for AI components; teams select models and deploy agents without enterprise guidance",
+              "2": "Informal guidelines exist for some AI decisions but are not governed as formal architecture standards",
+              "3": "AI standards defined and governed: model evaluation criteria, agent communication protocols, responsible AI principles, and sovereignty requirements",
+              "4": "AI standards enforced through automated compliance checking; standards refresh cycle aligned with AI market evolution on compressed timelines",
+              "5": "AI standards expressed as code and enforced automatically in deployment pipelines; continuous updates reflect evolving regulatory and market conditions"
+            }
+          },
+          {
+            "id": "standards-02",
+            "text": "We use agent-specific viewpoints and artifact templates to document agent behaviour, interactions, and governance consistently.",
+            "levels": {
+              "1": "No agent-specific viewpoints or artifact templates exist; agent documentation is ad hoc or absent",
+              "2": "Some teams document agents informally but without standardised viewpoints or templates",
+              "3": "Defined viewpoints for Agent Behaviour and Human-Agent Interaction; standard templates for Agent Catalog and Agent/Guardrail Matrix",
+              "4": "Full suite of agent viewpoints and artifacts produced consistently; notation extensions adopted for agent swim-lanes and handoff points",
+              "5": "Agent artifacts generated dynamically from live repository data; views reflect real-time agent status and compliance"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Create an initial set of AI architecture standards covering model selection criteria, agent access control policies, and responsible AI requirements for your enterprise.",
+            "max_level": 2
+          },
+          {
+            "text": "Define agent-specific viewpoint templates — start with an Agent Behaviour viewpoint and a Human-Agent Interaction viewpoint addressing key stakeholder concerns.",
+            "max_level": 3
+          },
+          {
+            "text": "Establish a compressed lifecycle review cycle for AI-related standards — quarterly rather than annual — to keep pace with model market evolution.",
+            "min_level": 3
+          },
+          {
+            "text": "Express architecture standards as code (using policy-as-code frameworks) so that deployment pipelines can automatically enforce AI governance rules.",
+            "min_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Standards must cover <mark>AI governance with lightweight, quarterly-cycle review</mark> or teams will bypass them entirely.",
+        "key_shifts": [
+          "<strong>AI standards catalog</strong> covers model evaluation, agent governance, and responsible AI requirements",
+          "Standards review cycles <strong>compressed to quarterly</strong> for AI-related technology",
+          "Critical standards expressed as <strong>executable policy</strong> for automated pipeline enforcement",
+          "<strong>Agent-native building block class</strong> added: configured not coded, probabilistic not deterministic"
+        ],
+        "what_breaks": [
+          "No <strong>responsible AI standards</strong> means fairness, transparency, and safety are ungoverned",
+          "<strong>Annual review cycles</strong> produce AI standards nobody follows because the technology moved on",
+          "<strong>Document-only standards</strong> depend on architects reviewing every deployment — which does not scale",
+          "No <strong>agent-specific viewpoints</strong> leave agent behaviour and human-agent interaction undocumented"
+        ],
+        "what_survives": [
+          "Governed standards with <strong>lifecycle status</strong> (Proposed, Active, Retired) apply directly to AI standards",
+          "<strong>Viewpoint-driven architecture documentation</strong> extends naturally to agent behaviour viewpoints",
+          "<strong>Building block patterns</strong> (ABB as specification, SBB as implementation) are exactly right for AI",
+          "<strong>Stakeholder-driven view selection</strong> remains valid — the stakeholder set just expands"
+        ]
+      },
+      "future_state": {
+        "summary": "AI standards are <mark>executable, automatically enforced, and refreshed quarterly</mark> — short enough to read, precise enough to automate.",
+        "description": "A lean AI Standards Catalog covers model selection criteria, agent access control, and responsible AI requirements with <strong>quarterly review cycles</strong>. Critical standards are expressed as executable policy enforced in deployment pipelines.",
+        "key_practices": [
+          "Start with <strong>three standards</strong>: model selection criteria, agent access control policy, and responsible AI requirements",
+          "Express critical standards as <strong>executable policy</strong> so enforcement is automatic in deployment pipelines",
+          "Define <strong>agent-specific viewpoints</strong>: Agent Behaviour and Human-Agent Interaction for key stakeholder concerns",
+          "Run <strong>quarterly lifecycle reviews</strong> for AI-related standards — retire what the market has moved past"
+        ]
+      }
+    },
+    {
+      "id": "knowledge-graphs",
+      "label": "Knowledge Graphs",
+      "traditional": {
+        "togaf_reference": "FC Part 4 Ch 7; FC Part 4 Ch 2; TSG Information Mapping (G190); TSG Metadata Management (G234)",
+        "summary": "Architecture knowledge is stored in a curated document repository with seven areas, supported by information mapping and metadata management.",
+        "body_html": "<h4>Purpose</h4><p>The Architecture Repository stores architecture content as curated documents organised into seven areas. The Enterprise Metamodel defines entities and relationships as a structural vocabulary for human comprehension. Information Mapping articulates information concepts and their relationships, producing visual artifacts (UML, ArchiMate, ERDs). Metadata Management governs business glossaries, data dictionaries, and data lineage.</p><h4>Structure</h4><p>Seven repository areas hold content produced during ADM phases. The metamodel defines entity types and valid relationships across four architecture domains. Information maps show data flows, dependencies, and organisational boundaries. Metadata organised as business, technical, and operational categories in relational or document-based repositories.</p><h4>How It's Used</h4><p>Architects search, locate, and interpret architecture content manually. Information maps support impact analysis. Metadata catalogs support governance and discovery. All assume human consumers interpreting prose documents, diagrams, and structured records through human-operated interfaces.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "kg-01",
+            "text": "We have an enterprise knowledge graph that provides shared semantic context for AI agents and architecture consumers.",
+            "levels": {
+              "1": "No knowledge graph exists; architecture content is stored in documents and wikis with no graph structure",
+              "2": "Experimental or team-level knowledge graphs exist for specific use cases but are not enterprise-governed",
+              "3": "Enterprise knowledge graph established with defined ontology, population processes, ownership, and governance; used by multiple AI applications",
+              "4": "Knowledge graph operates as production infrastructure with SLAs, automated population from enterprise sources, and versioned ontology management",
+              "5": "Knowledge graph is the primary shared context mechanism for all enterprise AI agents, continuously updated, with automated reasoning, conflict detection, and federated cross-enterprise queries"
+            }
+          },
+          {
+            "id": "kg-02",
+            "text": "Our enterprise ontology is formally defined, governed, and used consistently across AI applications for shared architectural understanding.",
+            "levels": {
+              "1": "No enterprise ontology exists; each team defines its own vocabulary and entity relationships",
+              "2": "Informal shared vocabulary exists for key business entities but is not formally governed or machine-readable",
+              "3": "Formal ontology defined for core domains; governance process established for ontology changes; machine-readable format used",
+              "4": "Comprehensive ontology covering business, data, application, AI, and technology domains; automatically validated against enterprise data sources",
+              "5": "Living ontology that evolves through governed migration processes, automatically detects semantic drift, and serves as the authoritative vocabulary for all enterprise AI"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Identify your highest-value multi-agent use case and map the enterprise entities and relationships that agents need to share as a first step toward knowledge graph design.",
+            "max_level": 2
+          },
+          {
+            "text": "Select an ontology framework and define a core enterprise ontology covering the architecture entities most critical to your AI use cases, with clear ownership and governance.",
+            "max_level": 3
+          },
+          {
+            "text": "Treat your knowledge graph as operational infrastructure: define SLAs for availability and query latency, establish automated population pipelines, and implement graph-level access control.",
+            "min_level": 3
+          },
+          {
+            "text": "Integrate the knowledge graph with your Architecture Repository so that agents can traverse both enterprise domain knowledge and architecture metadata through a unified semantic layer.",
+            "min_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Architecture knowledge must become <mark>graph-structured and machine-queryable</mark> so agents can reason across domains.",
+        "key_shifts": [
+          "Architecture entities connected as <strong>typed graph nodes</strong> with traversable relationships",
+          "Enterprise Metamodel formalised as <strong>computational ontology</strong> for agent reasoning",
+          "Graph populated <strong>continuously</strong> from deployment pipelines and runtime sources",
+          "<strong>Semantic search via vector embeddings</strong> complements structural graph traversal"
+        ],
+        "what_breaks": [
+          "Agents making decisions with <strong>partial context</strong> because they cannot traverse cross-domain relationships",
+          "<strong>Human-only interfaces</strong> for architecture content lock out the agents that need to consume it",
+          "No <strong>enterprise ontology governance</strong> means the graph amplifies vocabulary confusion across divisions",
+          "<strong>Manual architecture search</strong> cannot scale when dozens of agents need simultaneous lookups"
+        ],
+        "what_survives": [
+          "The metamodel's <strong>entity types and relationships</strong> are the starting point for a formal ontology",
+          "Repository areas map to <strong>graph domains</strong> — the organising logic transfers",
+          "<strong>Information mapping and metadata management</strong> disciplines are prerequisites for graph quality",
+          "The principle of <strong>curated, governed architecture content</strong> becomes more important, not less"
+        ]
+      },
+      "future_state": {
+        "summary": "An <mark>enterprise knowledge graph with governed ontology</mark> gives every agent shared context spanning business through infrastructure.",
+        "description": "Agents traverse from a business capability through its supporting applications, infrastructure, and jurisdictional constraints in a <strong>single query</strong>. The ontology is aligned across divisions first, then populated from automated feeds.",
+        "key_practices": [
+          "Start with a <strong>well-structured API layer</strong> over existing tools, not a multi-year knowledge graph cathedral",
+          "Do <strong>vocabulary alignment</strong> work first — resolve semantic conflicts across divisions before building the graph",
+          "Treat the knowledge graph as <strong>operational infrastructure</strong> with SLAs, automated population, and access control",
+          "Combine <strong>structural graph traversal</strong> with semantic vector search for both precise queries and similarity"
+        ]
+      }
+    },
+    {
+      "id": "enterprise-as-code",
+      "label": "Enterprise as Code",
+      "traditional": {
+        "togaf_reference": "FC Part 4, Ch 4",
+        "summary": "Architecture deliverables are defined as document-centric work products with defined content and human-led approval processes.",
+        "body_html": "<h4>Purpose</h4><p>Architecture deliverables are the contractual outputs of architecture engagements — Architecture Definition Document, Architecture Requirements Specification, Architecture Roadmap, Architecture Contract, Compliance Assessment, and others. Over twenty deliverable types are defined with prescribed content.</p><h4>Structure</h4><p>Each deliverable has defined content expressed as prose sections: scope statements, stakeholder concerns, principles, gap analyses, impact assessments, and checklists. Architecture Contracts define governance agreements including conformance requirements and target architecture measures. Compliance Assessments check project progress at milestones.</p><h4>How It's Used</h4><p>Deliverables are produced during ADM phases, reviewed through governance boards, stored in the repository, and consumed by architects and stakeholders for decision-making. All designed for human reading — documents, presentations, and diagrams. Change Requests follow a document-based workflow with human impact assessment.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "eac-01",
+            "text": "Our architecture standards and policies are expressed as code that can be automatically validated and enforced.",
+            "levels": {
+              "1": "All architecture standards exist only as human-readable documents; compliance is checked manually",
+              "2": "A few technology standards are expressed as automated rules (e.g., cloud deployment policies) but most remain document-only",
+              "3": "Architecture policies systematically expressed as code for technology domains; automated compliance checking operational for key standards",
+              "4": "Dual-format content production in place: single source of truth generates both documentation and executable policy rules; compliance automated across most domains",
+              "5": "Architecture content is natively machine-readable with human-readable views generated on demand; full Enterprise as Code realised with automated enforcement across all domains"
+            }
+          },
+          {
+            "id": "eac-02",
+            "text": "AI agents can programmatically discover, interpret, and act on our architecture content through APIs and structured data formats.",
+            "levels": {
+              "1": "Architecture content is accessible only through documents and web pages; no programmatic access exists",
+              "2": "Some architecture data is available in spreadsheets or databases but not through governed APIs",
+              "3": "Key repository content (standards, metamodel entities, catalogs) available through APIs in structured formats",
+              "4": "Full repository API access; AI agents consume architecture content for analysis, compliance checking, and decision support",
+              "5": "AI agents participate in architecture development, consuming and producing machine-readable content; architecture content is an executable specification of the operating model"
+            }
+          },
+          {
+            "id": "eac-03",
+            "text": "Architecture changes follow CI/CD pipelines with automated validation, testing, and staged deployment — not just document review workflows.",
+            "levels": {
+              "1": "Architecture changes follow informal document update processes with no automated validation",
+              "2": "Architecture content is stored in version control but changes are not validated or tested automatically",
+              "3": "Architecture change pipelines validate schema conformance and detect policy conflicts before changes are accepted",
+              "4": "Full CI/CD for architecture: automated testing, conflict detection, staged rollout of new constraints to agent subsets before enterprise-wide deployment",
+              "5": "Architecture changes propagate automatically with rollback capability; drift detection triggers remediation; architecture operates as a living, continuously validated codebase"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Start with one high-impact standard (e.g., cloud deployment policy or data classification rule) and express it as code using a policy-as-code framework such as Open Policy Agent.",
+            "max_level": 2
+          },
+          {
+            "text": "Place your architecture definitions under version control (git) and establish a pull-request workflow for architecture changes with peer review and approval.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement dual-format content production for your Standards Information Base: author standards in a structured format that generates both human documentation and machine-enforceable rules.",
+            "min_level": 3
+          },
+          {
+            "text": "Build architecture content APIs that expose repository data to AI agents and compliance automation, starting with standards, metamodel entities, and catalog data.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Architecture content must become <mark>executable code — version-controlled, testable, and automatically enforced</mark>.",
+        "key_shifts": [
+          "Architecture policies encoded as <strong>executable rules</strong> enforced automatically in deployment pipelines",
+          "Architecture definitions managed in <strong>git with pull-request review</strong> and commit audit trail",
+          "<strong>Continuous drift detection</strong> compares live state against code-defined target architecture",
+          "<strong>Dual-format output</strong>: machine-enforceable rules and human-readable documentation from one source"
+        ],
+        "what_breaks": [
+          "<strong>Document-only standards</strong> where compliance depends on someone reading them — which nobody does at scale",
+          "<strong>No version control</strong> means architecture changes lack audit trail, rollback, and peer review",
+          "No <strong>drift detection</strong> allows deployed state to diverge silently from target architecture for months",
+          "Human-unreadable machine formats lose stakeholder buy-in; <strong>machine-unreadable prose</strong> blocks automation"
+        ],
+        "what_survives": [
+          "<strong>Architecture governance intent</strong> — review, approve, enforce — transfers directly to code-based workflows",
+          "<strong>Architecture Contracts</strong> concept maps naturally to executable compliance specifications",
+          "The requirement for <strong>stakeholder-consumable content</strong> remains — dual-format output is the solution",
+          "<strong>Change Request workflows</strong> translate to pull-request processes with broader participation"
+        ]
+      },
+      "future_state": {
+        "summary": "Architecture operates as a <mark>living codebase with automated enforcement</mark> — guardrails within which agents and teams act autonomously.",
+        "description": "Architecture definitions live in version control with pull-request review, automated validation, and <strong>continuous drift detection</strong>. Codified guardrails cut costs by 30% and improve time-to-market by 50% because compliance is built in, not bolted on.",
+        "key_practices": [
+          "Start with one <strong>high-impact policy in OPA/Rego</strong> and architecture definitions in git with pull-request review",
+          "Implement <strong>dual-format output</strong>: single source generates both machine-enforceable rules and human-readable docs",
+          "Deploy <strong>continuous drift detection</strong> comparing live deployed state against code-defined target architecture",
+          "Build <strong>architecture content APIs</strong> so agents consume standards, metamodel entities, and catalog data programmatically"
+        ]
+      }
+    },
+    {
+      "id": "data-architecture",
+      "label": "Data Architecture for AI",
+      "traditional": {
+        "togaf_reference": "FC Part 1, Ch 6; TSG Metadata Management (G234); TSG BI & Analytics (G238)",
+        "summary": "Data Architecture develops baseline and target data architectures using entity-relationship models, metadata management, and BI/analytics patterns.",
+        "body_html": "<h4>Purpose</h4><p>Defines the structure of logical and physical data assets, data management resources, and data governance — ensuring data supports business and technology architecture requirements. Addresses data at rest, data in motion, data in use, and open data.</p><h4>Structure</h4><p>Data entity catalogues, logical data models, data dissemination diagrams. Metadata organised as technical (schemas, lineage), business (definitions, ownership), and operational (quality metrics, usage). BI covers descriptive through prescriptive analytics with reference models for data integration layers.</p><h4>How It's Used</h4><p>Data entities identified and governed during Data Architecture. Metadata catalogued for governance and discovery. Information maps document data flows for impact analysis. All constructs assume structured, schema-defined data consumed by deterministic applications through request-response patterns.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "data-ai-01",
+            "text": "Our data architecture accounts for AI-specific data structures including vector stores, embeddings, knowledge graphs, and training datasets.",
+            "levels": {
+              "1": "Data architecture covers only traditional relational and structured data; AI data structures are unmanaged",
+              "2": "Some AI data assets exist but are managed by individual teams without enterprise data architecture oversight",
+              "3": "AI data assets included in the enterprise Data Entity Catalogue with defined ownership, quality standards, and governance",
+              "4": "Standardised AI data architecture patterns (RAG, embedding pipelines, knowledge graph integration) defined and enforced; training data governance in place",
+              "5": "Integrated AI and traditional data architecture with unified governance, machine-readable metadata for all assets, automated quality tracking, and sovereign data zones"
+            }
+          },
+          {
+            "id": "data-ai-02",
+            "text": "Our metadata is machine-readable and available through APIs, enabling AI agents to discover, assess, and access enterprise data autonomously.",
+            "levels": {
+              "1": "Metadata exists only in documents or human-browsable portals with no programmatic access",
+              "2": "Some metadata available in structured formats but not through governed APIs; coverage is incomplete",
+              "3": "Key metadata (schemas, ownership, quality metrics, sovereignty classification) exposed through APIs for the most critical data assets",
+              "4": "Comprehensive machine-readable metadata for all enterprise data; agents can discover sources, assess quality, and determine access without human mediation",
+              "5": "Self-describing data infrastructure where metadata is real-time, automatically validated, and powers autonomous agent data discovery with continuous quality assurance"
+            }
+          },
+          {
+            "id": "data-ai-03",
+            "text": "Data sovereignty is treated as a first-order architecture constraint that shapes data storage, processing, and AI workload placement decisions.",
+            "levels": {
+              "1": "Sovereignty is treated as a legal/compliance concern; data architecture proceeds without sovereignty input",
+              "2": "Sovereignty requirements documented for regulated workloads and applied through manual review at deployment time",
+              "3": "Sovereignty classification is a standard attribute on all data entities; information maps show sovereignty boundaries; AI workload placement considers jurisdiction",
+              "4": "Sovereign data zones operational with automated enforcement; AI workloads automatically deployed to compliant infrastructure based on data classification",
+              "5": "Sovereignty-by-default — all new data architectures inherit appropriate constraints; regulatory changes automatically trigger architecture impact assessment"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Inventory your AI data assets (models, training data, vector stores, embeddings) and add them to your Data Entity Catalogue with ownership and basic governance attributes.",
+            "max_level": 2
+          },
+          {
+            "text": "Classify all data domains for sovereignty: determine jurisdictional constraints on storage, processing, cross-border transfer, and implications for AI model training and inference.",
+            "max_level": 3
+          },
+          {
+            "text": "Define RAG pipeline architecture standards covering retrieval patterns, chunking strategies, freshness guarantees, and evaluation frameworks to replace ad-hoc team implementations.",
+            "max_level": 3
+          },
+          {
+            "text": "Design and implement sovereign data zones for your highest-risk jurisdictions so that AI workloads deployed within a zone inherit compliance properties automatically.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Data architecture must govern <mark>vector stores, RAG pipelines, and training data</mark> — agents amplify data quality failures at machine speed.",
+        "key_shifts": [
+          "<strong>Vector stores, embeddings, and training datasets</strong> cataloged as governed enterprise data assets",
+          "<strong>RAG pipeline standards</strong> defined: retrieval patterns, chunking, freshness guarantees, evaluation",
+          "Data quality elevated from governance aspiration to <strong>operational prerequisite</strong> for AI workloads",
+          "<strong>Sovereignty classification</strong> mandatory for all data entities, enforced in AI workload placement"
+        ],
+        "what_breaks": [
+          "77% of organisations <strong>cannot connect AI to business data</strong> without changes — gaps stall AI investment",
+          "Agents <strong>amplify data quality defects</strong> at machine speed, making thousands of flawed decisions unnoticed",
+          "Every team building its own RAG stack creates <strong>rework, inconsistency, and ungoverned pipelines</strong>",
+          "<strong>Unstructured data</strong> (documents, images, audio) sits entirely outside the governance perimeter"
+        ],
+        "what_survives": [
+          "<strong>Entity-relationship modelling</strong> discipline applies to AI data assets — they need the same cataloging rigour",
+          "<strong>Metadata management</strong> (technical, business, operational) extends directly to vector stores and training data",
+          "Data governance principles of <strong>ownership, quality, and lineage</strong> become more critical for AI, not less",
+          "The <strong>logical/physical data architecture</strong> distinction helps separate AI data patterns from implementations"
+        ]
+      },
+      "future_state": {
+        "summary": "AI data assets are <mark>cataloged, sovereignty-classified, and quality-assured</mark> as first-class citizens in enterprise data architecture.",
+        "description": "Vector stores, training datasets, and embeddings appear in the enterprise Data Entity Catalogue with ownership, quality metrics, and <strong>sovereignty classification</strong>. Standardised RAG pipeline patterns replace ad hoc team implementations.",
+        "key_practices": [
+          "<strong>Inventory all AI data assets</strong> — models, training data, vector stores, embeddings — in the Data Entity Catalogue",
+          "Define <strong>RAG pipeline architecture standards</strong> covering retrieval, chunking, freshness, and evaluation",
+          "Classify all data domains for <strong>sovereignty</strong> and enforce constraints in AI workload placement decisions",
+          "Implement <strong>sovereign data zones</strong> for highest-risk jurisdictions so AI workloads inherit compliance automatically"
+        ]
+      }
+    }
+  ]
+}

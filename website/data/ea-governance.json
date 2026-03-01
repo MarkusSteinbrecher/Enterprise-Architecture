@@ -1,0 +1,669 @@
+{
+  "id": "ea-governance",
+  "title": "EA Governance",
+  "description": "How architecture governance must evolve for the agentic organisation — from periodic review boards to continuous automated compliance with exception-based human review.",
+  "subtopics": [
+    {
+      "id": "governance-framework",
+      "label": "Governance Framework",
+      "traditional": {
+        "togaf_reference": "FC Part 5, Ch 3",
+        "summary": "Traditional EA governance uses a structure separating context, process, and content for managing enterprise architectures.",
+        "body_html": "<h4>Purpose</h4><p>Architecture governance ensures integrity and effectiveness of architectures through controlled creation, monitoring, and compliance enforcement. It operates within a four-level hierarchy: corporate, technology, IT, and architecture governance.</p><h4>How It Works</h4><p>The framework separates three pillars: <strong>context</strong> (business, technology, and regulatory drivers), <strong>process</strong> (governance workflows — policy management, compliance assessment, dispensation handling, monitoring), and <strong>content</strong> (policies, standards, architectures). Six characteristics define governance quality: discipline, transparency, independence, accountability, responsibility, and fairness. Business controls ensure compliance with organisational policies, while environment management handles repository infrastructure and access.</p><h4>Key Outputs</h4><p>Governance policies, architecture standards, compliance assessment procedures, dispensation (waiver) processes, and monitoring reports. The content-agnostic process design enables new governance material to be introduced without redesigning processes.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "gov-fw-q1",
+            "text": "Our governance framework separates process from content, allowing new AI governance rules to be introduced without disrupting governance processes.",
+            "levels": {
+              "1": "No formal governance framework exists; governance is ad hoc and inconsistent across the organisation.",
+              "2": "A governance framework exists but processes are tightly coupled to specific content areas, making it difficult to add AI governance.",
+              "3": "The framework clearly separates process from content; AI governance content has been added for major agent workloads.",
+              "4": "AI governance content is comprehensive and maintained alongside traditional governance content with clear ownership and tiered review paths.",
+              "5": "The framework dynamically incorporates new governance requirements, with regulatory changes triggering automated framework updates."
+            }
+          },
+          {
+            "id": "gov-fw-q2",
+            "text": "Our governance processes operate at a cadence that matches AI deployment velocity, with tiered review paths for different change types.",
+            "levels": {
+              "1": "Governance processes operate on quarterly or longer cycles with no awareness of deployment frequency.",
+              "2": "The gap between governance cycle time and deployment cadence is measured and understood but not yet addressed.",
+              "3": "Tiered governance paths exist: lightweight review for agent configuration changes, full review for capability changes; routine decisions handled within days.",
+              "4": "Automated governance checks handle routine decisions in real time; human review reserved for high-risk changes and exceptions.",
+              "5": "Governance operates at deployment speed — conformant changes proceed automatically, exceptions are triaged within minutes, dispensations are time-bound with mandatory monitoring."
+            }
+          },
+          {
+            "id": "gov-fw-q3",
+            "text": "Business controls are expressed in both human-readable and machine-executable forms so agents can enforce policies directly.",
+            "levels": {
+              "1": "Business controls exist only as prose policy documents with no machine-readable representation.",
+              "2": "The need for dual-expression policies is recognised but no controls have been translated to machine-executable form.",
+              "3": "Key business controls are expressed as machine-executable guardrails with traceability to source policy documents.",
+              "4": "Dual-expression is standard practice; policy changes trigger guardrail updates and vice versa with automated consistency checks.",
+              "5": "Policies are authored in structured formats that generate both human documentation and machine-executable guardrails from a single source."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Document your current governance framework and identify where process and content are coupled, blocking AI governance adoption.",
+            "max_level": 2
+          },
+          {
+            "text": "Define tiered governance paths: lightweight review for agent configuration changes, full review for new agent capabilities or autonomy changes.",
+            "max_level": 3
+          },
+          {
+            "text": "Translate your highest-priority business controls into dual-expression format — human-readable policy paired with machine-executable guardrails.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement event-driven governance triggers from deployment pipeline events rather than calendar-based review schedules.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Agent governance content fits existing frameworks, but <mark>governance speed must match deployment speed</mark> or you govern nothing.",
+        "key_shifts": [
+          "<strong>Governance cadence must match deployment velocity</strong> or agents deploy ungoverned",
+          "Business controls need <strong>dual expression</strong>: human-readable policy plus machine-executable guardrail",
+          "<strong>Dispensation windows shrink</strong> because agents accumulate non-compliance risk per decision, not per quarter",
+          "<strong>Tiered review paths</strong> separate routine configuration changes from capability or autonomy changes"
+        ],
+        "what_breaks": [
+          "<strong>Quarterly governance cycles</strong> cannot keep pace with daily agent deployments",
+          "<strong>No agent lifecycle governance</strong> covering registration, monitoring, and retirement",
+          "<strong>Autonomy classification is missing</strong> — governance controls cannot be calibrated to agent authority levels",
+          "<strong>Investment plans for governance tooling</strong> do not exist, leaving continuous checks unsupported"
+        ],
+        "what_survives": [
+          "The <strong>separation of context, process, and content</strong> remains structurally sound for agent governance",
+          "<strong>Six governance quality characteristics</strong> (discipline, transparency, accountability) apply unchanged",
+          "<strong>Content-agnostic process design</strong> means agent-specific policies slot in without structural redesign",
+          "The <strong>four-level governance hierarchy</strong> still provides the right escalation structure"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Tiered, speed-matched governance</mark> where automated checks clear conformant changes and humans govern by exception.",
+        "description": "<strong>Governance operates at deployment speed</strong> through machine-executable guardrails that enforce business controls in real time. Human review is reserved for new capabilities, autonomy changes, and exceptions — with every agent registered, classified by autonomy level, and governed from registration through retirement.",
+        "key_practices": [
+          "Define <strong>tiered review paths</strong>: automated checks for configuration changes, human review for capability or autonomy changes",
+          "Express every business control in <strong>dual form</strong> — human-readable policy paired with machine-executable guardrail",
+          "Implement <strong>agent lifecycle governance</strong> covering registration, autonomy classification, monitoring, and retirement",
+          "Trigger governance from <strong>deployment pipeline events</strong> instead of calendar-based review schedules"
+        ]
+      }
+    },
+    {
+      "id": "architecture-board",
+      "label": "Architecture Board",
+      "traditional": {
+        "togaf_reference": "FC Part 5, Ch 4",
+        "summary": "A cross-organisation body of 4–10 executives providing strategic oversight and decision authority for architecture matters.",
+        "body_html": "<h4>Purpose</h4><p>The Architecture Board provides decision-making authority for architecture matters — reviewing change requests, granting dispensations, assessing compliance, and resolving disputes. It operates at global, regional, or business-line scope with defined remit and authority limits.</p><h4>How It Works</h4><p>Structured meetings with explicit agendas covering change requests, dispensations, compliance assessments, dispute resolution, and strategic direction. Supports global governance boards, local boards, design authorities, and working parties. Recommended 4–5 permanent members with staggered terms for continuity. Triggers for establishing include new CIO appointment, mergers, organisational restructuring, or moves to new computing models.</p><h4>Key Outputs</h4><p>Architecture decisions, compliance assessments, dispensation approvals, dispute resolutions, strategic direction, and contract documentation management.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "arb-q1",
+            "text": "Our Architecture Board operates with tiered decision authority — automated approval for conformant deployments, design authority review for flagged issues, board escalation for strategic decisions.",
+            "levels": {
+              "1": "All architecture decisions require board or committee review regardless of complexity or risk level.",
+              "2": "Some informal delegation exists but there is no defined tiered authority model; most decisions still queue for board review.",
+              "3": "A formal tiered authority model is defined with clear criteria for each tier; automated checks handle routine decisions.",
+              "4": "Tiered authority is operational and data-driven; tier boundaries are adjusted based on exception volumes and outcomes.",
+              "5": "The tiered model is self-optimising — escalation patterns are analysed to continuously refine tier boundaries and automated checks."
+            }
+          },
+          {
+            "id": "arb-q2",
+            "text": "Our Architecture Board includes members with AI and ML expertise who can evaluate model behaviour, agent architecture, and non-deterministic system risks.",
+            "levels": {
+              "1": "No AI/ML expertise is represented on the architecture governance body.",
+              "2": "AI/ML expertise is consulted on an ad hoc basis but is not a standing board capability.",
+              "3": "At least one board member has substantive AI/ML expertise; AI-related proposals receive informed review.",
+              "4": "AI/ML expertise is represented across the governance structure including design authorities and working parties.",
+              "5": "The governance structure includes a dedicated agent architecture design authority with deep expertise in model behaviour, guardrail design, and AI-specific risk."
+            }
+          },
+          {
+            "id": "arb-q3",
+            "text": "Agent deployments above a defined risk threshold pass through a formal board-level review gate before production, validating guardrails, monitoring, and escalation readiness.",
+            "levels": {
+              "1": "Agent deployments do not go through any formal architecture governance gate.",
+              "2": "Some agent deployments are reviewed ad hoc, but there is no defined risk threshold or standard review process.",
+              "3": "A formal agent deployment review gate exists for high-risk agents, assessing guardrails, monitoring setup, and escalation paths.",
+              "4": "The review gate is integrated into deployment pipelines with automated pre-screening and human review for flagged risks.",
+              "5": "Review gates are risk-calibrated — fully automated for low-risk agents, streamlined review for medium-risk, full board review for high-risk with post-deployment verification."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Measure the proportion of board time spent on routine reviews versus strategic decisions and agent governance matters.",
+            "max_level": 2
+          },
+          {
+            "text": "Define a tiered decision authority model with clear criteria for automated approval, design authority review, and board escalation.",
+            "max_level": 3
+          },
+          {
+            "text": "Add AI/ML expertise to the board through new members, a rotating AI advisory role, or a dedicated agent architecture working party.",
+            "max_level": 3
+          },
+          {
+            "text": "Establish a formal agent deployment review gate for production deployments above a defined risk threshold, with standing board agenda items for agent incidents.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Boards reviewing already-deployed architectures perform governance theatre; shift to <mark>exception-based governance with AI expertise</mark>.",
+        "key_shifts": [
+          "Automated pre-checks clear conformant deployments; the <strong>board governs by exception</strong> only",
+          "Board composition must include <strong>AI/ML expertise</strong> to evaluate model and guardrail decisions",
+          "<strong>Agent dispensations tracked separately</strong> with shorter windows due to per-decision risk accumulation",
+          "Organisation-wide agent adoption treated as a <strong>board-level governance trigger</strong> alongside mergers"
+        ],
+        "what_breaks": [
+          "<strong>Monthly board meetings</strong> reviewing production architectures after the fact add no governance value",
+          "<strong>No production deployment gate</strong> for agents — reviews happen at design milestones only",
+          "<strong>No agent incident escalation path</strong> to the board for systemic autonomous system failures",
+          "<strong>Board decisions cannot be communicated</strong> at deployment speed to affected teams"
+        ],
+        "what_survives": [
+          "The board's <strong>strategic oversight role</strong> — setting direction and resolving enterprise-level disputes — remains essential",
+          "<strong>Tiered governance structures</strong> (global boards, local boards, design authorities) map well to agent governance",
+          "<strong>Staggered membership terms</strong> for continuity apply regardless of what the board governs",
+          "The board's <strong>authority to grant dispensations</strong> and assess compliance transfers directly"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Strategy-focused board with AI-literate membership</mark> governing agent patterns, incidents, and autonomy thresholds — not routine deployments.",
+        "description": "The Architecture Board shifts from reviewing individual architectures to <strong>governing the agent ecosystem strategically</strong>. Automated pre-screening clears conformant deployments, design authorities handle flagged issues, and the board focuses on novel agent patterns, systemic incidents, and enterprise autonomy thresholds.",
+        "key_practices": [
+          "Add <strong>standing board agenda items</strong> for agent deployment requests, incident analysis, and model update approvals",
+          "Establish a <strong>dedicated agent architecture design authority</strong> with AI/ML expertise reporting to the board",
+          "Implement <strong>automated pre-screening</strong> that clears conformant deployments and escalates exceptions with context",
+          "Define agent adoption as a <strong>formal board-level governance trigger</strong> requiring architectural impact assessment"
+        ]
+      }
+    },
+    {
+      "id": "architecture-compliance",
+      "label": "Architecture Compliance",
+      "traditional": {
+        "togaf_reference": "FC Part 5, Ch 6",
+        "summary": "Compliance reviews assess project conformance against architecture standards at defined milestones using structured checklists.",
+        "body_html": "<h4>Purpose</h4><p>Ensures implementations conform to architecture standards, catching errors early to reduce cost and risk, identifying reuse opportunities, and communicating readiness to management. Serves both technical and political purposes — providing measurable deliverables to executives and engaging development projects with architecture.</p><h4>How It Works</h4><p>Reviews at project milestones (initiation, initial design, major changes, ad hoc). Uses graduated conformance levels from Irrelevant through Consistent, Compliant, Conformant, and Fully Conformant to Non-conformant. Three governance scenarios scale review rigour: self-assessment checklists for small projects, EA-led review for projects without architects, and lead architect coordinating a review team for larger projects. Checklists cover hardware, middleware, applications, information management, security, and system engineering.</p><h4>Key Outputs</h4><p>Compliance assessments with conformance ratings, dispensation requests for non-conformant items, remediation plans, and compliance reports presented to the Architecture Board.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "comp-q1",
+            "text": "Our architecture compliance checks are automated and integrated into deployment pipelines, verifying conformance at deployment time rather than at periodic review meetings.",
+            "levels": {
+              "1": "Architecture compliance is assessed through periodic manual reviews; significant deployments occur without compliance checks.",
+              "2": "Some automated checks exist for infrastructure standards, but manual review remains the primary compliance mechanism.",
+              "3": "A majority of architecture standards are expressed as policy-as-code and checked automatically in CI/CD pipelines for all production deployments.",
+              "4": "Automated compliance coverage exceeds 80% of standards with false positive rates tracked and managed below defined thresholds.",
+              "5": "Near-complete automated coverage with AI-assisted policy authoring; predictive compliance identifies potential violations before code is written."
+            }
+          },
+          {
+            "id": "comp-q2",
+            "text": "Our compliance process includes AI-specific conformance criteria with quantitative thresholds for agent accuracy, drift limits, bias metrics, and guardrail effectiveness.",
+            "levels": {
+              "1": "No AI-specific compliance criteria exist; AI systems are assessed against the same standards as traditional systems.",
+              "2": "Some AI-specific criteria have been defined but are assessed manually and inconsistently with no quantitative thresholds.",
+              "3": "AI-specific compliance criteria are formalised with quantitative thresholds and included in standard reviews for all agent deployments.",
+              "4": "AI-specific criteria are automated — model drift, accuracy degradation, and bias metrics are continuously monitored against defined probabilistic conformance thresholds.",
+              "5": "AI compliance is proactive — trend analysis anticipates compliance risks and automatically triggers remediation or escalation before thresholds are breached."
+            }
+          },
+          {
+            "id": "comp-q3",
+            "text": "We have a dedicated agent architecture compliance checklist that is mandatory for any project deploying AI agents.",
+            "levels": {
+              "1": "No agent-specific compliance checklist exists; agent projects use generic architecture checklists.",
+              "2": "Some informal agent-specific review questions exist but they are not standardised or mandatory.",
+              "3": "A formal agent architecture compliance checklist is defined covering model selection, guardrails, escalation, monitoring, bias testing, and regulatory evidence.",
+              "4": "The agent checklist is integrated into automated compliance pipelines with automated verification for most items and human review for judgment-dependent items.",
+              "5": "The agent checklist is continuously refined based on incident patterns and regulatory changes, with automated updates propagated to all compliance pipelines."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Define an agent architecture compliance checklist covering model selection, guardrail design, escalation paths, monitoring setup, bias testing, and regulatory compliance.",
+            "max_level": 2
+          },
+          {
+            "text": "Establish quantitative conformance thresholds for agent behaviour — define what accuracy and boundary-adherence rates constitute Compliant versus Non-conformant.",
+            "max_level": 3
+          },
+          {
+            "text": "Add model updates as a compliance re-assessment trigger alongside traditional code changes and project milestones.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement continuous compliance monitoring for deployed agents to detect behavioural drift between formal review milestones.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Shift from milestone reviews to <mark>continuous automated compliance</mark> because agents drift between checkpoints without triggering any review.",
+        "key_shifts": [
+          "Conformance becomes <strong>quantitative and probabilistic</strong> — define acceptable thresholds, not binary pass/fail",
+          "Automated compliance checking added as a <strong>fourth governance scenario</strong> for deployment-speed verification",
+          "<strong>Model updates risk-tiered</strong>: major changes trigger re-assessment, minor patches proceed with monitoring",
+          "Agent compliance checklist <strong>co-owned by architecture, risk, and business</strong>"
+        ],
+        "what_breaks": [
+          "<strong>Binary pass/fail conformance</strong> cannot assess probabilistic systems that are 99.5% compliant",
+          "<strong>No continuous monitoring</strong> for behavioural drift between review milestones",
+          "Governance teams <strong>lack statistical skills</strong> to assess non-deterministic system compliance",
+          "<strong>Milestone-triggered reviews</strong> miss model updates, data shifts, and prompt changes entirely"
+        ],
+        "what_survives": [
+          "<strong>Graduated conformance levels</strong> provide a usable foundation for probabilistic thresholds",
+          "<strong>Tiered review scenarios</strong> (self-assessment, EA-led, review team) map to agent risk tiers",
+          "The principle of <strong>catching deviations early</strong> to reduce cost and risk is more urgent, not less",
+          "<strong>Dispensation processes</strong> for non-conformance still apply — agents just need shorter windows"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Probabilistic, always-on compliance</mark> where automated checks verify conformance at deployment speed and statistical monitoring catches drift.",
+        "description": "Compliance is verified continuously through automated policy checks in deployment pipelines and runtime monitoring of agent behaviour. <strong>Quantitative conformance thresholds</strong> replace binary pass/fail, and a focused agent compliance checklist covers the 10 items that catch 80% of issues.",
+        "key_practices": [
+          "Define <strong>quantitative conformance thresholds</strong> for agent accuracy, boundary adherence, and drift tolerance",
+          "Add automated compliance checking as a <strong>fourth governance scenario</strong> alongside self-assessment, EA-led, and review-team",
+          "Create a <strong>focused agent compliance checklist</strong>: guardrail design, escalation paths, bias testing, model selection, drift monitoring",
+          "<strong>Risk-tier model updates</strong> so minor patches skip review while major capability changes require full re-assessment"
+        ]
+      }
+    },
+    {
+      "id": "architecture-contracts",
+      "label": "Architecture Contracts",
+      "traditional": {
+        "togaf_reference": "FC Part 5, Ch 5",
+        "summary": "Architecture contracts are formal agreements defining deliverables, quality criteria, and governance obligations between stakeholders.",
+        "body_html": "<h4>Purpose</h4><p>Contracts create binding agreements between architecture stakeholders — ensuring continuous monitoring, adherence to standards, risk identification, and accountability. They occur at various ADM stages: Statement of Architecture Work (Architecture Vision), design partner contracts, and implementation contracts (Implementation Governance).</p><h4>How It Works</h4><p>Three contract types: the Statement of Architecture Work defines scope and deliverables with the sponsor; design partner contracts specify conformance requirements, development processes, and target measures; business stakeholder contracts define the rules for building and deploying solutions in the architected environment. Effective contracts require simple processes, people-centred authority, strong communication, timely responses, and status tracking.</p><h4>Key Outputs</h4><p>Statement of Architecture Work, architecture contracts with conformance criteria, partner and vendor obligations, and implementation governance documentation.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "cont-q1",
+            "text": "Our architecture contracts include machine-readable terms for AI agent behaviour, including accuracy thresholds, cost caps, and decision authority boundaries.",
+            "levels": {
+              "1": "Architecture contracts are prose-only documents governing human-to-human agreements with no AI-specific terms.",
+              "2": "Some AI-related terms exist in contracts but they are not machine-readable and enforcement relies on manual monitoring.",
+              "3": "Standard agent SLA templates exist with machine-readable terms for key dimensions (accuracy, cost, drift); enforcement is partially automated.",
+              "4": "All AI agents operate under machine-readable contracts with automated enforcement; violations trigger immediate automated responses.",
+              "5": "Agent contracts are dynamically optimised — terms are adjusted based on operational data, and the contract framework supports multi-agent interaction agreements."
+            }
+          },
+          {
+            "id": "cont-q2",
+            "text": "Our contracts include post-deployment operational governance obligations defining who monitors agents, what triggers review, and how incidents are managed.",
+            "levels": {
+              "1": "Contracts cover delivery only; post-deployment agent governance responsibilities are undefined.",
+              "2": "Some informal operational agreements exist but responsibility for deployed agent governance is ambiguous between teams.",
+              "3": "Operational governance contracts are standardised, defining monitoring obligations, metric triggers, model update authority, and incident response.",
+              "4": "Operational contracts are integrated with automated monitoring — contract metrics flow directly into dashboards and alerting systems.",
+              "5": "Operational governance is self-maintaining — contract terms evolve based on agent performance data with automated escalation for degradation patterns."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Create an agent SLA template that defines standard contract terms: accuracy, cost, drift, decision authority, escalation behaviour, and fallback specifications.",
+            "max_level": 2
+          },
+          {
+            "text": "Define an operational governance contract template covering post-deployment monitoring, model update authority, incident response, and agent retirement.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement automated monitoring for agent behaviour against at least one key contract dimension (e.g., accuracy or cost) with real-time violation detection.",
+            "max_level": 3
+          },
+          {
+            "text": "Extend business stakeholder contracts to specify approved agent patterns, mandatory guardrails, and pre-deployment testing requirements.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Contracts must cover <mark>operational governance with machine-readable agent SLAs</mark> — not just delivery — because agents breach thresholds silently.",
+        "key_shifts": [
+          "Agent SLAs include <strong>machine-readable terms</strong> enforced automatically via observability platforms",
+          "New <strong>operational governance contract type</strong> covers monitoring, incident response, and agent retirement",
+          "<strong>Contract violations detected in real time</strong> — not discovered at the next review meeting",
+          "<strong>Standardised agent performance vocabulary</strong> enables cross-organisation comparison"
+        ],
+        "what_breaks": [
+          "<strong>No contract type for post-deployment</strong> operational governance — responsibility falls between teams",
+          "<strong>No standardised SLA vocabulary</strong> for agent decision quality, accuracy, and drift metrics",
+          "<strong>No lifecycle RACI</strong> spanning agent development, deployment, operation, and retirement",
+          "<strong>Prose-only contracts</strong> cannot be automatically enforced against agent behaviour in production"
+        ],
+        "what_survives": [
+          "<strong>Three contract types</strong> (Statement of Work, design partner, implementation) remain valid for agent delivery",
+          "Contract principles — <strong>simple processes, clear authority, strong communication</strong> — apply directly",
+          "<strong>Conformance criteria and partner obligations</strong> transfer to agent vendor relationships",
+          "The concept of <strong>binding agreements between stakeholders</strong> is the foundation for agent SLAs"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Machine-enforced operational contracts</mark> governing agent behaviour from deployment through retirement with automated threshold monitoring.",
+        "description": "Every production agent operates under a <strong>machine-readable contract</strong> defining accuracy thresholds, cost caps, drift limits, decision boundaries, and escalation triggers. Operational governance contracts assign clear ownership for monitoring, incident response, model updates, and retirement.",
+        "key_practices": [
+          "Create <strong>agent SLA templates</strong> with machine-readable terms for accuracy, cost, drift, decision authority, and escalation",
+          "Define <strong>operational governance contracts</strong> assigning monitoring, model update authority, and retirement ownership",
+          "Integrate contract terms with observability platforms for <strong>automated violation detection</strong> and alerting",
+          "Establish a <strong>lifecycle RACI</strong> spanning agent development, deployment, operation, and retirement across teams"
+        ]
+      }
+    },
+    {
+      "id": "governance-principles",
+      "label": "Governance Principles",
+      "traditional": {
+        "togaf_reference": "FC Part 2, Ch 2",
+        "summary": "Architecture principles provide enduring guidance for architecture decisions, structured as name, statement, rationale, and implications.",
+        "body_html": "<h4>Purpose</h4><p>Architecture Principles govern the architecture process, reflecting enterprise-level consensus and embodying the spirit of enterprise principles. They provide a framework for conscious decisions about architecture, guide evaluation criteria for technology selection, drive functional requirements, and support governance activities including compliance assessment and dispensation requests.</p><h4>How It Works</h4><p>Principles form a hierarchy: enterprise principles inform architecture principles. Each principle has four components — name, statement, rationale, and implications. Five qualities define good principles: understandable, robust, complete, consistent, and stable. Principles are developed by enterprise architects with key stakeholders, influenced by enterprise mission, strategic initiatives, external constraints, current systems, and emerging trends. The framework provides 21 example principles across business, data, application, and technology domains.</p><h4>Key Outputs</h4><p>Principle catalogue with name, statement, rationale, and implications for each principle. Precedence guidance for competing principles. Evaluation criteria derived from principles for technology and solution selection.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "prin-q1",
+            "text": "Our architecture principles have been extended with agent-specific principles covering human override authority, agent accountability, decision boundaries, and graceful degradation.",
+            "levels": {
+              "1": "Architecture principles exist but none address AI agents, autonomous decision-making, or agent-specific governance concerns.",
+              "2": "Agent-related concerns have been discussed but not formalised into the principle catalogue.",
+              "3": "Agent governance principles are formally defined, approved by the Architecture Board, and integrated into the principle hierarchy with clear rationale and implications.",
+              "4": "Agent principles are operationalised — translated into machine-enforceable constraints in agent configurations with traceability from principle to guardrail.",
+              "5": "Principles are continuously refined based on agent deployment experience, with amendment triggers tied to capability milestones and regulatory changes."
+            }
+          },
+          {
+            "id": "prin-q2",
+            "text": "Every AI agent in our organisation has an identifiable human owner accountable for the agent's behaviour and outcomes.",
+            "levels": {
+              "1": "AI agents are deployed without formal accountability assignments; no one is clearly responsible for agent outcomes.",
+              "2": "Accountability is assigned informally or inconsistently; some agents have identified owners but many do not.",
+              "3": "Every production agent has a registered human owner in a formal agent registry with defined accountability obligations.",
+              "4": "Agent accountability is operational — owners receive automated alerts on performance, violations, and anomalies with defined response timeframes.",
+              "5": "Accountability is layered — individual owners, team-level governance, and enterprise AI governance roles with clear escalation paths and board reporting."
+            }
+          },
+          {
+            "id": "prin-q3",
+            "text": "Competing principles have explicit precedence rules so that agent design teams can resolve conflicts deterministically rather than relying on case-by-case human judgement.",
+            "levels": {
+              "1": "No precedence guidance exists for competing principles; resolution depends entirely on individual architect judgement.",
+              "2": "Some precedence guidance is documented but it is informal and does not address agent-specific tension pairs.",
+              "3": "Explicit precedence rules exist for key tension pairs (autonomy vs oversight, data sharing vs minimisation, speed vs auditability) with documented rationale.",
+              "4": "Precedence rules are encoded into agent design tooling and compliance checks, preventing principles from being silently violated.",
+              "5": "Precedence rules are context-aware — different resolutions for different risk tiers and business contexts, with automated application during agent design."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Review each existing architecture principle and document how it applies to AI agent governance — identify gaps requiring new agent-specific principles.",
+            "max_level": 2
+          },
+          {
+            "text": "Define and ratify agent governance principles: human override authority, agent accountability, authority boundaries, graceful degradation, and explainability.",
+            "max_level": 3
+          },
+          {
+            "text": "Document explicit precedence rules for key principle tension pairs, especially autonomy vs oversight and data sharing vs minimisation.",
+            "max_level": 3
+          },
+          {
+            "text": "Translate agent governance principles into machine-enforceable constraints that can be embedded directly into agent configuration and compliance pipelines.",
+            "min_level": 3
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Principles become <mark>critical guardrails for autonomous agents</mark> because agents resolve ambiguity inconsistently, creating liability and brand risk.",
+        "key_shifts": [
+          "New <strong>Agent Governance Principles tier</strong>: human override, accountability, authority boundaries, graceful degradation",
+          "Principles rewritten as <strong>testable assertions</strong> so compliance can be verified programmatically",
+          "<strong>Explicit precedence rules</strong> for competing principles — agents cannot balance tensions contextually",
+          "<strong>Amendment process triggered by capability milestones</strong>: first production agent, first autonomous decision"
+        ],
+        "what_breaks": [
+          "<strong>No principles addressing autonomous agent governance</strong>, override authority, or decision boundaries",
+          "<strong>No guidance on encoding principles</strong> as machine-enforceable constraints in agent configuration",
+          "<strong>Ambiguous principles</strong> cause every agent to resolve conflicts differently at machine speed",
+          "<strong>No defined owner or governance process</strong> for the Agent Governance Principles tier"
+        ],
+        "what_survives": [
+          "The <strong>principle structure</strong> (name, statement, rationale, implications) works for agent governance principles",
+          "Enterprise-to-architecture <strong>principle hierarchy extends naturally</strong> to include an agent tier",
+          "<strong>Five qualities of good principles</strong> (understandable, robust, complete, consistent, stable) apply unchanged",
+          "<strong>Stakeholder-driven principle development</strong> ensures agent governance reflects business intent"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Machine-testable principles with explicit precedence</mark> ensuring every agent resolves ambiguity consistently with enterprise intent.",
+        "description": "Agent Governance Principles form a new tier in the principle hierarchy, <strong>expressed as testable assertions</strong> that compile into machine-enforceable guardrails. Every production agent is traceable to a responsible human, operates within defined decision boundaries, and degrades gracefully when unavailable.",
+        "key_practices": [
+          "Define <strong>five foundational agent principles</strong>: human override, accountability, decision boundaries, graceful degradation, explainability",
+          "Rewrite the highest-impact principles as <strong>testable assertions</strong> verifiable in agent configuration",
+          "Document <strong>explicit precedence rules</strong> for key tension pairs: autonomy vs oversight, speed vs auditability",
+          "Trigger principle review at <strong>capability milestones</strong> — first production agent, first autonomous decision domain"
+        ]
+      }
+    },
+    {
+      "id": "continuous-compliance",
+      "label": "Continuous Compliance",
+      "traditional": {
+        "togaf_reference": "FC Part 5, Ch 6; FC Part 1, Ch 11",
+        "summary": "Traditional compliance uses milestone-based human-executed reviews triggered at project checkpoints.",
+        "body_html": "<h4>Purpose</h4><p>Ensures that what gets built matches what was designed — compliance reviews at project milestones catch deviations before they become embedded. Implementation Governance provides architectural oversight during implementation, with compliance checklists, conformance levels, and dispensation processes.</p><h4>How It Works</h4><p>Reviews triggered at project initiation, initial design, major design changes, and ad hoc requests. Human reviewers tailor checklists, interview project principals, analyse against standards, and present findings to the Architecture Board. Compliance reports capture point-in-time snapshots. Dispensations grant time-bound waivers for non-conformance.</p><h4>Key Outputs</h4><p>Conformance assessments, compliance reports presented at governance meetings, dispensation records, and risk reports feeding back into architecture documentation.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "cc-q1",
+            "text": "Our architecture standards are expressed as policy-as-code with traceability to source architecture decisions, integrated into CI/CD pipelines.",
+            "levels": {
+              "1": "Architecture standards exist only as human-readable documents with no machine-readable representation.",
+              "2": "A small number of standards have been translated to policy-as-code, primarily for infrastructure security.",
+              "3": "A majority of standards are expressed as policy-as-code with traceability to source decisions; policies are integrated into CI/CD pipelines.",
+              "4": "Comprehensive policy-as-code coverage with a governed lifecycle (authoring, peer review, testing, versioning, deprecation); false positive rates tracked.",
+              "5": "AI-assisted policy authoring generates draft policies from architecture decisions; compliance policies are tested like software with regression suites."
+            }
+          },
+          {
+            "id": "cc-q2",
+            "text": "Our exception handling process efficiently triages automated compliance failures, routing genuine violations to reviewers while managing false positives.",
+            "levels": {
+              "1": "No automated compliance checks exist, so no exception handling process is needed.",
+              "2": "Automated checks exist but all failures require manual investigation with no triage or routing logic.",
+              "3": "Exception workflows are standardised with automated triage by severity and routing to designated reviewers; time-bound dispensations replace open-ended waivers.",
+              "4": "Exception resolution times are measured; common patterns drive policy improvements and reduce false positives systematically.",
+              "5": "Exception handling is largely self-resolving — automated remediation addresses common issues, only genuinely novel exceptions reach human reviewers."
+            }
+          },
+          {
+            "id": "cc-q3",
+            "text": "We monitor deployed agent behaviour continuously for compliance drift, detecting deviations from approved parameters without relying on deployment events as triggers.",
+            "levels": {
+              "1": "No monitoring of agent behaviour between formal review milestones; compliance is assessed only at project checkpoints.",
+              "2": "Basic agent monitoring exists but is not connected to compliance criteria or governance processes.",
+              "3": "Deployed agents are monitored against architecture-defined boundaries with alerts when behaviour deviates from approved parameters.",
+              "4": "Drift detection uses statistical baselines of agent decision patterns to identify significant deviations even without explicit configuration changes.",
+              "5": "Cross-agent compliance correlation detects systemic issues — correlated violations, cascade risks, and emergent non-compliance across the agent population."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Select five high-priority architecture standards and translate them into policy-as-code with explicit traceability to source architecture decisions.",
+            "max_level": 2
+          },
+          {
+            "text": "Integrate policy-as-code checks into your primary CI/CD pipeline for at least one production deployment path.",
+            "max_level": 3
+          },
+          {
+            "text": "Design a standardised exception workflow with automated triage, severity-based routing, time-bound dispensations, and resolution time tracking.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement runtime compliance monitoring for deployed agents with statistical baseline comparison to detect behavioural drift between deployments.",
+            "min_level": 3
+          },
+          {
+            "text": "Establish a feedback loop from compliance data to architecture standards — use violation patterns and exception volumes to identify standards needing updates.",
+            "min_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Without <mark>continuous automated compliance</mark>, you face a binary choice: governance bottlenecks or ungoverned agents accumulating risk.",
+        "key_shifts": [
+          "Architecture standards encoded as <strong>policy-as-code</strong>, tested and versioned like software",
+          "<strong>Runtime monitoring</strong> detects agent behavioural drift without explicit configuration changes",
+          "<strong>Automated exception triage</strong> with severity-based routing replaces meeting-based dispensation processing",
+          "The <strong>board governs the compliance framework</strong> itself, not individual compliance decisions"
+        ],
+        "what_breaks": [
+          "<strong>Milestone-based compliance</strong> cannot govern systems deploying daily — changes bypass every checkpoint",
+          "<strong>No mechanism for encoding compliance criteria</strong> as machine-executable policy exists today",
+          "<strong>Point-in-time compliance snapshots</strong> miss behavioural drift from model updates and data shifts",
+          "<strong>Meeting-based dispensation processing</strong> cannot handle the exception volume from automated checks"
+        ],
+        "what_survives": [
+          "The <strong>intent of Implementation Governance architectural oversight</strong> is exactly what continuous compliance delivers",
+          "<strong>Conformance levels and dispensation concepts</strong> transfer to automated policy enforcement",
+          "<strong>Human-led review remains essential</strong> for genuinely novel exceptions and edge cases",
+          "<strong>Compliance reports feeding back</strong> into architecture documentation become automated feedback loops"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Policy-as-code with runtime drift detection</mark> — standards enforced at deployment time and agent behaviour monitored continuously.",
+        "description": "Architecture standards are encoded as machine-readable policies checked in deployment pipelines, with <strong>runtime monitoring detecting behavioural drift</strong> between deployments. The Architecture Board shifts from reviewing individual proposals to governing the compliance policy framework — approving policies, reviewing exception trends, and assessing effectiveness.",
+        "key_practices": [
+          "Encode architecture standards as <strong>policy-as-code</strong> with traceability to source decisions, tested like software",
+          "Implement <strong>automated exception triage</strong> with severity-based routing and time-bound dispensations",
+          "Deploy <strong>runtime monitoring</strong> using statistical baselines to detect agent behavioural drift between changes",
+          "Establish a <strong>feedback loop</strong> from compliance data to architecture standards — violation patterns drive updates"
+        ]
+      }
+    },
+    {
+      "id": "sovereignty-governance",
+      "label": "Sovereignty by Design",
+      "traditional": {
+        "togaf_reference": "FC Part 2, Ch 9; FC Part 0, Ch 3",
+        "summary": "Traditional EA addresses regulatory concerns through risk management and interoperability but not as first-order architecture design constraints.",
+        "body_html": "<h4>Purpose</h4><p>Risk management and compliance processes handle regulatory requirements as governance overlays applied to architecture decisions, not as constraints that shape those decisions from the start. The framework defines four architecture domains and addresses interoperability across systems.</p><h4>How It Works</h4><p>Risk identification, classification by impact and frequency, and mitigation through FC Part 2. Regulatory compliance treated as one risk category among many, assessed using generic impact/frequency matrices. Interoperability guidance for cross-system integration through FC Part 0. These are applied during architecture development but do not constrain the initial design space.</p><h4>Key Outputs</h4><p>Risk assessments, compliance reviews, interoperability requirements, and dispensation records for regulatory non-conformance.</p>"
+      },
+      "assessment": {
+        "questions": [
+          {
+            "id": "sov-q1",
+            "text": "Sovereignty requirements (data residency, model provenance, jurisdictional constraints) are treated as first-order design inputs that shape architecture decisions from the earliest phases.",
+            "levels": {
+              "1": "Sovereignty is addressed reactively — discovered during deployment or audit with no systematic mapping to architecture.",
+              "2": "Sovereignty requirements are documented for major jurisdictions and reflected in cloud deployment decisions case by case.",
+              "3": "Sovereignty constraints are formally integrated into architecture design; reference architectures include sovereignty-compliant patterns for common scenarios.",
+              "4": "Sovereignty constraints are encoded as automated policy checks; regulatory changes trigger systematic architecture impact assessments.",
+              "5": "Predictive regulatory intelligence anticipates sovereignty changes; architecture can be dynamically reconfigured across jurisdictions with pre-validated patterns."
+            }
+          },
+          {
+            "id": "sov-q2",
+            "text": "We assess AI model provider dependency and maintain exit capability — the ability to switch providers without re-engineering agent workflows.",
+            "levels": {
+              "1": "Model provider dependency is not assessed; the organisation has no visibility into concentration risk.",
+              "2": "Dependency on key model providers is informally recognised but not quantified or actively managed.",
+              "3": "Model provider dependency is formally assessed for all production agents, with business impact analysis for provider unavailability or terms changes.",
+              "4": "Exit capability is maintained through abstraction layers and model-agnostic interfaces; portability is periodically tested.",
+              "5": "Multi-provider strategy is operational — critical workflows run on multiple models, with automated failover and continuous portability validation."
+            }
+          },
+          {
+            "id": "sov-q3",
+            "text": "A formal decision authority map defines which decisions agents may make autonomously, which require human approval, and which are prohibited from agent involvement.",
+            "levels": {
+              "1": "No formal mapping of agent decision authority exists; agents accumulate autonomy incrementally without governance review.",
+              "2": "Some guidance exists for high-risk decisions but agent authority boundaries are not systematically defined or enforced.",
+              "3": "A decision authority map is formally defined, derived from business criticality and regulatory requirements, and enforced through agent guardrails.",
+              "4": "Decision authority is monitored in production — agents operating outside defined boundaries are automatically detected and escalated.",
+              "5": "Decision authority is dynamically governed — boundaries are adjusted based on agent performance data and regulatory changes with full audit trails."
+            }
+          }
+        ],
+        "actions": [
+          {
+            "text": "Map sovereignty requirements for each jurisdiction where the organisation operates, focusing on AI-specific regulations and data residency obligations.",
+            "max_level": 2
+          },
+          {
+            "text": "Assess model provider dependency for all production agents — quantify business impact of provider unavailability, terms changes, or model deprecation.",
+            "max_level": 3
+          },
+          {
+            "text": "Create a decision authority map defining which business decisions agents may make autonomously, require human approval, or are prohibited from.",
+            "max_level": 3
+          },
+          {
+            "text": "Implement model portability architecture — abstraction layers, model-agnostic interfaces, and periodic exit capability testing.",
+            "min_level": 3
+          },
+          {
+            "text": "Establish regulatory horizon scanning that translates emerging AI regulations into concrete architecture change requirements before enforcement dates.",
+            "min_level": 4
+          }
+        ]
+      },
+      "changes": {
+        "summary": "Sovereignty is a <mark>first-order architecture constraint</mark> — violations carry penalties to 7% of global turnover and can invalidate architectures overnight.",
+        "key_shifts": [
+          "Data residency governance treats agent context windows as <strong>jurisdictional data processing</strong> operations",
+          "<strong>Model provider dependency</strong> quantified and managed — portability or contractual protections by risk profile",
+          "<strong>Decision authority formally mapped</strong> before any agent gains autonomous decision-making capability",
+          "<strong>Regulatory horizon scanning</strong> translates emerging AI regulations into architecture constraints proactively"
+        ],
+        "what_breaks": [
+          "Treating regulation as <strong>reactive risk management fails</strong> when AI-specific laws carry turnover-percentage fines",
+          "<strong>No sovereignty-by-design methodology</strong> — traditional EA addresses regulation as an overlay, not a design input",
+          "<strong>No framework for assessing model provider dependency</strong> as a strategic architecture risk",
+          "<strong>No legal clarity</strong> on whether agent context windows constitute jurisdictional data processing"
+        ],
+        "what_survives": [
+          "<strong>Risk identification and classification</strong> by impact remain the foundation for sovereignty assessment",
+          "<strong>Interoperability guidance</strong> applies to cross-jurisdiction and multi-provider agent architectures",
+          "<strong>Dispensation processes</strong> for regulatory non-conformance transfer to sovereignty waivers",
+          "Assessing regulatory compliance as part of architecture development is right — it just <strong>needs to be first</strong>"
+        ]
+      },
+      "future_state": {
+        "summary": "<mark>Sovereignty-by-design governance</mark> where data residency, model dependency, and decision authority are constraints from day one.",
+        "description": "Sovereignty requirements shape architecture decisions from the earliest design phases, <strong>not as an overlay applied later</strong>. Four governance domains are addressed in sequence: decision authority mapping, data sovereignty, model provider dependency management, and infrastructure sovereignty.",
+        "key_practices": [
+          "Create a <strong>decision authority map</strong> defining which decisions agents may make autonomously, require approval, or are prohibited",
+          "Treat agent context windows as <strong>jurisdictional data processing</strong> and apply data residency rules accordingly",
+          "Assess <strong>model provider dependency</strong> for all production agents with documented portability or exit protections",
+          "Implement <strong>regulatory horizon scanning</strong> translating emerging AI regulations into architecture constraints before enforcement"
+        ]
+      }
+    }
+  ]
+}
