@@ -1749,6 +1749,236 @@ a.dashboard-card:hover {
   margin-top: .15rem;
 }
 
+/* ── Architecture Reference Diagram ───────────────────── */
+.arch-diagram {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.arch-diagram-layout {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 1rem;
+  align-items: stretch;
+}
+.arch-layers-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.arch-layer-bar {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .5rem .75rem;
+  border: 1px solid;
+  border-left: 4px solid var(--layer-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: box-shadow .15s, transform .15s;
+  min-height: 52px;
+}
+.arch-layer-bar:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  transform: translateX(2px);
+}
+.arch-layer-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.arch-layer-info {
+  flex: 1;
+  min-width: 0;
+}
+.arch-layer-name {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+.arch-layer-components {
+  font-size: .75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.arch-layer-bar .finding-chevron {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+.arch-layer-row.open .finding-chevron {
+  transform: rotate(180deg);
+}
+/* Expandable detail panel */
+.arch-layer-detail {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s ease;
+  padding: 0 .75rem;
+}
+.arch-layer-row.open .arch-layer-detail {
+  max-height: 800px;
+  padding: 1rem .75rem;
+}
+.arch-layer-desc {
+  font-size: .88rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin-bottom: 1rem;
+}
+.arch-component-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: .75rem;
+  margin-bottom: .75rem;
+}
+.arch-component-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: .75rem;
+}
+.arch-component-name {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: .25rem;
+}
+.arch-component-desc {
+  font-size: .78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.arch-layer-sources {
+  font-size: .75rem;
+  color: var(--text-muted);
+  padding-top: .5rem;
+  border-top: 1px solid var(--border);
+}
+.arch-sources-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+/* Cross-cutting concern vertical bars */
+.arch-cc-stack {
+  display: flex;
+  gap: 4px;
+}
+.arch-cc-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.arch-cc-bar {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: .75rem .35rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity .15s;
+  flex: 1;
+  min-height: 0;
+}
+.arch-cc-bar:hover {
+  opacity: .85;
+}
+.arch-cc-label {
+  font-size: .72rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+.arch-cc-detail {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s ease;
+}
+.arch-cc-item.open .arch-cc-detail {
+  max-height: 500px;
+  padding: .75rem .25rem;
+}
+.arch-cc-desc {
+  font-size: .82rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: .5rem;
+}
+.arch-cc-components {
+  font-size: .8rem;
+  color: var(--text-secondary);
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+.arch-cc-components li {
+  margin-bottom: .35rem;
+}
+/* Source attribution cards */
+.arch-sources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+.arch-source-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+}
+.arch-source-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: .15rem;
+}
+.arch-source-framework {
+  font-size: .78rem;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: .5rem;
+}
+.arch-source-desc {
+  font-size: .82rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: .75rem;
+}
+.arch-source-coverage {
+  display: flex;
+  gap: 4px;
+}
+.arch-coverage-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+.arch-coverage-dot.covered {
+  border-color: transparent;
+}
+
 /* ── Footer ──────────────────────────────────────────── */
 .footer {
   padding: 2rem 0;
@@ -1760,6 +1990,25 @@ a.dashboard-card:hover {
 
 /* ── Responsive: Layout ──────────────────────────────── */
 @media (max-width: 900px) {
+  .arch-diagram-layout {
+    grid-template-columns: 1fr;
+  }
+  .arch-cc-stack {
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .arch-cc-bar {
+    writing-mode: horizontal-tb;
+    text-orientation: initial;
+    padding: .6rem .75rem;
+    min-height: auto;
+  }
+  .arch-cc-label {
+    font-size: .78rem;
+  }
+  .arch-layer-components {
+    white-space: normal;
+  }
   .page-layout {
     grid-template-columns: 1fr;
   }
@@ -1805,4 +2054,11 @@ a.dashboard-card:hover {
   .capabilities-grid { grid-template-columns: 1fr; }
   .dashboard-grid { grid-template-columns: 1fr; }
   .top-nav-brand { font-size: .78rem; }
+  .arch-diagram { padding: 1rem; }
+  .arch-layer-bar { padding: .4rem .6rem; gap: .5rem; }
+  .arch-layer-name { font-size: .78rem; }
+  .arch-layer-components { font-size: .7rem; }
+  .arch-layer-number { width: 22px; height: 22px; font-size: .65rem; }
+  .arch-component-grid { grid-template-columns: 1fr; }
+  .arch-sources-grid { grid-template-columns: 1fr; }
 }

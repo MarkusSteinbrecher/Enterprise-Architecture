@@ -1,0 +1,261 @@
+{
+  "page_type": "architecture",
+  "title": "Agentic AI Reference Architecture",
+  "subtitle": "A technology reference architecture for the Agentic Organisation, synthesised from 30+ industry frameworks.",
+  "description": "Nine technology layers and three cross-cutting concerns that define how enterprises build, deploy, and govern AI agent systems at scale.",
+  "layers": [
+    {
+      "id": "experience",
+      "order": 9,
+      "label": "Experience & Applications",
+      "short": "Chat UIs, co-pilots, agent teammates, APIs, voice",
+      "color": "#2563eb",
+      "color_bg": "#eff6ff",
+      "color_border": "#bfdbfe",
+      "description": "The interface layer where humans and systems interact with AI agents. Includes conversational UIs, embedded co-pilots, autonomous agent teammates, programmatic APIs, and voice interfaces. The experience layer must support streaming responses, multi-turn context, and graceful degradation when agents are unavailable.",
+      "components": [
+        { "name": "Conversational UIs", "description": "Natural language chat interfaces with multi-turn dialogue, context management, and citation rendering." },
+        { "name": "Co-Pilots", "description": "AI assistants embedded in existing applications — IDEs, office suites, analytics tools — augmenting human workflows in-place." },
+        { "name": "Agent Teammates", "description": "Autonomous agents operating as virtual team members, executing tasks independently with human oversight and escalation." },
+        { "name": "APIs & Programmatic Access", "description": "REST, GraphQL, and streaming endpoints for system-to-agent and agent-to-system communication at machine speed." },
+        { "name": "Voice & Multimodal", "description": "Speech-to-text and text-to-speech pipelines, image understanding, and multimodal input/output for agent interaction." }
+      ],
+      "sources": ["Salesforce (Experience Layer)", "Google (Frontend Framework)", "AIMultiple (Applications Layer)", "Sealos (Experience Layer)"]
+    },
+    {
+      "id": "guardrails",
+      "order": 8,
+      "label": "Guardrails & Safety",
+      "short": "Input/output validation, PII redaction, content policy, schema enforcement",
+      "color": "#dc2626",
+      "color_bg": "#fef2f2",
+      "color_border": "#fecaca",
+      "description": "The safety layer that validates every agent input and output before it reaches users or downstream systems. Prevents hallucination propagation, enforces content policies, redacts sensitive data, and ensures outputs conform to expected schemas. Operates as an inline filter, not a post-hoc check.",
+      "components": [
+        { "name": "Input Validation", "description": "Prompt injection detection, jailbreak filters, and input sanitisation before agent processing." },
+        { "name": "Output Enforcement", "description": "JSON schema validation, format compliance, and structured output guarantees for downstream consumers." },
+        { "name": "Content Policy", "description": "Topic restrictions, toxicity filters, brand-safety rules, and regulatory content constraints enforced at runtime." },
+        { "name": "PII Redaction", "description": "Automated detection and masking of personally identifiable information in both inputs and outputs." },
+        { "name": "Hallucination Detection", "description": "Grounding checks, citation verification, and confidence scoring to flag unsubstantiated claims." }
+      ],
+      "sources": ["Sealos (Safety & Guardrails)", "AIMultiple (Observability & Governance)", "Forrester (Agent Control Plane)", "CSA (Zero Trust for AI)"]
+    },
+    {
+      "id": "orchestration",
+      "order": 7,
+      "label": "Orchestration & Planning",
+      "short": "Task decomposition, multi-agent coordination, workflow engines, state management",
+      "color": "#d97706",
+      "color_bg": "#fffbeb",
+      "color_border": "#fde68a",
+      "description": "The coordination layer that decomposes complex goals into executable tasks, routes them to the right agents, and manages state across multi-step workflows. Supports sequential, parallel, hierarchical, and swarm orchestration patterns. The critical difference from traditional workflow engines: orchestration must handle non-deterministic agent outputs and dynamic re-planning.",
+      "components": [
+        { "name": "Task Decomposition", "description": "Breaking complex objectives into sub-tasks with dependency graphs, priority ordering, and resource estimation." },
+        { "name": "Multi-Agent Coordination", "description": "Routing tasks across specialised agents — sequential handoffs, fan-out/fan-in, group chat, and supervisor patterns." },
+        { "name": "Workflow Engines", "description": "Durable execution engines (LangGraph, Temporal, Step Functions) with retry logic, checkpointing, and failover." },
+        { "name": "State Management", "description": "Maintaining conversation context, task progress, and shared state across agents within and across sessions." },
+        { "name": "Human-in-the-Loop", "description": "Escalation paths, approval gates, and confidence-threshold routing that bring humans into agent workflows at decision points." }
+      ],
+      "sources": ["Salesforce (Enterprise Orchestration)", "Microsoft (Semantic Kernel / AutoGen)", "Forrester (Adaptive Process Orchestration)", "Kore.ai (Workflow Tier)", "LangGraph / CrewAI / AutoGen"]
+    },
+    {
+      "id": "tools",
+      "order": 6,
+      "label": "Tools & Integration",
+      "short": "Function calling, MCP servers, API connectors, enterprise systems",
+      "color": "#7c3aed",
+      "color_bg": "#f5f3ff",
+      "color_border": "#ddd6fe",
+      "description": "The capability layer that connects agents to the outside world — enterprise systems, databases, APIs, and external services. Agents are only as capable as their available tools. This layer manages tool registration, discovery, invocation, and access control. MCP (Model Context Protocol) is emerging as the standard for tool exposure.",
+      "components": [
+        { "name": "Function Calling", "description": "Structured tool invocation via JSON Schema definitions — the primary mechanism for agent-to-tool communication." },
+        { "name": "MCP Servers", "description": "Model Context Protocol servers that expose enterprise tools, resources, and prompts to any MCP-compatible agent." },
+        { "name": "API Connectors", "description": "Pre-built integrations for CRM (Salesforce), ERP (SAP), HR (Workday), ITSM (ServiceNow), and other enterprise systems." },
+        { "name": "Data Access", "description": "Database query tools, file system access, knowledge base retrieval, and structured data extraction capabilities." },
+        { "name": "External Services", "description": "Web search, code execution, email, calendar, and third-party SaaS integrations available to agents." }
+      ],
+      "sources": ["Google (Agent Tools)", "Microsoft (Tool Invocation)", "Anthropic (MCP)", "Salesforce (Integration Layer)", "AIMultiple (Tooling & Enrichment)"]
+    },
+    {
+      "id": "runtime",
+      "order": 5,
+      "label": "Agent Runtime & Memory",
+      "short": "Execution sandboxes, session memory, long-term knowledge, embedding stores",
+      "color": "#0891b2",
+      "color_bg": "#ecfeff",
+      "color_border": "#a5f3fc",
+      "description": "The execution environment where agents run and persist knowledge. Manages agent lifecycle (create, execute, suspend, resume, terminate), provides isolated sandboxes for safe execution, and maintains both short-term session memory and long-term organisational knowledge. Memory is what separates a stateless API call from an intelligent agent.",
+      "components": [
+        { "name": "Execution Sandboxes", "description": "Isolated runtime environments (containers, serverless functions) with resource limits, timeout policies, and security boundaries." },
+        { "name": "Session Memory", "description": "Short-term conversational context — what the agent knows about the current task, user, and interaction history." },
+        { "name": "Long-Term Knowledge", "description": "Persistent memory across sessions — learned preferences, past decisions, organisational knowledge, and accumulated expertise." },
+        { "name": "Vector / Embedding Stores", "description": "Semantic search infrastructure (Pinecone, Qdrant, Milvus) for similarity-based retrieval of relevant context and documents." },
+        { "name": "Agent Lifecycle Management", "description": "Creation, versioning, deployment, scaling, suspension, and retirement of agent instances across the organisation." }
+      ],
+      "sources": ["Google (Agent Runtime + Memory)", "Microsoft (Memory Service)", "AWS (AgentCore Runtime)", "AIMultiple (Agent Runtime & Infrastructure)", "Akka (Memory + Agents)"]
+    },
+    {
+      "id": "protocols",
+      "order": 4,
+      "label": "Protocols & Interoperability",
+      "short": "MCP, A2A, ACP, ANP, OpenAPI",
+      "color": "#0d9488",
+      "color_bg": "#f0fdfa",
+      "color_border": "#99f6e4",
+      "description": "The standards layer that enables agents from different vendors, frameworks, and organisations to communicate. Without interoperability protocols, every agent integration is bespoke. Four protocols are emerging as the foundation: MCP for tool access, A2A for agent-to-agent delegation, ACP for agent communication, and ANP for network-level agent interaction.",
+      "components": [
+        { "name": "MCP (Model Context Protocol)", "description": "Anthropic-originated, now Linux Foundation. Standardises how agents access tools, resources, and prompts. 97M+ monthly SDK downloads." },
+        { "name": "A2A (Agent-to-Agent)", "description": "Google-led protocol for standardised agent delegation — discovery, handshake, task transfer, and result return between agents." },
+        { "name": "ACP (Agent Communication Protocol)", "description": "IBM-led protocol for structured agent-to-agent messaging with typed payloads and conversation management." },
+        { "name": "ANP (Agent Network Protocol)", "description": "Cisco-led protocol for agent interaction at the network layer — routing, discovery, and trust across organisational boundaries." },
+        { "name": "OpenAPI & JSON-RPC", "description": "Established API standards that underpin agent tool definitions and structured communication formats." }
+      ],
+      "sources": ["Microsoft (Communication Protocol)", "Google (A2A Protocol)", "Anthropic / Linux Foundation (MCP)", "AIMultiple (Protocols & Interoperability)", "Academic Taxonomy (arXiv:2508.10146)"]
+    },
+    {
+      "id": "models",
+      "order": 3,
+      "label": "Foundation Models",
+      "short": "LLMs, SLMs, domain models, model serving, model routing",
+      "color": "#8b5cf6",
+      "color_bg": "#f5f3ff",
+      "color_border": "#ddd6fe",
+      "description": "The intelligence layer providing reasoning capabilities. Not one model but a portfolio: large language models for complex reasoning, small language models for cost-efficient routine tasks, domain-specific models for specialised knowledge, and vision/speech models for multimodal capabilities. Model routing directs each request to the optimal model based on task complexity, cost, and latency requirements.",
+      "components": [
+        { "name": "Large Language Models", "description": "General-purpose reasoning engines (GPT-4, Claude, Gemini) for complex analysis, planning, and creative tasks." },
+        { "name": "Small Language Models", "description": "Cost-efficient models (Phi, Mistral, Llama) for routine classification, extraction, and structured output tasks." },
+        { "name": "Domain-Specific Models", "description": "Fine-tuned or specialised models for finance, legal, medical, and other regulated domains requiring deep expertise." },
+        { "name": "Model Serving", "description": "Infrastructure for hosting and scaling model inference — vLLM, TensorRT, managed endpoints — with latency and throughput SLAs." },
+        { "name": "Model Routing", "description": "Intelligent request routing that selects the optimal model per task based on complexity, cost, latency, and capability requirements." }
+      ],
+      "sources": ["Salesforce (AI/ML Layer)", "Google (AI Models + Runtime)", "AWS (Bedrock)", "AIMultiple (Foundation Model Infrastructure)", "Sealos (Intelligence Layer)"]
+    },
+    {
+      "id": "data",
+      "order": 2,
+      "label": "Data & Knowledge",
+      "short": "Data lakes, vector stores, knowledge graphs, RAG pipelines, semantic layer",
+      "color": "#2563eb",
+      "color_bg": "#eff6ff",
+      "color_border": "#bfdbfe",
+      "description": "The knowledge foundation that gives agents access to organisational data, documents, and structured knowledge. Agents without data access are limited to their training knowledge. This layer manages data ingestion, transformation, semantic indexing, and retrieval — including RAG (Retrieval-Augmented Generation) pipelines that ground agent responses in enterprise-specific facts.",
+      "components": [
+        { "name": "Data Lakes & Warehouses", "description": "Centralised storage for structured and unstructured enterprise data — the raw material agents need to reason about the business." },
+        { "name": "Knowledge Graphs", "description": "Entity-relationship models that encode organisational knowledge — people, processes, systems, policies — in machine-traversable form." },
+        { "name": "RAG Pipelines", "description": "Retrieval-Augmented Generation: document chunking, embedding, indexing, and retrieval to ground agent responses in source documents." },
+        { "name": "Semantic Layer", "description": "Business ontologies and concept hierarchies that give agents a shared vocabulary for the organisation's domain." },
+        { "name": "Data Ingestion & ETL", "description": "Connectors, transformers, and pipelines that keep agent-accessible data current — batch for stable data, streaming for volatile data." }
+      ],
+      "sources": ["Salesforce (Data + Semantic Layer)", "Bain (Scalable Data Infrastructure)", "Google (Agent Memory)", "Sealos (Data & Knowledge)", "Kore.ai (Knowledge Layer)"]
+    },
+    {
+      "id": "infrastructure",
+      "order": 1,
+      "label": "Infrastructure & Compute",
+      "short": "GPU/CPU, Kubernetes, cloud platforms, networking, edge",
+      "color": "#64748b",
+      "color_bg": "#f8fafc",
+      "color_border": "#cbd5e1",
+      "description": "The physical and virtual compute foundation. AI workloads demand GPU clusters for model training and inference, container orchestration for agent scaling, and low-latency networking for real-time interactions. Cloud platforms provide managed services, but sovereignty requirements increasingly drive hybrid and edge deployments.",
+      "components": [
+        { "name": "GPU / CPU Compute", "description": "Hardware accelerators (NVIDIA, AMD, custom ASICs) for model inference and training, with CPU for orchestration workloads." },
+        { "name": "Container Orchestration", "description": "Kubernetes-based platforms for scaling agent instances, managing resource allocation, and ensuring availability." },
+        { "name": "Cloud Platforms", "description": "Managed services from hyperscalers (AWS, Azure, GCP) providing model hosting, storage, networking, and security infrastructure." },
+        { "name": "Networking & Edge", "description": "Low-latency connectivity, edge compute for latency-sensitive agent interactions, and network segmentation for security." },
+        { "name": "CI/CD & DevOps", "description": "Automated build, test, and deployment pipelines adapted for AI workloads — model versioning, A/B testing, canary deployments." }
+      ],
+      "sources": ["Salesforce (Infrastructure Layer)", "Google (Agent Runtime / GKE)", "AWS (Bedrock / SageMaker)", "AIMultiple (Foundation Model Infrastructure)", "Sealos (Platform & Infrastructure)"]
+    }
+  ],
+  "cross_cutting": [
+    {
+      "id": "observability",
+      "label": "Observability",
+      "short": "Tracing, cost dashboards, eval pipelines, audit trails",
+      "color": "#0891b2",
+      "description": "End-to-end visibility into agent behaviour across all layers. Traditional APM is insufficient — agent observability must capture semantic quality (was the answer correct?), not just technical health (did the API return 200?). Includes distributed tracing, cost attribution, evaluation pipelines, and audit trails.",
+      "components": [
+        { "name": "Distributed Tracing", "description": "OpenTelemetry-based tracing across agent chains — from user request through orchestration, tool calls, and model invocations." },
+        { "name": "Cost Attribution", "description": "Per-request, per-agent, per-model cost tracking with dashboards for budget management and optimisation." },
+        { "name": "Evaluation Pipelines", "description": "Automated quality assessment using golden datasets, A/B testing, and statistical metrics for agent output quality." },
+        { "name": "Audit Trails", "description": "Immutable logs of every agent decision, tool invocation, and output — required for compliance, debugging, and accountability." }
+      ]
+    },
+    {
+      "id": "governance",
+      "label": "Governance",
+      "short": "Identity, RBAC, policy-as-code, agent registries, human-in-the-loop",
+      "color": "#7c3aed",
+      "description": "The control framework that ensures agents operate within organisational boundaries. Includes agent identity and authentication, role-based access control, policy-as-code enforcement, agent registries for inventory management, and human-in-the-loop approval workflows for high-stakes decisions.",
+      "components": [
+        { "name": "Agent Identity", "description": "Cryptographically verifiable agent identities using OIDC/JWT — every agent action traceable to a registered identity." },
+        { "name": "Policy-as-Code", "description": "Machine-executable governance rules (OPA, Cedar) that enforce compliance at deployment speed, not review-cycle speed." },
+        { "name": "Agent Registry", "description": "Central catalogue of all deployed agents — capabilities, owners, dependencies, health status, and compliance posture." },
+        { "name": "Access Control", "description": "RBAC and ABAC for agent permissions — per-session auth, minimum privilege, time-limited tokens, tool-level whitelisting." }
+      ]
+    },
+    {
+      "id": "security",
+      "label": "Security",
+      "short": "Zero-trust, per-tool-call PEP, agent identity, environment isolation",
+      "color": "#dc2626",
+      "description": "Zero-trust security applied to every agent interaction. Traditional perimeter security is insufficient — agents require per-tool-call policy enforcement points, isolated execution environments, and cryptographic identity verification. Covers new AI-specific attack vectors: prompt injection, model extraction, data poisoning, and training data leakage.",
+      "components": [
+        { "name": "Zero-Trust Architecture", "description": "No implicit trust — every agent request authenticated, authorised, and validated regardless of network position or prior interactions." },
+        { "name": "Policy Enforcement Points", "description": "Inline validation at every tool call, API invocation, and data access — not just at the perimeter but at every interaction boundary." },
+        { "name": "Environment Isolation", "description": "Sandboxed execution with resource limits, network restrictions, and blast-radius containment for each agent instance." },
+        { "name": "AI-Specific Threat Protection", "description": "Defences against prompt injection, model extraction, data poisoning, adversarial inputs, and training data exfiltration." }
+      ]
+    }
+  ],
+  "reference_architectures": [
+    {
+      "name": "Salesforce",
+      "framework": "11-Layer Agentic Enterprise IT Architecture",
+      "description": "Most comprehensive enterprise IT reference. Adds four new layers — Semantic, AI/ML, Agentic, and Enterprise Orchestration — to the traditional five-layer IT stack.",
+      "layer_coverage": ["infrastructure", "data", "models", "protocols", "runtime", "tools", "orchestration", "guardrails", "experience"]
+    },
+    {
+      "name": "Microsoft",
+      "framework": "8-Service Agent Factory Stack",
+      "description": "Protocol-first architecture centred on interoperability. Defines eight core services from communication protocols to evaluation and governance.",
+      "layer_coverage": ["protocols", "runtime", "tools", "orchestration", "guardrails", "experience"]
+    },
+    {
+      "name": "Google Cloud",
+      "framework": "8-Component Agentic Architecture",
+      "description": "Full-stack reference from frontend frameworks through agent development kits to model runtime, with A2A protocol for multi-agent systems.",
+      "layer_coverage": ["infrastructure", "data", "models", "runtime", "tools", "orchestration", "experience"]
+    },
+    {
+      "name": "AWS",
+      "framework": "Multi-Agent Orchestration with Bedrock AgentCore",
+      "description": "Managed services approach with Bedrock at the centre. Supervisor and Broker orchestration patterns for multi-agent coordination.",
+      "layer_coverage": ["infrastructure", "models", "runtime", "tools", "orchestration"]
+    },
+    {
+      "name": "Forrester",
+      "framework": "Three-Plane Model (Build, Orchestration, Control)",
+      "description": "Governance-first perspective with the Agent Control Plane providing out-of-band oversight across heterogeneous agent estates.",
+      "layer_coverage": ["runtime", "tools", "orchestration", "guardrails"]
+    },
+    {
+      "name": "McKinsey",
+      "framework": "Five-Pillar Agentic Organisation + Agentic AI Mesh",
+      "description": "Whole-enterprise model covering business model, operating model, governance, workforce, and technology. The Agentic AI Mesh provides the connective orchestration layer.",
+      "layer_coverage": ["data", "orchestration", "experience"]
+    },
+    {
+      "name": "Bain",
+      "framework": "Seven-Pillar Foundation for Agentic AI",
+      "description": "Foundation-up approach emphasising modernised core platforms, interoperability (MCP standard), and distributed accountability across domain teams.",
+      "layer_coverage": ["infrastructure", "data", "protocols", "tools", "orchestration", "guardrails"]
+    },
+    {
+      "name": "AIMultiple",
+      "framework": "7-Layer Agentic AI Stack",
+      "description": "Technology-agnostic layer model with competitive moat analysis per layer. Cleanest mapping of the full technology stack from infrastructure to applications.",
+      "layer_coverage": ["infrastructure", "runtime", "protocols", "orchestration", "tools", "experience", "guardrails"]
+    }
+  ]
+}

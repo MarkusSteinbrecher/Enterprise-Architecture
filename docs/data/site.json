@@ -2,6 +2,7 @@
   "brand": "EA for the Agentic Organisation",
   "nav": [
     { "id": "overview", "label": "Overview", "href": "overview.html" },
+    { "id": "architecture-reference", "label": "Architecture", "href": "architecture-reference.html" },
     { "id": "ea-operating-model", "label": "Operating Model", "href": "ea-operating-model.html" },
     { "id": "ea-development-method", "label": "EA Development", "href": "ea-development-method.html" },
     { "id": "ea-governance", "label": "Governance", "href": "ea-governance.html" },

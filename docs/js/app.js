@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (peek && peek.page_type === 'industry') {
       pageData = peek;
       initIndustryPage();
+    } else if (peek && peek.page_type === 'architecture') {
+      pageData = peek;
+      initArchitecturePage();
     } else {
       await initConceptPage(page);
     }
@@ -938,6 +941,142 @@ window.handleAssessmentChange = function(questionId, level) {
   }
 };
 
+/* ── Architecture Reference Page ──────────────────────── */
+
+function initArchitecturePage() {
+  const el = document.getElementById('architecture-content');
+  if (!el || !pageData) return;
+
+  let html = '';
+
+  /* Hero */
+  html += '<header class="hero"><div class="container">';
+  html += '<p class="section-label">Reference Architecture</p>';
+  html += `<h1>${pageData.title}</h1>`;
+  html += `<p class="subtitle">${pageData.subtitle}</p>`;
+  html += '</div></header>';
+
+  /* Diagram section */
+  html += '<div class="dashboard-section"><div class="container">';
+  html += '<p class="section-label">Technology Stack</p>';
+  html += '<h2>Nine Layers &amp; Three Cross-Cutting Concerns</h2>';
+  html += `<p class="page-description">${pageData.description}</p>`;
+  html += renderArchDiagram(pageData.layers, pageData.cross_cutting);
+  html += '</div></div>';
+
+  /* Sources section */
+  if (pageData.reference_architectures && pageData.reference_architectures.length) {
+    html += '<div class="dashboard-section"><div class="container">';
+    html += '<p class="section-label">Sources</p>';
+    html += '<h2>Reference Architectures Analysed</h2>';
+    html += '<p class="page-description">Synthesised from eight major reference architectures across hyperscalers, analyst firms, and enterprise vendors.</p>';
+    html += renderArchSources(pageData.reference_architectures, pageData.layers);
+    html += '</div></div>';
+  }
+
+  el.innerHTML = html;
+
+  /* Layer expand/collapse handlers */
+  el.querySelectorAll('.arch-layer-bar').forEach(bar => {
+    bar.addEventListener('click', () => {
+      bar.closest('.arch-layer-row').classList.toggle('open');
+    });
+  });
+
+  /* Cross-cutting expand/collapse handlers */
+  el.querySelectorAll('.arch-cc-bar').forEach(bar => {
+    bar.addEventListener('click', () => {
+      bar.closest('.arch-cc-item').classList.toggle('open');
+    });
+  });
+}
+
+function renderArchDiagram(layers, crossCutting) {
+  let html = '<div class="arch-diagram"><div class="arch-diagram-layout">';
+
+  /* Layers stack (left) */
+  html += '<div class="arch-layers-stack">';
+  for (const layer of layers) {
+    html += `<div class="arch-layer-row" id="arch-${layer.id}">`;
+    html += `<div class="arch-layer-bar" style="background:${layer.color_bg};border-color:${layer.color_border};--layer-color:${layer.color}">`;
+    html += `<div class="arch-layer-number" style="background:${layer.color}">${layer.order}</div>`;
+    html += '<div class="arch-layer-info">';
+    html += `<div class="arch-layer-name">${layer.label}</div>`;
+    html += `<div class="arch-layer-components">${layer.short}</div>`;
+    html += '</div>';
+    html += chevronSVG();
+    html += '</div>'; /* arch-layer-bar */
+
+    /* Detail panel */
+    html += '<div class="arch-layer-detail">';
+    html += `<p class="arch-layer-desc">${layer.description}</p>`;
+    if (layer.components && layer.components.length) {
+      html += '<div class="arch-component-grid">';
+      for (const c of layer.components) {
+        html += `<div class="arch-component-card">`;
+        html += `<div class="arch-component-name">${c.name}</div>`;
+        html += `<div class="arch-component-desc">${c.description}</div>`;
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+    if (layer.sources && layer.sources.length) {
+      html += '<div class="arch-layer-sources">';
+      html += '<span class="arch-sources-label">Referenced in:</span> ';
+      html += layer.sources.join(' &middot; ');
+      html += '</div>';
+    }
+    html += '</div>'; /* arch-layer-detail */
+    html += '</div>'; /* arch-layer-row */
+  }
+  html += '</div>'; /* arch-layers-stack */
+
+  /* Cross-cutting concerns (right) */
+  html += '<div class="arch-cc-stack">';
+  for (const cc of crossCutting) {
+    html += `<div class="arch-cc-item" id="arch-cc-${cc.id}">`;
+    html += `<div class="arch-cc-bar" style="background:${cc.color}">`;
+    html += `<span class="arch-cc-label">${cc.label}</span>`;
+    html += '</div>';
+    html += '<div class="arch-cc-detail">';
+    html += `<p class="arch-cc-desc">${cc.description}</p>`;
+    if (cc.components && cc.components.length) {
+      html += '<ul class="arch-cc-components">';
+      for (const c of cc.components) {
+        html += `<li><strong>${c.name}</strong> &mdash; ${c.description}</li>`;
+      }
+      html += '</ul>';
+    }
+    html += '</div>';
+    html += '</div>';
+  }
+  html += '</div>'; /* arch-cc-stack */
+
+  html += '</div></div>'; /* arch-diagram-layout, arch-diagram */
+  return html;
+}
+
+function renderArchSources(sources, layers) {
+  let html = '<div class="arch-sources-grid">';
+  for (const src of sources) {
+    html += '<div class="arch-source-card">';
+    html += `<div class="arch-source-name">${src.name}</div>`;
+    html += `<div class="arch-source-framework">${src.framework}</div>`;
+    html += `<div class="arch-source-desc">${src.description}</div>`;
+    if (src.layer_coverage && src.layer_coverage.length) {
+      html += '<div class="arch-source-coverage">';
+      for (const layer of layers) {
+        const covered = src.layer_coverage.includes(layer.id);
+        html += `<span class="arch-coverage-dot${covered ? ' covered' : ''}" style="${covered ? 'background:' + layer.color : ''}" title="${layer.label}${covered ? '' : ' (not covered)'}"></span>`;
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
 /* ── Site-Wide Search ──────────────────────────────────── */
 let searchIndex = null;
 let searchOverlay = null;
@@ -961,7 +1100,8 @@ async function buildSearchIndex() {
     'home', 'overview', 'recommendations', 'new-capabilities',
     'ea-operating-model', 'ea-development-method', 'ea-governance',
     'ea-repository', 'ea-roles-skills', 'risk-security',
-    'banking', 'reinsurance', 'pharma'
+    'banking', 'reinsurance', 'pharma',
+    'architecture-reference'
   ];
   const results = await Promise.all(files.map(f => loadJSON(`data/${f}.json`)));
   const idx = [];
@@ -1028,6 +1168,16 @@ async function buildSearchIndex() {
           s.agentic ? (s.agentic.key_points || []).map(stripHTML).join(' ') : ''
         ].join(' ');
         idx.push({ type: 'topic', title: stripHTML(s.label), snippet: truncate(stripHTML(s.agentic?.summary || s.traditional?.summary || ''), 200), href: href + '#' + s.id, page: pageLabel, _text: (stripHTML(s.label) + ' ' + texts).toLowerCase() });
+      }
+    }
+
+    // Architecture layers
+    if (data.layers) {
+      for (const layer of data.layers) {
+        const texts = [layer.label, layer.short, layer.description,
+          (layer.components || []).map(c => c.name + ' ' + c.description).join(' ')
+        ].join(' ');
+        idx.push({ type: 'topic', title: layer.label, snippet: truncate(layer.short, 200), href: href + '#arch-' + layer.id, page: pageLabel, _text: texts.toLowerCase() });
       }
     }
 
