@@ -969,12 +969,13 @@ function initArchitecturePage() {
     });
   });
 
-  /* Cross-cutting expand/collapse handlers */
-  el.querySelectorAll('.arch-cc-header').forEach(hdr => {
-    hdr.addEventListener('click', () => {
-      hdr.closest('.arch-cc-card').classList.toggle('open');
+  /* Cross-cutting expand/collapse */
+  const ccTrigger = el.querySelector('.arch-cc-trigger');
+  if (ccTrigger) {
+    ccTrigger.addEventListener('click', () => {
+      ccTrigger.closest('.arch-cc-row').classList.toggle('open');
     });
-  });
+  }
 }
 
 function renderArchDiagram(layers, crossCutting) {
@@ -1017,18 +1018,20 @@ function renderArchDiagram(layers, crossCutting) {
   }
   html += '</div>'; /* arch-layers-stack */
 
-  /* Cross-cutting concerns — horizontal cards below the stack */
-  html += '<div class="arch-cc-label-row">Spans all layers</div>';
+  /* Cross-cutting concerns — single expandable row */
+  html += '<div class="arch-cc-row">';
+  html += '<div class="arch-cc-trigger">';
+  html += '<span class="arch-cc-trigger-label">Cross-Cutting Concerns</span>';
+  html += '<span class="arch-cc-trigger-names">';
+  html += crossCutting.map(cc => `<span class="arch-cc-tag" style="--cc-color:${cc.color}"><span class="arch-cc-dot" style="background:${cc.color}"></span>${cc.label}</span>`).join('');
+  html += '</span>';
+  html += chevronSVG();
+  html += '</div>';
+  html += '<div class="arch-cc-detail">';
   html += '<div class="arch-cc-grid">';
   for (const cc of crossCutting) {
     html += `<div class="arch-cc-card" id="arch-cc-${cc.id}">`;
-    html += `<div class="arch-cc-header" style="--cc-color:${cc.color}">`;
-    html += `<div class="arch-cc-dot" style="background:${cc.color}"></div>`;
-    html += `<div class="arch-cc-title">${cc.label}</div>`;
-    html += chevronSVG();
-    html += '</div>';
-    html += '<div class="arch-cc-detail">';
-    html += `<p class="arch-cc-short">${cc.short}</p>`;
+    html += `<div class="arch-cc-card-title" style="--cc-color:${cc.color}"><span class="arch-cc-dot" style="background:${cc.color}"></span>${cc.label}</div>`;
     html += `<p class="arch-cc-desc">${cc.description}</p>`;
     if (cc.components && cc.components.length) {
       html += '<div class="arch-component-grid">';
@@ -1041,9 +1044,10 @@ function renderArchDiagram(layers, crossCutting) {
       html += '</div>';
     }
     html += '</div>';
-    html += '</div>';
   }
   html += '</div>'; /* arch-cc-grid */
+  html += '</div>'; /* arch-cc-detail */
+  html += '</div>'; /* arch-cc-row */
 
   html += '</div>'; /* arch-diagram */
   return html;

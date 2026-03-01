@@ -1860,74 +1860,91 @@ a.dashboard-card:hover {
   font-weight: 600;
   color: var(--text-secondary);
 }
-/* Cross-cutting concerns — horizontal cards */
-.arch-cc-label-row {
-  font-size: .72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  color: var(--text-muted);
-  margin-top: 1.25rem;
-  margin-bottom: .5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
+/* Cross-cutting concerns — single expandable row */
+.arch-cc-row {
+  margin-top: 4px;
 }
-.arch-cc-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: .5rem;
-}
-.arch-cc-card {
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-}
-.arch-cc-header {
+.arch-cc-trigger {
   display: flex;
   align-items: center;
-  gap: .6rem;
+  gap: .75rem;
   padding: .6rem .75rem;
-  cursor: pointer;
-  transition: background .15s;
-  border-left: 4px solid var(--cc-color);
-}
-.arch-cc-header:hover {
   background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: box-shadow .15s;
+}
+.arch-cc-trigger:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+.arch-cc-trigger-label {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+.arch-cc-trigger-names {
+  display: flex;
+  gap: .5rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+.arch-cc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .72rem;
+  color: var(--text-muted);
+  padding: .15rem .5rem;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: var(--surface);
 }
 .arch-cc-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-.arch-cc-title {
-  font-size: .82rem;
-  font-weight: 600;
-  color: var(--text);
-  flex: 1;
-}
-.arch-cc-header .finding-chevron {
+.arch-cc-trigger .finding-chevron {
   width: 16px;
   height: 16px;
   color: var(--text-muted);
   transition: transform .2s;
   flex-shrink: 0;
 }
-.arch-cc-card.open .finding-chevron {
+.arch-cc-row.open .finding-chevron {
   transform: rotate(180deg);
 }
-.arch-cc-detail {
+.arch-cc-row > .arch-cc-detail {
   max-height: 0;
   overflow: hidden;
   transition: max-height .3s ease;
 }
-.arch-cc-card.open .arch-cc-detail {
-  max-height: 600px;
-  padding: .75rem;
+.arch-cc-row.open > .arch-cc-detail {
+  max-height: 3000px;
+  padding-top: .75rem;
 }
-.arch-cc-short {
-  font-size: .78rem;
-  color: var(--text-muted);
+.arch-cc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+.arch-cc-card {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cc-color);
+  border-radius: 6px;
+  padding: 1rem;
+  background: var(--surface);
+}
+.arch-cc-card-title {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--text);
   margin-bottom: .5rem;
 }
 .arch-cc-desc {
@@ -1993,9 +2010,6 @@ a.dashboard-card:hover {
 
 /* ── Responsive: Layout ──────────────────────────────── */
 @media (max-width: 900px) {
-  .arch-cc-grid {
-    grid-template-columns: 1fr;
-  }
   .arch-layer-components {
     white-space: normal;
   }
