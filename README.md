@@ -18,11 +18,11 @@ An element-level analysis of traditional EA frameworks, examining what changes, 
 
 ## Website
 
-The website is a static site (vanilla HTML/CSS/JS, no build step) in the `website/` directory. All content is data-driven from JSON files in `website/data/`.
+The website is a static site (vanilla HTML/CSS/JS, no build step) in the `docs/` directory. All content is data-driven from JSON files in `docs/data/`.
 
 To run locally:
 
 ```
-cd website
+cd docs
 python3 -m http.server 8080
 ```
