@@ -1,0 +1,177 @@
+{
+  "page_type": "industry",
+  "title": "Re/Insurance",
+  "subtitle": "How EA for the Agentic Organisation applies to insurance and reinsurance &mdash; an industry where agentic AI is moving from pilots to production-scale deployment.",
+  "description": "The re/insurance industry faces unique EA challenges: decades-old core systems, triple regulatory overlay (Solvency II, IFRS 17, EU AI Act), actuarial model governance, and catastrophe modelling infrastructure. Major carriers are partnering with AI platforms to transform underwriting, claims, and risk modelling.",
+  "findings": [
+    {
+      "id": "RI-F1",
+      "title": "Re/insurance is an early mover in agentic AI",
+      "summary": "Swiss Re, Sompo, and AIG are deploying AI agents at production scale &mdash; not just piloting. Only 7% of insurers have scaled AI across their organisations, but the leaders are achieving 15-25% expense ratio improvements."
+    },
+    {
+      "id": "RI-F2",
+      "title": "Triple regulatory overlay creates unique EA governance requirements",
+      "summary": "Solvency II (capital), IFRS 17 (financial reporting), and EU AI Act (AI governance) impose overlapping requirements on architecture that don't exist in other industries. AI systems for insurance underwriting are classified as high-risk under the EU AI Act."
+    },
+    {
+      "id": "RI-F3",
+      "title": "Dual model governance is the defining architectural challenge",
+      "summary": "EA must govern both traditional actuarial models (deterministic, regulated) and AI/ML models (probabilistic, agentic) under a unified framework. Two parallel model governance regimes must coexist."
+    },
+    {
+      "id": "RI-F4",
+      "title": "Legacy modernisation is a $17B industry priority",
+      "summary": "Insurers in EMEA and North America are spending approximately $17 billion on core IT modernisation (2024-2026), yet 68% of insurance leaders struggle to keep pace with technological change."
+    },
+    {
+      "id": "RI-F5",
+      "title": "Catastrophe modelling is being re-platformed",
+      "summary": "Cloud-native, multi-vendor, AI-augmented catastrophe modelling architectures (Oasis SaaS, Moody's IRP) are replacing legacy vendor-specific platforms. AI-powered weather forecasting and damage assessment are now operational."
+    },
+    {
+      "id": "RI-F6",
+      "title": "Ontology-based platforms are emerging as the integration pattern",
+      "summary": "Palantir's deployments at Swiss Re, Sompo, and AIG use a semantic Ontology layer that maps insurance business objects (policies, claims, risks) to underlying data, enabling AI agents to reason about domain concepts rather than raw data."
+    },
+    {
+      "id": "RI-F7",
+      "title": "Reinsurance treaty administration remains heavily manual",
+      "summary": "Many reinsurers still use spreadsheets to administer contracts, leading to errors, claims leakage, and slow deal implementation. This is one of the most under-digitised areas and a major opportunity for agentic AI."
+    },
+    {
+      "id": "RI-F8",
+      "title": "Human-in-the-loop is non-negotiable",
+      "summary": "The EU AI Act mandates human oversight for high-risk insurance AI systems. AI cannot deny claims without human confirmation. Architecture must embed governance controls, not bolt them on."
+    }
+  ],
+  "case_studies": [
+    {
+      "company": "Swiss Re",
+      "metrics": ["50%+ workforce on platform", "9-digit USD impact from single use case", "85% staff tech adoption"],
+      "description": "Over 50% of Swiss Re's workforce actively uses the Palantir platform across two dozen business domains. The platform integrates structured and unstructured data with automation, ontologies, and simulation capabilities. Post-2025, Swiss Re is shifting from incremental use cases to structural transformation, redesigning core processes using agentic AI that blends predictive and generative capabilities."
+    },
+    {
+      "company": "Sompo Japan",
+      "metrics": ["8,000+ active users", "$60M profit improvement", "$100M additional expected"],
+      "description": "Sompo expanded its multi-year partnership in August 2025, with over 8,000 employees actively using the platform. AI agents evaluate risk and make automated underwriting recommendations, driving data-driven pricing across the organisation. The partnership delivered $60M in profit improvement over three years."
+    },
+    {
+      "company": "AIG",
+      "metrics": ["500K+ E&amp;S submissions processed", "$4B new business target by 2030", "1 underwriter &rarr; 5x output"],
+      "description": "AIG deployed multiple LLM agents for rapid data retrieval and underwriting support, processing over 500,000 excess &amp; surplus submissions. The platform is described internally as 'turning one human underwriter into five', targeting at least $4 billion in new business premiums by 2030."
+    }
+  ],
+  "sections": [
+    {
+      "id": "use-cases",
+      "label": "Agentic AI Use Cases",
+      "traditional": {
+        "summary": "Manual processes dominate underwriting, claims, and reinsurance administration across the industry.",
+        "body_html": "<h4>Underwriting</h4><p>Manual submission intake from PDFs and emails. Human underwriters assess risk against guidelines and pricing models. Turnaround measured in days to weeks.</p><h4>Claims</h4><p>Manual first notification of loss (FNOL) processing. Human adjusters assess coverage and damage. Claims routing based on workload, not expertise match.</p><h4>Reinsurance</h4><p>Spreadsheet-based treaty administration. Manual cession calculations. Contract parsing done by specialists. Errors and claims leakage are common.</p><h4>Catastrophe Modelling</h4><p>Vendor-specific platforms (RMS, AIR) running periodic batch analyses. Post-event damage assessment relies on field inspection and delayed reporting.</p>"
+      },
+      "agentic": {
+        "summary": "<mark>AI agents are automating end-to-end insurance workflows</mark> &mdash; from submission intake through underwriting, claims processing, and reinsurance administration.",
+        "body_html": "<p>Production deployments are showing 15-25% expense ratio improvements, 30% faster claims cycles, and 12% lower leakage. The shift is from human-executed processes with tool support to agent-executed processes with human governance.</p>",
+        "key_points": [
+          "<strong>Underwriting agents</strong> extract data from PDFs, emails, and spreadsheets, compare against guidelines, and propose premiums &mdash; AIG processes 500K+ submissions this way",
+          "<strong>Claims agents</strong> handle FNOL ingestion, multi-modal coverage assessment, intelligent routing, and automated payouts for straightforward claims",
+          "<strong>Reinsurance agents</strong> parse contracts, calculate cessions, and manage treaty administration &mdash; replacing error-prone spreadsheet processes",
+          "<strong>Catastrophe agents</strong> analyse pre/post-event satellite imagery for real-time damage assessment; AI weather forecasting (ECMWF AIFS) went operational in 2025",
+          "<strong>Customer agents</strong> provide unified 360 views, next best action recommendations, and live call transcription in 50+ languages"
+        ]
+      }
+    },
+    {
+      "id": "regulatory-architecture",
+      "label": "Regulatory Architecture",
+      "traditional": {
+        "summary": "Regulatory compliance is managed through periodic reporting, manual audit processes, and siloed compliance teams.",
+        "body_html": "<h4>Solvency II</h4><p>Risk-based capital requirements implemented through dedicated actuarial and finance systems. Own Risk and Solvency Assessment (ORSA) requires demonstrating how risk models connect to capital calculations.</p><h4>IFRS 17</h4><p>Financial reporting standard requiring dramatically higher data volumes with granularity and traceability requirements. 97% of UK insurance professionals report increased complexity. Monthly closes take 3+ weeks. Implementation requires 12-18 months of actuarial-finance-IT alignment per workstream.</p><h4>General Compliance</h4><p>Manual compliance checking against regulatory requirements. Periodic audits. Documentation maintained separately from operational systems.</p>"
+      },
+      "agentic": {
+        "summary": "A <mark>triple regulatory overlay</mark> &mdash; Solvency II, IFRS 17, and EU AI Act &mdash; creates EA governance requirements unique to insurance.",
+        "body_html": "<p>The EU AI Act classifies AI systems for insurance pricing and underwriting as <strong>high-risk</strong>, taking effect August 2026. This requires data quality and fairness controls, technical documentation, human oversight, transparency, accuracy guarantees, and registration with authorities. AI literacy duties are already effective since February 2025.</p>",
+        "key_points": [
+          "Every agent decision in underwriting or claims must be <strong>traceable to regulatory compliance evidence</strong> across all three frameworks",
+          "A dedicated <strong>regulatory architecture layer</strong> must map AI agent activities to Solvency II, IFRS 17, and EU AI Act requirements simultaneously",
+          "IFRS 17's granularity and traceability requirements mean <strong>architecture must support audit trails at the individual contract level</strong>",
+          "EU AI Act technical standards for insurance expected <strong>spring/summer 2026</strong> &mdash; architecture must be ready to incorporate them"
+        ]
+      }
+    },
+    {
+      "id": "dual-model-governance",
+      "label": "Dual Model Governance",
+      "traditional": {
+        "summary": "Actuarial models are governed through established validation frameworks, regulatory submission processes, and specialist oversight.",
+        "body_html": "<h4>Actuarial Models</h4><p>Deterministic models built in specialised platforms (Prophet, AXIS, MoSes). Governed through actuarial standards, peer review, regulatory submission, and board sign-off. Model changes follow formal change control with long approval cycles.</p><h4>Model Risk Management</h4><p>Focused on actuarial and financial models. Validation frameworks well-established. Model inventory maintained. Independent model validation as a regulatory requirement.</p>"
+      },
+      "agentic": {
+        "summary": "EA must govern <mark>two parallel model regimes</mark> &mdash; traditional actuarial models and AI/ML models &mdash; under a unified framework.",
+        "body_html": "<p>The defining architectural challenge for re/insurance is that actuarial models (deterministic, heavily regulated, slow-changing) and AI models (probabilistic, fast-evolving, agentic) must coexist. Underwriting agents need real-time access to actuarial model outputs; actuarial models need agent-gathered data. The EU AI Act's high-risk classification means AI model governance is not optional.</p>",
+        "key_points": [
+          "<strong>Unified model registry</strong> covering both actuarial models (Prophet, AXIS) and AI/ML models (LLMs, agent chains) with common metadata",
+          "<strong>Integration patterns</strong> between actuarial platforms and AI agent platforms &mdash; agents need actuarial outputs, actuaries need agent-gathered data",
+          "Distinct <strong>validation cadences</strong>: actuarial models validated annually vs AI models validated continuously",
+          "<strong>Explainability requirements</strong> differ: actuarial models are inherently deterministic; AI models need separate explainability infrastructure"
+        ]
+      }
+    },
+    {
+      "id": "platform-architecture",
+      "label": "Platform Architecture",
+      "traditional": {
+        "summary": "A uniquely fragmented core system landscape spanning policy admin, claims, billing, reinsurance, actuarial, and catastrophe modelling.",
+        "body_html": "<h4>Core Systems</h4><p>Policy Administration Systems (often 20-30+ years old). Claims Management (frequently mainframe-based). Actuarial Modelling on specialised platforms. Reinsurance Administration often spreadsheet-based. Catastrophe Modelling on vendor-specific platforms. Finance systems for Solvency II and IFRS 17 reporting.</p><h4>Integration</h4><p>Point-to-point integrations between systems. Data duplication across platforms. No unified semantic model. $17 billion industry investment in modernisation (2024-2026).</p>"
+      },
+      "agentic": {
+        "summary": "An <mark>Ontology-based semantic layer</mark> emerging as the integration pattern for agentic re/insurance, with AI agents operating above core systems.",
+        "body_html": "<p>Palantir's deployments at Swiss Re, Sompo, and AIG suggest a reference architecture where a semantic Ontology layer maps insurance business objects (policies, claims, risks, exposures, treaties) to underlying data across all core systems. AI agents reason about domain concepts rather than raw data tables. Human-in-the-loop governance ensures agents cannot make high-impact decisions without human confirmation.</p>",
+        "key_points": [
+          "<strong>Ontology-first approach</strong>: model business objects semantically before deploying AI agents",
+          "<strong>Multi-agent orchestration</strong>: specialised agents collaborate (intake, assessment, routing, payout) across the insurance value chain",
+          "<strong>Unstructured data processing</strong>: PDFs, emails, spreadsheets, and audio calls processed as first-class data sources",
+          "<strong>Human-in-the-loop governance</strong>: embedded in the platform, not bolted on &mdash; AI cannot deny claims without human confirmation",
+          "Architecture augments rather than replaces <strong>existing actuarial and pricing systems</strong>"
+        ]
+      }
+    },
+    {
+      "id": "catastrophe-modelling",
+      "label": "Catastrophe Modelling",
+      "traditional": {
+        "summary": "Vendor-specific catastrophe modelling platforms running periodic batch analyses with manual post-event assessment.",
+        "body_html": "<h4>Current Landscape</h4><p>Dominated by proprietary platforms (RMS, AIR, CoreLogic). Models run as periodic batch jobs. Post-event damage assessment relies on field inspection and delayed reporting. Each vendor requires separate data formats and integration.</p><h4>Challenges</h4><p>Vendor lock-in. Expensive licensing. Limited ability to combine models from multiple providers. Climate change is making historical models less predictive. Real-time assessment capability is minimal.</p>"
+      },
+      "agentic": {
+        "summary": "Catastrophe modelling is being <mark>re-platformed with cloud-native, multi-vendor, AI-augmented architectures</mark>.",
+        "body_html": "<p>The industry-owned Oasis SaaS platform (launched Q3 2025) provides vendor-neutral cloud access to 300+ model providers. Moody's is integrating Oasis into its Intelligent Risk Platform, unifying multi-vendor access. AI-powered damage assessment using satellite imagery and AI weather forecasting (ECMWF AIFS operational since February 2025) are transforming real-time catastrophe response.</p>",
+        "key_points": [
+          "<strong>Oasis SaaS</strong>: industry-owned, vendor-neutral cloud platform with access to 300+ cat model providers",
+          "<strong>Moody's IRP integration</strong>: unifying multi-vendor catastrophe modelling access within one platform",
+          "<strong>AI damage assessment</strong>: pre/post-event satellite imagery analysis to determine structure damage in real-time",
+          "<strong>AI weather forecasting</strong>: ECMWF's AIFS went operational for deterministic forecasts in February 2025"
+        ]
+      }
+    },
+    {
+      "id": "legacy-modernisation",
+      "label": "Legacy Modernisation",
+      "traditional": {
+        "summary": "Core systems averaging 20-30+ years old, with $17 billion being invested in modernisation from 2024-2026.",
+        "body_html": "<h4>Scale of the Challenge</h4><p>68% of insurance leaders struggle to keep up with technological change. Policy administration system replacements involve migrating legacy policy data spanning decades. Data quality remediation is consistently the most time-consuming activity. IFRS 17 made monthly closes take 3+ weeks at many insurers, revealing architecture that is not fit for AI-speed operations.</p><h4>Approaches</h4><p>BCG identifies three paths: full replacement, progressive modernisation, and strangler-fig pattern. Cloud-ready core systems are now the foundation for faster product launches, real-time analytics, and ecosystem connectivity.</p>"
+      },
+      "agentic": {
+        "summary": "Agentic AI can <mark>accelerate legacy modernisation</mark> by operating as an integration layer above core systems, while also being constrained by the legacy landscape it sits on.",
+        "body_html": "<p>The paradox: AI agents need clean, integrated data to function well, but the legacy systems they must integrate with are the source of data fragmentation. The Ontology approach (mapping business objects across systems) provides a pragmatic path: agents can start delivering value even before full core system replacement, provided the semantic layer is robust enough.</p>",
+        "key_points": [
+          "Agents as an <strong>integration and abstraction layer</strong> above legacy systems &mdash; delivering value before full replacement",
+          "<strong>Data quality remediation</strong> must precede or accompany agent deployment &mdash; agents amplify bad data",
+          "<strong>Strangler-fig pattern</strong>: agents gradually take over processes from legacy systems, enabling incremental decommissioning",
+          "Architecture must support <strong>decades of historical data</strong> for long-tail liabilities alongside real-time agent operations"
+        ]
+      }
+    }
+  ]
+}

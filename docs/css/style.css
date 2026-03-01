@@ -1191,6 +1191,51 @@ a.dashboard-card:hover {
   border-color: var(--impact-new);
 }
 
+/* ── Industry Page: Case Study Cards ─────────────────── */
+.case-study-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.case-study-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  border-top: 3px solid var(--accent);
+}
+.case-study-company {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: .75rem;
+}
+.case-study-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin-bottom: .75rem;
+}
+.case-study-metric {
+  font-size: .7rem;
+  font-weight: 600;
+  padding: .2rem .5rem;
+  border-radius: 100px;
+  background: var(--accent-light);
+  color: var(--accent);
+  white-space: nowrap;
+}
+.case-study-desc {
+  font-size: .85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .case-study-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 900px) {
   .cap-diagram-top {
     grid-template-columns: 1fr;

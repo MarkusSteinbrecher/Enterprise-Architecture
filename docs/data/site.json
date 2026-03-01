@@ -7,6 +7,7 @@
     { "id": "ea-governance", "label": "Governance", "href": "ea-governance.html" },
     { "id": "ea-repository", "label": "Repository", "href": "ea-repository.html" },
     { "id": "ea-roles-skills", "label": "Roles & Skills", "href": "ea-roles-skills.html" },
-    { "id": "risk-security", "label": "Risk & Security", "href": "risk-security.html" }
+    { "id": "risk-security", "label": "Risk & Security", "href": "risk-security.html" },
+    { "id": "reinsurance", "label": "Re/Insurance", "href": "reinsurance.html" }
   ]
 }

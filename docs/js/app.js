@@ -22,7 +22,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else if (page === 'overview') {
     await initOverview();
   } else {
-    await initConceptPage(page);
+    // Peek at JSON to detect page type
+    const peek = await loadJSON(`data/${page}.json`);
+    if (peek && peek.page_type === 'industry') {
+      pageData = peek;
+      initIndustryPage();
+    } else {
+      await initConceptPage(page);
+    }
   }
 });
 
@@ -266,6 +273,101 @@ function renderImpactMatrix(matrix) {
 
   html += '</table>';
   html += '</div>';
+  el.innerHTML = html;
+}
+
+/* ── Industry Page ──────────────────────────────────── */
+function initIndustryPage() {
+  const el = document.getElementById('industry-content');
+  if (!el || !pageData) return;
+
+  let html = '';
+
+  // Hero
+  html += '<header class="hero"><div class="container">';
+  html += `<p class="section-label">Industry Focus</p>`;
+  html += `<h1>${pageData.title}</h1>`;
+  html += `<p class="subtitle">${pageData.subtitle}</p>`;
+  html += '</div></header>';
+
+  // Findings
+  if (pageData.findings && pageData.findings.length) {
+    html += '<div class="dashboard-section"><div class="container">';
+    html += '<p class="section-label">Key Findings</p>';
+    html += `<h2>What Makes ${pageData.title} Different</h2>`;
+    html += '<div class="overview-findings">';
+    for (const f of pageData.findings) {
+      html += `<div class="overview-finding">
+        <span class="overview-finding-id">${f.id}</span>
+        <span class="overview-finding-text"><strong>${f.title}</strong> &mdash; ${f.summary}</span>
+      </div>`;
+    }
+    html += '</div></div></div>';
+  }
+
+  // Case Studies
+  if (pageData.case_studies && pageData.case_studies.length) {
+    html += '<div class="dashboard-section"><div class="container">';
+    html += '<p class="section-label">Industry Leaders</p>';
+    html += '<h2>Agentic AI in Production</h2>';
+    html += '<div class="case-study-grid">';
+    for (const cs of pageData.case_studies) {
+      html += `<div class="case-study-card">
+        <div class="case-study-company">${cs.company}</div>
+        <div class="case-study-metrics">${cs.metrics.map(m => `<span class="case-study-metric">${m}</span>`).join('')}</div>
+        <div class="case-study-desc">${cs.description}</div>
+      </div>`;
+    }
+    html += '</div></div></div>';
+  }
+
+  // Comparison Sections
+  if (pageData.sections && pageData.sections.length) {
+    html += '<div class="dashboard-section"><div class="container">';
+    html += '<p class="section-label">EA Impact Analysis</p>';
+    html += '<h2>How EA Must Adapt</h2>';
+    html += `<p class="page-description">${pageData.description}</p>`;
+    html += '<div class="compare-table">';
+    html += '<div class="compare-header">';
+    html += '<div class="compare-col-header compare-col-trad"><span class="compare-col-label">Traditional EA</span></div>';
+    html += '<div class="compare-col-header compare-col-ai"><span class="compare-col-label">EA for the Agentic Organisation</span></div>';
+    html += '</div>';
+    for (const s of pageData.sections) {
+      const t = s.traditional;
+      const a = s.agentic;
+      const tradText = (t && t.summary) ? t.summary : '';
+      const aiText = (a && a.summary) ? a.summary : '';
+      html += `<div class="compare-topic-row" id="topic-${s.id}">`;
+      html += `<div class="compare-topic-header" onclick="toggleTopic('${s.id}')">`;
+      html += `<div class="compare-topic-label">${s.label}</div>`;
+      html += '<div class="compare-topic-summaries">';
+      html += `<div class="compare-topic-summary compare-topic-trad">${tradText}</div>`;
+      html += `<div class="compare-topic-summary compare-topic-ai">${aiText}</div>`;
+      html += '</div></div>';
+
+      html += '<div class="compare-topic-detail"><div class="compare-detail-grid">';
+      html += '<div class="compare-detail-col compare-detail-trad">';
+      if (t && t.body_html) html += `<div class="content-body">${t.body_html}</div>`;
+      html += '</div>';
+      html += '<div class="compare-detail-col compare-detail-ai">';
+      if (a && a.body_html) html += `<div class="content-body">${a.body_html}</div>`;
+      if (a && a.key_points && a.key_points.length) {
+        html += `<div class="impact-section">
+          <div class="impact-section-title">Key Points</div>
+          <ul class="impact-list changes">
+            ${a.key_points.map(p => `<li>${p}</li>`).join('')}
+          </ul>
+        </div>`;
+      }
+      html += '</div>';
+      html += '</div></div>'; // detail-grid, detail
+
+      html += '</div>'; // topic-row
+    }
+    html += '</div>'; // compare-table
+    html += '</div></div>'; // container, section
+  }
+
   el.innerHTML = html;
 }
 
