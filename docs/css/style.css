@@ -856,6 +856,7 @@ a.dashboard-card:hover {
 /* ── Topic Row Layout (all subtopics in one table) ──── */
 .compare-topic-row {
   border-bottom: 1px solid var(--border);
+  border-left: 3px solid var(--text);
 }
 .compare-topic-row:last-child { border-bottom: none; }
 
@@ -864,7 +865,6 @@ a.dashboard-card:hover {
   cursor: pointer;
   user-select: none;
   transition: background .15s;
-  border-left: 3px solid var(--text);
 }
 .compare-topic-header:hover { background: var(--bg); }
 .compare-topic-row.open .compare-topic-header {
