@@ -110,16 +110,40 @@ function renderTopNav() {
   html += '</div>';
   nav.innerHTML = html;
 
-  // Dropdown toggle for mobile tap
-  nav.querySelectorAll('.dropdown-trigger').forEach(btn => {
+  // Dropdown: position fixed menu below trigger
+  function positionDropdown(dd) {
+    const menu = dd.querySelector('.dropdown-menu');
+    const btn = dd.querySelector('.dropdown-trigger');
+    if (!menu || !btn) return;
+    const r = btn.getBoundingClientRect();
+    menu.style.top = (r.bottom + 4) + 'px';
+    menu.style.left = r.left + 'px';
+  }
+
+  nav.querySelectorAll('.top-nav-dropdown').forEach(dd => {
+    const btn = dd.querySelector('.dropdown-trigger');
+    // Click/tap toggle
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      btn.closest('.top-nav-dropdown').classList.toggle('open');
+      const opening = !dd.classList.contains('open');
+      closeAllDropdowns();
+      if (opening) { dd.classList.add('open'); positionDropdown(dd); }
     });
+    // Desktop hover
+    dd.addEventListener('mouseenter', () => { dd.classList.add('open'); positionDropdown(dd); });
+    dd.addEventListener('mouseleave', () => { dd.classList.remove('open'); });
   });
-  document.addEventListener('click', () => {
+
+  // Keep menu attached to dropdown on scroll
+  const menuParent = nav.closest('.top-nav') || nav;
+  menuParent.addEventListener('scroll', () => {
+    nav.querySelectorAll('.top-nav-dropdown.open').forEach(positionDropdown);
+  }, { passive: true });
+
+  function closeAllDropdowns() {
     nav.querySelectorAll('.top-nav-dropdown.open').forEach(d => d.classList.remove('open'));
-  });
+  }
+  document.addEventListener('click', closeAllDropdowns);
 }
 
 /* ── Home Page ───────────────────────────────────────── */

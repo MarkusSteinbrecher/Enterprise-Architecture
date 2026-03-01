@@ -157,9 +157,7 @@ p:last-child { margin-bottom: 0; }
 }
 .dropdown-menu {
   display: none;
-  position: absolute;
-  top: calc(100% + .35rem);
-  left: 0;
+  position: fixed;
   min-width: 10rem;
   background: var(--text);
   border: 1px solid rgba(255,255,255,.15);
@@ -168,7 +166,6 @@ p:last-child { margin-bottom: 0; }
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
   z-index: 300;
 }
-.top-nav-dropdown:hover .dropdown-menu,
 .top-nav-dropdown.open .dropdown-menu {
   display: block;
 }
