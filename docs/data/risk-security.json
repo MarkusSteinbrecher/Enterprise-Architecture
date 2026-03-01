@@ -8,8 +8,8 @@
       "label": "Risk Management Framework",
       "traditional": {
         "togaf_reference": "FC Part 2, Ch 9",
-        "summary": "Traditional EA provides a structured risk management technique integrated throughout the ADM.",
-        "body_html": "<h4>Risk Category</h4><p>Architecture risk — the risk that architecture decisions produce outcomes that fail to meet enterprise objectives or introduce unacceptable exposure.</p><h4>Assessment</h4><p>A five-stage process: risk classification (categorising by area), risk identification (workshops and analysis), risk assessment (effect × frequency matrix producing risk ratings), risk mitigation (countermeasures and contingency plans), and risk monitoring (tracking residual risk through implementation).</p><h4>Controls</h4><p>Risk owners assigned for each identified risk. Countermeasures defined with contingency plans. Residual risk tracked through Implementation Governance and Change Management. Risk management embedded as an ADM-integrated activity, not a separate stream.</p>"
+        "summary": "Traditional EA provides a structured risk management technique integrated throughout the development cycle.",
+        "body_html": "<h4>Risk Category</h4><p>Architecture risk — the risk that architecture decisions produce outcomes that fail to meet enterprise objectives or introduce unacceptable exposure.</p><h4>Assessment</h4><p>A five-stage process: risk classification (categorising by area), risk identification (workshops and analysis), risk assessment (effect × frequency matrix producing risk ratings), risk mitigation (countermeasures and contingency plans), and risk monitoring (tracking residual risk through implementation).</p><h4>Controls</h4><p>Risk owners assigned for each identified risk. Countermeasures defined with contingency plans. Residual risk tracked through Implementation Governance and Change Management. Risk management embedded as an Development-integrated activity, not a separate stream.</p>"
       },
       "assessment": {
         "questions": [
@@ -69,7 +69,7 @@
           "The <strong>five-stage risk process</strong> (classify, identify, assess, mitigate, monitor) remains structurally sound",
           "<strong>Risk ownership and accountability</strong> principles apply directly to AI systems",
           "Countermeasure and contingency planning logic transfers to <strong>agent containment strategies</strong>",
-          "<strong>ADM-integrated risk management</strong> is more important than ever with agent-augmented architecture"
+          "<strong>Development-integrated risk management</strong> is more important than ever with agent-augmented architecture"
         ]
       },
       "future_state": {
@@ -88,8 +88,8 @@
       "label": "Security Architecture",
       "traditional": {
         "togaf_reference": "TSG Risk and Security",
-        "summary": "Traditional EA treats security as a cross-cutting concern spanning all architecture domains and ADM phases.",
-        "body_html": "<h4>Risk Category</h4><p>Enterprise security risk — threats to the confidentiality, integrity, and availability of enterprise systems and data from external attackers, insider threats, and system vulnerabilities.</p><h4>Assessment</h4><p>The TSG provides phase-by-phase guidance for incorporating security into each ADM phase. Threats are identified, controls are defined, and compliance is verified. Security maps to industry security frameworks and standards.</p><h4>Controls</h4><p>Security designed into every architecture component as a cross-cutting property, not a layer added afterwards. Defence-in-depth with access controls, encryption, monitoring, and incident response.</p>"
+        "summary": "Traditional EA treats security as a cross-cutting concern spanning all architecture domains and development phases.",
+        "body_html": "<h4>Risk Category</h4><p>Enterprise security risk — threats to the confidentiality, integrity, and availability of enterprise systems and data from external attackers, insider threats, and system vulnerabilities.</p><h4>Assessment</h4><p>The TSG provides phase-by-phase guidance for incorporating security into each development phase. Threats are identified, controls are defined, and compliance is verified. Security maps to industry security frameworks and standards.</p><h4>Controls</h4><p>Security designed into every architecture component as a cross-cutting property, not a layer added afterwards. Defence-in-depth with access controls, encryption, monitoring, and incident response.</p>"
       },
       "assessment": {
         "questions": [
@@ -160,7 +160,7 @@
           "<strong>Defence-in-depth</strong> principles apply — agents need layered controls just as traditional systems do",
           "Incident response structure (detect, contain, eradicate, recover) transfers to <strong>AI-specific playbooks</strong>",
           "The practice of <strong>mapping threats to controls</strong> and verifying coverage remains essential",
-          "<strong>Cross-cutting security architecture</strong> integrated across ADM phases is more critical than ever"
+          "<strong>Cross-cutting security architecture</strong> integrated across development phases is more critical than ever"
         ]
       },
       "future_state": {
