@@ -82,17 +82,18 @@ function renderTopNav() {
   if (!nav || !siteData) return;
 
   const page = getPageId();
-  let html = `<a class="top-nav-brand" href="overview.html">${siteData.brand || 'EA for AI'}</a>`;
-  html += '<div class="top-nav-links">';
-  let rightStarted = false;
-  for (const link of siteData.nav) {
-    const pushRight = link.align === 'right' && !rightStarted;
-    if (pushRight) rightStarted = true;
-    const style = pushRight ? ' style="margin-left:auto"' : '';
 
+  /* ── Brand + hamburger button (mobile) ── */
+  let html = `<a class="top-nav-brand" href="overview.html">${siteData.brand || 'EA for AI'}</a>`;
+  html += '<button class="nav-hamburger" aria-label="Menu">&#9776;</button>';
+
+  /* ── Link list (horizontal on desktop, vertical drawer on mobile) ── */
+  html += '<div class="top-nav-links">';
+  for (const link of siteData.nav) {
     if (link.children) {
+      /* Desktop: dropdown. Mobile: group label + children inline */
       const childActive = link.children.some(c => c.id === page);
-      html += `<div class="top-nav-dropdown${childActive ? ' active' : ''}"${style}>`;
+      html += `<div class="top-nav-dropdown${childActive ? ' active' : ''}">`;
       html += `<button class="top-nav-link dropdown-trigger${childActive ? ' active' : ''}">${link.label} \u25BE</button>`;
       html += '<div class="dropdown-menu">';
       for (const child of link.children) {
@@ -100,17 +101,32 @@ function renderTopNav() {
         html += `<a class="dropdown-item${cActive}" href="${child.href}">${child.label}</a>`;
       }
       html += '</div></div>';
+      /* Mobile-only: flat links with indent */
+      html += `<span class="mobile-nav-group">${link.label}</span>`;
+      for (const child of link.children) {
+        const cActive = child.id === page ? ' active' : '';
+        html += `<a class="top-nav-link mobile-nav-child${cActive}" href="${child.href}">${child.label}</a>`;
+      }
     } else {
       const isExternal = link.external || link.href.startsWith('http');
       const active = !isExternal && link.id === page ? ' active' : '';
       const target = isExternal ? ' target="_blank" rel="noopener"' : '';
-      html += `<a class="top-nav-link${active}" href="${link.href}"${target}${style}>${link.label}</a>`;
+      html += `<a class="top-nav-link${active}" href="${link.href}"${target}>${link.label}</a>`;
     }
   }
   html += '</div>';
   nav.innerHTML = html;
 
-  // Dropdown: position fixed menu below trigger
+  /* ── Hamburger toggle ── */
+  const hamburger = nav.querySelector('.nav-hamburger');
+  const links = nav.querySelector('.top-nav-links');
+  hamburger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    links.classList.toggle('open');
+    hamburger.classList.toggle('open');
+  });
+
+  /* ── Desktop dropdown: hover + click ── */
   function positionDropdown(dd) {
     const menu = dd.querySelector('.dropdown-menu');
     const btn = dd.querySelector('.dropdown-trigger');
@@ -119,31 +135,25 @@ function renderTopNav() {
     menu.style.top = (r.bottom + 4) + 'px';
     menu.style.left = r.left + 'px';
   }
-
   nav.querySelectorAll('.top-nav-dropdown').forEach(dd => {
     const btn = dd.querySelector('.dropdown-trigger');
-    // Click/tap toggle
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const opening = !dd.classList.contains('open');
       closeAllDropdowns();
       if (opening) { dd.classList.add('open'); positionDropdown(dd); }
     });
-    // Desktop hover
     dd.addEventListener('mouseenter', () => { dd.classList.add('open'); positionDropdown(dd); });
     dd.addEventListener('mouseleave', () => { dd.classList.remove('open'); });
   });
 
-  // Keep menu attached to dropdown on scroll
-  const menuParent = nav.closest('.top-nav') || nav;
-  menuParent.addEventListener('scroll', () => {
-    nav.querySelectorAll('.top-nav-dropdown.open').forEach(positionDropdown);
-  }, { passive: true });
-
   function closeAllDropdowns() {
     nav.querySelectorAll('.top-nav-dropdown.open').forEach(d => d.classList.remove('open'));
   }
-  document.addEventListener('click', closeAllDropdowns);
+  document.addEventListener('click', (e) => {
+    closeAllDropdowns();
+    if (!nav.contains(e.target)) { links.classList.remove('open'); hamburger.classList.remove('open'); }
+  });
 }
 
 /* ── Home Page ───────────────────────────────────────── */

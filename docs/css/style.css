@@ -105,9 +105,9 @@ p:last-child { margin-bottom: 0; }
 .top-nav-inner {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: .5rem;
   padding: .5rem 0;
-  overflow-x: auto;
 }
 .top-nav-brand {
   font-size: .85rem;
@@ -119,10 +119,27 @@ p:last-child { margin-bottom: 0; }
   flex-shrink: 0;
 }
 .top-nav-brand:hover { text-decoration: none; opacity: .9; }
+
+/* Hamburger — hidden on desktop */
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: .35rem;
+  color: #fff;
+  font-size: 1.2rem;
+  padding: .15rem .5rem;
+  cursor: pointer;
+  margin-left: auto;
+  line-height: 1;
+}
+.nav-hamburger:hover { background: rgba(255,255,255,.1); }
+.nav-hamburger.open { background: rgba(255,255,255,.15); }
+
 .top-nav-links {
   display: flex;
   gap: .25rem;
-  overflow-x: auto;
+  align-items: center;
 }
 .top-nav-link {
   font-size: .78rem;
@@ -146,7 +163,11 @@ p:last-child { margin-bottom: 0; }
   border-color: var(--accent);
 }
 
-/* Dropdown nav */
+/* Mobile-only nav items — hidden on desktop */
+.mobile-nav-group,
+.mobile-nav-child { display: none; }
+
+/* Dropdown nav (desktop) */
 .top-nav-dropdown {
   position: relative;
 }
@@ -183,6 +204,42 @@ p:last-child { margin-bottom: 0; }
   color: #fff;
   background: rgba(255,255,255,.1);
   text-decoration: none;
+}
+
+/* ── Mobile nav (≤768px) ─────────────────────────────── */
+@media (max-width: 768px) {
+  .nav-hamburger { display: block; }
+
+  .top-nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    gap: 0;
+    padding: .25rem 0 .5rem;
+  }
+  .top-nav-links.open { display: flex; }
+
+  .top-nav-link {
+    border-radius: .35rem;
+    padding: .55rem .75rem;
+    width: 100%;
+  }
+
+  /* Hide desktop dropdown, show flat mobile items */
+  .top-nav-dropdown { display: none; }
+  .mobile-nav-group {
+    display: block;
+    font-size: .68rem;
+    font-weight: 600;
+    color: rgba(255,255,255,.45);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .65rem .75rem .2rem;
+  }
+  .mobile-nav-child {
+    display: block;
+    padding-left: 1.25rem;
+  }
 }
 
 /* ── Page Layout: Sidebar + Main ─────────────────────── */
