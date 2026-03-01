@@ -1,0 +1,177 @@
+{
+  "page_type": "industry",
+  "title": "Banking",
+  "subtitle": "How EA for the Agentic Organisation applies to banking &mdash; an industry where agentic AI is moving from pilot programmes to enterprise-scale transformation.",
+  "description": "The banking industry faces unique EA challenges: decades-old core systems processing millions of transactions daily, a triple regulatory overlay (Basel IV, DORA, EU AI Act), open banking mandates requiring API-first architecture, and real-time decision requirements across lending, trading, and payments. Major banks are investing billions in AI transformation, with JPMorgan Chase targeting a fully AI-powered megabank.",
+  "findings": [
+    {
+      "id": "BK-F1",
+      "title": "70% of banks are already deploying or piloting agentic AI",
+      "summary": "16% of banking institutions have existing agentic AI deployments and 52% have active pilot projects. McKinsey warns that slow adopters risk falling into 'pilot purgatory' &mdash; dabbling in narrow use cases without realising transformative potential. AI pioneers could open a 4-percentage-point ROTE gap over slow movers."
+    },
+    {
+      "id": "BK-F2",
+      "title": "JPMorgan Chase is building the first fully AI-powered megabank",
+      "summary": "JPMorgan has 450+ AI use cases in production, $20 billion in annual technology spend, and 150,000 employees using its internal LLM weekly. AI-attributed benefits are growing 30&ndash;40% year-over-year. CEO Jamie Dimon says AI is 'actively transforming' the workforce."
+    },
+    {
+      "id": "BK-F3",
+      "title": "Triple regulatory overlay creates unique EA governance requirements",
+      "summary": "Basel IV/CRR III (capital, applicable since January 2025), DORA (operational resilience, applicable since January 2025), and EU AI Act (AI governance, fully applicable August 2026) impose overlapping requirements on banking architecture. BaFin guidance explicitly makes AI part of ICT risk management under DORA."
+    },
+    {
+      "id": "BK-F4",
+      "title": "KYC/AML is the defining agentic AI use case for banking",
+      "summary": "Banks assign 10&ndash;15% of full-time equivalents to KYC/AML alone. Agent-based architectures are cutting onboarding cycle times from weeks to hours. 90% of financial institutions are expected to use AI/ML for AML by 2025. A global bank resolved transaction monitoring alerts 60% faster at 90% lower cost using Palantir."
+    },
+    {
+      "id": "BK-F5",
+      "title": "90% of US banking core software is legacy",
+      "summary": "Banks spend 78% of IT budgets maintaining legacy cores, with operating costs running 10x higher than next-generation platforms. 94% of modernisation projects exceed timelines. Yet 80% of European financial institutions intend to replace core systems by 2026."
+    },
+    {
+      "id": "BK-F6",
+      "title": "Open banking is evolving into agentic finance",
+      "summary": "PSD3, expected in force 2026&ndash;2027, expands open banking to instant payments, BNPL, crypto, and digital identity. The Financial Data Access Act (FiDA) extends to open finance. Model Context Protocol (MCP) can enable AI agents to securely interpret and act on PSD2-compliant banking APIs."
+    },
+    {
+      "id": "BK-F7",
+      "title": "Palantir's Ontology approach is gaining traction in banking",
+      "summary": "Citigroup (wealth management), Soci&eacute;t&eacute; G&eacute;n&eacute;rale (compliance &amp; risk), and Better.com (mortgage origination) are deploying Palantir's Ontology-based platform. The semantic layer maps banking objects across fragmented legacy systems, enabling AI agents to reason about domain concepts."
+    },
+    {
+      "id": "BK-F8",
+      "title": "Agentic AI could reshape $1.2 trillion in global banking profits",
+      "summary": "McKinsey estimates that without AI reinvention, global banking profit pools could shrink by up to 10% over 5&ndash;10 years. Conversely, agentic AI could lower operational costs by 20%+ (equivalent to 9&ndash;15% of operating profits) and banks rewiring frontline domains see 3&ndash;15% higher revenues per RM."
+    }
+  ],
+  "case_studies": [
+    {
+      "company": "JPMorgan Chase",
+      "metrics": ["450+ AI use cases in production", "$20B technology budget", "150K employees using LLM weekly"],
+      "description": "JPMorgan Chase is pursuing a volume-and-scale strategy to become the world's first fully AI-powered megabank. About half of all employees use gen AI tools daily, with AI-attributed benefits growing 30&ndash;40% year-over-year. Agentic AI handles complex multi-step tasks &mdash; including generating investment banking decks in 30 seconds. The 2026 technology budget of $20 billion (out of $105B total expenses) reflects the scale of ambition."
+    },
+    {
+      "company": "Goldman Sachs",
+      "metrics": ["10,000 employees on AI assistant", "Autonomous coding agents in use", "Company-wide rollout planned"],
+      "description": "Goldman Sachs deployed its AI assistant to 10,000 employees in early 2025, with capabilities evolving from document summarisation to sophisticated analytical support. The firm is experimenting with fully autonomous AI coding agents ('Devin') to augment its engineering teams, signalling a shift toward AI as 'digital employee'. Goldman's strategy focuses on bespoke, high-margin AI products for Investment Banking and Wealth Management."
+    },
+    {
+      "company": "HSBC",
+      "metrics": ["$1.8B reallocated to AI/digital", "85% employees with gen AI access", "50 processes being redesigned"],
+      "description": "HSBC is undertaking a sweeping structural reengineering programme to become a 'simple, agile, and growing' bank with AI at the centre. The bank partnered with Mistral AI in 2025 to accelerate adoption and is assessing how AI can redesign 50 business processes including fraud detection and credit applications. Generative AI is receiving the largest investment into new technology across the group."
+    }
+  ],
+  "sections": [
+    {
+      "id": "use-cases",
+      "label": "Agentic AI Use Cases",
+      "traditional": {
+        "summary": "Manual and semi-automated processes dominate KYC/AML, lending, trading support, and customer service across the banking value chain.",
+        "body_html": "<h4>KYC/AML &amp; Compliance</h4><p>Manual customer onboarding taking weeks. Human analysts reviewing transaction monitoring alerts with high false-positive rates. 10&ndash;15% of bank FTEs dedicated to compliance functions. Periodic batch screening against sanctions lists.</p><h4>Lending &amp; Credit</h4><p>Multi-day credit decisioning processes. Manual document collection and verification. Human underwriters assessing creditworthiness against lending policies. Paper-intensive mortgage origination.</p><h4>Trading &amp; Markets</h4><p>Semi-automated trade execution with manual exception handling. Human-driven reconciliation and settlement processes. Risk calculations running as overnight batch jobs.</p><h4>Customer Service</h4><p>Call centre agents handling routine enquiries. Basic chatbots with limited conversational ability. Manual complaint handling and resolution tracking.</p>"
+      },
+      "agentic": {
+        "summary": "<mark>AI agents are automating end-to-end banking workflows</mark> &mdash; from KYC onboarding through credit decisioning, trading support, and customer service, with 20%+ operational cost reductions.",
+        "body_html": "<p>Production deployments are showing 20%+ operational cost reductions, 3&ndash;15% higher revenues per relationship manager, and onboarding cycles compressed from weeks to hours. The shift is from human-executed processes with tool support to agent-executed processes with human governance.</p>",
+        "key_points": [
+          "<strong>KYC/AML agents</strong> gather evidence, screen against sanctions, draft case files, and validate &mdash; cutting onboarding from weeks to hours; a global bank resolved alerts 60% faster at 90% lower cost",
+          "<strong>Credit agents</strong> automate end-to-end loan processing from application to disbursement; JPMorgan generates investment banking decks in 30 seconds",
+          "<strong>Frontline agents</strong> provide next-best-action recommendations to relationship managers, driving 3&ndash;15% revenue uplift per RM",
+          "<strong>Fraud agents</strong> monitor transactions in real-time with adaptive learning, reducing false positives and accelerating investigation",
+          "<strong>Customer agents</strong> handle routine enquiries, transactions, and complaint resolution with full conversational ability across channels"
+        ]
+      }
+    },
+    {
+      "id": "regulatory-architecture",
+      "label": "Regulatory Architecture",
+      "traditional": {
+        "summary": "Regulatory compliance managed through periodic reporting, manual audit processes, and dedicated compliance teams operating in silos.",
+        "body_html": "<h4>Basel III/IV</h4><p>Risk-based capital requirements implemented through dedicated risk and finance systems. Internal models approach requires rigorous model validation. Standardised and IRB approaches for credit risk with complex risk-weighted asset calculations.</p><h4>DORA</h4><p>ICT risk management handled through separate IT governance frameworks. Incident reporting processes. Third-party risk assessment for technology providers. Operational resilience testing as a periodic exercise.</p><h4>General Compliance</h4><p>Manual compliance checking against regulatory requirements. Periodic audits and regulatory examinations. Documentation maintained separately from operational systems. Regulatory reporting as a labour-intensive quarterly/annual exercise.</p>"
+      },
+      "agentic": {
+        "summary": "A <mark>triple regulatory overlay</mark> &mdash; Basel IV, DORA, and EU AI Act &mdash; creates EA governance requirements unique to banking.",
+        "body_html": "<p>CRR III has been directly applicable since January 2025, DORA since January 2025, and the EU AI Act becomes fully applicable in August 2026. BaFin guidance (December 2025) explicitly makes AI part of ICT risk management under DORA. Banking AI for credit scoring, creditworthiness assessment, and fraud detection is classified as <strong>high-risk</strong> under the EU AI Act, requiring risk management, data quality, transparency, human oversight, and accuracy guarantees.</p>",
+        "key_points": [
+          "Every agent decision in lending, trading, or risk must be <strong>traceable across all three regulatory frameworks</strong> simultaneously",
+          "DORA requires AI systems to be integrated into <strong>ICT risk management</strong> &mdash; including identification, protection, detection, response and recovery",
+          "Critical ICT third-party providers (including AI platforms) <strong>designated by ESAs</strong> in November 2025 &mdash; banks must manage them under DORA",
+          "EU AI Act high-risk obligations for banking AI effective <strong>August 2026</strong> &mdash; architecture must embed compliance controls now"
+        ]
+      }
+    },
+    {
+      "id": "dual-model-governance",
+      "label": "Dual Model Governance",
+      "traditional": {
+        "summary": "Financial risk models governed through established Basel validation frameworks, regulatory approval processes, and independent model validation.",
+        "body_html": "<h4>Financial Risk Models</h4><p>Credit risk models (PD, LGD, EAD) built in specialised platforms. Market risk models for VaR and stress testing. Operational risk models for capital calculations. All governed through Basel model validation requirements with formal approval cycles.</p><h4>Model Risk Management</h4><p>Focused on financial and risk models. Validation frameworks well-established under SR 11-7 / SS1/23 guidelines. Model inventory maintained. Independent model validation as a regulatory requirement. Model change control with long approval cycles.</p>"
+      },
+      "agentic": {
+        "summary": "EA must govern <mark>two parallel model regimes</mark> &mdash; traditional Basel-validated financial models and AI/ML models &mdash; under a unified framework.",
+        "body_html": "<p>The defining architectural challenge for banking is that Basel-validated financial models (deterministic, heavily regulated, slow-changing) and AI/ML models (probabilistic, fast-evolving, agentic) must coexist. Credit agents need real-time access to risk model outputs; risk models need agent-gathered data. The EU AI Act's high-risk classification means AI model governance in banking is not optional &mdash; it must be as rigorous as Basel model validation.</p>",
+        "key_points": [
+          "<strong>Unified model registry</strong> covering Basel-validated financial models and AI/ML models (LLMs, agent chains) with common metadata and lineage",
+          "<strong>Integration patterns</strong> between risk platforms and AI agent platforms &mdash; agents need risk model outputs, risk models need agent-gathered data",
+          "Distinct <strong>validation cadences</strong>: Basel models validated annually under regulatory scrutiny vs AI models validated continuously",
+          "<strong>Explainability requirements</strong> differ: financial risk models are deterministic and auditable; AI models require separate explainability infrastructure (SHAP, LIME, attention maps)"
+        ]
+      }
+    },
+    {
+      "id": "platform-architecture",
+      "label": "Platform Architecture",
+      "traditional": {
+        "summary": "A deeply fragmented core system landscape spanning core banking, payments, trading, lending, risk, and regulatory reporting.",
+        "body_html": "<h4>Core Systems</h4><p>Core banking platforms averaging 20&ndash;30+ years old. Payments infrastructure (SWIFT, domestic schemes). Trading platforms and order management systems. Lending origination and servicing systems. Risk calculation engines. Regulatory reporting systems. CRM and customer data platforms.</p><h4>Integration</h4><p>Point-to-point integrations between systems. Batch processing for overnight reconciliation and risk calculations. No unified semantic model across platforms. 78% of IT budgets consumed by maintenance. 90% of US banking core software is legacy.</p>"
+      },
+      "agentic": {
+        "summary": "An <mark>Ontology-based semantic layer</mark> emerging as the integration pattern for agentic banking, with AI agents operating above fragmented core systems.",
+        "body_html": "<p>Palantir's deployments at Citigroup, Soci&eacute;t&eacute; G&eacute;n&eacute;rale, and Better.com demonstrate a reference architecture where a semantic Ontology layer maps banking business objects (accounts, transactions, customers, risks, products) to underlying data across all core systems. AI agents reason about domain concepts rather than raw data tables. The architecture must also support API-first design for open banking compliance (PSD2/PSD3) and real-time processing for payments and trading.</p>",
+        "key_points": [
+          "<strong>Ontology-first approach</strong>: model banking business objects semantically before deploying AI agents across the value chain",
+          "<strong>Multi-agent orchestration</strong>: specialised agents collaborate (KYC, credit, risk, compliance, customer) across banking operations",
+          "<strong>API-first architecture</strong>: open banking (PSD2/PSD3) mandates require APIs as first-class architectural elements, enabling agentic finance",
+          "<strong>Real-time data fabric</strong>: moving from overnight batch to event-driven architecture for payments, trading, and AI agent decision-making",
+          "Architecture integrates rather than replaces <strong>existing core banking and risk platforms</strong> &mdash; pragmatic modernisation over big-bang replacement"
+        ]
+      }
+    },
+    {
+      "id": "core-banking-modernisation",
+      "label": "Core Banking Modernisation",
+      "traditional": {
+        "summary": "Core banking systems averaging 20&ndash;30+ years old, with 78% of IT budgets consumed by maintenance and 94% of modernisation projects exceeding timelines.",
+        "body_html": "<h4>Scale of the Challenge</h4><p>90% of US banking core software is legacy. Banks underestimate total cost of ownership by up to 80%. Operating costs for legacy systems run 10x higher than next-generation platforms. 80% of European financial institutions intend to replace core systems by 2026, yet only 20% actually make the switch when renewal arrives.</p><h4>Approaches</h4><p>Four primary paths: full replacement ('big bang'), progressive modernisation, strangler-fig pattern, and dual-core strategy. Successful transformations show 47% TCO reduction, 3.2x increase in digital conversion, and 18-day reduction in new product launch timelines. Commonwealth Bank of Australia spent $1 billion+ over 5 years on core replacement.</p>"
+      },
+      "agentic": {
+        "summary": "Agentic AI can <mark>accelerate legacy modernisation</mark> by operating as an integration layer above core systems, while being constrained by the legacy landscape it sits on.",
+        "body_html": "<p>The modernisation paradox: AI agents need clean, integrated data to function well, but legacy systems are the source of data fragmentation. The Ontology approach provides a pragmatic path &mdash; agents can deliver value above legacy systems before full replacement, provided the semantic layer is robust. JPMorgan's $20 billion technology budget reflects the scale of investment required. Agentic AI itself can assist modernisation by automating code migration, testing, and data quality remediation.</p>",
+        "key_points": [
+          "Agents as an <strong>integration and abstraction layer</strong> above legacy cores &mdash; delivering value before full replacement",
+          "<strong>Data quality remediation</strong> must precede or accompany agent deployment &mdash; agents amplify bad data at banking transaction volumes",
+          "<strong>Strangler-fig pattern</strong>: agents gradually take over processes from legacy systems, enabling incremental decommissioning",
+          "<strong>Dual-core strategy</strong>: new digital core alongside legacy, with AI agents bridging both and gradually shifting transaction volumes"
+        ]
+      }
+    },
+    {
+      "id": "open-banking",
+      "label": "Open Banking &amp; Agentic Finance",
+      "traditional": {
+        "summary": "Open banking driven by PSD2 compliance since 2015, with API-based third-party access to account data and payment initiation.",
+        "body_html": "<h4>PSD2 Landscape</h4><p>Banks required to provide third-party access to customer account data via secure APIs. Account Information Services (AIS) and Payment Initiation Services (PIS) as regulated activities. Consent management and strong customer authentication (SCA) requirements. Open banking primarily a compliance exercise for most banks.</p><h4>Current State</h4><p>API ecosystems established but unevenly adopted. Fintech integration primarily through screen-scraping being replaced by APIs. Banking-as-a-Service (BaaS) emerging as a business model. Most banks treat open banking as a cost centre rather than a growth opportunity.</p>"
+      },
+      "agentic": {
+        "summary": "Open banking is evolving from compliance to <mark>agentic finance</mark> &mdash; where AI agents act on behalf of consumers and businesses across interconnected banking ecosystems.",
+        "body_html": "<p>PSD3 (expected in force 2026&ndash;2027) expands scope to instant payments, BNPL, crypto, and digital identity. The Financial Data Access Act (FiDA) extends open banking to open finance &mdash; investments, pensions, mortgages, insurance. Model Context Protocol (MCP) can enable AI agents to securely interpret and act on PSD2-compliant APIs, abstracting technical complexity into model-readable instructions. Agentic payments represent the next stage of B2B payments evolution.</p>",
+        "key_points": [
+          "<strong>PSD3 &amp; FiDA</strong>: expanding from open banking to open finance, dramatically increasing the data and transaction scope available to AI agents",
+          "<strong>Model Context Protocol (MCP)</strong>: enabling AI agents to securely interact with banking APIs, abstracting technical complexity into agent-readable instructions",
+          "<strong>Agentic payments</strong>: AI agents initiating and managing payments on behalf of businesses, accelerating B2B payment automation",
+          "<strong>Multi-party ecosystem architecture</strong>: banks, fintechs, AI platforms, and regulators interacting through standardised APIs with embedded governance"
+        ]
+      }
+    }
+  ]
+}
