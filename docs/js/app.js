@@ -115,6 +115,10 @@ function renderTopNav() {
     }
   }
   html += '</div>';
+  /* Search icon — outside links div so it's always visible on mobile */
+  html += '<button class="search-toggle" aria-label="Search">'
+    + '<svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/></svg>'
+    + '</button>';
   nav.innerHTML = html;
 
   /* ── Hamburger toggle ── */
@@ -165,6 +169,10 @@ function renderTopNav() {
     closeAllDropdowns();
     if (!nav.contains(e.target)) { links.classList.remove('open'); hamburger.classList.remove('open'); }
   });
+
+  /* ── Search toggle ── */
+  const searchBtn = nav.querySelector('.search-toggle');
+  if (searchBtn) searchBtn.addEventListener('click', (e) => { e.stopPropagation(); openSearch(); });
 }
 
 /* ── Home Page ───────────────────────────────────────── */
@@ -909,4 +917,216 @@ window.handleAssessmentChange = function(questionId, level) {
     });
   }
 };
+
+/* ── Site-Wide Search ──────────────────────────────────── */
+let searchIndex = null;
+let searchOverlay = null;
+
+function stripHTML(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html || '';
+  return tmp.textContent || '';
+}
+
+function truncate(text, max) {
+  if (!text) return '';
+  text = text.replace(/\s+/g, ' ').trim();
+  return text.length > max ? text.slice(0, max) + '\u2026' : text;
+}
+
+async function buildSearchIndex() {
+  if (searchIndex) return searchIndex;
+
+  const files = [
+    'home', 'overview', 'recommendations', 'new-capabilities',
+    'ea-operating-model', 'ea-development-method', 'ea-governance',
+    'ea-repository', 'ea-roles-skills', 'risk-security',
+    'banking', 'reinsurance', 'pharma'
+  ];
+  const results = await Promise.all(files.map(f => loadJSON(`data/${f}.json`)));
+  const idx = [];
+
+  const pageLabels = {};
+  if (siteData) {
+    for (const n of siteData.nav) {
+      if (n.children) n.children.forEach(c => { pageLabels[c.id] = c.label; });
+      else pageLabels[n.id] = n.label;
+    }
+  }
+
+  results.forEach((data, i) => {
+    if (!data) return;
+    const file = files[i];
+    const pageLabel = pageLabels[file] || data.title || file;
+    const href = file === 'home' ? 'index.html' : file + '.html';
+
+    // Page-level entry
+    if (data.title) {
+      idx.push({ type: 'page', title: pageLabel, snippet: stripHTML(data.subtitle || data.description || ''), href, page: pageLabel });
+    }
+
+    // Concept page subtopics
+    if (data.subtopics) {
+      for (const st of data.subtopics) {
+        const texts = [
+          st.traditional ? st.traditional.summary : '',
+          st.traditional ? stripHTML(st.traditional.body_html) : '',
+          st.changes ? st.changes.summary : '',
+          st.changes ? stripHTML(st.changes.body_html) : '',
+          st.changes ? (st.changes.key_shifts || []).map(stripHTML).join(' ') : '',
+          st.future_state ? st.future_state.summary : '',
+          st.future_state ? stripHTML(st.future_state.description) : '',
+          st.ai_impact ? st.ai_impact.summary : '',
+          st.ai_impact ? stripHTML(st.ai_impact.body_html) : ''
+        ].join(' ');
+        idx.push({ type: 'topic', title: st.label, snippet: truncate(stripHTML(st.changes?.summary || st.ai_impact?.summary || st.traditional?.summary || ''), 200), href: href + '#' + st.id, page: pageLabel, _text: (st.label + ' ' + texts).toLowerCase() });
+      }
+    }
+
+    // Industry findings
+    if (data.findings) {
+      for (const f of data.findings) {
+        idx.push({ type: 'finding', title: f.title, snippet: truncate(stripHTML(f.summary), 200), href: href, page: pageLabel, _text: (f.title + ' ' + stripHTML(f.summary)).toLowerCase() });
+      }
+    }
+
+    // Industry case studies
+    if (data.case_studies) {
+      for (const cs of data.case_studies) {
+        idx.push({ type: 'case_study', title: cs.company, snippet: truncate(stripHTML(cs.description), 200), href: href, page: pageLabel, _text: (cs.company + ' ' + stripHTML(cs.description) + ' ' + (cs.metrics || []).join(' ')).toLowerCase() });
+      }
+    }
+
+    // Industry sections
+    if (data.sections) {
+      for (const s of data.sections) {
+        const texts = [
+          s.traditional ? s.traditional.summary : '',
+          s.traditional ? stripHTML(s.traditional.body_html) : '',
+          s.agentic ? s.agentic.summary : '',
+          s.agentic ? stripHTML(s.agentic.body_html) : '',
+          s.agentic ? (s.agentic.key_points || []).map(stripHTML).join(' ') : ''
+        ].join(' ');
+        idx.push({ type: 'topic', title: stripHTML(s.label), snippet: truncate(stripHTML(s.agentic?.summary || s.traditional?.summary || ''), 200), href: href + '#' + s.id, page: pageLabel, _text: (stripHTML(s.label) + ' ' + texts).toLowerCase() });
+      }
+    }
+
+    // Home findings
+    if (data.findings && file === 'home') {
+      for (const f of data.findings) {
+        const text = f.title || f.headline || '';
+        idx.push({ type: 'finding', title: stripHTML(text), snippet: truncate(stripHTML(f.bottomline || f.body || f.summary || ''), 200), href: href, page: 'Home', _text: (stripHTML(text) + ' ' + stripHTML(f.body || f.summary || '')).toLowerCase() });
+      }
+    }
+
+    // Recommendations
+    if (file === 'recommendations' && Array.isArray(data)) {
+      for (const r of data) {
+        idx.push({ type: 'finding', title: r.title, snippet: truncate(stripHTML(r.description), 200), href: 'overview.html', page: 'Recommendations', _text: (r.title + ' ' + stripHTML(r.description)).toLowerCase() });
+      }
+    }
+
+    // New capabilities
+    if (file === 'new-capabilities' && Array.isArray(data)) {
+      for (const c of data) {
+        idx.push({ type: 'finding', title: c.title, snippet: truncate(stripHTML(c.description), 200), href: 'overview.html', page: 'New Capabilities', _text: (c.title + ' ' + stripHTML(c.description)).toLowerCase() });
+      }
+    }
+  });
+
+  // Build _text for items that don't have it yet
+  for (const item of idx) {
+    if (!item._text) item._text = (item.title + ' ' + item.snippet).toLowerCase();
+  }
+
+  searchIndex = idx;
+  return idx;
+}
+
+function openSearch() {
+  if (searchOverlay) { searchOverlay.style.display = 'flex'; searchOverlay.querySelector('.search-input').focus(); return; }
+
+  searchOverlay = document.createElement('div');
+  searchOverlay.className = 'search-overlay';
+  searchOverlay.innerHTML = `
+    <div class="search-panel">
+      <div class="search-input-row">
+        <svg class="search-input-icon" width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/></svg>
+        <input class="search-input" type="text" placeholder="Search across all pages\u2026" autocomplete="off" />
+        <kbd class="search-kbd">Esc</kbd>
+      </div>
+      <div class="search-results"></div>
+    </div>`;
+  document.body.appendChild(searchOverlay);
+
+  const input = searchOverlay.querySelector('.search-input');
+  const resultsEl = searchOverlay.querySelector('.search-results');
+
+  input.focus();
+
+  let debounceTimer = null;
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => executeSearch(input.value, resultsEl), 80);
+  });
+
+  // Close on backdrop click
+  searchOverlay.addEventListener('click', (e) => { if (e.target === searchOverlay) closeSearch(); });
+
+  // Close on Escape
+  searchOverlay.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSearch(); });
+}
+
+function closeSearch() {
+  if (searchOverlay) searchOverlay.style.display = 'none';
+}
+
+async function executeSearch(query, resultsEl) {
+  if (!query || query.length < 2) { resultsEl.innerHTML = '<div class="search-empty">Type at least 2 characters to search</div>'; return; }
+
+  const idx = await buildSearchIndex();
+  const q = query.toLowerCase();
+  const matches = idx.filter(item => item._text.includes(q));
+
+  if (!matches.length) { resultsEl.innerHTML = '<div class="search-empty">No results found</div>'; return; }
+
+  // Group by type
+  const groups = { page: [], topic: [], finding: [], case_study: [] };
+  const groupLabels = { page: 'Pages', topic: 'Topics', finding: 'Findings & Recommendations', case_study: 'Case Studies' };
+  for (const m of matches) { if (groups[m.type]) groups[m.type].push(m); }
+
+  let html = '';
+  for (const [type, items] of Object.entries(groups)) {
+    if (!items.length) continue;
+    html += `<div class="search-group-label">${groupLabels[type]}</div>`;
+    const shown = items.slice(0, 8);
+    for (const item of shown) {
+      const title = highlightMatch(stripHTML(item.title), query);
+      const snippet = highlightMatch(item.snippet, query);
+      html += `<a class="search-item" href="${item.href}">
+        <span class="search-item-title">${title}</span>
+        <span class="search-item-snippet">${snippet}</span>
+        <span class="search-item-page">${item.page}</span>
+      </a>`;
+    }
+    if (items.length > 8) {
+      html += `<div class="search-more">${items.length - 8} more results</div>`;
+    }
+  }
+  resultsEl.innerHTML = html;
+}
+
+function highlightMatch(text, query) {
+  if (!text || !query) return text || '';
+  const esc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp('(' + esc + ')', 'gi'), '<mark>$1</mark>');
+}
+
+// Global keyboard shortcut: "/" to open search
+document.addEventListener('keydown', (e) => {
+  if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+    e.preventDefault();
+    openSearch();
+  }
+});
 
