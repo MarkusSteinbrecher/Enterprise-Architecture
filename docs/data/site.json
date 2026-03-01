@@ -13,7 +13,8 @@
       "label": "Industries",
       "children": [
         { "id": "reinsurance", "label": "Re/Insurance", "href": "reinsurance.html" },
-        { "id": "banking", "label": "Banking", "href": "banking.html" }
+        { "id": "banking", "label": "Banking", "href": "banking.html" },
+        { "id": "pharma", "label": "Pharma", "href": "pharma.html" }
       ]
     }
   ]

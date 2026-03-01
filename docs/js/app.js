@@ -137,14 +137,25 @@ function renderTopNav() {
   }
   nav.querySelectorAll('.top-nav-dropdown').forEach(dd => {
     const btn = dd.querySelector('.dropdown-trigger');
+    const menu = dd.querySelector('.dropdown-menu');
+    let hideTimer = null;
+    function showDD() { clearTimeout(hideTimer); dd.classList.add('open'); positionDropdown(dd); }
+    function hideDD() { hideTimer = setTimeout(() => dd.classList.remove('open'), 120); }
+
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const opening = !dd.classList.contains('open');
       closeAllDropdowns();
-      if (opening) { dd.classList.add('open'); positionDropdown(dd); }
+      if (opening) showDD();
     });
-    dd.addEventListener('mouseenter', () => { dd.classList.add('open'); positionDropdown(dd); });
-    dd.addEventListener('mouseleave', () => { dd.classList.remove('open'); });
+    // Hover on trigger
+    dd.addEventListener('mouseenter', showDD);
+    dd.addEventListener('mouseleave', hideDD);
+    // Hover on fixed-position menu (outside trigger's DOM bounds)
+    if (menu) {
+      menu.addEventListener('mouseenter', showDD);
+      menu.addEventListener('mouseleave', hideDD);
+    }
   });
 
   function closeAllDropdowns() {

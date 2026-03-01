@@ -187,6 +187,15 @@ p:last-child { margin-bottom: 0; }
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
   z-index: 300;
 }
+/* Invisible bridge so mouse can travel from trigger to menu */
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -.5rem;
+  left: 0;
+  right: 0;
+  height: .5rem;
+}
 .top-nav-dropdown.open .dropdown-menu {
   display: block;
 }

@@ -151,34 +151,42 @@
         ]
       },
       "changes": {
-        "summary": "Every architect role now carries <mark>agent governance accountability</mark> — add it to job descriptions or accept ungoverned sprawl.",
+        "summary": "Every architect role now carries <mark>agent governance accountability</mark> and becomes more T-shaped &mdash; broadening from deep specialisation to strategic orchestration.",
+        "body_html": "<h4>Industry Evidence</h4><p>Forrester identifies <strong>four emerging architect roles</strong>: (1) customer/employee-centric <strong>value mapper</strong> who builds knowledge graphs linking experience to value streams, (2) <strong>digital twin strategist</strong> simulating architecture options with AI, (3) <strong>enterprise knowledge curator</strong> governing semantic layers and RAG pipelines, and (4) <strong>agentic governance champion</strong> managing fleets of AI agents with guardrails and feedback loops.</p><p>Gartner predicts that by 2028, <strong>55% of EA teams will act as coordinators of autonomous governance automation</strong>, shifting from direct oversight to model curation, agent simulation, and business outcome alignment. Agentic AI in EA tools (Celonis, SAP Signavio, ServiceNow) now automates data validation, capability mapping, and artifact creation &mdash; freeing architects for strategy.</p><h4>Are Domain Architects Still Needed?</h4><p><strong>Yes &mdash; but the role transforms significantly.</strong> Domain (Segment) architects are not made obsolete; they become <strong>more T-shaped</strong>. Rather than narrowing their specialisation, architects must blend deep technical understanding with broader business insight and AI governance capability. The shift is from <em>designing systems</em> to <em>orchestrating intelligent ecosystems</em>. Domain architects classify every capability as human-delivered, augmented, or agent-native, and govern the agent fleet within their domain.</p><h4>Solution Architects as Orchestrators</h4><p>Over a 3&ndash;5 year horizon, AI agents will handle routine technical tasks: generating architectural diagrams, writing specifications, documenting integration patterns. Solution Architects shift from technical design to <strong>AI orchestration, stakeholder management, and strategic advisory</strong>. The uniquely human skills &mdash; creative problem-solving, navigating complex stakeholder relationships, and customer empathy &mdash; become the core differentiators. Technology teams transition from development to <strong>architecture teams that validate AI-generated code</strong> and ensure compliance.</p>",
         "key_shifts": [
           "Solution Architects must design for <strong>non-deterministic outputs</strong> with explicit guardrail layers",
-          "Segment Architects classify every capability as <strong>human-delivered, augmented, or agent-native</strong>",
+          "Segment/Domain Architects classify every capability as <strong>human-delivered, augmented, or agent-native</strong> &mdash; the role broadens, not disappears",
           "Chief Architect must articulate <strong>agent strategy to the board</strong> in business-risk terms",
-          "Embed agent responsibilities into <strong>existing roles first</strong>; create specialist roles as volume demands"
+          "Enterprise Architects become <strong>knowledge curators and agentic governance champions</strong> (Forrester), governing semantic layers and agent fleets",
+          "By 2028, <strong>55% of EA teams will coordinate autonomous governance</strong> rather than perform direct oversight (Gartner)",
+          "All architect roles become more <strong>T-shaped</strong>: deep domain knowledge combined with AI governance, business strategy, and stakeholder orchestration"
         ],
         "what_breaks": [
+          "Architect roles focused <strong>purely on technical design</strong> lose value as AI automates diagrams, specs, and integration patterns",
           "No defined role owns <strong>agent behavioural compliance</strong> distinct from structural compliance",
           "<strong>No mapping</strong> connects agent-era roles to platform engineering or MLOps teams already managing runtimes",
           "<strong>No transition path</strong> exists from embedding responsibilities to staffing dedicated roles",
-          "KPIs for all architect roles ignore <strong>agent governance effectiveness</strong> entirely"
+          "KPIs for all architect roles ignore <strong>agent governance effectiveness</strong> entirely",
+          "Only <strong>1 in 5 AI initiatives achieve ROI</strong> (1 in 50 deliver true transformation) &mdash; architects must be able to distinguish viable from aspirational"
         ],
         "what_survives": [
-          "The role hierarchy — Chief, Enterprise, Segment, Solution — remains a <strong>sound accountability structure</strong>",
+          "The role hierarchy &mdash; Chief, Enterprise, Segment, Solution &mdash; remains a <strong>sound accountability structure</strong>",
+          "Domain expertise becomes <strong>more valuable, not less</strong> &mdash; architects who understand the business deeply can govern AI agents effectively",
           "Structured responsibilities and <strong>stakeholder relationships</strong> per role still organise the work",
           "<strong>Progressive proficiency levels</strong> across skill categories apply unchanged to new AI skill clusters",
           "The principle of role-specific KPIs extends naturally to include <strong>agent governance metrics</strong>"
         ]
       },
       "future_state": {
-        "summary": "Architect roles include <mark>AI/Agent Architect and Agent Governance Lead</mark> with every existing role carrying explicit agent responsibilities.",
-        "description": "All traditional architect roles carry updated <strong>agent governance accountabilities</strong> in their job descriptions and KPIs. Dedicated AI/Agent Architect and Agent Governance Lead roles handle specialist concerns as agent volume grows.",
+        "summary": "Architect roles include <mark>AI/Agent Architect and Agent Governance Lead</mark> with every existing role carrying explicit agent responsibilities and a broader T-shaped skill profile.",
+        "description": "All traditional architect roles carry updated <strong>agent governance accountabilities</strong> in their job descriptions and KPIs. Domain architects remain essential but become <strong>orchestrators of intelligent ecosystems</strong> rather than purely technical designers. Dedicated AI/Agent Architect and Agent Governance Lead roles handle specialist concerns as agent volume grows. Forrester's four emerging roles &mdash; value mapper, digital twin strategist, knowledge curator, agentic governance champion &mdash; represent the career evolution path.",
         "key_practices": [
           "Update every architect job description with <strong>agent responsibilities</strong>: strategy, operating model, delivery classification, guardrails",
           "Define the <strong>AI/Agent Architect role</strong> covering agent design patterns, protocols, guardrail standards, and testing",
           "Staff an <strong>Agent Governance Lead</strong> responsible for behavioural compliance, escalation policies, and cross-team standards",
-          "Expand <strong>stakeholder maps</strong> for all roles to include AI/ML engineering, data science, and AI ethics"
+          "Expand <strong>stakeholder maps</strong> for all roles to include AI/ML engineering, data science, and AI ethics",
+          "Develop <strong>T-shaped career paths</strong> that combine deep domain expertise with AI governance, business strategy, and ecosystem orchestration skills",
+          "Adopt Forrester's emerging role framework: <strong>value mapper, digital twin strategist, knowledge curator, agentic governance champion</strong> as evolution targets"
         ]
       }
     },
