@@ -1998,6 +1998,29 @@ a.dashboard-card:hover {
 .arch-coverage-dot.covered {
   border-color: transparent;
 }
+.arch-coverage-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem .75rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.arch-coverage-legend-label {
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.arch-coverage-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .7rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
 
 /* ── Implementation Patterns (Architecture Reference) ── */
 .arch-impl-section {

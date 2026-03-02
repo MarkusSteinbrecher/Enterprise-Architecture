@@ -1103,6 +1103,13 @@ function renderArchSources(sources, layers) {
     html += '</div>';
   }
   html += '</div>';
+  // Legend
+  html += '<div class="arch-coverage-legend">';
+  html += '<span class="arch-coverage-legend-label">Layer Coverage:</span>';
+  for (const layer of layers) {
+    html += `<span class="arch-coverage-legend-item"><span class="arch-coverage-dot covered" style="background:${layer.color}"></span>${layer.label}</span>`;
+  }
+  html += '</div>';
   return html;
 }
 
