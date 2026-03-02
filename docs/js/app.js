@@ -385,6 +385,37 @@ function initIndustryPage() {
   html += `<p class="subtitle">${pageData.subtitle}</p>`;
   html += '</div></header>';
 
+  const hasDomains = pageData.ea_domains && pageData.ea_domains.length;
+
+  if (hasDomains) {
+    // Tab bar
+    html += '<div class="dashboard-section" style="padding-bottom:0"><div class="container">';
+    html += '<div class="tabs industry-tabs">';
+    html += '<button class="tab-btn active" data-industry-tab="analysis">Industry Analysis</button>';
+    html += '<button class="tab-btn" data-industry-tab="domains">EA Domains</button>';
+    html += '</div></div></div>';
+
+    // Tab panels
+    html += '<div id="industry-tab-analysis" class="industry-tab-panel">';
+    html += renderIndustryAnalysis();
+    html += '</div>';
+    html += '<div id="industry-tab-domains" class="industry-tab-panel" style="display:none">';
+    html += renderIndustryDomains();
+    html += '</div>';
+  } else {
+    html += renderIndustryAnalysis();
+  }
+
+  el.innerHTML = html;
+
+  if (hasDomains) {
+    initIndustryTabs();
+  }
+}
+
+function renderIndustryAnalysis() {
+  let html = '';
+
   // Findings
   if (pageData.findings && pageData.findings.length) {
     html += '<div class="dashboard-section"><div class="container">';
@@ -463,7 +494,101 @@ function initIndustryPage() {
     html += '</div></div>'; // container, section
   }
 
-  el.innerHTML = html;
+  return html;
+}
+
+function renderIndustryDomains() {
+  const domains = pageData.ea_domains;
+  const findingsMap = {};
+  if (pageData.findings) {
+    for (const f of pageData.findings) findingsMap[f.id] = f.title;
+  }
+
+  let html = '<div class="dashboard-section"><div class="container">';
+  html += '<p class="section-label">EA Domain Perspectives</p>';
+  html += `<h2>How Each EA Domain Applies to ${pageData.title}</h2>`;
+  html += '<div class="industry-domain-cards">';
+
+  for (const d of domains) {
+    html += `<div class="industry-domain-card" id="domain-${d.id}">`;
+
+    // Header
+    html += `<div class="industry-domain-header" onclick="toggleIndustryDomain('${d.id}')">`;
+    html += `<h3>${d.label}</h3>`;
+    html += chevronSVG();
+    html += '</div>';
+
+    // Context — always visible
+    html += `<div class="industry-domain-context">${d.industry_context}</div>`;
+
+    // Expandable detail
+    html += '<div class="industry-domain-detail">';
+
+    // Key Adaptations
+    html += '<h4>Key Adaptations</h4>';
+    for (const a of d.key_adaptations) {
+      html += `<div class="industry-adaptation">
+        <strong>${a.title}</strong>
+        <p>${a.description}</p>
+      </div>`;
+    }
+
+    // Recommended Practices
+    if (d.practices && d.practices.length) {
+      html += '<h4>Recommended Practices</h4>';
+      html += '<ul class="industry-practices">';
+      for (const p of d.practices) {
+        html += `<li>${p}</li>`;
+      }
+      html += '</ul>';
+    }
+
+    // Related Findings
+    if (d.related_findings && d.related_findings.length) {
+      html += '<h4>Related Findings</h4>';
+      html += '<div class="industry-related-findings">';
+      for (const fid of d.related_findings) {
+        const title = findingsMap[fid] || fid;
+        html += `<span class="overview-finding-id" title="${stripHTML(title)}">${fid}</span>`;
+      }
+      html += '</div>';
+    }
+
+    // Link to domain sub-page
+    html += `<a class="industry-domain-link" href="${d.href}">Full analysis &rarr;</a>`;
+
+    html += '</div>'; // detail
+    html += '</div>'; // card
+  }
+
+  html += '</div>'; // cards
+  html += '</div></div>'; // container, section
+  return html;
+}
+
+function toggleIndustryDomain(id) {
+  const card = document.getElementById('domain-' + id);
+  if (card) card.classList.toggle('open');
+}
+
+function initIndustryTabs() {
+  const btns = document.querySelectorAll('[data-industry-tab]');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.getAttribute('data-industry-tab');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('industry-tab-analysis').style.display = tab === 'analysis' ? '' : 'none';
+      document.getElementById('industry-tab-domains').style.display = tab === 'domains' ? '' : 'none';
+      history.replaceState(null, '', tab === 'domains' ? '#domains' : window.location.pathname);
+    });
+  });
+
+  // Pre-select tab from hash
+  if (window.location.hash === '#domains') {
+    const domainsBtn = document.querySelector('[data-industry-tab="domains"]');
+    if (domainsBtn) domainsBtn.click();
+  }
 }
 
 /* ── Concept Page ────────────────────────────────────── */
@@ -1453,6 +1578,18 @@ async function buildSearchIndex() {
           s.agentic ? (s.agentic.key_points || []).map(stripHTML).join(' ') : ''
         ].join(' ');
         idx.push({ type: 'topic', title: stripHTML(s.label), snippet: truncate(stripHTML(s.agentic?.summary || s.traditional?.summary || ''), 200), href: href + '#' + s.id, page: pageLabel, _text: (stripHTML(s.label) + ' ' + texts).toLowerCase() });
+      }
+    }
+
+    // Industry EA domains
+    if (data.ea_domains) {
+      for (const d of data.ea_domains) {
+        const texts = [
+          d.label, d.industry_context,
+          (d.key_adaptations || []).map(a => a.title + ' ' + a.description).join(' '),
+          (d.practices || []).join(' ')
+        ].join(' ');
+        idx.push({ type: 'topic', title: stripHTML(d.label) + ' (' + pageLabel + ')', snippet: truncate(stripHTML(d.industry_context), 200), href: href + '#domains', page: pageLabel, _text: (stripHTML(d.label) + ' ' + stripHTML(texts)).toLowerCase() });
       }
     }
 

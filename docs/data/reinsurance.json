@@ -173,5 +173,162 @@
         ]
       }
     }
+  ],
+  "ea_domains": [
+    {
+      "id": "ea-development",
+      "label": "EA Development Method",
+      "href": "ea-development-method.html",
+      "industry_context": "Re/insurance EA development must reconcile two fundamentally different cadences: annual actuarial and regulatory cycles (Solvency II ORSA, IFRS 17 closes) that drive long-horizon planning, and continuous AI iteration where agentic capabilities evolve weekly. The fragmented six-system core landscape &mdash; policy admin, claims, billing, reinsurance admin, actuarial platforms, and catastrophe modelling &mdash; means business architecture must map agent boundaries across systems that were never designed to interoperate.",
+      "key_adaptations": [
+        {
+          "title": "Dual-cadence architecture development",
+          "description": "Maintain an annual architecture cycle aligned to regulatory reporting (Solvency II ORSA, IFRS 17 annual close) while running continuous sprint-based iterations for AI agent deployment. Architecture roadmaps must bridge both cadences without one blocking the other."
+        },
+        {
+          "title": "Business architecture for the fragmented core landscape",
+          "description": "Map agent orchestration patterns across six distinct core system domains (policy admin, claims, billing, reinsurance admin, actuarial, cat modelling). Each domain has different data models, vendors, and modernisation timelines &mdash; agents must bridge all six."
+        },
+        {
+          "title": "Strangler-fig migration with agents as integration layer",
+          "description": "Deploy AI agents as an abstraction layer above legacy systems before full replacement. Agents can deliver value immediately (e.g. submission intake, contract parsing) while the underlying $17B modernisation programme proceeds incrementally."
+        },
+        {
+          "title": "Catastrophe modelling as first-class architecture domain",
+          "description": "Treat cat modelling infrastructure (Oasis SaaS, Moody's IRP, AI weather/damage assessment) as a dedicated architecture domain rather than a peripheral system. The shift to cloud-native, multi-vendor, AI-augmented cat platforms requires explicit architectural governance."
+        }
+      ],
+      "practices": [
+        "Run architecture sprints on a two-speed cadence: quarterly regulatory checkpoints alongside fortnightly agent capability releases",
+        "Create a unified capability map that spans all six core system domains and identifies agent insertion points in each",
+        "Use architecture decision records (ADRs) to document agent-vs-legacy boundary decisions for each process migration",
+        "Establish a cat modelling architecture review board that includes actuarial, IT, and AI platform stakeholders"
+      ],
+      "related_findings": ["RI-F1", "RI-F4", "RI-F5"]
+    },
+    {
+      "id": "ea-governance",
+      "label": "EA Governance",
+      "href": "ea-governance.html",
+      "industry_context": "Re/insurance faces a governance challenge unlike any other industry: three overlapping regulatory frameworks (Solvency II for capital, IFRS 17 for financial reporting, EU AI Act for AI systems) impose simultaneous constraints on architecture decisions. Every AI agent that touches underwriting or claims is classified as high-risk under the EU AI Act, requiring human oversight, fairness controls, and registration with authorities. Governance must be embedded in the architecture, not bolted on.",
+      "key_adaptations": [
+        {
+          "title": "Triple-framework compliance architecture",
+          "description": "Architect governance controls that satisfy Solvency II (capital adequacy, ORSA), IFRS 17 (granular financial reporting, contract-level audit trails), and EU AI Act (technical documentation, fairness testing, transparency) simultaneously. A single agent decision may need compliance evidence across all three."
+        },
+        {
+          "title": "Dual model governance regime",
+          "description": "Govern actuarial models (deterministic, validated annually, regulated by actuarial standards) and AI/ML models (probabilistic, validated continuously, regulated by EU AI Act) under a unified framework with distinct cadences. The model registry must cover both Prophet/AXIS and LLM agent chains."
+        },
+        {
+          "title": "Human-in-the-loop as legal requirement",
+          "description": "The EU AI Act classifies insurance underwriting and claims AI as high-risk, mandating human oversight. Architecture must enforce that no agent can deny a claim or reject an application without human confirmation &mdash; this is a legal obligation from August 2026, not a design preference."
+        },
+        {
+          "title": "Tiered agent dispensation for catastrophe response",
+          "description": "Design governance processes that can grant emergency elevated agent authority during catastrophe events (hours, not weeks). Cat response requires rapid claim assessment at scale &mdash; normal approval cycles are incompatible with event-driven urgency."
+        }
+      ],
+      "practices": [
+        "Maintain a regulatory traceability matrix mapping each agent capability to its Solvency II, IFRS 17, and EU AI Act obligations",
+        "Implement continuous model validation for AI agents alongside annual validation cycles for actuarial models",
+        "Embed human-in-the-loop checkpoints as platform-enforced controls, not optional workflow steps",
+        "Pre-approve tiered agent authority levels for catastrophe scenarios with defined escalation triggers"
+      ],
+      "related_findings": ["RI-F2", "RI-F3", "RI-F8"]
+    },
+    {
+      "id": "ea-repository",
+      "label": "EA Repository",
+      "href": "ea-repository.html",
+      "industry_context": "The re/insurance EA repository must manage an unusually complex information landscape: decades of historical policy and claims data for long-tail liabilities, real-time agent-generated data, both structured (actuarial tables, financial reports) and unstructured (submission PDFs, emails, satellite imagery, audio calls). The Ontology-based semantic layer pattern emerging at Swiss Re, Sompo, and AIG suggests a new reference model for insurance repository architecture.",
+      "key_adaptations": [
+        {
+          "title": "Ontology-first repository architecture",
+          "description": "Adopt the Palantir-style semantic Ontology pattern: model insurance business objects (policies, claims, risks, exposures, treaties) as a shared ontology that maps to underlying data across all core systems. AI agents reason about domain concepts rather than raw data tables."
+        },
+        {
+          "title": "Unified model registry for actuarial and AI models",
+          "description": "Extend the architecture repository to maintain a single registry covering traditional actuarial models (Prophet, AXIS, MoSes) and AI/ML models (LLMs, agent chains) with common metadata for lineage, validation status, regulatory classification, and performance monitoring."
+        },
+        {
+          "title": "Long-tail data architecture",
+          "description": "Design repository structures that span decades of historical policy and claims data (required for long-tail liability classes) alongside real-time agent operational data. Actuarial pricing requires 20-30+ years of loss history; agents generate high-velocity telemetry."
+        },
+        {
+          "title": "Unstructured data catalogue",
+          "description": "Catalogue and govern unstructured data as first-class repository assets: submission PDFs, broker emails, policy wordings, spreadsheets, satellite imagery for cat modelling, and call recordings in 50+ languages. Agents depend on this data but it is largely uncatalogued today."
+        }
+      ],
+      "practices": [
+        "Define a canonical insurance ontology as the foundation for both the EA repository and agent data access patterns",
+        "Implement a federated model registry that auto-discovers both actuarial platform models and deployed AI agents",
+        "Establish data retention policies that align long-tail actuarial needs with GDPR and regulatory requirements",
+        "Create metadata standards for unstructured data assets so agents can discover and reason about documents, images, and audio"
+      ],
+      "related_findings": ["RI-F5", "RI-F6", "RI-F7"]
+    },
+    {
+      "id": "ea-roles-skills",
+      "label": "EA Roles & Skills",
+      "href": "ea-roles-skills.html",
+      "industry_context": "Re/insurance requires bridge roles that don't exist in other industries: professionals who can translate between deterministic actuarial models and probabilistic AI systems, architects who understand both the fragmented core system landscape and multi-agent orchestration patterns, and compliance specialists for the EU AI Act's insurance-specific high-risk requirements. AI literacy for underwriters and actuaries has been a legal duty since February 2025.",
+      "key_adaptations": [
+        {
+          "title": "Actuarial-AI bridge roles",
+          "description": "Create roles that bridge actuarial science and AI/ML engineering. These professionals translate between deterministic actuarial models (mortality tables, loss triangles) and probabilistic AI systems (LLMs, predictive models), ensuring agents can consume actuarial outputs and actuaries can validate agent-gathered data."
+        },
+        {
+          "title": "Insurance-specific agent architects",
+          "description": "Develop architects who understand both the fragmented six-system core landscape (policy admin through cat modelling) and multi-agent orchestration patterns. Generic cloud or AI architects lack the domain knowledge to design effective agent boundaries across insurance-specific systems."
+        },
+        {
+          "title": "EU AI Act compliance specialists",
+          "description": "Build in-house expertise for EU AI Act technical documentation, fairness testing, bias auditing, and authority registration &mdash; specific to insurance high-risk classification. Technical standards expected spring/summer 2026 will require specialist interpretation for insurance applications."
+        },
+        {
+          "title": "AI literacy programmes for underwriters and actuaries",
+          "description": "Implement structured AI literacy training for all staff interacting with AI systems. The EU AI Act's AI literacy obligation has been effective since February 2025 &mdash; this is not optional. 85% adoption at Swiss Re demonstrates that enterprise-wide engagement is achievable."
+        }
+      ],
+      "practices": [
+        "Establish a joint actuarial-AI centre of excellence to develop bridge competencies and shared standards",
+        "Require insurance domain certification for agent architects working on core system integration",
+        "Appoint a dedicated EU AI Act compliance lead within the EA team to track evolving technical standards",
+        "Mandate AI literacy assessment for all underwriters and actuaries, with role-specific learning paths"
+      ],
+      "related_findings": ["RI-F1", "RI-F3", "RI-F8"]
+    },
+    {
+      "id": "risk-security",
+      "label": "Risk & Security",
+      "href": "risk-security.html",
+      "industry_context": "Re/insurance faces risk dimensions that are unique to the industry: non-deterministic AI making decisions on regulated financial products, pricing fairness requirements under the EU AI Act, long-tail liability exposure from AI-assisted underwriting decisions that create obligations lasting decades, and the need for multi-agent coordination under extreme load during catastrophe events. Traditional IT risk frameworks are insufficient.",
+      "key_adaptations": [
+        {
+          "title": "Non-deterministic risk in regulated underwriting",
+          "description": "Manage the risk of probabilistic AI systems making or influencing decisions on regulated insurance products. Unlike deterministic actuarial models, AI agents may produce different outputs for identical inputs &mdash; architecture must bound this variability within regulatory tolerances."
+        },
+        {
+          "title": "Bias and fairness in insurance pricing",
+          "description": "Implement continuous fairness monitoring for AI-influenced pricing and underwriting decisions. The EU AI Act mandates fairness controls for high-risk insurance AI. Architecture must detect and mitigate proxy discrimination across protected characteristics in pricing models."
+        },
+        {
+          "title": "Long-tail liability risk from AI decisions",
+          "description": "Assess and govern the multi-decade liability exposure created by AI-assisted underwriting. A policy underwritten with AI assistance today may generate claims 20-30 years from now &mdash; the architecture must maintain full decision audit trails across this entire liability horizon."
+        },
+        {
+          "title": "Catastrophe event agent coordination",
+          "description": "Design resilience and coordination patterns for multiple AI agents operating under extreme load during catastrophe events. Cat response requires rapid scaling of claims intake, damage assessment, and payment agents simultaneously, with degradation safeguards if systems are overwhelmed."
+        }
+      ],
+      "practices": [
+        "Define acceptable variability bounds for AI agent outputs on regulated insurance products and monitor continuously",
+        "Implement automated fairness testing as a pre-deployment gate for any agent touching pricing or underwriting",
+        "Architect immutable decision audit trails with retention periods matching the longest liability tail in the portfolio",
+        "Conduct annual catastrophe-scenario stress tests for multi-agent systems, simulating extreme volume and concurrent failures"
+      ],
+      "related_findings": ["RI-F2", "RI-F3", "RI-F5", "RI-F8"]
+    }
   ]
 }
