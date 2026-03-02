@@ -188,7 +188,15 @@
           "Develop <strong>T-shaped career paths</strong> that combine deep domain expertise with AI governance, business strategy, and ecosystem orchestration skills",
           "Adopt Forrester's emerging role framework: <strong>value mapper, digital twin strategist, knowledge curator, agentic governance champion</strong> as evolution targets"
         ]
-      }
+      },
+      "examples": [
+        {
+          "company": "Goldman Sachs",
+          "industry": "Banking",
+          "href": "banking.html",
+          "relevance": "With 10,000 employees on an AI assistant, Goldman Sachs demonstrates how architects must evolve from designing systems to governing agent behaviour across the enterprise."
+        }
+      ]
     },
     {
       "id": "skills-competencies",
@@ -283,7 +291,15 @@
           "Establish <strong>cross-functional mentoring</strong> pairing architects with AI/ML practitioners for experiential learning",
           "Run <strong>quarterly hands-on labs</strong> with production-representative sandboxes to maintain currency"
         ]
-      }
+      },
+      "examples": [
+        {
+          "company": "Swiss Re",
+          "industry": "Re/Insurance",
+          "href": "reinsurance.html",
+          "relevance": "Swiss Re achieved 85% staff tech adoption on their AI platform — requiring systematic upskilling from traditional actuarial tools to AI-augmented decision systems."
+        }
+      ]
     },
     {
       "id": "ea-maturity",

@@ -189,7 +189,21 @@
             "min_level": 3
           }
         ]
-      }
+      },
+      "examples": [
+        {
+          "company": "Roche",
+          "industry": "Pharma",
+          "href": "pharma.html",
+          "relevance": "Roche's 'lab in a loop' strategy — iterating AI models with laboratory experiments — required an architecture vision that explicitly defined the agent strategy before development began."
+        },
+        {
+          "company": "HSBC",
+          "industry": "Banking",
+          "href": "banking.html",
+          "relevance": "HSBC's structural reengineering and $1.8B digital reallocation demonstrates how architecture vision must anticipate the shift from human-executed to agent-executed processes."
+        }
+      ]
     },
     {
       "id": "business-architecture",
@@ -278,7 +292,15 @@
             "min_level": 3
           }
         ]
-      }
+      },
+      "examples": [
+        {
+          "company": "Sompo Japan",
+          "industry": "Re/Insurance",
+          "href": "reinsurance.html",
+          "relevance": "Sompo achieved $60M profit improvement by redesigning underwriting processes around AI agent capabilities rather than automating existing manual workflows."
+        }
+      ]
     },
     {
       "id": "application-architecture",
@@ -367,7 +389,15 @@
             "min_level": 3
           }
         ]
-      }
+      },
+      "examples": [
+        {
+          "company": "AIG",
+          "industry": "Re/Insurance",
+          "href": "reinsurance.html",
+          "relevance": "AIG processes 500K+ E&S submissions through LLM agents — the application architecture had to shift from batch-processing to event-driven agent pipelines."
+        }
+      ]
     },
     {
       "id": "data-architecture",

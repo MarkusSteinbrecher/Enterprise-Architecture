@@ -642,6 +642,15 @@ function renderOverview(el) {
       html += '</div>';
 
       html += '</div>'; // detail-grid
+      if (st.examples && st.examples.length) {
+        html += '<div class="examples-row">';
+        html += '<span class="examples-label">In Practice:</span>';
+        for (const ex of st.examples) {
+          html += `<a class="example-tag" href="${ex.href}" title="${ex.relevance}">`
+            + `<strong>${ex.company}</strong> <span class="example-industry">${ex.industry}</span></a>`;
+        }
+        html += '</div>';
+      }
       html += '</div>'; // detail
 
     } else {
@@ -693,6 +702,15 @@ function renderOverview(el) {
       html += '</div>';
 
       html += '</div>'; // detail-grid
+      if (st.examples && st.examples.length) {
+        html += '<div class="examples-row">';
+        html += '<span class="examples-label">In Practice:</span>';
+        for (const ex of st.examples) {
+          html += `<a class="example-tag" href="${ex.href}" title="${ex.relevance}">`
+            + `<strong>${ex.company}</strong> <span class="example-industry">${ex.industry}</span></a>`;
+        }
+        html += '</div>';
+      }
       html += '</div>'; // detail
     }
 
@@ -1013,6 +1031,20 @@ function renderArchDiagram(layers, crossCutting) {
       html += layer.sources.join(' &middot; ');
       html += '</div>';
     }
+    if (layer.implementation && layer.implementation.length) {
+      html += '<div class="arch-impl-section">';
+      html += '<div class="arch-impl-label">Implementation Patterns</div>';
+      for (const p of layer.implementation) {
+        html += '<div class="arch-impl-card">';
+        html += `<div class="arch-impl-name">${p.pattern}</div>`;
+        html += `<div class="arch-impl-when">${p.when}</div>`;
+        html += `<div class="arch-impl-desc">${p.description}</div>`;
+        html += '<div class="arch-impl-tools">';
+        for (const t of p.tools) { html += `<span class="arch-impl-tool">${t}</span>`; }
+        html += '</div></div>';
+      }
+      html += '</div>';
+    }
     html += '</div>'; /* arch-layer-detail */
     html += '</div>'; /* arch-layer-row */
   }
@@ -1172,7 +1204,8 @@ async function buildSearchIndex() {
     if (data.layers) {
       for (const layer of data.layers) {
         const texts = [layer.label, layer.short, layer.description,
-          (layer.components || []).map(c => c.name + ' ' + c.description).join(' ')
+          (layer.components || []).map(c => c.name + ' ' + c.description).join(' '),
+          (layer.implementation || []).map(p => p.pattern + ' ' + p.tools.join(' ') + ' ' + p.when + ' ' + p.description).join(' ')
         ].join(' ');
         idx.push({ type: 'topic', title: layer.label, snippet: truncate(layer.short, 200), href: href + '#arch-' + layer.id, page: pageLabel, _text: texts.toLowerCase() });
       }

@@ -85,7 +85,21 @@
           "Connect at least one <strong>automated feed</strong> — cloud inventory or CI/CD pipeline — before attempting full integration",
           "Maintain a <strong>Guardrail Specification Library</strong> as a standard repository area governing agent behaviour constraints"
         ]
-      }
+      },
+      "examples": [
+        {
+          "company": "JPMorgan Chase",
+          "industry": "Banking",
+          "href": "banking.html",
+          "relevance": "With 450+ AI use cases, JPMorgan needs a repository that tracks not just applications but models, agents, training data lineage, and inter-agent dependencies."
+        },
+        {
+          "company": "AstraZeneca",
+          "industry": "Pharma",
+          "href": "pharma.html",
+          "relevance": "AstraZeneca's ChatInvent system requires repository entries for each agent instance — version, validation status, GxP tier, and regulatory approval chain."
+        }
+      ]
     },
     {
       "id": "enterprise-metamodel",
@@ -180,7 +194,15 @@
           "Separate <strong>Agent ABBs from SBBs</strong> so model switching is a governed substitution, not a redesign",
           "Publish metamodel definitions in <strong>machine-readable formats</strong> (YAML/JSON) alongside human documentation"
         ]
-      }
+      },
+      "examples": [
+        {
+          "company": "Roche",
+          "industry": "Pharma",
+          "href": "pharma.html",
+          "relevance": "Roche manages 800K+ genomic profiles across 150+ tumour subtypes — the metamodel must accommodate AI-specific entities like model versions, embedding stores, and data lineage chains."
+        }
+      ]
     },
     {
       "id": "architecture-landscape",

@@ -20,7 +20,12 @@
         { "name": "APIs & Programmatic Access", "description": "REST, GraphQL, and streaming endpoints for system-to-agent and agent-to-system communication at machine speed." },
         { "name": "Voice & Multimodal", "description": "Speech-to-text and text-to-speech pipelines, image understanding, and multimodal input/output for agent interaction." }
       ],
-      "sources": ["Salesforce (Experience Layer)", "Google (Frontend Framework)", "AIMultiple (Applications Layer)", "Sealos (Experience Layer)"]
+      "sources": ["Salesforce (Experience Layer)", "Google (Frontend Framework)", "AIMultiple (Applications Layer)", "Sealos (Experience Layer)"],
+      "implementation": [
+        {"pattern": "Streaming Chat UI", "tools": ["Vercel AI SDK", "AG-UI Protocol", "Server-Sent Events"], "when": "Building conversational agent interfaces with real-time token streaming", "description": "Use the AI SDK's useChat hook or AG-UI protocol for standardised streaming. SSE provides the transport layer, with progressive rendering of agent responses and inline citations."},
+        {"pattern": "Embedded Co-Pilot", "tools": ["VS Code Extension API", "Office Add-ins", "Chrome Extensions"], "when": "Augmenting existing applications rather than building standalone agent UIs", "description": "Embed agent capabilities directly into the tools people already use. Co-pilots reduce context switching and adoption friction compared to standalone chat interfaces."},
+        {"pattern": "Agent-as-API", "tools": ["FastAPI", "LangServe", "OpenAI Assistants API"], "when": "System-to-agent communication without human UI", "description": "Expose agent capabilities as versioned REST APIs with OpenAPI specs. Enables programmatic access from CI/CD pipelines, other agents, and enterprise automation."}
+      ]
     },
     {
       "id": "guardrails",
@@ -38,7 +43,12 @@
         { "name": "PII Redaction", "description": "Automated detection and masking of personally identifiable information in both inputs and outputs." },
         { "name": "Hallucination Detection", "description": "Grounding checks, citation verification, and confidence scoring to flag unsubstantiated claims." }
       ],
-      "sources": ["Sealos (Safety & Guardrails)", "AIMultiple (Observability & Governance)", "Forrester (Agent Control Plane)", "CSA (Zero Trust for AI)"]
+      "sources": ["Sealos (Safety & Guardrails)", "AIMultiple (Observability & Governance)", "Forrester (Agent Control Plane)", "CSA (Zero Trust for AI)"],
+      "implementation": [
+        {"pattern": "Guardrails Pipeline", "tools": ["Guardrails AI", "NeMo Guardrails", "LLM Guard"], "when": "Need configurable input/output validation without custom code", "description": "Declarative guardrail definitions that validate agent inputs and outputs against configurable policies. Chain multiple validators (PII, toxicity, topic) in a pipeline before and after agent execution."},
+        {"pattern": "Structured Output Enforcement", "tools": ["Instructor", "Outlines", "BAML"], "when": "Agent outputs must conform to strict schemas for downstream systems", "description": "Constrain LLM outputs to valid JSON schemas at generation time rather than post-hoc validation. Instructor wraps API calls with Pydantic models; Outlines uses constrained decoding for guaranteed schema conformance."},
+        {"pattern": "Grounding & Citation", "tools": ["Vectara HHEM", "RAGAS", "Custom Fact-Checkers"], "when": "Hallucination risk is high and outputs must be traceable to sources", "description": "Validate that agent claims are grounded in retrieved context. RAGAS provides faithfulness and relevance metrics. Vectara's HHEM scores hallucination probability. Combine with mandatory citation rendering in the experience layer."}
+      ]
     },
     {
       "id": "orchestration",
@@ -56,7 +66,12 @@
         { "name": "State Management", "description": "Maintaining conversation context, task progress, and shared state across agents within and across sessions." },
         { "name": "Human-in-the-Loop", "description": "Escalation paths, approval gates, and confidence-threshold routing that bring humans into agent workflows at decision points." }
       ],
-      "sources": ["Salesforce (Enterprise Orchestration)", "Microsoft (Semantic Kernel / AutoGen)", "Forrester (Adaptive Process Orchestration)", "Kore.ai (Workflow Tier)", "LangGraph / CrewAI / AutoGen"]
+      "sources": ["Salesforce (Enterprise Orchestration)", "Microsoft (Semantic Kernel / AutoGen)", "Forrester (Adaptive Process Orchestration)", "Kore.ai (Workflow Tier)", "LangGraph / CrewAI / AutoGen"],
+      "implementation": [
+        {"pattern": "DAG Workflow Orchestration", "tools": ["LangGraph", "Temporal", "AWS Step Functions"], "when": "Complex multi-step workflows with branching logic and error recovery", "description": "Model agent workflows as directed acyclic graphs with conditional edges. LangGraph provides Python-native DAGs with state management. Temporal adds durable execution with automatic retries and human-in-the-loop wait states."},
+        {"pattern": "Role-Based Multi-Agent Crews", "tools": ["CrewAI", "AutoGen"], "when": "Multiple specialised agents collaborating on a shared objective", "description": "Define agents by role (Researcher, Analyst, Writer) with specific tools and models. CrewAI provides structured crew definitions; AutoGen offers flexible conversation patterns. Both support hierarchical and flat team structures."},
+        {"pattern": "Supervisor Pattern", "tools": ["Semantic Kernel", "Amazon Bedrock Multi-Agent"], "when": "Central coordination needed with dynamic agent selection", "description": "A supervisor agent decomposes tasks, selects the best sub-agent for each step, and synthesises results. Works well when the set of available agents changes or when tasks require dynamic planning."}
+      ]
     },
     {
       "id": "tools",
@@ -74,7 +89,12 @@
         { "name": "Data Access", "description": "Database query tools, file system access, knowledge base retrieval, and structured data extraction capabilities." },
         { "name": "External Services", "description": "Web search, code execution, email, calendar, and third-party SaaS integrations available to agents." }
       ],
-      "sources": ["Google (Agent Tools)", "Microsoft (Tool Invocation)", "Anthropic (MCP)", "Salesforce (Integration Layer)", "AIMultiple (Tooling & Enrichment)"]
+      "sources": ["Google (Agent Tools)", "Microsoft (Tool Invocation)", "Anthropic (MCP)", "Salesforce (Integration Layer)", "AIMultiple (Tooling & Enrichment)"],
+      "implementation": [
+        {"pattern": "MCP Server Pattern", "tools": ["Anthropic MCP SDK", "FastMCP", "MCP TypeScript SDK"], "when": "Exposing enterprise tools to any MCP-compatible agent", "description": "Build MCP servers that wrap existing APIs, databases, and services. Each server exposes tools (callable functions), resources (readable data), and prompts (reusable templates). The agent discovers and invokes tools via the standardised MCP protocol."},
+        {"pattern": "API Gateway for Agents", "tools": ["Kong AI Gateway", "Apigee", "AWS API Gateway"], "when": "Centralised access control and rate limiting for agent tool calls", "description": "Route all agent-to-tool communication through an API gateway that enforces authentication, rate limits, and audit logging. Prevents agents from directly accessing backend systems and provides a single chokepoint for security policy."},
+        {"pattern": "Dynamic Tool Discovery", "tools": ["OpenAPI + JSON Schema", "Tool Registry Service"], "when": "Agent needs to discover and use tools not known at build time", "description": "Maintain a registry of available tools with OpenAPI-compatible schemas. Agents query the registry at runtime to discover tools matching their current task, enabling extensibility without redeployment."}
+      ]
     },
     {
       "id": "runtime",
@@ -92,7 +112,12 @@
         { "name": "Vector / Embedding Stores", "description": "Semantic search infrastructure (Pinecone, Qdrant, Milvus) for similarity-based retrieval of relevant context and documents." },
         { "name": "Agent Lifecycle Management", "description": "Creation, versioning, deployment, scaling, suspension, and retirement of agent instances across the organisation." }
       ],
-      "sources": ["Google (Agent Runtime + Memory)", "Microsoft (Memory Service)", "AWS (AgentCore Runtime)", "AIMultiple (Agent Runtime & Infrastructure)", "Akka (Memory + Agents)"]
+      "sources": ["Google (Agent Runtime + Memory)", "Microsoft (Memory Service)", "AWS (AgentCore Runtime)", "AIMultiple (Agent Runtime & Infrastructure)", "Akka (Memory + Agents)"],
+      "implementation": [
+        {"pattern": "Managed Agent Runtime", "tools": ["AWS Bedrock AgentCore", "Vertex AI Agent Engine", "Azure AI Agent Service"], "when": "Enterprise deployment with minimal infrastructure management", "description": "Use cloud-managed runtimes that handle agent lifecycle, scaling, and monitoring. Trade customisation flexibility for operational simplicity. Best for organisations that want to focus on agent logic rather than infrastructure."},
+        {"pattern": "Self-Hosted Agent Runtime", "tools": ["Kubernetes + KEDA", "Docker Compose", "E2B Sandboxes"], "when": "Full control over execution environment, sovereignty requirements", "description": "Run agents in self-managed containers with autoscaling. KEDA provides event-driven scaling based on queue depth or request rate. E2B offers secure code execution sandboxes for agents that generate and run code."},
+        {"pattern": "Persistent Memory Stack", "tools": ["Mem0", "Zep", "LangMem", "Redis"], "when": "Agents need to remember context across sessions and learn from interactions", "description": "Layer short-term memory (Redis/in-memory for session context) with long-term memory (Mem0/Zep for cross-session knowledge). LangMem provides memory management as a LangGraph component. Critical for agents that build user models over time."}
+      ]
     },
     {
       "id": "protocols",
@@ -110,7 +135,12 @@
         { "name": "ANP (Agent Network Protocol)", "description": "Cisco-led protocol for agent interaction at the network layer — routing, discovery, and trust across organisational boundaries." },
         { "name": "OpenAPI & JSON-RPC", "description": "Established API standards that underpin agent tool definitions and structured communication formats." }
       ],
-      "sources": ["Microsoft (Communication Protocol)", "Google (A2A Protocol)", "Anthropic / Linux Foundation (MCP)", "AIMultiple (Protocols & Interoperability)", "Academic Taxonomy (arXiv:2508.10146)"]
+      "sources": ["Microsoft (Communication Protocol)", "Google (A2A Protocol)", "Anthropic / Linux Foundation (MCP)", "AIMultiple (Protocols & Interoperability)", "Academic Taxonomy (arXiv:2508.10146)"],
+      "implementation": [
+        {"pattern": "MCP-First Integration", "tools": ["Anthropic MCP SDK", "MCP Registry", "SSE/stdio Transport"], "when": "Primary need is connecting agents to enterprise tools and data", "description": "Start with MCP as the integration backbone. Build MCP servers for internal tools, use community servers for common services (GitHub, Slack, databases). SSE transport for remote servers, stdio for local."},
+        {"pattern": "A2A for Agent Delegation", "tools": ["Google A2A SDK", "Agent Cards", "Task Protocol"], "when": "Agents from different teams or vendors need to delegate tasks to each other", "description": "Use A2A when agents need to hand off work across organisational or vendor boundaries. Agent Cards advertise capabilities; the Task Protocol manages request lifecycle. Complements MCP — A2A is agent-to-agent, MCP is agent-to-tool."},
+        {"pattern": "Protocol Gateway", "tools": ["Custom Gateway", "MuleSoft", "API Mesh"], "when": "Mixed protocol environment requiring translation between standards", "description": "When different parts of the organisation use different protocols (MCP, A2A, legacy REST), a gateway translates between them. Allows gradual migration without forcing all teams to adopt the same protocol simultaneously."}
+      ]
     },
     {
       "id": "models",
@@ -128,7 +158,12 @@
         { "name": "Model Serving", "description": "Infrastructure for hosting and scaling model inference — vLLM, TensorRT, managed endpoints — with latency and throughput SLAs." },
         { "name": "Model Routing", "description": "Intelligent request routing that selects the optimal model per task based on complexity, cost, latency, and capability requirements." }
       ],
-      "sources": ["Salesforce (AI/ML Layer)", "Google (AI Models + Runtime)", "AWS (Bedrock)", "AIMultiple (Foundation Model Infrastructure)", "Sealos (Intelligence Layer)"]
+      "sources": ["Salesforce (AI/ML Layer)", "Google (AI Models + Runtime)", "AWS (Bedrock)", "AIMultiple (Foundation Model Infrastructure)", "Sealos (Intelligence Layer)"],
+      "implementation": [
+        {"pattern": "Model Router", "tools": ["OpenRouter", "LiteLLM", "Martian", "Azure AI Model Router"], "when": "Multiple models needed with different cost, latency, and capability profiles", "description": "Route each request to the optimal model based on task complexity. Use frontier models (Claude, GPT-4) for complex reasoning, SLMs (Phi, Mistral) for routine classification. LiteLLM provides a unified API across 100+ providers; OpenRouter adds automatic fallback."},
+        {"pattern": "Self-Hosted Model Serving", "tools": ["vLLM", "Ollama", "TGI", "TensorRT-LLM"], "when": "Data sovereignty, cost control at scale, or offline operation required", "description": "Host open-weight models on own infrastructure. vLLM provides high-throughput serving with PagedAttention. Ollama simplifies local development. TensorRT-LLM optimises for NVIDIA GPUs. Essential for regulated industries where data cannot leave the organisation."},
+        {"pattern": "Domain Fine-Tuning", "tools": ["Axolotl", "Unsloth", "OpenAI Fine-Tuning API"], "when": "General models lack domain accuracy for specialised tasks", "description": "Fine-tune base models on domain-specific data (legal, medical, financial) to improve accuracy and reduce hallucination. Unsloth provides 2x faster fine-tuning with 60% less memory. Start with few-shot prompting; fine-tune only when prompting hits its limits."}
+      ]
     },
     {
       "id": "data",
@@ -146,7 +181,12 @@
         { "name": "Semantic Layer", "description": "Business ontologies and concept hierarchies that give agents a shared vocabulary for the organisation's domain." },
         { "name": "Data Ingestion & ETL", "description": "Connectors, transformers, and pipelines that keep agent-accessible data current — batch for stable data, streaming for volatile data." }
       ],
-      "sources": ["Salesforce (Data + Semantic Layer)", "Bain (Scalable Data Infrastructure)", "Google (Agent Memory)", "Sealos (Data & Knowledge)", "Kore.ai (Knowledge Layer)"]
+      "sources": ["Salesforce (Data + Semantic Layer)", "Bain (Scalable Data Infrastructure)", "Google (Agent Memory)", "Sealos (Data & Knowledge)", "Kore.ai (Knowledge Layer)"],
+      "implementation": [
+        {"pattern": "RAG Pipeline", "tools": ["LangChain", "LlamaIndex", "Haystack"], "when": "Agents need to answer questions grounded in enterprise documents", "description": "Build retrieval-augmented generation pipelines: ingest documents, chunk semantically, embed, store in a vector database, retrieve relevant chunks at query time. LlamaIndex excels at complex document structures; Haystack offers production-grade pipelines."},
+        {"pattern": "Knowledge Graph + LLM", "tools": ["Neo4j", "Amazon Neptune", "LLM-based Extraction"], "when": "Relationships between entities matter more than document content", "description": "Extract entities and relationships from enterprise data using LLMs, store in a graph database. Agents query the graph for structured reasoning — 'which teams depend on this system?' Complements RAG for relational questions."},
+        {"pattern": "Semantic Layer", "tools": ["dbt Semantic Layer", "Cube", "Ontology Managers"], "when": "Agents need a shared, consistent vocabulary for business concepts", "description": "Define business metrics, dimensions, and relationships in a semantic layer that agents query instead of raw data. Ensures consistency — 'revenue' means the same thing to every agent. dbt provides metric definitions; Cube adds a query API."}
+      ]
     },
     {
       "id": "infrastructure",
@@ -164,7 +204,12 @@
         { "name": "Networking & Edge", "description": "Low-latency connectivity, edge compute for latency-sensitive agent interactions, and network segmentation for security." },
         { "name": "CI/CD & DevOps", "description": "Automated build, test, and deployment pipelines adapted for AI workloads — model versioning, A/B testing, canary deployments." }
       ],
-      "sources": ["Salesforce (Infrastructure Layer)", "Google (Agent Runtime / GKE)", "AWS (Bedrock / SageMaker)", "AIMultiple (Foundation Model Infrastructure)", "Sealos (Platform & Infrastructure)"]
+      "sources": ["Salesforce (Infrastructure Layer)", "Google (Agent Runtime / GKE)", "AWS (Bedrock / SageMaker)", "AIMultiple (Foundation Model Infrastructure)", "Sealos (Platform & Infrastructure)"],
+      "implementation": [
+        {"pattern": "GPU Orchestration", "tools": ["Ray", "SkyPilot", "RunPod", "Modal"], "when": "Scaling model inference across multiple GPUs or cloud providers", "description": "Use Ray for distributed inference across GPU clusters. SkyPilot optimises cost by routing to the cheapest available cloud. Modal and RunPod provide serverless GPU compute for burst workloads without managing infrastructure."},
+        {"pattern": "Agent Autoscaling", "tools": ["Kubernetes + KEDA", "AWS Lambda", "Cloud Run"], "when": "Agent traffic varies significantly and infrastructure costs matter", "description": "Scale agent instances based on demand. KEDA triggers scaling from queue depth or HTTP request rate. Serverless options (Lambda, Cloud Run) provide zero-to-many scaling with pay-per-use. Combine with warm pools for latency-sensitive agents."},
+        {"pattern": "Observability-First Infrastructure", "tools": ["OpenTelemetry", "Grafana + Tempo", "Datadog"], "when": "Need end-to-end visibility from infrastructure through agent behaviour", "description": "Instrument everything with OpenTelemetry from day one. Trace requests from load balancer through agent orchestration to model inference. Agent-specific spans should capture model, tokens, latency, and cost."}
+      ]
     }
   ],
   "cross_cutting": [

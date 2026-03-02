@@ -81,7 +81,21 @@
           "Establish <strong>automated risk threshold monitoring</strong> with governance escalation for agent anomalies",
           "Train risk owners on <strong>AI failure modes</strong> so they can evaluate agent risks without relying solely on AI teams"
         ]
-      }
+      },
+      "examples": [
+        {
+          "company": "Sompo Japan",
+          "industry": "Re/Insurance",
+          "href": "reinsurance.html",
+          "relevance": "Sompo's $60M AI-driven profit improvement introduced risk categories that traditional frameworks cannot score — model drift, cascade failure between agents, and emergent pricing behaviour."
+        },
+        {
+          "company": "AIG",
+          "industry": "Re/Insurance",
+          "href": "reinsurance.html",
+          "relevance": "AIG's automated E&S underwriting with 5x output per underwriter requires risk frameworks that assess AI decision quality, not just process compliance."
+        }
+      ]
     },
     {
       "id": "security-architecture",
@@ -172,7 +186,21 @@
           "Integrate <strong>AI-specific security monitoring</strong> into the SOC with playbooks for semantic attack categories",
           "Establish <strong>supply chain security assessment</strong> for third-party model APIs including data provenance requirements"
         ]
-      }
+      },
+      "examples": [
+        {
+          "company": "JPMorgan Chase",
+          "industry": "Banking",
+          "href": "banking.html",
+          "relevance": "JPMorgan's $20B technology budget includes zero-trust architecture for AI agents — per-session authentication, minimum privilege, and time-limited tokens for every agent interaction."
+        },
+        {
+          "company": "Novartis",
+          "industry": "Pharma",
+          "href": "pharma.html",
+          "relevance": "Novartis AI Innovation Lab operates under GxP validation requirements where AI security extends beyond data protection to include model integrity, training data provenance, and audit trail completeness."
+        }
+      ]
     },
     {
       "id": "compliance-framework",
