@@ -1988,15 +1988,20 @@ a.dashboard-card:hover {
   display: flex;
   gap: 4px;
 }
-.arch-coverage-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
+.arch-coverage-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: .6rem;
+  font-weight: 700;
+  color: var(--text-muted);
   background: var(--border);
-  border: 1px solid var(--border);
 }
-.arch-coverage-dot.covered {
-  border-color: transparent;
+.arch-coverage-num.covered {
+  color: #fff;
 }
 .arch-coverage-legend {
   display: flex;
@@ -2020,6 +2025,18 @@ a.dashboard-card:hover {
   font-size: .7rem;
   color: var(--text-secondary);
   white-space: nowrap;
+}
+.arch-legend-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: .58rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
 }
 
 /* ── Implementation Patterns (Architecture Reference) ── */

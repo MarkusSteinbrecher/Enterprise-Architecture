@@ -1096,7 +1096,7 @@ function renderArchSources(sources, layers) {
       html += '<div class="arch-source-coverage">';
       for (const layer of layers) {
         const covered = src.layer_coverage.includes(layer.id);
-        html += `<span class="arch-coverage-dot${covered ? ' covered' : ''}" style="${covered ? 'background:' + layer.color : ''}" title="${layer.label}${covered ? '' : ' (not covered)'}"></span>`;
+        html += `<span class="arch-coverage-num${covered ? ' covered' : ''}" style="${covered ? 'background:' + layer.color : ''}" title="${layer.label}${covered ? '' : ' (not covered)'}">${layer.order}</span>`;
       }
       html += '</div>';
     }
@@ -1107,7 +1107,7 @@ function renderArchSources(sources, layers) {
   html += '<div class="arch-coverage-legend">';
   html += '<span class="arch-coverage-legend-label">Layer Coverage:</span>';
   for (const layer of layers) {
-    html += `<span class="arch-coverage-legend-item"><span class="arch-coverage-dot covered" style="background:${layer.color}"></span>${layer.label}</span>`;
+    html += `<span class="arch-coverage-legend-item"><span class="arch-legend-number" style="background:${layer.color}">${layer.order}</span>${layer.label}</span>`;
   }
   html += '</div>';
   return html;
