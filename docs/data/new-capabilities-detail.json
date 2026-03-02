@@ -1,0 +1,177 @@
+{
+  "page_type": "new-capabilities",
+  "title": "New Capabilities for the Agentic Organisation",
+  "subtitle": "Ten capabilities that have no equivalent in traditional Enterprise Architecture. These emerge specifically from the requirements of managing AI agents, models, and autonomous systems as part of the enterprise workforce.",
+  "capabilities": [
+    {
+      "id": "cap-new-01-agent-lifecycle-management",
+      "label": "Agent Lifecycle Management",
+      "description": "Agent Lifecycle Management governs the complete lifecycle of AI agents from initial onboarding through active deployment to eventual retirement. It includes agent registry maintenance, performance monitoring, version management, retraining triggers, and decommissioning procedures. This capability treats agents as workforce participants with defined onboarding processes, performance expectations, escalation procedures, and retirement criteria &mdash; analogous to human workforce management but adapted for autonomous software agents.",
+      "why_new": "Traditional EA has no equivalent because agents as autonomous workforce participants did not exist. While application lifecycle management covers software, it does not address the unique requirements of non-deterministic, autonomous entities that make decisions, interact with other agents, and require performance monitoring analogous to human workforce management.",
+      "key_practices": [
+        "Maintain an enterprise agent registry tracking all deployed agents with configuration, permissions, and performance history",
+        "Define lifecycle stages: onboarding, active, under-review, retraining, deprecated, retired",
+        "Establish performance management including task completion rates, error rates, escalation frequency, and cost efficiency",
+        "Implement version management with rollback capabilities and canary deployment for agent updates",
+        "Define retirement criteria and decommissioning procedures including data retention and audit trail preservation"
+      ],
+      "related_pages": [
+        { "label": "Risk & Security", "href": "risk-security.html" },
+        { "label": "EA Repository", "href": "ea-repository.html" }
+      ]
+    },
+    {
+      "id": "cap-new-02-model-portfolio-management",
+      "label": "Model Portfolio Management",
+      "description": "Model Portfolio Management applies portfolio management discipline to the enterprise's collection of AI models. It governs model selection through structured evaluation criteria, tracks model performance through continuous benchmarking, manages costs through inference monitoring and right-sizing, ensures vendor diversification to avoid lock-in, and plans for deprecation as models become obsolete. This capability directly reduces AI cost and mitigates vendor concentration risk.",
+      "why_new": "Traditional EA manages application and technology portfolios, but AI models have fundamentally different characteristics: they are non-deterministic, rapidly depreciating, available from multiple vendors with different cost/performance trade-offs, and require continuous benchmarking against newer alternatives. No existing EA capability addresses this.",
+      "key_practices": [
+        "Establish structured model selection criteria: accuracy, cost, latency, sovereignty compliance, and vendor risk",
+        "Implement continuous benchmarking to compare deployed models against newer alternatives",
+        "Track inference costs by model, workload, and business unit with budget thresholds and alerts",
+        "Maintain a vendor diversification strategy to prevent concentration risk on a single AI provider",
+        "Plan deprecation timelines aligned with model provider roadmaps and enterprise migration capacity"
+      ],
+      "related_pages": [
+        { "label": "EA Development", "href": "ea-development-method.html" },
+        { "label": "Governance", "href": "ea-governance.html" }
+      ]
+    },
+    {
+      "id": "cap-new-03-ai-finops",
+      "label": "AI FinOps",
+      "description": "AI FinOps establishes financial governance for AI operations across the enterprise. It tracks inference costs by model, workload, and business unit; manages fine-tuning budgets and training compute spend; monitors vector storage and knowledge graph costs; allocates infrastructure costs to AI workloads; and implements budget thresholds with escalation triggers. Only 10% of organisations have mature AI FinOps practices, making this a critical gap for most enterprises scaling AI deployment.",
+      "why_new": "Traditional IT financial management and cloud FinOps do not account for the unique cost structures of AI: per-token inference pricing, GPU compute for training, vector storage costs, and the rapid cost changes as models are updated. AI costs are variable, unpredictable, and can escalate rapidly without dedicated governance.",
+      "key_practices": [
+        "Implement inference cost tracking by model, workload, and business unit with budget thresholds",
+        "Manage fine-tuning and training compute budgets with ROI tracking per use case",
+        "Create a cost allocation framework that attributes AI infrastructure costs to consuming business units",
+        "Set escalation triggers for cost anomalies with automated alerts and circuit breakers",
+        "Produce regular AI cost reports for leadership with trend analysis and optimisation recommendations"
+      ],
+      "related_pages": [
+        { "label": "Governance", "href": "ea-governance.html" },
+        { "label": "Risk & Security", "href": "risk-security.html" }
+      ]
+    },
+    {
+      "id": "cap-new-04-continuous-architecture-compliance",
+      "label": "Continuous Architecture Compliance",
+      "description": "Continuous Architecture Compliance moves compliance from periodic human review to automated, continuous checking embedded in CI/CD pipelines. Architecture standards and policies are codified as executable rules (policy-as-code) that are evaluated automatically at deployment time. This enables governance at the speed of AI deployment &mdash; catching violations before they reach production without creating bottlenecks. While traditional compliance evaluation focuses on manual review, this capability is about automated enforcement infrastructure.",
+      "why_new": "Traditional architecture compliance relies on periodic manual reviews at project milestones. AI deployment velocity makes this unsustainable &mdash; model updates, agent configuration changes, and infrastructure scaling happen continuously. Automated, pipeline-integrated compliance is a fundamentally different capability from manual compliance evaluation.",
+      "key_practices": [
+        "Codify architecture standards as policy-as-code using tools like Open Policy Agent or custom rule engines",
+        "Integrate compliance checks into CI/CD pipelines for automatic evaluation at deployment time",
+        "Implement real-time compliance dashboards that replace periodic manual compliance reports",
+        "Define automated remediation workflows for common compliance violations",
+        "Maintain a living policy catalogue that evolves with architecture standards and AI governance requirements"
+      ],
+      "related_pages": [
+        { "label": "Governance", "href": "ea-governance.html" },
+        { "label": "EA Development", "href": "ea-development-method.html" }
+      ]
+    },
+    {
+      "id": "cap-new-05-sovereignty-by-design",
+      "label": "Sovereignty-by-Design",
+      "description": "Sovereignty-by-Design treats data residency, model provenance, and jurisdictional constraints as first-order architecture design inputs rather than afterthought compliance checks. It maps AI workloads to sovereignty requirements, constrains infrastructure decisions based on jurisdictional rules, and ensures model training data provenance meets regulatory standards. This is critical for EU and multi-jurisdictional organisations where AI regulation creates binding constraints on architecture decisions.",
+      "why_new": "While data residency has existed as a compliance concern, AI introduces new sovereignty dimensions: model training data provenance, cross-border inference flows, and jurisdictional constraints on AI processing. These constraints are binding architecture inputs that must be considered at design time, not compliance checks applied after the fact.",
+      "key_practices": [
+        "Map all AI workloads to sovereignty requirements including data residency, model provenance, and inference location",
+        "Ensure sovereignty requirements drive infrastructure selection decisions, not the other way around",
+        "Track model training data provenance to ensure compliance with data residency regulations",
+        "Implement sovereignty constraint checking as part of architecture review and compliance processes",
+        "Maintain a sovereignty requirements register updated as regulations evolve across jurisdictions"
+      ],
+      "related_pages": [
+        { "label": "Risk & Security", "href": "risk-security.html" },
+        { "label": "EA Repository", "href": "ea-repository.html" }
+      ]
+    },
+    {
+      "id": "cap-new-06-enterprise-as-code",
+      "label": "Enterprise as Code",
+      "description": "Enterprise as Code codifies the implicit operating models that exist in organisations &mdash; workflows, decision rules, governance logic, escalation procedures &mdash; as executable code that is readable and actionable by both humans and AI agents. This is a prerequisite for effective agent deployment at scale: agents cannot follow unwritten rules or implicit knowledge. While high effort and low maturity today, this capability represents a compelling strategic direction that enables agents to operate within the full context of the enterprise.",
+      "why_new": "Traditional EA documents operating models as static diagrams and text. For AI agents to operate effectively within an enterprise, they need machine-readable, executable representations of business rules, workflows, and governance logic. This codification requirement is entirely new and driven by the need for agents to understand and follow enterprise context.",
+      "key_practices": [
+        "Codify implicit workflows, decision rules, and governance logic as executable specifications",
+        "Create dual-format content that serves both human understanding and machine execution",
+        "Prioritise codification of domains where agent deployment is planned or underway",
+        "Establish version control and change management for enterprise-as-code artefacts",
+        "Validate codified rules against actual business practice through structured testing and stakeholder review"
+      ],
+      "related_pages": [
+        { "label": "EA Repository", "href": "ea-repository.html" },
+        { "label": "EA Development", "href": "ea-development-method.html" }
+      ]
+    },
+    {
+      "id": "cap-new-07-agent-communication-architecture",
+      "label": "Agent Communication Architecture",
+      "description": "Agent Communication Architecture designs the inter-agent communication layer as a protocol-independent abstraction. With competing standards (MCP, A2A, ACP) and rapid protocol evolution, this capability ensures the enterprise can adopt and switch between agent communication protocols without re-architecting agent interactions. This is the defining architectural bet for 2026&ndash;2028: organisations that lock into a single protocol risk costly re-architecture as standards consolidate.",
+      "why_new": "Traditional integration architecture covers system-to-system communication via APIs and messaging. Agent-to-agent communication is fundamentally different: it involves semantic understanding, context sharing, and dynamic task delegation between autonomous entities. The protocol landscape is immature and evolving rapidly, requiring a dedicated abstraction capability.",
+      "key_practices": [
+        "Design a protocol abstraction layer enabling agent communication independent of specific standards (MCP, A2A, ACP)",
+        "Define agent interaction patterns at the semantic level, not the protocol level",
+        "Implement multi-protocol support to enable gradual migration as standards mature",
+        "Establish agent discovery and registration mechanisms for dynamic agent-to-agent interaction",
+        "Monitor and evaluate emerging protocol standards to inform architecture evolution decisions"
+      ],
+      "related_pages": [
+        { "label": "EA Development", "href": "ea-development-method.html" },
+        { "label": "EA Repository", "href": "ea-repository.html" }
+      ]
+    },
+    {
+      "id": "cap-new-08-ai-infrastructure-readiness-assessment",
+      "label": "AI Infrastructure Readiness Assessment",
+      "description": "AI Infrastructure Readiness Assessment provides a structured framework for evaluating whether the enterprise's compute, network, storage, and integration infrastructure can support planned AI workloads. With only 22% of organisations reporting infrastructure readiness for AI at scale, this is a binding constraint for AI deployment. The assessment includes GPU compute capacity, high-bandwidth networking for model training, vector storage scaling, sovereignty constraint mapping, and integration capacity for agent communication patterns.",
+      "why_new": "Traditional infrastructure capacity planning does not address the unique requirements of AI workloads: GPU compute clusters, high-bandwidth interconnects for distributed training, vector database scaling, and the bursty demand patterns of inference serving. A dedicated readiness assessment is needed because AI infrastructure gaps are the most common blocker for enterprise AI deployment.",
+      "key_practices": [
+        "Conduct structured readiness assessments covering GPU compute, networking, storage, and integration capacity",
+        "Map sovereignty constraints to identify where infrastructure gaps create regulatory risk",
+        "Develop capacity planning models for AI workloads with different scaling characteristics than traditional applications",
+        "Assess integration infrastructure readiness for agent communication patterns and real-time data feeds",
+        "Create infrastructure investment roadmaps aligned with AI deployment timelines and value progression"
+      ],
+      "related_pages": [
+        { "label": "EA Development", "href": "ea-development-method.html" },
+        { "label": "Risk & Security", "href": "risk-security.html" }
+      ]
+    },
+    {
+      "id": "cap-new-09-agent-risk-and-observability",
+      "label": "Agent Risk and Observability",
+      "description": "Agent Risk and Observability addresses the unique risk profile of autonomous, non-deterministic AI agents operating at enterprise scale. It implements distributed tracing across agent interactions to enable end-to-end visibility, blast-radius controls to limit the impact of agent failures, cascade failure detection to identify chain reactions across multi-agent systems, and circuit breakers to automatically halt agents exhibiting anomalous behaviour. This capability is required before deploying a second agent, as multi-agent interactions create emergent risks that single-agent deployments do not.",
+      "why_new": "Traditional application monitoring and risk management assume deterministic software behaviour. AI agents are non-deterministic, autonomous, and interact in complex multi-agent topologies that create emergent risks. Distributed tracing, blast-radius controls, and cascade failure detection for agent systems are entirely new requirements with no traditional EA equivalent.",
+      "key_practices": [
+        "Implement distributed tracing enabling end-to-end visibility across multi-agent interaction chains",
+        "Define blast-radius controls and circuit breakers to limit the impact of agent failures",
+        "Deploy cascade failure detection to identify chain reactions across interconnected agent systems",
+        "Establish agent behaviour baselines with anomaly detection for drift identification",
+        "Create escalation procedures for agent failures including automated containment and human-in-the-loop override"
+      ],
+      "related_pages": [
+        { "label": "Risk & Security", "href": "risk-security.html" },
+        { "label": "Governance", "href": "ea-governance.html" }
+      ]
+    },
+    {
+      "id": "cap-new-10-ai-value-progression-management",
+      "label": "AI Value Progression Management",
+      "description": "AI Value Progression Management addresses the strategic transition from phase-one AI (productivity gains from cost reduction and efficiency) to phase-two AI (revenue generation from AI-augmented products and services). It aligns CEO and CIO expectations on AI value timelines, maps the platform requirements for each phase, and defines differentiated KPIs that track progress through the value progression. This capability addresses the C-suite expectation misalignment where leadership expects revenue impact while the organisation is still building productivity foundations.",
+      "why_new": "Traditional EA value management measures architecture contribution to business outcomes, but AI value realisation follows a distinct two-phase pattern that traditional frameworks do not recognise. The transition from productivity gains to revenue generation requires dedicated planning, differentiated KPIs, and active expectation management with the C-suite &mdash; a combination that no existing EA capability provides.",
+      "key_practices": [
+        "Map the enterprise's position on the productivity-to-revenue AI value progression",
+        "Define differentiated KPIs for phase-one (productivity) and phase-two (revenue) AI value",
+        "Align C-suite expectations on AI value timelines through structured communication and evidence",
+        "Plan platform requirements and infrastructure investments for each value progression phase",
+        "Track and communicate AI value realisation against the progression plan with regular leadership reporting"
+      ],
+      "related_pages": [
+        { "label": "EA Development", "href": "ea-development-method.html" },
+        { "label": "Governance", "href": "ea-governance.html" }
+      ]
+    }
+  ]
+}

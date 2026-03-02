@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initHome();
   } else if (page === 'overview') {
     await initOverview();
+  } else if (page === 'new-capabilities') {
+    pageData = await loadJSON('data/new-capabilities-detail.json');
+    if (pageData) initNewCapabilitiesPage();
   } else {
     // Peek at JSON to detect page type
     const peek = await loadJSON(`data/${page}.json`);
@@ -30,6 +33,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (peek && peek.page_type === 'architecture') {
       pageData = peek;
       initArchitecturePage();
+    } else if (peek && peek.page_type === 'operating-model') {
+      pageData = peek;
+      initOperatingModelPage();
+    } else if (peek && peek.page_type === 'new-capabilities') {
+      pageData = peek;
+      initNewCapabilitiesPage();
     } else {
       await initConceptPage(page);
     }
@@ -751,7 +760,10 @@ function renderCapabilityDiagram(subtopics) {
   function renderBoxes(groupName) {
     if (!groups[groupName]) return '';
     return groups[groupName].map(st => {
-      const cat = st.ai_impact ? st.ai_impact.impact_category : 'A';
+      const cat = st.ai_impact ? st.ai_impact.impact_category : (st.impact_category || 'A');
+      if (st.href) {
+        return `<a class="cap-box ${impactClass(cat)}" href="${st.href}" title="${st.label}">${st.label}</a>`;
+      }
       return `<button class="cap-box ${impactClass(cat)}" onclick="scrollToTopic('${st.id}')" title="${st.label}">${st.label}</button>`;
     }).join('');
   }
@@ -945,6 +957,242 @@ window.handleAssessmentChange = function(questionId, level) {
   }
 };
 
+/* ── Operating Model Page ─────────────────────────────── */
+
+function initOperatingModelPage() {
+  const el = document.getElementById('tab-content');
+  if (!el || !pageData) return;
+
+  let html = '';
+
+  /* Hero */
+  html += '<header class="hero"><div class="container">';
+  html += '<p class="section-label">Operating Model</p>';
+  html += `<h1>${pageData.title}</h1>`;
+  html += `<p class="subtitle">${pageData.description}</p>`;
+  html += '</div></header>';
+
+  /* Overview section */
+  if (pageData.overview) {
+    html += '<div class="dashboard-section"><div class="container">';
+    html += '<p class="section-label">What is an EA Operating Model?</p>';
+    html += '<h2>Six Dimensions</h2>';
+    html += `<p class="page-description">${pageData.overview.what}</p>`;
+    html += '<div class="om-dim-grid">';
+    for (const dim of pageData.overview.dimensions) {
+      html += `<div class="om-dim-card">
+        <div class="om-dim-icon">${dim.icon}</div>
+        <div class="om-dim-label">${dim.label}</div>
+        <div class="om-dim-desc">${dim.description}</div>
+      </div>`;
+    }
+    html += '</div>';
+    html += '</div></div>';
+  }
+
+  /* Operating Model Types */
+  if (pageData.operating_models) {
+    html += '<div class="dashboard-section"><div class="container">';
+    html += '<p class="section-label">Organisational Model</p>';
+    html += '<h2>Choose Your Operating Model Type</h2>';
+    html += '<p class="page-description">The right model depends on your organisation\'s size, maturity, regulatory environment, and AI ambition. Most organisations deploying AI at scale benefit from a hybrid approach.</p>';
+    html += '<div class="om-types-grid">';
+    for (const model of pageData.operating_models) {
+      const borderColour = model.id === 'hybrid' ? 'var(--accent)' : model.id === 'centralised' ? 'var(--impact-modify)' : 'var(--impact-extend)';
+      html += `<div class="om-type-card" style="border-left-color:${borderColour}" id="om-type-${model.id}">`;
+      html += `<div class="om-type-header" onclick="this.closest('.om-type-card').classList.toggle('open')">`;
+      html += `<div>`;
+      html += `<div class="om-type-label">${model.label}</div>`;
+      html += `<div class="om-type-best">${model.best_for}</div>`;
+      html += `</div>`;
+      html += chevronSVG();
+      html += `</div>`;
+      html += `<div class="om-type-detail">`;
+      html += `<p class="om-type-desc">${model.description}</p>`;
+      /* Metrics */
+      html += '<div class="om-type-metrics">';
+      const metricLabels = { decision_speed: 'Decision Speed', consistency: 'Consistency', scalability: 'Scalability' };
+      for (const [key, label] of Object.entries(metricLabels)) {
+        const val = model.metrics[key] || 0;
+        html += `<div class="om-metric">
+          <div class="om-metric-label">${label}</div>
+          <div class="om-metric-dots">${'<span class="om-metric-dot filled"></span>'.repeat(val)}${'<span class="om-metric-dot"></span>'.repeat(5 - val)}</div>
+        </div>`;
+      }
+      html += '</div>';
+      /* Strengths */
+      html += '<div class="om-type-section"><div class="om-type-section-title">Strengths</div><ul>';
+      for (const s of model.strengths) html += `<li>${s}</li>`;
+      html += '</ul></div>';
+      /* Trade-offs */
+      html += '<div class="om-type-section"><div class="om-type-section-title">Trade-offs</div><ul>';
+      for (const t of model.trade_offs) html += `<li>${t}</li>`;
+      html += '</ul></div>';
+      /* Agentic considerations */
+      html += `<div class="om-type-agentic"><div class="om-type-section-title">Agentic Organisation Considerations</div><p>${model.agentic_considerations}</p></div>`;
+      html += '</div>'; // om-type-detail
+      html += '</div>'; // om-type-card
+    }
+    html += '</div>';
+    html += '</div></div>';
+  }
+
+  /* Capability Model Diagram */
+  if (pageData.subtopics) {
+    html += '<div class="dashboard-section"><div class="container">';
+    html += '<p class="section-label">Capability Model</p>';
+    html += '<h2>40 EA Capabilities</h2>';
+    html += '<p class="page-description">30 traditional capabilities (modified or extended for AI) plus 10 net-new capabilities for the agentic organisation. Click any capability to see its detailed analysis on the relevant sub-page.</p>';
+    html += renderCapabilityDiagram(pageData.subtopics);
+    html += '</div></div>';
+  }
+
+  /* Component Cards */
+  if (pageData.components && pageData.components.length) {
+    html += '<div class="dashboard-section"><div class="container">';
+    html += '<p class="section-label">Deep Dives</p>';
+    html += '<h2>EA Operating Model Components</h2>';
+    html += '<p class="page-description">Each component has a dedicated page with detailed analysis of traditional vs. agentic EA practices, an interactive comparison table, and a self-assessment tool.</p>';
+    html += '<div class="om-components">';
+    for (const c of pageData.components) {
+      html += `<a class="om-component-card" href="${c.href}">
+        <div class="om-component-title">${c.label}</div>
+        <div class="om-component-desc">${c.description}</div>
+      </a>`;
+    }
+    html += '</div>';
+    html += '</div></div>';
+  }
+
+  /* Engagement Model */
+  if (pageData.engagement) {
+    const eng = pageData.engagement;
+    html += '<div class="dashboard-section"><div class="container">';
+    html += '<p class="section-label">Engagement</p>';
+    html += '<h2>When Does EA Get Involved?</h2>';
+    html += `<p class="page-description">${eng.description}</p>`;
+    /* Tier cards */
+    html += '<div class="om-engagement-tiers">';
+    for (const tier of eng.tiers) {
+      html += `<div class="om-tier-card" style="border-top-color:${tier.colour}">`;
+      html += `<div class="om-tier-level" style="color:${tier.colour}">${tier.label}</div>`;
+      html += '<ul class="om-tier-criteria">';
+      for (const c of tier.criteria) html += `<li>${c}</li>`;
+      html += '</ul>';
+      html += `<div class="om-tier-sla"><strong>SLA:</strong> ${tier.sla}</div>`;
+      html += `<div class="om-tier-agentic">${tier.agentic_addition}</div>`;
+      html += '</div>';
+    }
+    html += '</div>';
+    /* ARB structure */
+    html += '<h3 style="margin-top:2rem">Architecture Review Board Structure</h3>';
+    html += '<div class="om-arb-grid">';
+    for (const arb of eng.arb) {
+      html += `<div class="om-arb-card">
+        <div class="om-arb-board">${arb.board}</div>
+        <div class="om-arb-freq">${arb.frequency}</div>
+        <div class="om-arb-scope">${arb.scope}</div>
+        <div class="om-arb-members"><strong>Members:</strong> ${arb.members}</div>
+      </div>`;
+    }
+    html += '</div>';
+    html += '</div></div>';
+  }
+
+  /* Performance & Maturity */
+  if (pageData.performance) {
+    const perf = pageData.performance;
+    html += '<div class="dashboard-section"><div class="container">';
+    html += '<p class="section-label">Performance</p>';
+    html += '<h2>Measuring EA Effectiveness</h2>';
+    html += `<p class="page-description">${perf.description}</p>`;
+    /* KPIs */
+    html += '<div class="om-kpi-grid">';
+    for (const kpi of perf.kpis) {
+      html += `<div class="om-kpi-card">
+        <div class="om-kpi-icon">${kpi.icon}</div>
+        <div class="om-kpi-label">${kpi.label}</div>
+        <div class="om-kpi-target">${kpi.target}</div>
+        <div class="om-kpi-desc">${kpi.description}</div>
+      </div>`;
+    }
+    html += '</div>';
+    /* Maturity Model */
+    html += '<h3 style="margin-top:2rem">EA Maturity Model</h3>';
+    html += '<p class="page-description">Five maturity levels with recommended operating model and AI readiness assessment per level.</p>';
+    html += '<div class="om-maturity">';
+    for (const level of perf.maturity_model) {
+      html += `<div class="om-maturity-step">
+        <div class="om-maturity-level">${level.level}</div>
+        <div class="om-maturity-label">${level.label}</div>
+        <div class="om-maturity-desc">${level.description}</div>
+        <div class="om-maturity-meta"><strong>Recommended model:</strong> ${level.recommended_model}</div>
+        <div class="om-maturity-meta"><strong>AI readiness:</strong> ${level.ai_readiness}</div>
+      </div>`;
+    }
+    html += '</div>';
+    html += '</div></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+/* ── New Capabilities Page ────────────────────────────── */
+
+function initNewCapabilitiesPage() {
+  const el = document.getElementById('tab-content');
+  if (!el || !pageData) return;
+
+  let html = '';
+
+  /* Hero */
+  html += '<header class="hero"><div class="container">';
+  html += '<p class="section-label">Net-New Capabilities</p>';
+  html += `<h1>${pageData.title}</h1>`;
+  html += `<p class="subtitle">${pageData.subtitle}</p>`;
+  html += '</div></header>';
+
+  /* Capabilities grid */
+  html += '<div class="dashboard-section"><div class="container">';
+  html += '<div class="new-cap-grid">';
+  for (const cap of pageData.capabilities) {
+    html += `<div class="new-cap-card" id="${cap.id}">`;
+    html += `<div class="new-cap-header" onclick="this.closest('.new-cap-card').classList.toggle('open')">`;
+    html += `<div class="new-cap-label">${cap.label}</div>`;
+    html += chevronSVG();
+    html += '</div>';
+    html += '<div class="new-cap-detail">';
+    html += `<div class="new-cap-desc">${cap.description}</div>`;
+    html += `<div class="new-cap-why"><div class="new-cap-why-title">Why This Is New</div><p>${cap.why_new}</p></div>`;
+    html += '<div class="new-cap-practices"><div class="new-cap-practices-title">Key Practices</div><ul>';
+    for (const p of cap.key_practices) html += `<li>${p}</li>`;
+    html += '</ul></div>';
+    if (cap.related_pages && cap.related_pages.length) {
+      html += '<div class="new-cap-links">';
+      for (const link of cap.related_pages) {
+        html += `<a class="new-cap-link" href="${link.href}">${link.label} &rarr;</a>`;
+      }
+      html += '</div>';
+    }
+    html += '</div>'; // new-cap-detail
+    html += '</div>'; // new-cap-card
+  }
+  html += '</div>';
+  html += '</div></div>';
+
+  el.innerHTML = html;
+
+  // Open from hash
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    const card = document.getElementById(hash);
+    if (card) {
+      card.classList.add('open');
+      setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }
+}
+
 /* ── Architecture Reference Page ──────────────────────── */
 
 function initArchitecturePage() {
@@ -1134,7 +1382,8 @@ async function buildSearchIndex() {
 
   const files = [
     'home', 'overview', 'recommendations', 'new-capabilities',
-    'ea-operating-model', 'ea-development-method', 'ea-governance',
+    'ea-operating-model', 'new-capabilities-detail',
+    'ea-development-method', 'ea-governance',
     'ea-repository', 'ea-roles-skills', 'risk-security',
     'banking', 'reinsurance', 'pharma',
     'architecture-reference'
@@ -1233,10 +1482,26 @@ async function buildSearchIndex() {
       }
     }
 
-    // New capabilities
+    // New capabilities (overview list)
     if (file === 'new-capabilities' && Array.isArray(data)) {
       for (const c of data) {
         idx.push({ type: 'finding', title: c.title, snippet: truncate(stripHTML(c.description), 200), href: 'overview.html', page: 'New Capabilities', _text: (c.title + ' ' + stripHTML(c.description)).toLowerCase() });
+      }
+    }
+
+    // New capabilities detail page
+    if (file === 'new-capabilities-detail' && data.capabilities) {
+      for (const c of data.capabilities) {
+        const texts = [c.label, stripHTML(c.description), stripHTML(c.why_new), (c.key_practices || []).join(' ')].join(' ');
+        idx.push({ type: 'topic', title: c.label, snippet: truncate(stripHTML(c.description), 200), href: 'new-capabilities.html#' + c.id, page: 'New Capabilities', _text: texts.toLowerCase() });
+      }
+    }
+
+    // Operating model sections
+    if (file === 'ea-operating-model' && data.operating_models) {
+      for (const m of data.operating_models) {
+        const texts = [m.label, m.description, m.best_for, m.agentic_considerations, (m.strengths || []).join(' '), (m.trade_offs || []).join(' ')].join(' ');
+        idx.push({ type: 'topic', title: m.label + ' Operating Model', snippet: truncate(stripHTML(m.description), 200), href: 'ea-operating-model.html#om-type-' + m.id, page: 'Operating Model', _text: texts.toLowerCase() });
       }
     }
   });

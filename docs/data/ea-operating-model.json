@@ -1,6 +1,80 @@
 {
+  "page_type": "operating-model",
   "title": "EA Operating Model",
   "description": "How the EA function organises, governs, and delivers architecture work &mdash; and what must change when AI agents become part of the enterprise workforce.",
+  "overview": {
+    "what": "An EA Operating Model defines <strong>how</strong> the Enterprise Architecture function operates &mdash; not just what capabilities it has, but how decisions are made, how teams are structured, how work gets done, and how performance is measured. It is the blueprint for running EA as a service to the organisation.",
+    "dimensions": [
+      { "icon": "&#9881;", "label": "Capabilities", "description": "What the EA function can do &mdash; the 30 core capabilities that define EA's service portfolio, from architecture vision development to compliance evaluation." },
+      { "icon": "&#9878;", "label": "Governance", "description": "How architecture decisions are made and enforced &mdash; decision rights, review boards, compliance mechanisms, and escalation paths." },
+      { "icon": "&#128101;", "label": "People &amp; Organisation", "description": "Team structure, roles, competencies, and career paths &mdash; including new roles for AI governance and agent architecture." },
+      { "icon": "&#9654;", "label": "Processes", "description": "How architecture work gets done &mdash; the development cycle, reviews, continuous architecture practices, and delivery methodology." },
+      { "icon": "&#128451;", "label": "Tools &amp; Repository", "description": "Platforms and content supporting EA &mdash; including new registries for models, agents, and machine-readable architecture data." },
+      { "icon": "&#128200;", "label": "Performance", "description": "How EA effectiveness is measured &mdash; KPIs, maturity models, stakeholder satisfaction, and value contribution tracking." }
+    ]
+  },
+  "operating_models": [
+    {
+      "id": "centralised",
+      "label": "Centralised",
+      "best_for": "Regulated industries, early EA maturity, strong compliance needs",
+      "description": "A single, central EA team owns all architecture decisions, standards, and governance. Domain and solution architects report into or are closely governed by the central function. This model maximises consistency and control but can become a bottleneck at scale.",
+      "metrics": { "decision_speed": 2, "consistency": 5, "scalability": 2 },
+      "strengths": [
+        "Maximum consistency in standards and architecture decisions across the enterprise",
+        "Clear accountability and ownership for architecture governance",
+        "Strongest compliance posture &mdash; all decisions go through a single review authority",
+        "Easiest model to establish for organisations building their first EA function"
+      ],
+      "trade_offs": [
+        "Can become a bottleneck as architecture demand grows",
+        "Risk of ivory tower perception if central team is disconnected from delivery",
+        "Slower decision-making for domain-specific questions that require deep business context",
+        "Limited scalability without significant headcount investment in the central team"
+      ],
+      "agentic_considerations": "In the agentic organisation, centralised governance gains new importance for AI standards and agent deployment policies. However, the pace of AI change can overwhelm a purely centralised review process. Consider <strong>centralised policy, automated enforcement</strong> &mdash; where the central team defines rules as policy-as-code and compliance checking is automated in CI/CD pipelines."
+    },
+    {
+      "id": "federated",
+      "label": "Federated",
+      "best_for": "Large enterprises, diverse business units, high domain autonomy",
+      "description": "Architecture capability is distributed across business units or domains, each with their own architects who operate with significant autonomy. A lightweight central team may set broad principles but does not control domain-level decisions. This model maximises speed and domain relevance but risks inconsistency.",
+      "metrics": { "decision_speed": 5, "consistency": 2, "scalability": 5 },
+      "strengths": [
+        "Fastest decision-making &mdash; domain architects have authority to act without central approval",
+        "Deep business context &mdash; architects are embedded in their domains",
+        "Highly scalable as each domain manages its own architecture capacity",
+        "Greatest business satisfaction as EA is responsive and locally relevant"
+      ],
+      "trade_offs": [
+        "Risk of inconsistency across domains in standards, tooling, and architectural patterns",
+        "Difficult to maintain enterprise-wide views and cross-domain integration",
+        "Standards divergence can lead to integration challenges and technical debt",
+        "Harder to enforce compliance with enterprise-wide policies"
+      ],
+      "agentic_considerations": "Federated models risk <strong>AI fragmentation</strong> &mdash; different domains selecting different models, protocols, and agent frameworks without coordination. For AI governance, this creates dangerous gaps in compliance, cost control, and risk management. At minimum, federated organisations need <strong>centralised AI standards and agent governance</strong> even if domain architecture decisions remain federated."
+    },
+    {
+      "id": "hybrid",
+      "label": "Hybrid (Recommended)",
+      "best_for": "Most organisations, especially those deploying AI at scale",
+      "description": "Combines a central EA team that sets strategy, standards, and governance with federated domain architects who have autonomy within guardrails. The central team focuses on cross-cutting concerns, enterprise-wide views, and strategic alignment while domains handle domain-specific architecture. This is the most common and recommended model for organisations deploying AI at scale.",
+      "metrics": { "decision_speed": 4, "consistency": 4, "scalability": 4 },
+      "strengths": [
+        "Balances consistency with speed &mdash; guardrails without bottlenecks",
+        "Central team can focus on strategic, cross-cutting, and AI-specific concerns",
+        "Domain architects maintain business context and delivery speed",
+        "Scalable through the federation while maintaining enterprise coherence"
+      ],
+      "trade_offs": [
+        "Requires clear role definitions to avoid confusion about decision rights",
+        "Coordination overhead between central and domain teams",
+        "Risk of gravitating toward one extreme (too centralised or too federated) without active governance",
+        "Needs mature communication and knowledge-sharing practices to function effectively"
+      ],
+      "agentic_considerations": "The hybrid model is best suited for the agentic organisation. The <strong>central team governs AI standards, model portfolio, agent policies, and sovereignty compliance</strong> while domain architects design agent-augmented solutions within their business context. Policy-as-code enables the central team to enforce standards at scale without becoming a bottleneck. This mirrors the pattern emerging in leading organisations: centralise what must be consistent (AI governance, security, cost controls) and federate what benefits from domain expertise (agent design, use case prioritisation)."
+    }
+  ],
   "components": [
     {
       "label": "EA Governance Model",
@@ -28,946 +102,185 @@
       "href": "risk-security.html"
     }
   ],
+  "engagement": {
+    "description": "The engagement model defines when and how the EA function gets involved in projects, decisions, and change initiatives. Clear engagement rules prevent EA from being either a bottleneck or an afterthought.",
+    "tiers": [
+      {
+        "level": "Mandatory",
+        "label": "Mandatory Review",
+        "colour": "#dc2626",
+        "criteria": [
+          "New platform or infrastructure investment above threshold",
+          "Cross-domain integration or data sharing initiative",
+          "AI agent deployment or model onboarding",
+          "Sovereignty-sensitive workload migration",
+          "Strategic vendor selection or contract renewal"
+        ],
+        "sla": "Architecture review completed within 10 business days",
+        "agentic_addition": "All AI agent deployments require mandatory architecture review regardless of project size, due to the cross-cutting risk and governance implications."
+      },
+      {
+        "level": "Recommended",
+        "label": "Recommended Consultation",
+        "colour": "#f59e0b",
+        "criteria": [
+          "Application modernisation or migration",
+          "New API or integration pattern",
+          "Technology standard deviation request",
+          "Significant data model changes",
+          "Agent configuration or permission scope changes"
+        ],
+        "sla": "Consultation available within 5 business days",
+        "agentic_addition": "Agent permission scope changes and model substitutions should trigger consultation even if the project itself is below the mandatory threshold."
+      },
+      {
+        "level": "Self-Service",
+        "label": "Self-Service Guidance",
+        "colour": "#22c55e",
+        "criteria": [
+          "Standard technology stack selection within approved catalogue",
+          "Minor application configuration changes",
+          "Use of pre-approved agent templates and patterns",
+          "Standard deployment pipeline usage",
+          "Routine model version updates within approved model family"
+        ],
+        "sla": "Guidance available on-demand via repository and knowledge base",
+        "agentic_addition": "Pre-approved agent templates and model families enable teams to deploy within guardrails without EA review, enforced by automated compliance checks."
+      }
+    ],
+    "arb": [
+      {
+        "board": "Strategic Architecture Board",
+        "frequency": "Quarterly",
+        "scope": "Enterprise-wide architecture direction, major platform decisions, AI strategy alignment",
+        "members": "CIO/CTO, Lead EA, Domain Leads, AI Platform Lead, CISO"
+      },
+      {
+        "board": "Tactical Architecture Review",
+        "frequency": "Monthly",
+        "scope": "Project architecture reviews, standard deviation requests, technology evaluations",
+        "members": "Lead EA, Domain Architects, Solution Architects, AI/Agent Architect"
+      },
+      {
+        "board": "Domain Architecture Sync",
+        "frequency": "Bi-weekly",
+        "scope": "Domain-specific architecture decisions, cross-domain coordination, agent deployment reviews",
+        "members": "Domain Architects, Solution Architects, relevant SMEs"
+      }
+    ]
+  },
+  "performance": {
+    "description": "EA must demonstrate its value through measurable outcomes. These KPIs track both traditional EA effectiveness and the new dimensions introduced by AI and agent governance.",
+    "kpis": [
+      {
+        "label": "Architecture Compliance Rate",
+        "target": "&ge; 85%",
+        "description": "Percentage of projects and deployments that pass architecture compliance checks. In the agentic organisation, this includes automated policy-as-code checks in CI/CD pipelines.",
+        "icon": "&#9989;"
+      },
+      {
+        "label": "Time-to-Decision",
+        "target": "&le; 10 days",
+        "description": "Average elapsed time from architecture review request to decision. Self-service and automated compliance should handle 60%+ of requests instantly.",
+        "icon": "&#9201;"
+      },
+      {
+        "label": "Stakeholder Satisfaction",
+        "target": "&ge; 4.0 / 5.0",
+        "description": "Annual survey score from EA stakeholders measuring perceived value, responsiveness, and relevance. Must include new AI stakeholder groups.",
+        "icon": "&#11088;"
+      },
+      {
+        "label": "Repository Adoption",
+        "target": "&ge; 80%",
+        "description": "Percentage of architecture data fields that are complete and current in the EA repository. Includes new AI registries (model, agent, sovereignty).",
+        "icon": "&#128202;"
+      },
+      {
+        "label": "AI Governance Coverage",
+        "target": "&ge; 90%",
+        "description": "Percentage of deployed AI models and agents that are registered, governed, and monitored within EA frameworks. A new KPI specific to the agentic organisation.",
+        "icon": "&#129302;"
+      }
+    ],
+    "maturity_model": [
+      {
+        "level": 1,
+        "label": "Initial",
+        "description": "Ad hoc EA activities. No formal processes, governance, or repository. Architecture decisions are made locally without coordination.",
+        "recommended_model": "Centralised",
+        "ai_readiness": "Not ready for AI agent deployment. Must establish foundational governance first."
+      },
+      {
+        "level": 2,
+        "label": "Developing",
+        "description": "Basic EA processes emerging. Some standards defined. Architecture repository started but incomplete. Governance exists but is inconsistently applied.",
+        "recommended_model": "Centralised",
+        "ai_readiness": "Can pilot individual AI use cases. Not ready for agent deployment or multi-model operations."
+      },
+      {
+        "level": 3,
+        "label": "Defined",
+        "description": "Standardised EA processes and governance. Repository actively maintained. Regular architecture reviews. Clear roles and responsibilities. Standards communicated and mostly followed.",
+        "recommended_model": "Hybrid",
+        "ai_readiness": "Ready for structured AI adoption. Can onboard agents with governance. Needs AI-specific standards and registries."
+      },
+      {
+        "level": 4,
+        "label": "Managed",
+        "description": "EA performance measured with KPIs. Continuous compliance monitoring. Architecture data is machine-readable. AI-specific governance is integrated. Policy-as-code is operational.",
+        "recommended_model": "Hybrid",
+        "ai_readiness": "Ready for scaled AI deployment. Agent lifecycle management, model portfolio governance, and AI FinOps are operational."
+      },
+      {
+        "level": 5,
+        "label": "Optimising",
+        "description": "Continuous improvement driven by data. EA is agent-augmented itself. Architecture decisions are informed by real-time data. Enterprise as Code is advancing. EA demonstrates measurable business value.",
+        "recommended_model": "Hybrid / Federated",
+        "ai_readiness": "Leading practice. EA function itself uses AI agents. Fully automated compliance. AI value progression management in place."
+      }
+    ]
+  },
   "subtopics": [
-    {
-      "id": "cap-01-architecture-vision-development",
-      "label": "Architecture Vision Development",
-      "group": "Architecture Development — Common",
-      "traditional": {
-        "summary": "Align business strategy with architecture direction and gain stakeholder buy-in.",
-        "body_html": "<h4>Definition</h4><p>Architecture Vision Development involves creating a high-level view of the desired architecture that aligns with business goals and stakeholder needs. It sets the direction for the architecture development process.</p><h4>Tasks</h4><ol><li><strong>Stakeholder engagement</strong>: Identify key stakeholders and their concerns; conduct interviews to gather objectives, concerns, drivers and constraints.</li><li><strong>Business strategy alignment</strong>: Define the strategic goals and drivers and align the scope and constraints of the architecture effort.</li><li><strong>Develop the Architecture Vision</strong> including all relevant artefacts (e.g. business capabilities, application landscape).</li><li><strong>Communication</strong> to get approval and signoff.</li><li><strong>Baseline assessment</strong> (high-level) and <strong>roadmap definition</strong>, outlining the transition to the architecture vision.</li></ol><h4>Inputs</h4><ul><li>Business strategy and goals</li><li>Stakeholder concerns and requirements</li><li>Industry trends</li><li>Existing architecture documentation (e.g. architecture principles)</li></ul><h4>Outputs</h4><ul><li>Architecture Vision statement</li><li>High-level architecture models and roadmap</li><li>Stakeholder communication material</li><li>Statement of architecture work</li></ul>",
-        "key_concepts": ["Enterprise Architect", "CIO", "Business Architect"]
-      },
-      "ai_impact": {
-        "summary": "Must include <mark>AI operating model vision, agent-augmented process design intent, and AI value progression strategy</mark>.",
-        "impact_category": "A",
-        "body_html": "<p>The Architecture Vision must evolve beyond traditional IT-business alignment to explicitly address how AI agents will participate in the enterprise. This means declaring which capabilities will be human-delivered, agent-augmented, or fully automated &mdash; and articulating the AI value progression from productivity gains to revenue generation. Stakeholder maps must expand to include AI platform teams, legal, HR, and workforce planning as first-class participants.</p>",
-        "what_changes": [
-          "Vision must declare agent deployment ambition: which capabilities will be human, augmented, or agent-native",
-          "Stakeholder maps must add AI platform teams, legal, HR, and workforce planning",
-          "Readiness assessment must include agent-specific factors: data quality, regulatory clearance, organisational willingness"
-        ],
-        "what_survives": [
-          "Misalignment between business and IT without a clear connection between the IT architecture effort and the business strategy",
-          "Lack of direction: teams are unsure what the future state looks like or why transformations are happening",
-          "Stakeholder resistance: key stakeholders are not engaged or do not support a transformation effort"
-        ]
-      }
-    },
-    {
-      "id": "cap-02-architecture-roadmap-development",
-      "label": "Architecture Roadmap Development",
-      "group": "Architecture Development — Common",
-      "traditional": {
-        "summary": "Provide a clear path towards a target architecture, aligned with business goals and priorities.",
-        "body_html": "<h4>Definition</h4><p>Architecture Roadmap Development involves creating a strategic plan that outlines the steps and milestones needed to achieve a target architecture. It provides a clear timeline and prioritization from the current state to the desired future state.</p><h4>Tasks</h4><ol><li><strong>Current state assessment</strong>: Review and analyse the current state architecture to identify gaps, inefficiencies and opportunities.</li><li><strong>Target architecture definition</strong>: Reference and refine the target architecture (developed as part of the Architecture Vision).</li><li><strong>Gap analysis</strong>: Identify the gaps between the current state and the target architecture.</li><li><strong>Initiative identification</strong>: Define initiatives, projects or work packages required to address the gap.</li><li><strong>Roadmap development</strong>: Establish a timeline, including key phases and milestones.</li><li><strong>Resource planning</strong>: Identify the resource needs to execute the roadmap.</li></ol><h4>Inputs</h4><ul><li>Current state architecture</li><li>Target architecture</li><li>Business strategy and goals</li><li>Resource availabilities (budget, people, technology)</li></ul><h4>Outputs</h4><ul><li>Architecture Roadmap document</li><li>Transition architecture models</li><li>Implementation plans</li><li>Prioritized initiative backlog</li></ul>",
-        "key_concepts": ["Business Architect", "Application Architect", "Data Architect", "Technology Architect", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "Roadmap horizons <mark>compress from years to months for AI components</mark>; must account for rapid model obsolescence.",
-        "impact_category": "A",
-        "body_html": "<p>AI technology evolves at a pace that renders traditional multi-year roadmaps obsolete before execution begins. Architecture roadmaps must adopt dual-speed planning: stable horizons for foundational infrastructure alongside compressed, iterative horizons for AI model selection, agent deployment, and capability evolution. Roadmaps must explicitly address model deprecation cycles and vendor diversification to avoid lock-in.</p>",
-        "what_changes": [
-          "Dual-speed roadmap horizons: stable for infrastructure, compressed for AI components",
-          "Must account for rapid model obsolescence and deprecation cycles",
-          "Roadmaps must include AI platform investment sequencing and vendor diversification"
-        ],
-        "what_survives": [
-          "Lack of direction and redundancies in the application landscape",
-          "Unrealistic and pressured timelines, due to a lack of strategic planning",
-          "Scope creep and too many scope changes"
-        ]
-      }
-    },
-    {
-      "id": "cap-03-transformation-planning",
-      "label": "Transformation Planning",
-      "group": "Architecture Development — Common",
-      "traditional": {
-        "summary": "Aligning with business goals and minimizing disruption through a structured and coordinated approach.",
-        "body_html": "<h4>Definition</h4><p>Transformation Planning involves developing a comprehensive plan to transition from the current state to the target architecture. It includes identifying the necessary steps, resources, and timelines to achieve the desired transformation.</p><h4>Tasks</h4><ol><li><strong>Dependency analysis</strong>: Identify cross-project dependencies, risks and sequencing constraints.</li><li><strong>Work package definition</strong>: Break roadmap initiatives into actionable work packages with owners.</li><li><strong>Transition architecture design</strong>: Define intermediate states between current and target.</li><li><strong>Resource and budget allocation</strong>: Assign resources, budget and timelines per work package.</li><li><strong>Stakeholder alignment</strong>: Validate and approve the transformation plan with key stakeholders.</li></ol><h4>Inputs</h4><ul><li>Architecture Roadmap</li><li>Business strategy and goals</li><li>Resource availabilities (budget, people, technology)</li><li>Risk assessments and dependency information</li></ul><h4>Outputs</h4><ul><li>Transformation Plan document with work packages</li><li>Transition architecture models</li><li>Resource and budget allocation plan</li><li>Risk and dependency register</li></ul>",
-        "key_concepts": ["Business Architect", "Application Architect", "Data Architect", "Technology Architect", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "Must <mark>sequence AI value progression (productivity to revenue), infrastructure investment, and process redesign</mark>.",
-        "impact_category": "A",
-        "body_html": "<p>Transformation planning must account for the phased nature of AI value realisation. Organisations typically progress from productivity gains (phase one) to revenue generation (phase two), and transformation plans must sequence infrastructure investment, capability building, and process redesign accordingly. The interdependency between AI platform readiness and business transformation creates new sequencing constraints that traditional planning methods do not address.</p>",
-        "what_changes": [
-          "Must sequence AI value progression from productivity gains to revenue generation",
-          "Infrastructure investment for AI (GPU compute, vector stores, model serving) becomes a critical path dependency",
-          "Process redesign must be zero-based for agent strengths, not incremental automation of human workflows"
-        ],
-        "what_survives": [
-          "Rogue projects that are not in line with the overall strategy and enterprise architecture",
-          "Unrealistic timelines and project timelines that are not aligned with each other",
-          "Scope creep and unclear prioritization"
-        ]
-      }
-    },
-    {
-      "id": "cap-04-architecture-requirements-management",
-      "label": "Architecture Requirements Management",
-      "group": "Architecture Development — Common",
-      "traditional": {
-        "summary": "Ensure all needs are identified, understood and communicated throughout architecture development.",
-        "body_html": "<h4>Definition</h4><p>Architecture Requirements Management involves managing and governing the requirements throughout the architecture development process. It ensures that all requirements are identified, documented, and addressed in the architecture.</p><h4>Tasks</h4><ol><li><strong>Identify</strong> and <strong>document requirements</strong>.</li><li><strong>Analyse requirements</strong> and <strong>prioritize</strong> based on business value, urgency and feasibility.</li><li><strong>Document requirements</strong> in a <strong>structured form</strong> (ensure traceability to business goals) and establish and monitor baseline requirements.</li><li><strong>Manage changes to requirements</strong> (use a repository to track changes and ensure version control).</li><li><strong>Traceability</strong> and <strong>impact analysis</strong>: Establish traceability between requirements and architecture decisions; assess the impact of changes.</li></ol><h4>Inputs</h4><ul><li>New stakeholder requirements</li><li>Business goals and objectives</li><li>Existing architecture documentation</li></ul><h4>Outputs</h4><ul><li>Architecture requirement specifications</li><li>Requirement impact assessment and prioritization</li><li>Updated requirements repository</li></ul>",
-        "key_concepts": ["Business Architect", "Application Architect", "Data Architect", "Technology Architect", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "Must support <mark>continuous, machine-readable requirements</mark>; change velocity exceeds traditional governance capacity.",
-        "impact_category": "A",
-        "body_html": "<p>Requirements management must shift from periodic human intake processes to continuous, event-driven capture. AI components generate requirements at a pace that exceeds traditional governance capacity &mdash; model updates, agent behaviour changes, and infrastructure scaling needs emerge continuously. Requirements must become machine-readable to enable automated traceability, impact analysis, and compliance checking.</p>",
-        "what_changes": [
-          "Requirements must become machine-readable for automated traceability and compliance checking",
-          "Change velocity from AI components exceeds traditional governance capacity",
-          "Event-driven requirements capture replaces periodic manual intake"
-        ],
-        "what_survives": [
-          "Unclear requirements and misalignment, leading to stakeholder dissatisfaction",
-          "Scope creep where requirements keep getting added",
-          "Poor traceability between requirements, architecture and validation"
-        ]
-      }
-    },
-    {
-      "id": "cap-05-architecture-view-creation",
-      "label": "Architecture View Creation",
-      "group": "Architecture Development — Common",
-      "traditional": {
-        "summary": "Facilitate effective decision-making by addressing specific stakeholder concerns.",
-        "body_html": "<h4>Definition</h4><p>Architecture View Creation involves developing various perspectives (views) of the architecture to address the concerns of different stakeholders. These views help in understanding, analysing, and communicating the architecture.</p><h4>Tasks</h4><ol><li><strong>Identify information needs</strong> of EA stakeholders and their key questions and concerns.</li><li>Select viewpoints and <strong>define which views address which stakeholder concerns</strong> (e.g. business capability map, application landscape, technology lifecycle).</li><li><strong>Develop architecture views</strong> using data from the architecture repository.</li><li><strong>Validate</strong> views with stakeholders and iterate based on feedback.</li><li><strong>Maintain</strong> and update views as architecture data evolves.</li></ol><h4>Inputs</h4><ul><li>Stakeholder requirements</li><li>Architecture Repository data</li><li>Viewpoint catalogue and standards (e.g. ArchiMate)</li><li>Architecture principles and guidelines</li></ul><h4>Outputs</h4><ul><li>Architecture views and models</li><li>Viewpoint catalogue</li><li>Validated and approved architecture views</li></ul>",
-        "key_concepts": ["Business Architect", "Application Architect", "Data Architect", "Technology Architect", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "New views needed: <mark>agent interaction views, model portfolio views, AI infrastructure views, sovereignty compliance views</mark>.",
-        "impact_category": "A",
-        "body_html": "<p>The viewpoint catalogue must expand significantly to address AI-specific stakeholder concerns. New views include agent interaction topologies, model portfolio dashboards, AI infrastructure capacity views, and sovereignty compliance maps. The pace of change in AI landscapes means views must shift from periodic manual creation to continuously updated, data-driven generation from the architecture repository.</p>",
-        "what_changes": [
-          "Viewpoint catalogue must add agent interaction, model portfolio, AI infrastructure, and sovereignty compliance views",
-          "Views shift from periodic manual creation to continuously updated, data-driven generation",
-          "New stakeholder groups (AI platform teams, ethics boards, regulators) require tailored perspectives"
-        ],
-        "what_survives": [
-          "Miscommunication between stakeholders and unclear views on the current situation",
-          "Overwhelming complexity of architecture views or lack of relevance",
-          "Creating views takes a long time with manual effort of multiple people"
-        ]
-      }
-    },
-    {
-      "id": "cap-06-new-technology-evaluation",
-      "label": "New Technology Evaluation",
-      "group": "Architecture Development — Common",
-      "traditional": {
-        "summary": "Leverage new technologies to stay ahead of trends and achieve business goals.",
-        "body_html": "<h4>Definition</h4><p>New Technology Evaluation involves assessing emerging technologies to determine their potential impact and value to the organization. It includes identifying, analysing, and recommending new technologies for adoption.</p><h4>Tasks</h4><ol><li><strong>Technology scanning</strong>: Identify emerging technologies through market research, trend analysis and vendor engagement.</li><li><strong>Feasibility assessment</strong>: Evaluate technical fit, business value, risks and organizational readiness.</li><li><strong>Proof-of-concept</strong>: Conduct pilots or prototypes to validate assumptions.</li><li><strong>Recommendation</strong>: Create technology evaluation reports with clear adoption recommendations.</li><li><strong>Standards update</strong>: Feed approved technologies into the technology standards and roadmap.</li></ol><h4>Inputs</h4><ul><li>Business strategy and goals</li><li>Technology trends and market analysis</li><li>Existing technology landscape</li></ul><h4>Outputs</h4><ul><li>Technology evaluation reports and recommendations</li><li>Proof-of-concept and pilot results</li><li>Updated technology standards and approved technology list</li></ul>",
-        "key_concepts": ["Application Architect", "Data Architect", "Technology Architect", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "Must include <mark>model evaluation, agent framework assessment, and AI platform evaluation</mark>; commoditization of models changes selection criteria.",
-        "impact_category": "A",
-        "body_html": "<p>Technology evaluation must expand to cover an entirely new category: AI model and platform assessment. This includes benchmarking models for accuracy, cost, latency and sovereignty compliance; evaluating agent frameworks and orchestration platforms; and assessing AI infrastructure providers. The rapid commoditization of foundation models means selection criteria shift from raw capability to total cost of ownership, vendor lock-in risk, and sovereignty alignment.</p>",
-        "what_changes": [
-          "Model evaluation (benchmarking, cost/accuracy trade-offs, sovereignty compliance) becomes a core evaluation activity",
-          "Agent framework and orchestration platform assessment is a new evaluation category",
-          "Selection criteria shift from raw capability to total cost, lock-in risk, and sovereignty alignment"
-        ],
-        "what_survives": [
-          "Ad-hoc decision making has led to sub-optimal IT solutions",
-          "Overwhelmed teams and inability to decide on new technologies",
-          "New technologies have been implemented but are poorly integrated"
-        ]
-      }
-    },
-    {
-      "id": "cap-07-strategic-value-driver-definition",
-      "label": "Strategic Value Driver Definition",
-      "group": "Business Architecture",
-      "traditional": {
-        "summary": "Identify and articulate the key factors that drive value creation for an organization.",
-        "body_html": "<h4>Definition</h4><p>Strategic Value Driver Definition is the process of identifying and articulating the key factors that drive value creation for an organization. These drivers are critical for aligning business strategies with operational activities to achieve long-term success.</p><h4>Tasks</h4><ol><li><strong>Stakeholder engagement</strong>: Conduct interviews and workshops to gather insights on value creation.</li><li><strong>Value driver analysis</strong>: Analyse business processes and performance data to identify potential value drivers.</li><li><strong>Documentation</strong>: Define and document strategic value drivers, including their impact on business outcomes.</li><li><strong>Strategic alignment</strong>: Align value drivers with the organization's strategic goals and objectives.</li><li><strong>Communication</strong>: Communicate the identified value drivers to stakeholders through presentations and documentation.</li></ol><h4>Inputs</h4><ul><li>Business strategy and objectives</li><li>Performance data and analytics</li><li>Stakeholder insights and expectations</li><li>Industry benchmarks and best practices</li></ul><h4>Outputs</h4><ul><li>Strategic value driver documentation</li><li>Value driver impact analysis</li><li>Alignment matrix with business goals</li><li>Stakeholder communication materials</li></ul>",
-        "key_concepts": ["Business Architect", "Enterprise Architect", "Business Analyst", "Business Leaders"]
-      },
-      "ai_impact": {
-        "summary": "AI value drivers differ: <mark>productivity gains, revenue from AI-augmented products, data monetization, agent efficiency</mark>.",
-        "impact_category": "A",
-        "body_html": "<p>Traditional value drivers centred on cost reduction, revenue growth, and operational efficiency remain relevant but are insufficient. AI introduces entirely new value creation mechanisms: productivity gains from agent-augmented workflows, revenue from AI-powered products and services, data monetization opportunities, and operational efficiency from autonomous agent processes. Value driver frameworks must distinguish between phase-one productivity gains and phase-two revenue generation to align executive expectations.</p>",
-        "what_changes": [
-          "Value drivers must explicitly include AI-specific sources: productivity gains, AI-augmented products, data monetization",
-          "Must distinguish between phase-one (productivity) and phase-two (revenue) AI value progression",
-          "Measurement frameworks need AI-specific KPIs: model ROI, agent productivity multiplier, inference cost efficiency"
-        ],
-        "what_survives": [
-          "Value drivers are too vague or generic, making them impossible to measure or act upon",
-          "Disconnect between business strategy and EA in defining value drivers",
-          "No regular review as value drivers become outdated when business priorities shift"
-        ]
-      }
-    },
-    {
-      "id": "cap-08-capability-definition",
-      "label": "Business Capability Definition",
-      "group": "Business Architecture",
-      "traditional": {
-        "summary": "Define what the organization does and how it delivers value.",
-        "body_html": "<h4>Definition</h4><p>Capability Definition involves identifying and defining the core capabilities that an organization needs to achieve its business objectives. It provides a structured approach to understanding what the organization does and how it delivers value.</p><h4>Tasks</h4><ol><li><strong>Capability identification</strong> through workshops and interviews and leveraging industry reference architectures.</li><li><strong>Capability modelling</strong>: Define each capability in a structured way (e.g. capability map) and organize them into categories or levels (e.g. strategic, core, supporting).</li><li><strong>Capability documentation</strong>: Document each with a clear definition, description and key attributes.</li><li><strong>Capability mapping</strong>: Map each capability to architecture domains (processes, application, data, technology).</li><li>Align with stakeholders and finalise.</li></ol><h4>Inputs</h4><ul><li>Business strategy, business objectives and operating model</li><li>Organizational structure and value chains</li><li>Industry reference models (e.g. BIAN, eTOM)</li><li>Existing capability documentation (if available)</li></ul><h4>Outputs</h4><ul><li>Business capability map (visual representation of business capabilities)</li><li>Capability descriptions (including maturity assessment)</li><li>Business capability mapping to architecture domains</li></ul>",
-        "key_concepts": ["Business Architect", "Application Architect", "Data Architect", "Technology Architect", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "Must <mark>distinguish human-delivered, agent-augmented, and fully-automated capabilities</mark>.",
-        "impact_category": "A",
-        "body_html": "<p>Business capability maps must evolve to classify each capability by its delivery model: human-only, agent-augmented, or fully autonomous. This three-way classification drives downstream architecture decisions about infrastructure, governance, and workforce planning. Capability maturity assessment must add an AI-readiness dimension that evaluates data quality, process codification, and regulatory clearance for agent deployment.</p>",
-        "what_changes": [
-          "Capability maps must classify delivery model: human-only, agent-augmented, or fully autonomous",
-          "Capability maturity assessment adds AI-readiness as a dimension",
-          "Industry reference models need extension to cover AI-native capabilities that have no traditional precedent"
-        ],
-        "what_survives": [
-          "Capabilities are defined too granularly or inconsistently, making the map unusable for strategic discussions",
-          "No business ownership of the capability map",
-          "Confusion between capabilities and processes leading to unclear scope"
-        ]
-      }
-    },
-    {
-      "id": "cap-09-process-modelling",
-      "label": "Process Modelling",
-      "group": "Business Architecture",
-      "traditional": {
-        "summary": "Visualize and optimize business processes to align operations with strategic goals and drive efficiency.",
-        "body_html": "<h4>Definition</h4><p>Process Modelling involves creating visual representations of business processes to understand, analyse, and optimize how work is performed. It provides a clear view of activities, roles, systems, and information flows, enabling effective process design and improvement.</p><h4>Tasks</h4><ol><li><strong>Identify, prioritize and document</strong> key business processes based on business impact, complexity, and transformation needs.</li><li><strong>Analyse and document detail processes</strong> including activities, decision points, inputs/outputs, roles and responsibilities using standard notation (e.g. BPMN).</li><li><strong>Design optimized future processes</strong> by identifying inefficiencies, bottlenecks, redundancies, and improvement opportunities.</li><li><strong>Validate</strong> alignment with business goals and technology. Refine process models with stakeholders.</li><li><strong>Maintain and update</strong> process models as business operations evolve.</li></ol><h4>Inputs</h4><ul><li>Business strategy and objectives</li><li>Stakeholder interviews and workshop results</li><li>Existing process documentation</li><li>System and application documentation</li><li>Performance metrics and pain points</li></ul><h4>Outputs</h4><ul><li>Current state (AS-IS) process documentation</li><li>Process improvement recommendations</li><li>Future state (TO-BE) process models with capability and technology mapping</li><li>Process detail documentation and descriptions</li></ul>",
-        "key_concepts": ["Business Architect", "Business Analyst", "Process Owner", "Lead Enterprise Architect", "Application Architect"]
-      },
-      "ai_impact": {
-        "summary": "Must model <mark>agent-native processes, not just human-process-plus-automation</mark>; zero-based process redesign for agent strengths.",
-        "impact_category": "A",
-        "body_html": "<p>Process modelling must move beyond adding automation steps to existing human workflows. Agent-native process design starts from agent strengths &mdash; parallel execution, continuous operation, pattern recognition &mdash; and designs processes from scratch. Process notation must distinguish human tasks, agent tasks, and human-agent handoffs. Escalation and exception handling become first-class process elements when agents handle the happy path.</p>",
-        "what_changes": [
-          "Zero-based process redesign starting from agent strengths rather than automating human workflows",
-          "Process notation must distinguish human tasks, agent tasks, and human-agent handoffs",
-          "Escalation and exception handling become first-class design elements when agents handle routine work"
-        ],
-        "what_survives": [
-          "Missing, inconsistent or outdated documentation of business processes",
-          "Lack of standardization in process modeling notation and tools",
-          "Disconnect between business processes and IT systems"
-        ]
-      }
-    },
-    {
-      "id": "cap-10-architecture-validation",
-      "label": "Architecture Validation",
-      "group": "Application Architecture",
-      "traditional": {
-        "summary": "Confirm that an architecture is fit for purpose and identify any gaps or issues.",
-        "body_html": "<h4>Definition</h4><p>Architecture Validation involves ensuring that the developed architecture meets the defined requirements and aligns with business goals. It includes verifying the accuracy, completeness, and feasibility of the architecture.</p><h4>Tasks</h4><ol><li>Review architecture documentation against requirements, principles and standards.</li><li><strong>Perform compliance assessments</strong> against architecture policies and guidelines.</li><li>Assess technical feasibility, risks and implementation readiness.</li><li><strong>Conduct validation sessions</strong> with key stakeholders to confirm fit for purpose.</li><li>Document findings, gaps and <strong>recommendations</strong> for remediation.</li></ol><h4>Inputs</h4><ul><li>Architecture documentation</li><li>Requirements specifications</li><li>Business goals and objectives</li><li>Guiding principles, standards, policies and guidelines</li></ul><h4>Outputs</h4><ul><li>Validation reports</li><li>Compliance assessment results</li><li>Updated architecture documentation</li></ul>",
-        "key_concepts": ["Business Architect", "Application Architect", "Data Architect", "Technology Architect", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "Must validate <mark>AI-specific requirements: model performance, agent behaviour, sovereignty compliance, cost constraints</mark>.",
-        "impact_category": "A",
-        "body_html": "<p>Architecture validation must expand its criteria to cover AI-specific requirements that traditional validation frameworks do not address. Model performance benchmarks, agent behaviour predictability, sovereignty compliance for data flows to AI services, inference cost constraints, and bias monitoring requirements must all become standard validation checkpoints. Validation must also shift from periodic milestone reviews to continuous automated checking as AI component changes outpace traditional review cadences.</p>",
-        "what_changes": [
-          "Validation criteria must include model performance, agent behaviour, sovereignty compliance, and cost constraints",
-          "Shift from periodic milestone reviews to continuous automated validation",
-          "AI bias monitoring and fairness requirements become standard validation checkpoints"
-        ],
-        "what_survives": [
-          "Validation happens too late and issues are discovered during implementation when changes are expensive",
-          "No clear validation criteria making reviews subjective and inconsistent",
-          "Validation is seen as a bottleneck and projects try to skip or rush through it"
-        ]
-      }
-    },
-    {
-      "id": "cap-11-application-solution-architecture-modelling",
-      "label": "Application/Solution Architecture Modelling",
-      "group": "Application Architecture",
-      "traditional": {
-        "summary": "Design and document application structures to guide development and transformation.",
-        "body_html": "<h4>Definition</h4><p>Application Architecture Modelling involves designing and documenting the structure, components, and interactions of software applications. It provides a blueprint for how applications are composed, relate to each other, and support business capabilities.</p><h4>Tasks</h4><ol><li>Analyse the current application landscape &mdash; document applications, technology stack and lifecycle status.</li><li>Define application architecture principles, standards and design patterns (e.g. microservices, layered, event-driven).</li><li>Design target application architectures &mdash; model components, responsibilities, interactions and data flows.</li><li>Identify integration points and dependencies with other architecture domains.</li><li>Validate application models with stakeholders and iterate based on feedback.</li><li>Maintain and update application models as requirements and the technology landscape evolve.</li></ol><h4>Inputs</h4><ul><li>Business strategy and objectives</li><li>Current state application documentation</li><li>Stakeholder requirements and expectations</li><li>Architecture Vision and principles</li><li>Application portfolio inventory</li></ul><h4>Outputs</h4><ul><li>Application architecture models (e.g. component diagrams, data flow diagrams)</li><li>Application architecture principles and standards</li><li>Integration points and interfaces documentation</li><li>Architecture Decision Records (ADRs)</li></ul>",
-        "key_concepts": ["Application Architect", "Lead Enterprise Architect", "Enterprise Architect", "Solution Architect", "Business Analyst", "Technology Architect"]
-      },
-      "ai_impact": {
-        "summary": "AI agents are <mark>first-class application components; model abstraction layers, agent orchestration, and multi-agent topologies</mark> are new patterns.",
-        "impact_category": "B",
-        "body_html": "<p>Application architecture must treat AI agents as first-class application components, not bolt-on integrations. This introduces entirely new architectural patterns: model abstraction layers that decouple applications from specific AI models, agent orchestration frameworks that manage multi-agent workflows, and topology patterns for agent-to-agent communication. The application portfolio must track AI models and agents alongside traditional applications, with lifecycle management for model versions, fine-tuned variants, and agent configurations.</p>",
-        "what_changes": [
-          "AI agents become first-class application components with their own lifecycle management",
-          "New patterns: model abstraction layers, agent orchestration, multi-agent topologies",
-          "Application portfolio must track AI models and agents alongside traditional applications"
-        ],
-        "what_survives": [
-          "No standardized way of documenting application architectures across teams",
-          "Architecture only done at project level with no enterprise-wide view",
-          "Architecture decisions are not documented, leading to repeated debates"
-        ]
-      }
-    },
-    {
-      "id": "cap-12-integration-architecture-modelling",
-      "label": "Integration Architecture Modelling",
-      "group": "Application Architecture",
-      "traditional": {
-        "summary": "Integrating all applications and components of an IT landscape in an efficient and future-proof way.",
-        "body_html": "<h4>Definition</h4><p>Integration Architecture Modelling is the process of designing and documenting the interactions and data flows between different systems and applications within an enterprise. It ensures seamless communication and data exchange, enhancing overall system efficiency.</p><h4>Tasks</h4><ol><li>Identification of integration points and patterns between applications.</li><li>Define integration architecture principles and standards.</li><li>Develop detailed integration models, including data flow diagrams, interface specifications and communication protocols.</li><li>Validate and verify integration models with stakeholders.</li><li>Maintain and update integration models to reflect changes in the architecture.</li></ol><h4>Inputs</h4><ul><li>Architecture Vision and other architecture documentation (e.g. principles)</li><li>Stakeholder requirements and expectations</li><li>Integration points and interfaces documentation</li><li>Industry standards and best practices</li></ul><h4>Outputs</h4><ul><li>Integration architecture models, diagrams and reports</li><li>Integration architecture principles, integration patterns, tools and techniques</li></ul>",
-        "key_concepts": ["Application Architect", "Lead Enterprise Architect", "Solution Architect", "Technology Architect", "Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "<mark>Agent-to-agent communication, protocol abstraction (MCP/A2A), and semantic interoperability</mark> via knowledge graphs are new integration concerns.",
-        "impact_category": "B",
-        "body_html": "<p>Integration architecture faces a paradigm shift with the emergence of agent-to-agent communication protocols. MCP (Model Context Protocol), A2A (Agent-to-Agent), and ACP (Agent Communication Protocol) introduce new integration patterns that operate alongside traditional APIs and messaging. Integration architecture must define protocol abstraction layers that allow agent communication independent of specific protocol choice, and must address semantic interoperability through shared knowledge graphs and ontologies.</p>",
-        "what_changes": [
-          "Agent-to-agent communication protocols (MCP, A2A, ACP) create new integration patterns",
-          "Protocol abstraction layers needed to avoid lock-in to specific agent communication standards",
-          "Semantic interoperability via knowledge graphs replaces rigid schema-based integration for agent contexts"
-        ],
-        "what_survives": [
-          "Inadequate documentation of interfaces leads to unplanned efforts and delays",
-          "Overly complex IT landscapes due to lack of standardization",
-          "Duplication of efforts and missed opportunities due to missing overview of integration patterns"
-        ]
-      }
-    },
-    {
-      "id": "cap-13-business-object-modelling",
-      "label": "Business Object Modelling",
-      "group": "Data Architecture",
-      "traditional": {
-        "summary": "Define and structure the key business entities and their relationships.",
-        "body_html": "<h4>Definition</h4><p>Business Object Modelling involves identifying, defining, and documenting the core business entities (objects). It establishes a common vocabulary and understanding of what data represents, including attributes, relationships, and business rules, as the base for the data architecture.</p><h4>Tasks</h4><ol><li>Identify core business objects through stakeholder workshops, process analysis, and business capability mapping.</li><li>Define business objects, including their purpose, key attributes, definitions, ownership.</li><li>Document business rules that govern business objects (e.g. validation rules, lifecycle states, constraints).</li><li>Validate and align business objects with stakeholders and business processes.</li><li>Maintain and evolve the business object model as the business changes.</li></ol><h4>Inputs</h4><ul><li>Business strategy and objectives</li><li>Business capability model</li><li>Process models and documentation</li><li>Existing data models and definitions</li><li>Stakeholder requirements</li></ul><h4>Outputs</h4><ul><li>Conceptual data model (business object model)</li><li>Business object definitions and glossary</li><li>Business rules documentation</li><li>Business object to process/capability mapping</li></ul>",
-        "key_concepts": ["Data Architect", "Business Architect", "Business Analyst", "Data Owner/Steward", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "Must accommodate <mark>AI entities: models, agents, prompts, training datasets as business objects</mark> with lifecycle, ownership, and governance.",
-        "impact_category": "A",
-        "body_html": "<p>The business object model must expand to include AI-native entities that have no traditional precedent. AI models, agents, prompts, training datasets, embeddings, and evaluation benchmarks are all business objects that require lifecycle management, ownership assignment, and governance rules. These new entities have unique characteristics &mdash; models have versions, fine-tuned variants, and performance metrics; agents have behaviour specifications, permission scopes, and audit requirements.</p>",
-        "what_changes": [
-          "AI models, agents, prompts, and training datasets become first-class business objects",
-          "New lifecycle patterns: model versioning, fine-tuning lineage, prompt evolution tracking",
-          "Ownership and governance rules must address non-deterministic, evolving AI entities"
-        ],
-        "what_survives": [
-          "Inconsistent terminology across different departments and systems",
-          "Lack of clear data ownership resulting in poor data quality",
-          "Gap between business concepts and technical implementation"
-        ]
-      }
-    },
-    {
-      "id": "cap-14-data-architecture-modelling",
-      "label": "Data Architecture Modelling",
-      "group": "Data Architecture",
-      "traditional": {
-        "summary": "Design logical and physical data structures that implement business objects.",
-        "body_html": "<h4>Definition</h4><p>Data Architecture Modelling involves creating detailed logical and physical data models that translate business objects into implementable data structures. It defines how data is organized, stored, and accessed, ensuring data consistency, integrity, and optimal performance.</p><h4>Tasks</h4><ol><li>Translate business objects into logical data models, defining entities, attributes, primary/foreign keys, and relationships.</li><li>Define data types, constraints, and validation rules at the technical level.</li><li>Apply data modeling principles including normalization, referential integrity, and data standardization.</li><li>Create physical data models optimized for specific database platforms and performance requirements.</li><li>Validate data models with stakeholders (data owners, architects, developers) and ensure alignment with business requirements.</li><li>Maintain and evolve data models as business and technical requirements change.</li></ol><h4>Inputs</h4><ul><li>Conceptual data model (business object model)</li><li>Business requirements and use cases</li><li>Existing database schemas and data models</li><li>Performance and scalability requirements</li><li>Technology standards and database platforms</li></ul><h4>Outputs</h4><ul><li>Logical data models (entity-relationship diagrams)</li><li>Physical data models (database schemas and specs)</li><li>Data dictionary and metadata documentation</li><li>Data model to business object mapping</li><li>Data integrity and validation rules</li></ul>",
-        "key_concepts": ["Data Architect", "Database Administrator", "Application Architect", "Data Owner/Steward", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "New data structures: <mark>vector stores, knowledge graphs, embeddings, training data catalogues</mark>. Sovereignty constraints on data flows to AI models.",
-        "impact_category": "B",
-        "body_html": "<p>Data architecture must expand to encompass entirely new data storage paradigms required by AI workloads. Vector databases for embedding storage and similarity search, knowledge graphs for semantic context, training data catalogues with provenance tracking, and feature stores for ML pipelines all become core data architecture components. Sovereignty constraints add a new dimension: data flows to AI models must respect jurisdictional requirements on data residency, model training data provenance, and cross-border inference.</p>",
-        "what_changes": [
-          "Vector stores, knowledge graphs, and embedding databases become core data architecture components",
-          "Training data catalogues with provenance tracking are required for AI governance",
-          "Sovereignty constraints on data flows to AI models become a first-order design input"
-        ],
-        "what_survives": [
-          "Inconsistent data models across systems, data silos and integration challenges",
-          "Lack of standardization in naming conventions, data types, and methods",
-          "Disconnect between logical and physical models creating implementation gaps"
-        ]
-      }
-    },
-    {
-      "id": "cap-15-data-flow-modelling",
-      "label": "Data Flow Modelling",
-      "group": "Data Architecture",
-      "traditional": {
-        "summary": "Map and optimize how data moves between systems, applications, and processes across the enterprise.",
-        "body_html": "<h4>Definition</h4><p>Data Flow Modelling involves documenting and analyzing how data moves, transforms, and integrates across systems, applications, and business processes. It captures data sources, destinations, transformation logic, integration points, and dependencies.</p><h4>Tasks</h4><ol><li>Identify data sources and destinations across systems, applications, and external partners.</li><li>Document data flows and transformations between systems.</li><li>Define integration points and patterns (e.g. real-time, batch, API, ETL/ELT, messaging).</li><li>Establish data lineage showing origin, movement, and transformation of data throughout lifecycle.</li><li>Identify dependencies and impacts when a data source or flow is changed or unavailable.</li><li>Validate data flows with stakeholders (data owners, integration architects, application teams).</li><li>Maintain and update data flow models as integrations evolve.</li></ol><h4>Inputs</h4><ul><li>Business processes and requirements</li><li>Application architecture and integration landscape</li><li>Data architecture models (logical/physical)</li><li>Existing interface, API and integration documentation</li><li>Data quality and governance requirements</li></ul><h4>Outputs</h4><ul><li>Data flow diagrams (context, detailed level)</li><li>Data lineage documentation</li><li>Data transformation, dependency and impact analysis</li><li>Interface specifications</li></ul>",
-        "key_concepts": ["Data Architect", "Application Architect", "Data Owner/Steward", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "New data flows: <mark>inference pipelines, training data pipelines, agent context data, RAG retrieval flows</mark>. Sovereignty must be visible.",
-        "impact_category": "B",
-        "body_html": "<p>Data flow models must capture entirely new categories of data movement that AI workloads introduce. Inference pipelines, training data preparation flows, RAG (Retrieval-Augmented Generation) retrieval paths, agent context data flows, and embedding generation pipelines all create new data movement patterns. Critically, sovereignty constraints must be visible in data flow models &mdash; showing where data crosses jurisdictional boundaries on its way to AI processing services.</p>",
-        "what_changes": [
-          "New flow categories: inference pipelines, training data pipelines, RAG retrieval, agent context flows",
-          "Sovereignty constraints must be visible in data flow diagrams showing jurisdictional boundary crossings",
-          "Data lineage must track provenance through AI processing stages including model training and fine-tuning"
-        ],
-        "what_survives": [
-          "Undocumented or poorly documented integrations",
-          "Lack of data lineage visibility preventing impact analysis",
-          "Point-to-point integration spaghetti without governance"
-        ]
-      }
-    },
-    {
-      "id": "cap-16-system-architecture-modelling",
-      "label": "System Architecture Modelling",
-      "group": "Technology Architecture",
-      "traditional": {
-        "summary": "Define and design the technical systems and infrastructure components.",
-        "body_html": "<h4>Definition</h4><p>System Architecture Modelling involves designing and documenting the technical infrastructure and system components that host and run business applications. It defines servers, compute resources, operating systems, middleware, databases, and their configurations.</p><h4>Tasks</h4><ol><li>Identify system requirements from application architecture, business requirements, and non-functional requirements.</li><li>Define system components, topology and configuration for servers, compute, operating systems, middleware, data platforms, and storage.</li><li>Apply system architecture patterns and standards (e.g. high availability, load balancing, clustering, redundancy).</li><li>Define sizing and capacity requirements based on workload analysis and growth projections.</li><li>Document security and compliance and validate system architecture with stakeholders.</li><li>Maintain and evolve system architecture as technology and business requirements change.</li></ol><h4>Inputs</h4><ul><li>Application architecture and requirements</li><li>Non-functional requirements</li><li>Technology standards and reference architectures</li><li>Existing infrastructure, capacity and performance data</li><li>Budget and cost constraints</li></ul><h4>Outputs</h4><ul><li>System architecture diagrams and models</li><li>System component, capacity and sizing specifications</li><li>Deployment architecture documentation</li><li>High availability and disaster recovery designs</li><li>Security and compliance requirements</li></ul>",
-        "key_concepts": ["Technology Architect", "Application Architect", "System Administrator", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "Must cover <mark>GPU compute, model serving platforms, vector databases, agent runtime environments</mark>.",
-        "impact_category": "B",
-        "body_html": "<p>System architecture must expand to cover an entirely new infrastructure tier for AI workloads. GPU compute clusters for training and inference, model serving platforms with auto-scaling, vector databases for embedding storage, agent runtime environments with orchestration, and specialised storage for training data and model artifacts all become core system architecture components. Capacity planning must account for the bursty, GPU-intensive nature of AI workloads and the rapid scaling requirements of agent deployment.</p>",
-        "what_changes": [
-          "GPU compute clusters, model serving platforms, and vector databases become core infrastructure components",
-          "Agent runtime environments with orchestration and scaling capabilities are new platform requirements",
-          "Capacity planning must account for bursty, GPU-intensive AI workloads"
-        ],
-        "what_survives": [
-          "Inconsistent system designs across different applications and environments",
-          "Over- or under-provisioning due to lack of proper sizing and capacity planning",
-          "High operational costs from inefficient infrastructure design and complexity"
-        ]
-      }
-    },
-    {
-      "id": "cap-17-network-architecture-modelling",
-      "label": "Network Architecture Modelling",
-      "group": "Technology Architecture",
-      "traditional": {
-        "summary": "Design and optimize the network infrastructure that enables secure and reliable connectivity.",
-        "body_html": "<h4>Definition</h4><p>Network Architecture Modelling involves designing and documenting the network infrastructure and connectivity that enables communication between systems, applications, users, and external partners. It defines the network topology and its components.</p><h4>Tasks</h4><ol><li>Identify network requirements from application architecture, business requirements, and non-functional requirements.</li><li>Design network topology, segmentation, security zones based on security and compliance requirements.</li><li>Define connectivity, capacity and performance for different scenarios (site-to-site, remote access, cloud connectivity, partner integration).</li><li>Apply network architecture patterns and standards (e.g. redundancy, high availability, traffic management, Quality of Service).</li><li>Validate network architecture with stakeholders. Document security and compliance requirements.</li><li>Maintain and evolve network architecture as technology and business requirements change.</li></ol><h4>Inputs</h4><ul><li>Application architecture and connectivity requirements</li><li>Non-functional requirements</li><li>Technology standards and reference architectures</li><li>Existing network infrastructure, topology and usage data</li><li>Security and compliance policies, cost constraints</li></ul><h4>Outputs</h4><ul><li>Network architecture diagrams and topology models</li><li>Network component specifications and configurations</li><li>Network segmentation and security zone design</li><li>High availability, capacity and performance design</li><li>Security and compliance requirements</li></ul>",
-        "key_concepts": ["Technology Architect", "Security Architect", "Application Architect", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "AI workloads have <mark>distinct networking requirements: high-bandwidth GPU interconnects, inference latency optimisation</mark>.",
-        "impact_category": "A",
-        "body_html": "<p>AI workloads introduce networking requirements that differ fundamentally from traditional enterprise applications. GPU cluster interconnects require ultra-high bandwidth and low latency for distributed training. Inference serving demands optimised network paths to minimise response latency. Agent-to-agent communication creates new traffic patterns with different QoS requirements. Sovereignty constraints may require network-level controls to ensure AI data flows remain within jurisdictional boundaries.</p>",
-        "what_changes": [
-          "High-bandwidth, low-latency GPU interconnects for distributed AI training become a design requirement",
-          "Inference latency optimisation drives network topology decisions for AI serving infrastructure",
-          "Agent-to-agent communication creates new traffic patterns requiring distinct QoS profiles"
-        ],
-        "what_survives": [
-          "Inconsistent network designs across environments creating complexity",
-          "Performance bottlenecks due to inadequate capacity planning or poor traffic management",
-          "Poor visibility into network traffic and security events"
-        ]
-      }
-    },
-    {
-      "id": "cap-18-virtualization-architecture-modelling",
-      "label": "Virtualization Architecture Modelling",
-      "group": "Technology Architecture",
-      "traditional": {
-        "summary": "Design virtualized and containerized infrastructure to optimize resource utilization, agility, scalability.",
-        "body_html": "<h4>Definition</h4><p>Virtualization Architecture Modelling involves designing and documenting virtualized compute, storage, and network resources, including virtual machines, containers, and cloud-based infrastructure.</p><h4>Tasks</h4><ol><li>Identify virtualization requirements from application architecture, business requirements, and non-functional requirements.</li><li>Define virtualization strategy and platforms including hypervisors, container platforms, and cloud services.</li><li>Define topology, orchestration, automation, scaling, and lifecycle management of virtualized resources.</li><li>Apply virtualization patterns and standards (e.g. resource optimization, high availability, disaster recovery). Design for cloud-native and hybrid architectures.</li><li>Document security and compliance requirements. Validate virtualization architecture with stakeholders.</li><li>Maintain and evolve virtualization architecture as technology and business requirements change.</li></ol><h4>Inputs</h4><ul><li>Application architecture and requirements</li><li>Non-functional requirements (performance, scalability, availability, portability)</li><li>Technology standards and reference architectures</li><li>Existing virtualization and cloud infrastructure</li></ul><h4>Outputs</h4><ul><li>Virtualization architecture diagrams and models</li><li>Platform specifications, container and orchestration designs</li><li>Resource allocation and capacity specifications</li><li>Cloud integration and hybrid architecture designs</li></ul>",
-        "key_concepts": ["Technology Architect", "Application Architect", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "Must cover <mark>GPU virtualisation, container orchestration for AI workloads, serverless inference, multi-cloud AI deployment</mark> for sovereignty.",
-        "impact_category": "B",
-        "body_html": "<p>Virtualization architecture must extend to address the unique compute requirements of AI workloads. GPU virtualisation and sharing (e.g. MIG, time-slicing) enable efficient utilisation of expensive GPU resources. Container orchestration must support AI-specific scheduling for GPU affinity, memory requirements, and batch training jobs. Serverless inference platforms offer cost-efficient scaling for variable AI workloads. Multi-cloud deployment becomes a sovereignty requirement when AI processing must stay within specific jurisdictions.</p>",
-        "what_changes": [
-          "GPU virtualisation and sharing (MIG, time-slicing) becomes a core design concern",
-          "Container orchestration must support AI-specific scheduling: GPU affinity, memory requirements, batch training",
-          "Multi-cloud AI deployment becomes a sovereignty requirement for jurisdictional compliance"
-        ],
-        "what_survives": [
-          "Inconsistent virtualization approaches across environments creating complexity",
-          "Resource sprawl and inefficient utilization due to lack of governance and monitoring",
-          "Vendor lock-in from over-reliance on proprietary virtualization or cloud platforms"
-        ]
-      }
-    },
-    {
-      "id": "cap-19-dashboards-views-reports",
-      "label": "Dashboards, Views, Reports",
-      "group": "Architecture Repository",
-      "traditional": {
-        "summary": "Turn architecture data into actionable insights for informed decision-making.",
-        "body_html": "<h4>Definition</h4><p>Designing, building and maintaining visual dashboards, standardized views and reports that present architecture data in a clear, actionable format for different stakeholder groups.</p><h4>Tasks</h4><ol><li>Identify reporting needs and key questions per stakeholder group (e.g. CIO, project managers, domain architects).</li><li>Define and design dashboard layouts, views and report templates.</li><li>Implement dashboards and reports using the EA tooling platform (e.g. LeanIX, Mega, ServiceNow).</li><li>Automate data feeds from the architecture repository to dashboards where possible.</li><li>Maintain, update and continuously improve dashboards and reports based on stakeholder feedback.</li></ol><h4>Inputs</h4><ul><li>Architecture Repository data (applications, technologies, capabilities, etc.)</li><li>Stakeholder reporting requirements</li><li>EA governance KPIs and metrics</li><li>Data quality assessments</li></ul><h4>Outputs</h4><ul><li>Stakeholder-specific dashboards and views</li><li>Standardized architecture reports (e.g. application landscape, technology lifecycle, capability coverage)</li><li>KPI and metric visualizations</li></ul>",
-        "key_concepts": ["EA Repository Manager", "EA Analyst", "Lead Enterprise Architect", "Domain Architects", "Stakeholders"]
-      },
-      "ai_impact": {
-        "summary": "New dashboards: <mark>AI FinOps, agent performance, model portfolio, sovereignty compliance, automated compliance status</mark>.",
-        "impact_category": "B",
-        "body_html": "<p>The dashboard and reporting portfolio must expand significantly to cover AI-specific operational concerns. AI FinOps dashboards track inference costs, model utilisation, and budget consumption. Agent performance dashboards monitor task completion, error rates, and escalation patterns. Model portfolio views show model versions, benchmarks, and deprecation timelines. Sovereignty compliance dashboards map data flows against jurisdictional requirements. These new dashboards require real-time data feeds from AI platforms, not periodic manual updates.</p>",
-        "what_changes": [
-          "New dashboard categories: AI FinOps, agent performance, model portfolio, sovereignty compliance",
-          "Dashboards require real-time data feeds from AI platforms and agent runtime environments",
-          "Automated compliance status reporting replaces periodic manual compliance assessments"
-        ],
-        "what_survives": [
-          "Reports are created manually and ad-hoc, leading to inconsistency and high effort",
-          "Dashboards exist but are not used because they don't answer the right questions",
-          "Data in reports is outdated or inaccurate due to poor data quality in the repository"
-        ]
-      }
-    },
-    {
-      "id": "cap-20-data-gathering-data-quality",
-      "label": "Data Gathering &amp; Data Quality",
-      "group": "Architecture Repository",
-      "traditional": {
-        "summary": "Ensure architecture decisions are based on reliable, complete and up-to-date data.",
-        "body_html": "<h4>Definition</h4><p>Establishing and operating processes to systematically collect, validate and maintain architecture data across the organization, ensuring a high level of data quality, completeness and consistency in the architecture repository.</p><h4>Tasks</h4><ol><li>Define the data scope and data model for the architecture repository (what entities, attributes and relationships are needed).</li><li>Identify and connect data sources (e.g. CMDB, ITSM, HR systems, project portfolio tools).</li><li>Establish data collection processes &mdash; automated feeds where possible, structured manual input where necessary.</li><li>Define data quality rules, validation checks and quality KPIs (e.g. completeness, accuracy, timeliness).</li><li>Assign data owners and stewards responsible for maintaining data in their domain.</li><li>Conduct regular data quality reviews and remediation cycles.</li></ol><h4>Inputs</h4><ul><li>EA data model and repository structure</li><li>Existing data sources (CMDB, ITSM, PPM, HR, etc.)</li><li>Data quality requirements from stakeholders</li><li>Architecture governance policies</li></ul><h4>Outputs</h4><ul><li>Populated and up-to-date architecture repository</li><li>Data quality reports and scorecards</li><li>Data ownership matrix</li><li>Documented data collection processes and integration interfaces</li></ul>",
-        "key_concepts": ["EA Repository Manager", "EA Analyst", "Lead Enterprise Architect", "Data Owners/Stewards", "Domain Architects"]
-      },
-      "ai_impact": {
-        "summary": "Must support <mark>automated data gathering from deployment pipelines, API gateways, and cloud inventory</mark>; machine-readable architecture data.",
-        "impact_category": "A",
-        "body_html": "<p>Architecture data gathering must shift from manual collection and periodic updates to automated, continuous feeds from live infrastructure. Deployment pipelines, API gateways, cloud management platforms, and AI model registries become primary data sources. Architecture data must become machine-readable so that AI agents can consume and act on it &mdash; enabling automated compliance checking, drift detection, and architecture-aware agent decisions.</p>",
-        "what_changes": [
-          "Automated data gathering from deployment pipelines, API gateways, and cloud inventory replaces manual collection",
-          "Architecture data must become machine-readable for AI agent consumption",
-          "New data sources: AI model registries, agent runtime environments, inference cost APIs"
-        ],
-        "what_survives": [
-          "Repository data is outdated, incomplete or inconsistent because no one owns it",
-          "Data is gathered manually via spreadsheets, leading to high effort and errors",
-          "No clear definition of what data is needed, resulting in too much noise or critical gaps"
-        ]
-      }
-    },
-    {
-      "id": "cap-21-repository-support-and-maintenance",
-      "label": "Repository Support &amp; Maintenance",
-      "group": "Architecture Repository",
-      "traditional": {
-        "summary": "Keep the architecture repository operational, reliable and fit for evolving organizational needs.",
-        "body_html": "<h4>Definition</h4><p>Managing the day-to-day operations, technical maintenance and continuous improvement of the architecture repository platform, ensuring its availability, usability and alignment with evolving EA requirements.</p><h4>Tasks</h4><ol><li>Manage the EA repository platform (e.g. LeanIX, Mega, ServiceNow) including configuration, access management and upgrades.</li><li>Maintain and evolve the repository meta-model and data structure as EA requirements change.</li><li>Manage integrations with connected systems (CMDB, ITSM, PPM, etc.) and ensure data flows are operational.</li><li>Provide user support &mdash; handle requests, issues and questions from architects and stakeholders.</li><li>Develop and maintain user guidelines, templates and onboarding materials.</li><li>Monitor platform usage, performance and adoption metrics; identify and implement improvements.</li></ol><h4>Inputs</h4><ul><li>EA repository platform and infrastructure</li><li>User feedback and support requests</li><li>EA meta-model and data model requirements</li><li>Integration specifications and SLAs with connected systems</li></ul><h4>Outputs</h4><ul><li>Operational and up-to-date repository platform</li><li>Updated meta-model and repository configuration</li><li>User guidelines, templates and training materials</li><li>Platform usage and adoption reports, resolved support tickets</li></ul>",
-        "key_concepts": ["EA Repository Manager", "EA Tool Administrator", "Lead Enterprise Architect", "IT Operations", "Domain Architects"]
-      },
-      "ai_impact": {
-        "summary": "Repository must accommodate <mark>new registries (agent, model), machine-readable content, and continuous automated updates</mark>.",
-        "impact_category": "B",
-        "body_html": "<p>The architecture repository must evolve from a human-curated documentation system to a machine-readable, continuously updated platform that supports both human architects and AI agents. This requires new registries for AI models (versions, benchmarks, cost profiles) and agents (configurations, permissions, performance metrics), machine-readable content formats that agents can query and update, and integration with AI platform APIs for continuous automated updates. The meta-model must expand to accommodate AI-native entities and relationships.</p>",
-        "what_changes": [
-          "New registries: AI model registry (versions, benchmarks, costs) and agent registry (configurations, permissions, metrics)",
-          "Content must be machine-readable for AI agent consumption and automated updates",
-          "Meta-model must expand to accommodate AI-native entities and relationships"
-        ],
-        "what_survives": [
-          "The repository tool is set up but nobody maintains it and integrations break",
-          "Low adoption because users find the tool complex, unclear or poorly documented",
-          "No dedicated ownership so repository maintenance is everyone's and no one's job"
-        ]
-      }
-    },
-    {
-      "id": "cap-22-organisation-development",
-      "label": "Organisation Development",
-      "group": "Architecture Management",
-      "traditional": {
-        "summary": "Build and evolve the EA organization to effectively deliver architecture capabilities.",
-        "body_html": "<h4>Definition</h4><p>Designing, establishing and continuously improving the EA organizational structure, including team setup, roles, competencies and career paths, to ensure the EA function is adequately staffed and positioned within the organization.</p><h4>Tasks</h4><ol><li>Define the EA organizational model and reporting structure (e.g. centralized, federated, hybrid).</li><li>Define EA roles, job profiles and required competencies per role.</li><li>Assess current team capabilities against required competencies &mdash; identify gaps.</li><li>Develop hiring plans, training paths and career development frameworks for EA staff.</li><li>Continuously evaluate and adapt the EA organization to changing business needs and maturity levels.</li><li>Foster collaboration models between central EA and domain/solution architects across the organization.</li></ol><h4>Inputs</h4><ul><li>Business and IT strategy</li><li>Current EA team structure and skill profiles</li><li>EA capability maturity assessment results</li><li>HR policies and frameworks</li></ul><h4>Outputs</h4><ul><li>EA organizational model and reporting structure</li><li>EA role descriptions and competency matrix</li><li>Skills gap analysis and development plans</li><li>Collaboration model between central and federated EA roles</li></ul>",
-        "key_concepts": ["Lead Enterprise Architect", "CIO/CTO", "HR Business Partner", "Domain Architects"]
-      },
-      "ai_impact": {
-        "summary": "New roles: <mark>AI/Agent Architect, Model Portfolio Manager, AI Ethics Officer, Agent Ops Manager</mark>. AI literacy as baseline for all EA roles.",
-        "impact_category": "B",
-        "body_html": "<p>The EA organisation must evolve to include entirely new roles that address AI-specific architecture concerns. AI/Agent Architects design agent topologies and orchestration patterns. Model Portfolio Managers govern the enterprise's AI model selection and lifecycle. AI Ethics Officers ensure responsible AI deployment aligned with organisational values and regulations. Agent Ops Managers handle the operational management of deployed agents. Beyond new roles, AI literacy becomes a baseline competency for all EA roles &mdash; every architect must understand AI capabilities, limitations, and governance requirements.</p>",
-        "what_changes": [
-          "New roles: AI/Agent Architect, Model Portfolio Manager, AI Ethics Officer, Agent Ops Manager",
-          "AI literacy becomes a baseline competency requirement for all EA roles",
-          "Organisational model must accommodate human-agent collaboration patterns in EA delivery"
-        ],
-        "what_survives": [
-          "EA roles are unclear or overlapping, leading to confusion about who does what",
-          "EA team is understaffed or lacks critical skills, but no structured plan exists to address this",
-          "EA is positioned too far from business or too deep in IT, limiting its effectiveness"
-        ]
-      }
-    },
-    {
-      "id": "cap-23-ea-performance-management",
-      "label": "EA Performance Management",
-      "group": "Architecture Management",
-      "traditional": {
-        "summary": "Measure, evaluate and demonstrate the value and effectiveness of Enterprise Architecture.",
-        "body_html": "<h4>Definition</h4><p>Establishing and operating a framework to define, measure and report on the performance and value contribution of the EA function, ensuring continuous alignment with business objectives and stakeholder expectations.</p><h4>Tasks</h4><ol><li>Define EA performance goals aligned with business and IT strategy.</li><li>Identify and establish KPIs and metrics (e.g. stakeholder satisfaction, architecture compliance rate, time-to-decision, repository adoption).</li><li>Implement measurement and data collection mechanisms.</li><li>Produce regular performance reports and present to key stakeholders.</li><li>Analyse results, identify improvement areas and drive corrective actions.</li></ol><h4>Inputs</h4><ul><li>Business and IT strategy and goals</li><li>EA capability maturity assessment results</li><li>Stakeholder feedback and satisfaction data</li><li>Repository usage and data quality metrics</li></ul><h4>Outputs</h4><ul><li>EA KPI framework and metric definitions</li><li>Periodic EA performance reports and dashboards</li><li>Improvement recommendations and action plans</li><li>Stakeholder communication on EA value contribution</li></ul>",
-        "key_concepts": ["Lead Enterprise Architect", "CIO/CTO", "Domain Architects", "EA Repository Manager"]
-      },
-      "ai_impact": {
-        "summary": "Must include <mark>AI-specific value metrics: model ROI, agent productivity gains, AI FinOps efficiency</mark>.",
-        "impact_category": "A",
-        "body_html": "<p>EA performance management must expand its KPI framework to capture the value contribution of AI-related architecture decisions. Model ROI metrics track the return on investment for AI model selection and deployment. Agent productivity multipliers measure the efficiency gains from agent-augmented workflows. AI FinOps efficiency metrics show cost optimisation across inference, training, and infrastructure spend. These AI-specific metrics must be integrated alongside traditional EA value measures to give stakeholders a complete picture of architecture performance.</p>",
-        "what_changes": [
-          "New KPIs: model ROI, agent productivity multiplier, AI FinOps efficiency, agent error rates",
-          "Performance reporting must include AI-specific dashboards alongside traditional EA metrics",
-          "Value measurement must distinguish phase-one productivity gains from phase-two revenue contribution"
-        ],
-        "what_survives": [
-          "EA cannot demonstrate its value, leading to budget cuts and loss of management support",
-          "Metrics are either not defined or too technical to resonate with business stakeholders",
-          "Performance data is collected but never acted upon"
-        ]
-      }
-    },
-    {
-      "id": "cap-24-ea-process-development",
-      "label": "EA Process Development",
-      "group": "Architecture Management",
-      "traditional": {
-        "summary": "Define, standardize and continuously improve the processes that drive EA delivery.",
-        "body_html": "<h4>Definition</h4><p>Designing, documenting and continuously improving the core EA processes, ensuring a consistent, repeatable and efficient way of working across all architecture activities.</p><h4>Tasks</h4><ol><li>Identify and define core EA processes (e.g. architecture development, review, governance, repository management).</li><li>Document processes including activities, roles, inputs, outputs and decision points.</li><li>Align EA processes with existing organizational frameworks (e.g. project methodology, ITIL, SAFe).</li><li>Conduct periodic process maturity assessments and identify improvement areas.</li><li>Implement process improvements and track their effectiveness.</li></ol><h4>Inputs</h4><ul><li>EA capability and process maturity assessment results</li><li>Existing organizational process frameworks</li><li>Lessons learned and feedback from EA practitioners</li><li>Industry best practices and reference frameworks</li></ul><h4>Outputs</h4><ul><li>Documented EA process descriptions and workflows</li><li>EA process maturity assessment results</li><li>Process improvement backlog and action plans</li><li>Updated EA methodology and ways of working</li></ul>",
-        "key_concepts": ["Lead Enterprise Architect", "CIO/CTO", "Domain Architects", "EA Analysts"]
-      },
-      "ai_impact": {
-        "summary": "EA processes must accommodate <mark>AI's pace of change: continuous compliance, automated discovery, event-driven governance</mark>.",
-        "impact_category": "A",
-        "body_html": "<p>EA processes designed for quarterly review cycles and annual planning horizons cannot keep pace with AI-driven change. Processes must evolve to support continuous compliance checking, automated architecture discovery from live environments, and event-driven governance that responds to changes in real-time. This means embedding agent-assisted steps into EA processes themselves &mdash; using AI agents to perform discovery, draft analyses, and flag compliance issues, while human architects focus on strategic decisions and exception handling.</p>",
-        "what_changes": [
-          "EA processes must support continuous compliance checking rather than periodic reviews",
-          "Automated architecture discovery from live environments replaces manual documentation",
-          "Agent-assisted EA processes where AI performs discovery and drafting while humans direct strategy"
-        ],
-        "what_survives": [
-          "EA work is done differently by every architect with no consistent methodology",
-          "Processes exist on paper but are not followed in practice",
-          "No mechanism to learn and improve and the same mistakes are repeated"
-        ]
-      }
-    },
-    {
-      "id": "cap-25-ea-knowledge-management",
-      "label": "EA Knowledge Management",
-      "group": "Architecture Management",
-      "traditional": {
-        "summary": "Capture and share architecture knowledge to reduce key-person dependency.",
-        "body_html": "<h4>Definition</h4><p>Establishing practices and platforms to systematically capture, organize, share and reuse architecture knowledge, decisions, patterns and lessons learned across the EA function and the wider organization.</p><h4>Tasks</h4><ol><li>Define the knowledge scope &mdash; what needs to be captured (e.g. architecture decisions, patterns, reference architectures, lessons learned).</li><li>Establish a knowledge platform or wiki with a clear structure and taxonomy.</li><li>Integrate knowledge management into daily EA work &mdash; capture decisions and rationale as part of the architecture process.</li><li>Facilitate regular knowledge sharing sessions (e.g. architecture community of practice, brown bags).</li><li>Maintain and curate knowledge base &mdash; archive outdated content, ensure findability and relevance.</li></ol><h4>Inputs</h4><ul><li>Architecture decisions and decision logs</li><li>Reference architectures, patterns and templates</li><li>Lessons learned from projects and reviews</li><li>EA process documentation and guidelines</li></ul><h4>Outputs</h4><ul><li>Structured EA knowledge base and wiki</li><li>Architecture decision records (ADRs)</li><li>Reference architecture and pattern library</li><li>Knowledge sharing session materials and recordings</li></ul>",
-        "key_concepts": ["Lead Enterprise Architect", "Domain Architects", "EA Analysts", "EA Stakeholders"]
-      },
-      "ai_impact": {
-        "summary": "Must support <mark>machine-readable knowledge for AI agent consumption; knowledge graphs as shared enterprise context</mark>; Enterprise as Code.",
-        "impact_category": "B",
-        "body_html": "<p>Knowledge management must evolve from human-readable documentation to dual-format content that serves both human architects and AI agents. Knowledge graphs become the shared enterprise context that enables agents to make architecture-aware decisions. The Enterprise as Code paradigm codifies implicit operating models &mdash; workflows, decision rules, governance logic &mdash; as executable code readable by both humans and machines. Architecture decision records, patterns, and reference architectures must be structured in machine-readable formats that agents can query and apply.</p>",
-        "what_changes": [
-          "Knowledge must be machine-readable for AI agent consumption, not just human-readable documentation",
-          "Knowledge graphs become the shared enterprise context enabling agent decision-making",
-          "Enterprise as Code codifies implicit operating models as executable, machine-readable code"
-        ],
-        "what_survives": [
-          "Critical knowledge exists only in people's heads and is lost when they leave",
-          "Documentation exists but is scattered, outdated or unfindable",
-          "No culture of knowledge sharing as architects work in silos"
-        ]
-      }
-    },
-    {
-      "id": "cap-26-stakeholder-management",
-      "label": "Stakeholder Management",
-      "group": "Architecture Management",
-      "traditional": {
-        "summary": "Foster stakeholder support and involvement and ensure effective communication and collaboration.",
-        "body_html": "<h4>Definition</h4><p>Stakeholder Management involves identifying, analysing, and engaging stakeholders to ensure their needs and concerns are addressed throughout the architecture development process. It aims to build and maintain stakeholder support and alignment.</p><h4>Tasks</h4><ol><li>Identify stakeholders and create a stakeholder map. Assign priorities and identify preferred communication channels, styles and frequencies.</li><li>Analyse stakeholder interests and influence.</li><li>Develop stakeholder engagement strategies.</li><li>Plan the stakeholder communication and engagement.</li><li>Regularly collect stakeholder feedback on EA services and adjust engagement approach accordingly.</li><li>Manage escalations and resolve conflicting stakeholder interests in alignment with architecture priorities.</li></ol><h4>Inputs</h4><ul><li>Business strategy and goals</li><li>Stakeholder requirements and concerns</li><li>Existing stakeholder documentation</li></ul><h4>Outputs</h4><ul><li>Stakeholder map</li><li>Stakeholder analysis reports</li><li>Communication and engagement plans</li></ul>",
-        "key_concepts": ["Application Architect", "Data Architect", "Technology Architect", "Lead Enterprise Architect"]
-      },
-      "ai_impact": {
-        "summary": "New stakeholders: <mark>AI agent owners, AI ethics boards, data sovereignty officers</mark>. Agents themselves have system requirements that function like stakeholder concerns.",
-        "impact_category": "B",
-        "body_html": "<p>Stakeholder management must expand to include entirely new stakeholder groups that emerge with AI deployment. AI agent owners are accountable for agent behaviour and performance. AI ethics boards govern responsible AI deployment. Data sovereignty officers ensure jurisdictional compliance. Beyond new human stakeholders, agents themselves generate system requirements &mdash; for context access, API availability, and processing capacity &mdash; that function like stakeholder concerns and must be managed through similar engagement practices.</p>",
-        "what_changes": [
-          "New stakeholder groups: AI agent owners, AI ethics boards, data sovereignty officers",
-          "Agents themselves generate requirements that function like stakeholder concerns",
-          "Stakeholder engagement must address AI workforce anxiety and transformation resistance"
-        ],
-        "what_survives": [
-          "Lack of trust, support and stakeholder engagement for transformation initiatives",
-          "Ambiguity around stakeholder roles and responsibilities causing confusion",
-          "Even getting a list of relevant stakeholders requires time and effort"
-        ]
-      }
-    },
-    {
-      "id": "cap-27-standards-policies-principles-guidelines",
-      "label": "Standards, Policies, Principles, Guidelines",
-      "group": "Governance, Communication & Change",
-      "traditional": {
-        "summary": "Establish the guardrails that ensure consistency and alignment across all architecture decisions.",
-        "body_html": "<h4>Definition</h4><p>Defining, maintaining and communicating the set of architecture principles, standards, policies and guidelines that govern how architecture is developed, implemented and managed across the organization.</p><h4>Tasks</h4><ol><li>Define architecture principles that reflect business values and strategic direction.</li><li>Establish technology standards and policies (e.g. approved platforms, security requirements, integration patterns).</li><li>Develop practical guidelines that translate principles and standards into actionable guidance for architects and project teams.</li><li>Implement a review and approval process for new or updated standards.</li><li>Communicate and socialize principles, standards and guidelines across the organization.</li><li>Periodically review and update to ensure continued relevance.</li></ol><h4>Inputs</h4><ul><li>Business and IT strategy</li><li>Regulatory and compliance requirements</li><li>Industry standards and best practices</li><li>Architecture decision logs and lessons learned</li></ul><h4>Outputs</h4><ul><li>Architecture principles catalogue</li><li>Technology standards and policies documentation</li><li>Architecture guidelines and design patterns</li><li>Standards review and update log</li></ul>",
-        "key_concepts": ["Lead Enterprise Architect", "Architecture Review Board", "Domain Architects", "CIO/CTO"]
-      },
-      "ai_impact": {
-        "summary": "Must include <mark>AI-specific standards: model governance, agent communication, data sovereignty, AI ethics</mark>. Policy-as-code for automated enforcement.",
-        "impact_category": "A",
-        "body_html": "<p>The standards and policies framework must expand significantly to cover AI-specific governance requirements. Model governance standards define how AI models are selected, evaluated, deployed, and retired. Agent communication standards establish protocols and patterns for agent-to-agent interaction. Data sovereignty policies constrain how data flows to AI processing services across jurisdictions. AI ethics guidelines ensure responsible agent behaviour aligned with organisational values. Critically, these standards must be expressible as policy-as-code for automated enforcement in CI/CD pipelines.</p>",
-        "what_changes": [
-          "AI-specific standards: model governance, agent communication protocols, data sovereignty, AI ethics",
-          "Policy-as-code enables automated enforcement of architecture standards in CI/CD pipelines",
-          "Standards must evolve rapidly to keep pace with AI technology changes"
-        ],
-        "what_survives": [
-          "No defined standards so every project makes its own technology choices, creating fragmentation",
-          "Standards exist but are not communicated or enforced",
-          "Standards are too rigid or outdated, leading architects to bypass them"
-        ]
-      }
-    },
-    {
-      "id": "cap-28-architecture-training",
-      "label": "Architecture Training",
-      "group": "Governance, Communication & Change",
-      "traditional": {
-        "summary": "Build architecture skills and awareness across the organization to drive EA adoption.",
-        "body_html": "<h4>Definition</h4><p>Planning, developing and delivering training programs that build architecture knowledge, skills and awareness among EA team members, IT staff and business stakeholders.</p><h4>Tasks</h4><ol><li>Assess training needs based on role requirements, skill gaps and EA maturity targets.</li><li>Develop a training catalogue covering EA frameworks, tools, methods and soft skills.</li><li>Deliver training through appropriate formats (e.g. workshops, e-learning, certifications, lunch and learns).</li><li>Onboard new architects with a structured EA onboarding program.</li><li>Evaluate training effectiveness and continuously update the training offering.</li></ol><h4>Inputs</h4><ul><li>EA role descriptions and competency matrix</li><li>Skills gap analysis results</li><li>EA tools and methodology documentation</li><li>Stakeholder feedback and training requests</li></ul><h4>Outputs</h4><ul><li>EA training catalogue and learning paths</li><li>Training materials and session recordings</li><li>Training completion and effectiveness reports</li><li>Onboarding program for new EA team members</li></ul>",
-        "key_concepts": ["Lead Enterprise Architect", "HR/Learning &amp; Development", "Domain Architects", "EA Team Members"]
-      },
-      "ai_impact": {
-        "summary": "Must cover <mark>AI literacy, model evaluation, agent design, prompt engineering, AI ethics</mark>. Training must reach beyond EA team to business stakeholders.",
-        "impact_category": "B",
-        "body_html": "<p>Architecture training must expand dramatically in both scope and audience. All EA team members need AI literacy covering model capabilities, limitations, and governance requirements. Specialist tracks must cover model evaluation techniques, agent design patterns, prompt engineering, and AI ethics frameworks. Critically, training must reach beyond the EA team to business stakeholders who will work alongside agents &mdash; they need to understand agent capabilities, appropriate use cases, and escalation procedures. The training programme itself can leverage AI-assisted learning for personalised, continuous skill development.</p>",
-        "what_changes": [
-          "AI literacy becomes mandatory training for all EA roles: model capabilities, limitations, and governance",
-          "New specialist tracks: model evaluation, agent design, prompt engineering, AI ethics",
-          "Training audience expands beyond EA to business stakeholders who work alongside agents"
-        ],
-        "what_survives": [
-          "No structured training so new architects learn by trial and error",
-          "Training focuses only on tools and frameworks, neglecting communication and stakeholder skills",
-          "Knowledge stays with senior architects with no mechanism to transfer it broadly"
-        ]
-      }
-    },
-    {
-      "id": "cap-29-communication-and-change-management",
-      "label": "Communication &amp; Change Management",
-      "group": "Governance, Communication & Change",
-      "traditional": {
-        "summary": "Drive awareness, understanding and adoption of Enterprise Architecture across the organization.",
-        "body_html": "<h4>Definition</h4><p>Planning and executing communication and change management activities to ensure that architecture initiatives, decisions and standards are understood, accepted and adopted by all relevant stakeholders.</p><h4>Tasks</h4><ol><li>Develop an EA communication strategy and plan covering target audiences, channels, frequency and key messages.</li><li>Create and distribute regular EA communications (e.g. newsletters, architecture updates, decision summaries).</li><li>Identify change impacts of architecture decisions and develop change management approaches.</li><li>Engage stakeholders through targeted formats (e.g. town halls, roadshows, architecture days).</li><li>Monitor adoption and gather feedback to continuously improve communication and change efforts.</li></ol><h4>Inputs</h4><ul><li>Architecture decisions and roadmaps</li><li>Stakeholder map and communication preferences</li><li>Change impact assessments</li><li>Stakeholder feedback and adoption metrics</li></ul><h4>Outputs</h4><ul><li>EA communication strategy and plan</li><li>Communication materials (newsletters, updates, presentations)</li><li>Change impact assessments and mitigation plans</li><li>Adoption and feedback reports</li></ul>",
-        "key_concepts": ["Lead Enterprise Architect", "Communications/Change Manager", "Domain Architects", "CIO/CTO"]
-      },
-      "ai_impact": {
-        "summary": "Must address <mark>AI transformation resistance, agent workforce integration, AI value communication</mark>. The 10/20/70 rule applies.",
-        "impact_category": "A",
-        "body_html": "<p>Communication and change management become critical success factors for AI adoption. The 10/20/70 rule &mdash; where 10% of AI transformation effort is algorithms, 20% is technology, and 70% is people and process change &mdash; underscores that technical deployment is the easy part. Communication must proactively address workforce anxiety about agent deployment, clearly articulate the human-agent collaboration model, and demonstrate AI value through concrete examples. Change management must support the transition to new ways of working where agents handle routine tasks and humans focus on judgment, creativity, and exception handling.</p>",
-        "what_changes": [
-          "Must proactively address AI transformation resistance and workforce anxiety about agent deployment",
-          "Communication must articulate the human-agent collaboration model and demonstrate concrete AI value",
-          "Change management follows the 10/20/70 rule: 10% algorithms, 20% technology, 70% people and process"
-        ],
-        "what_survives": [
-          "EA works in an ivory tower with great architecture that nobody knows about or follows",
-          "Communication is ad-hoc and reactive and stakeholders only hear from EA when there is a problem",
-          "Architecture changes are pushed without change management, leading to resistance"
-        ]
-      }
-    },
-    {
-      "id": "cap-30-architecture-compliance-evaluation",
-      "label": "Architecture Compliance Evaluation",
-      "group": "Governance, Communication & Change",
-      "traditional": {
-        "summary": "Ensure architecture decisions and implementations adhere to defined standards and principles.",
-        "body_html": "<h4>Definition</h4><p>Assessing and evaluating whether projects, solutions and implementations comply with established architecture principles, standards, policies and guidelines, and managing deviations through a structured waiver process.</p><h4>Tasks</h4><ol><li>Define compliance evaluation criteria based on architecture principles, standards and policies.</li><li>Conduct architecture compliance reviews at key project milestones (e.g. design, build, go-live).</li><li>Document compliance findings, deviations and associated risks.</li><li>Manage a structured waiver process for justified deviations &mdash; including conditions and expiry.</li><li>Report compliance status to the Architecture Review Board and relevant stakeholders.</li></ol><h4>Inputs</h4><ul><li>Architecture principles, standards and policies</li><li>Project and solution architecture documentation</li><li>Waiver requests and deviation justifications</li><li>Previous compliance review findings</li></ul><h4>Outputs</h4><ul><li>Compliance assessment reports</li><li>Deviation and waiver register</li><li>Risk assessments for non-compliant decisions</li><li>Compliance status dashboards and trend reports</li></ul>",
-        "key_concepts": ["Domain Architects", "Architecture Review Board", "Lead Enterprise Architect", "Project/Solution Architects"]
-      },
-      "ai_impact": {
-        "summary": "Must shift from <mark>periodic manual review to continuous automated compliance</mark>. AI-specific compliance criteria: model governance, agent behaviour, bias monitoring, sovereignty.",
-        "impact_category": "A",
-        "body_html": "<p>Architecture compliance evaluation must fundamentally transform from periodic manual checkpoint reviews to continuous automated compliance monitoring. Policy-as-code enables compliance rules to be checked automatically in CI/CD pipelines at deployment time, catching violations before they reach production. AI-specific compliance criteria must address model governance (approved models, version control), agent behaviour (permission boundaries, escalation rules), bias monitoring (fairness metrics, demographic parity), and sovereignty compliance (data residency, cross-border inference). The waiver process must support the rapid pace of AI deployment without becoming a bottleneck.</p>",
-        "what_changes": [
-          "Shift from periodic manual reviews to continuous automated compliance via policy-as-code",
-          "AI-specific compliance criteria: model governance, agent behaviour, bias monitoring, sovereignty",
-          "Compliance must operate at deployment speed through CI/CD pipeline integration"
-        ],
-        "what_survives": [
-          "No formal compliance checks so deviations are only discovered in production",
-          "Compliance is perceived as a bottleneck and projects bypass architecture reviews",
-          "Waivers are granted informally without tracking, leading to unmanaged technical debt"
-        ]
-      }
-    },
-    {
-      "id": "cap-new-01-agent-lifecycle-management",
-      "label": "Agent Lifecycle Management",
-      "group": "Net-New for the Agentic Organisation",
-      "traditional": {
-        "summary": "No traditional EA equivalent exists.",
-        "body_html": "<p class=\"text-muted\">This capability has no equivalent in traditional EA practice. It addresses requirements that arise only when AI agents become part of the enterprise workforce.</p>"
-      },
-      "ai_impact": {
-        "summary": "<mark>Onboarding, monitoring, versioning, retraining, and retiring AI agents</mark> as enterprise workforce participants.",
-        "impact_category": "C",
-        "body_html": "<p>Agent Lifecycle Management governs the complete lifecycle of AI agents from initial onboarding through active deployment to eventual retirement. It includes agent registry maintenance, performance monitoring, version management, retraining triggers, and decommissioning procedures. This capability treats agents as workforce participants with defined onboarding processes, performance expectations, escalation procedures, and retirement criteria &mdash; analogous to human workforce management but adapted for autonomous software agents.</p>",
-        "what_changes": [
-          "Agent registry tracks all deployed agents with configuration, permissions, and performance history",
-          "Lifecycle stages: onboarding, active, under-review, retraining, deprecated, retired",
-          "Performance management includes task completion rates, error rates, escalation frequency, and cost efficiency"
-        ]
-      }
-    },
-    {
-      "id": "cap-new-02-model-portfolio-management",
-      "label": "Model Portfolio Management",
-      "group": "Net-New for the Agentic Organisation",
-      "traditional": {
-        "summary": "No traditional EA equivalent exists.",
-        "body_html": "<p class=\"text-muted\">This capability has no equivalent in traditional EA practice. It addresses requirements that arise only when AI agents become part of the enterprise workforce.</p>"
-      },
-      "ai_impact": {
-        "summary": "Managing the enterprise's <mark>portfolio of AI models: selection, benchmarking, cost tracking, vendor diversification, and deprecation planning</mark>.",
-        "impact_category": "C",
-        "body_html": "<p>Model Portfolio Management applies portfolio management discipline to the enterprise's collection of AI models. It governs model selection through structured evaluation criteria, tracks model performance through continuous benchmarking, manages costs through inference monitoring and right-sizing, ensures vendor diversification to avoid lock-in, and plans for deprecation as models become obsolete. This capability directly reduces AI cost and mitigates vendor concentration risk.</p>",
-        "what_changes": [
-          "Structured model selection process with evaluation criteria: accuracy, cost, latency, sovereignty, vendor risk",
-          "Continuous benchmarking compares deployed models against newer alternatives",
-          "Vendor diversification strategy prevents concentration risk on a single AI provider"
-        ]
-      }
-    },
-    {
-      "id": "cap-new-03-ai-finops",
-      "label": "AI FinOps",
-      "group": "Net-New for the Agentic Organisation",
-      "traditional": {
-        "summary": "No traditional EA equivalent exists.",
-        "body_html": "<p class=\"text-muted\">This capability has no equivalent in traditional EA practice. It addresses requirements that arise only when AI agents become part of the enterprise workforce.</p>"
-      },
-      "ai_impact": {
-        "summary": "<mark>Financial governance for AI operations</mark>: inference cost tracking, fine-tuning budgets, vector storage costs, infrastructure cost allocation.",
-        "impact_category": "C",
-        "body_html": "<p>AI FinOps establishes financial governance for AI operations across the enterprise. It tracks inference costs by model, workload, and business unit; manages fine-tuning budgets and training compute spend; monitors vector storage and knowledge graph costs; allocates infrastructure costs to AI workloads; and implements budget thresholds with escalation triggers. Only 10% of organisations have mature AI FinOps practices, making this a critical gap for most enterprises scaling AI deployment.</p>",
-        "what_changes": [
-          "Inference cost tracking by model, workload, and business unit with budget thresholds",
-          "Fine-tuning and training compute budget management with ROI tracking",
-          "Cost allocation framework that attributes AI infrastructure costs to consuming business units"
-        ]
-      }
-    },
-    {
-      "id": "cap-new-04-continuous-architecture-compliance",
-      "label": "Continuous Architecture Compliance",
-      "group": "Net-New for the Agentic Organisation",
-      "traditional": {
-        "summary": "No traditional EA equivalent exists.",
-        "body_html": "<p class=\"text-muted\">This capability has no equivalent in traditional EA practice. It addresses requirements that arise only when AI agents become part of the enterprise workforce.</p>"
-      },
-      "ai_impact": {
-        "summary": "<mark>Automated, continuous compliance checking integrated into CI/CD pipelines</mark>. Policy-as-code with automated enforcement.",
-        "impact_category": "C",
-        "body_html": "<p>Continuous Architecture Compliance moves compliance from periodic human review to automated, continuous checking embedded in CI/CD pipelines. Architecture standards and policies are codified as executable rules (policy-as-code) that are evaluated automatically at deployment time. This enables governance at the speed of AI deployment &mdash; catching violations before they reach production without creating bottlenecks. While traditional compliance evaluation focuses on manual review, this capability is about automated enforcement infrastructure.</p>",
-        "what_changes": [
-          "Policy-as-code translates architecture standards into executable compliance rules",
-          "CI/CD pipeline integration checks compliance at deployment time automatically",
-          "Real-time compliance dashboards replace periodic manual compliance reports"
-        ]
-      }
-    },
-    {
-      "id": "cap-new-05-sovereignty-by-design",
-      "label": "Sovereignty-by-Design",
-      "group": "Net-New for the Agentic Organisation",
-      "traditional": {
-        "summary": "No traditional EA equivalent exists.",
-        "body_html": "<p class=\"text-muted\">This capability has no equivalent in traditional EA practice. It addresses requirements that arise only when AI agents become part of the enterprise workforce.</p>"
-      },
-      "ai_impact": {
-        "summary": "Treating <mark>data residency, model provenance, and jurisdictional constraints as first-order architecture design inputs</mark>.",
-        "impact_category": "C",
-        "body_html": "<p>Sovereignty-by-Design treats data residency, model provenance, and jurisdictional constraints as first-order architecture design inputs rather than afterthought compliance checks. It maps AI workloads to sovereignty requirements, constrains infrastructure decisions based on jurisdictional rules, and ensures model training data provenance meets regulatory standards. This is critical for EU and multi-jurisdictional organisations where AI regulation creates binding constraints on architecture decisions.</p>",
-        "what_changes": [
-          "Sovereignty requirements drive infrastructure selection, not the other way around",
-          "AI workload mapping to jurisdictional constraints becomes a standard architecture activity",
-          "Model provenance tracking ensures training data complies with data residency regulations"
-        ]
-      }
-    },
-    {
-      "id": "cap-new-06-enterprise-as-code",
-      "label": "Enterprise as Code",
-      "group": "Net-New for the Agentic Organisation",
-      "traditional": {
-        "summary": "No traditional EA equivalent exists.",
-        "body_html": "<p class=\"text-muted\">This capability has no equivalent in traditional EA practice. It addresses requirements that arise only when AI agents become part of the enterprise workforce.</p>"
-      },
-      "ai_impact": {
-        "summary": "<mark>Codifying implicit operating models as executable code</mark> readable by both humans and AI agents. Prerequisite for effective agent deployment at scale.",
-        "impact_category": "C",
-        "body_html": "<p>Enterprise as Code codifies the implicit operating models that exist in organisations &mdash; workflows, decision rules, governance logic, escalation procedures &mdash; as executable code that is readable and actionable by both humans and AI agents. This is a prerequisite for effective agent deployment at scale: agents cannot follow unwritten rules or implicit knowledge. While high effort and low maturity today, this capability represents a compelling strategic direction that enables agents to operate within the full context of the enterprise.</p>",
-        "what_changes": [
-          "Implicit workflows, decision rules, and governance logic are codified as executable specifications",
-          "Dual-format content serves both human understanding and machine execution",
-          "Agents can operate within the full context of enterprise rules without human interpretation"
-        ]
-      }
-    },
-    {
-      "id": "cap-new-07-agent-communication-architecture",
-      "label": "Agent Communication Architecture",
-      "group": "Net-New for the Agentic Organisation",
-      "traditional": {
-        "summary": "No traditional EA equivalent exists.",
-        "body_html": "<p class=\"text-muted\">This capability has no equivalent in traditional EA practice. It addresses requirements that arise only when AI agents become part of the enterprise workforce.</p>"
-      },
-      "ai_impact": {
-        "summary": "<mark>Protocol abstraction layer for agent-to-agent communication</mark>, independent of specific protocol (MCP, A2A, ACP).",
-        "impact_category": "C",
-        "body_html": "<p>Agent Communication Architecture designs the inter-agent communication layer as a protocol-independent abstraction. With competing standards (MCP, A2A, ACP) and rapid protocol evolution, this capability ensures the enterprise can adopt and switch between agent communication protocols without re-architecting agent interactions. This is the defining architectural bet for 2026&ndash;2028: organisations that lock into a single protocol risk costly re-architecture as standards consolidate.</p>",
-        "what_changes": [
-          "Protocol abstraction layer enables agent communication independent of specific standard (MCP, A2A, ACP)",
-          "Agent interaction patterns are defined at the semantic level, not the protocol level",
-          "Multi-protocol support enables gradual migration as agent communication standards mature"
-        ]
-      }
-    },
-    {
-      "id": "cap-new-08-ai-infrastructure-readiness-assessment",
-      "label": "AI Infrastructure Readiness Assessment",
-      "group": "Net-New for the Agentic Organisation",
-      "traditional": {
-        "summary": "No traditional EA equivalent exists.",
-        "body_html": "<p class=\"text-muted\">This capability has no equivalent in traditional EA practice. It addresses requirements that arise only when AI agents become part of the enterprise workforce.</p>"
-      },
-      "ai_impact": {
-        "summary": "<mark>Structured assessment of compute, network, storage, and integration capacity</mark> against planned AI workloads.",
-        "impact_category": "C",
-        "body_html": "<p>AI Infrastructure Readiness Assessment provides a structured framework for evaluating whether the enterprise's compute, network, storage, and integration infrastructure can support planned AI workloads. With only 22% of organisations reporting infrastructure readiness for AI at scale, this is a binding constraint for AI deployment. The assessment includes GPU compute capacity, high-bandwidth networking for model training, vector storage scaling, sovereignty constraint mapping, and integration capacity for agent communication patterns.</p>",
-        "what_changes": [
-          "Structured readiness assessment framework covering GPU compute, networking, storage, and integration",
-          "Sovereignty constraint mapping identifies where infrastructure gaps create regulatory risk",
-          "Capacity planning models for AI workloads with different scaling characteristics than traditional applications"
-        ]
-      }
-    },
-    {
-      "id": "cap-new-09-agent-risk-and-observability",
-      "label": "Agent Risk and Observability",
-      "group": "Net-New for the Agentic Organisation",
-      "traditional": {
-        "summary": "No traditional EA equivalent exists.",
-        "body_html": "<p class=\"text-muted\">This capability has no equivalent in traditional EA practice. It addresses requirements that arise only when AI agents become part of the enterprise workforce.</p>"
-      },
-      "ai_impact": {
-        "summary": "<mark>Distributed tracing across agent interactions, blast-radius controls, cascade failure detection, circuit breakers</mark>.",
-        "impact_category": "C",
-        "body_html": "<p>Agent Risk and Observability addresses the unique risk profile of autonomous, non-deterministic AI agents operating at enterprise scale. It implements distributed tracing across agent interactions to enable end-to-end visibility, blast-radius controls to limit the impact of agent failures, cascade failure detection to identify chain reactions across multi-agent systems, and circuit breakers to automatically halt agents exhibiting anomalous behaviour. This capability is required before deploying a second agent, as multi-agent interactions create emergent risks that single-agent deployments do not.</p>",
-        "what_changes": [
-          "Distributed tracing enables end-to-end visibility across multi-agent interaction chains",
-          "Blast-radius controls and circuit breakers limit the impact of agent failures",
-          "Cascade failure detection identifies chain reactions across interconnected agent systems"
-        ]
-      }
-    },
-    {
-      "id": "cap-new-10-ai-value-progression-management",
-      "label": "AI Value Progression Management",
-      "group": "Net-New for the Agentic Organisation",
-      "traditional": {
-        "summary": "No traditional EA equivalent exists.",
-        "body_html": "<p class=\"text-muted\">This capability has no equivalent in traditional EA practice. It addresses requirements that arise only when AI agents become part of the enterprise workforce.</p>"
-      },
-      "ai_impact": {
-        "summary": "Planning the <mark>platform transition from productivity (phase one) to revenue (phase two) AI</mark>.",
-        "impact_category": "C",
-        "body_html": "<p>AI Value Progression Management addresses the strategic transition from phase-one AI (productivity gains from cost reduction and efficiency) to phase-two AI (revenue generation from AI-augmented products and services). It aligns CEO and CIO expectations on AI value timelines, maps the platform requirements for each phase, and defines differentiated KPIs that track progress through the value progression. This capability addresses the C-suite expectation misalignment where leadership expects revenue impact while the organisation is still building productivity foundations.</p>",
-        "what_changes": [
-          "Phase-one to phase-two transition planning aligns expectations on AI value timelines",
-          "Differentiated KPIs track productivity gains (phase one) separately from revenue generation (phase two)",
-          "Platform requirement mapping ensures infrastructure investments support the value progression"
-        ]
-      }
-    }
+    { "id": "cap-01-architecture-vision-development", "label": "Architecture Vision Development", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#architecture-vision" },
+    { "id": "cap-02-architecture-roadmap-development", "label": "Architecture Roadmap Development", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#migration-planning" },
+    { "id": "cap-03-transformation-planning", "label": "Transformation Planning", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#opportunities-solutions" },
+    { "id": "cap-04-architecture-requirements-management", "label": "Architecture Requirements Management", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#architecture-vision" },
+    { "id": "cap-05-architecture-view-creation", "label": "Architecture View Creation", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#architecture-vision" },
+    { "id": "cap-06-new-technology-evaluation", "label": "New Technology Evaluation", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#technology-architecture" },
+    { "id": "cap-07-strategic-value-driver-definition", "label": "Strategic Value Driver Definition", "group": "Business Architecture", "impact_category": "A", "href": "ea-development-method.html#business-architecture" },
+    { "id": "cap-08-capability-definition", "label": "Business Capability Definition", "group": "Business Architecture", "impact_category": "A", "href": "ea-development-method.html#business-architecture" },
+    { "id": "cap-09-process-modelling", "label": "Process Modelling", "group": "Business Architecture", "impact_category": "A", "href": "ea-development-method.html#business-architecture" },
+    { "id": "cap-10-architecture-validation", "label": "Architecture Validation", "group": "Application Architecture", "impact_category": "A", "href": "ea-development-method.html#application-architecture" },
+    { "id": "cap-11-application-solution-architecture-modelling", "label": "Application/Solution Architecture Modelling", "group": "Application Architecture", "impact_category": "B", "href": "ea-development-method.html#application-architecture" },
+    { "id": "cap-12-integration-architecture-modelling", "label": "Integration Architecture Modelling", "group": "Application Architecture", "impact_category": "B", "href": "ea-development-method.html#application-architecture" },
+    { "id": "cap-13-business-object-modelling", "label": "Business Object Modelling", "group": "Data Architecture", "impact_category": "A", "href": "ea-development-method.html#data-architecture" },
+    { "id": "cap-14-data-architecture-modelling", "label": "Data Architecture Modelling", "group": "Data Architecture", "impact_category": "B", "href": "ea-development-method.html#data-architecture" },
+    { "id": "cap-15-data-flow-modelling", "label": "Data Flow Modelling", "group": "Data Architecture", "impact_category": "B", "href": "ea-development-method.html#data-architecture" },
+    { "id": "cap-16-system-architecture-modelling", "label": "System Architecture Modelling", "group": "Technology Architecture", "impact_category": "B", "href": "ea-development-method.html#technology-architecture" },
+    { "id": "cap-17-network-architecture-modelling", "label": "Network Architecture Modelling", "group": "Technology Architecture", "impact_category": "A", "href": "ea-development-method.html#technology-architecture" },
+    { "id": "cap-18-virtualization-architecture-modelling", "label": "Virtualization Architecture Modelling", "group": "Technology Architecture", "impact_category": "B", "href": "ea-development-method.html#technology-architecture" },
+    { "id": "cap-19-dashboards-views-reports", "label": "Dashboards, Views, Reports", "group": "Architecture Repository", "impact_category": "B", "href": "ea-repository.html#architecture-landscape" },
+    { "id": "cap-20-data-gathering-data-quality", "label": "Data Gathering & Data Quality", "group": "Architecture Repository", "impact_category": "A", "href": "ea-repository.html#architecture-repository" },
+    { "id": "cap-21-repository-support-and-maintenance", "label": "Repository Support & Maintenance", "group": "Architecture Repository", "impact_category": "B", "href": "ea-repository.html#architecture-repository" },
+    { "id": "cap-22-organisation-development", "label": "Organisation Development", "group": "Architecture Management", "impact_category": "B", "href": "ea-roles-skills.html#ea-organisation" },
+    { "id": "cap-23-ea-performance-management", "label": "EA Performance Management", "group": "Architecture Management", "impact_category": "A", "href": "ea-roles-skills.html#ea-maturity" },
+    { "id": "cap-24-ea-process-development", "label": "EA Process Development", "group": "Architecture Management", "impact_category": "A", "href": "ea-roles-skills.html#ea-organisation" },
+    { "id": "cap-25-ea-knowledge-management", "label": "EA Knowledge Management", "group": "Architecture Management", "impact_category": "B", "href": "ea-roles-skills.html#skills-competencies" },
+    { "id": "cap-26-stakeholder-management", "label": "Stakeholder Management", "group": "Architecture Management", "impact_category": "B", "href": "ea-roles-skills.html#architect-roles" },
+    { "id": "cap-27-standards-policies-principles-guidelines", "label": "Standards, Policies, Principles, Guidelines", "group": "Governance, Communication & Change", "impact_category": "A", "href": "ea-governance.html#governance-principles" },
+    { "id": "cap-28-architecture-training", "label": "Architecture Training", "group": "Governance, Communication & Change", "impact_category": "B", "href": "ea-governance.html#governance-framework" },
+    { "id": "cap-29-communication-and-change-management", "label": "Communication & Change Management", "group": "Governance, Communication & Change", "impact_category": "A", "href": "ea-governance.html#governance-framework" },
+    { "id": "cap-30-architecture-compliance-evaluation", "label": "Architecture Compliance Evaluation", "group": "Governance, Communication & Change", "impact_category": "A", "href": "ea-governance.html#architecture-compliance" },
+    { "id": "cap-new-01-agent-lifecycle-management", "label": "Agent Lifecycle Management", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-01-agent-lifecycle-management" },
+    { "id": "cap-new-02-model-portfolio-management", "label": "Model Portfolio Management", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-02-model-portfolio-management" },
+    { "id": "cap-new-03-ai-finops", "label": "AI FinOps", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-03-ai-finops" },
+    { "id": "cap-new-04-continuous-architecture-compliance", "label": "Continuous Architecture Compliance", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-04-continuous-architecture-compliance" },
+    { "id": "cap-new-05-sovereignty-by-design", "label": "Sovereignty-by-Design", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-05-sovereignty-by-design" },
+    { "id": "cap-new-06-enterprise-as-code", "label": "Enterprise as Code", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-06-enterprise-as-code" },
+    { "id": "cap-new-07-agent-communication-architecture", "label": "Agent Communication Architecture", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-07-agent-communication-architecture" },
+    { "id": "cap-new-08-ai-infrastructure-readiness-assessment", "label": "AI Infrastructure Readiness Assessment", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-08-ai-infrastructure-readiness-assessment" },
+    { "id": "cap-new-09-agent-risk-and-observability", "label": "Agent Risk and Observability", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-09-agent-risk-and-observability" },
+    { "id": "cap-new-10-ai-value-progression-management", "label": "AI Value Progression Management", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-10-ai-value-progression-management" }
   ]
 }
