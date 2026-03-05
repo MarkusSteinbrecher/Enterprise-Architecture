@@ -1923,23 +1923,33 @@ function initProcessesPage() {
   const tc = document.getElementById('tab-content');
   if (!tc || !pageData) return;
 
-  let html = '<div class="gov-hero">';
+  let html = '';
+
+  /* Hero */
+  html += '<header class="hero"><div class="container">';
+  html += '<p class="section-label">Processes</p>';
   html += `<h1>${pageData.title}</h1>`;
-  html += `<p class="gov-subtitle">${pageData.subtitle}</p>`;
-  html += '</div>';
+  html += `<p class="subtitle">${pageData.subtitle}</p>`;
+  html += '</div></header>';
 
   /* Section nav grid */
+  html += '<div class="dashboard-section"><div class="container">';
   html += '<div class="gov-nav-grid">';
   for (const sec of pageData.sections) {
-    html += `<a class="gov-nav-card" href="#${sec.id}"><span class="gov-nav-icon">${sec.icon}</span><strong>${sec.label}</strong><p>${sec.summary.slice(0, 100)}\u2026</p></a>`;
+    html += `<a class="gov-nav-card" href="#${sec.id}" onclick="event.preventDefault();document.getElementById('${sec.id}').scrollIntoView({behavior:'smooth',block:'start'})">`;
+    html += `<span class="gov-nav-icon">${sec.icon}</span>`;
+    html += `<span class="gov-nav-label">${sec.label}</span>`;
+    html += '</a>';
   }
   html += '</div>';
+  html += '</div></div>';
 
   /* Sections */
   for (const sec of pageData.sections) {
-    html += `<section class="gov-section" id="${sec.id}">`;
-    html += `<h2><span class="gov-section-icon">${sec.icon}</span> ${sec.label}</h2>`;
-    html += `<p class="gov-section-summary">${sec.summary}</p>`;
+    html += `<div class="dashboard-section" id="${sec.id}"><div class="container">`;
+    html += `<p class="section-label">${sec.label}</p>`;
+    html += `<h2>${sec.label}</h2>`;
+    html += `<p class="page-description">${sec.summary}</p>`;
 
     /* Phases (practitioner guidance) */
     if (sec.phases) {
@@ -1950,20 +1960,24 @@ function initProcessesPage() {
     if (sec.subsections) {
       for (const sub of sec.subsections) {
         html += `<div class="gov-subsection" id="${sub.id}">`;
-        html += `<div class="gov-subsection-header" onclick="this.parentElement.classList.toggle('open')"><h3>${sub.title}</h3>${chevronSVG()}</div>`;
+        html += `<div class="gov-subsection-header" onclick="this.closest('.gov-subsection').classList.toggle('open')">`;
+        html += `<h3>${sub.title}</h3>`;
+        html += chevronSVG();
+        html += '</div>';
         html += `<div class="gov-subsection-content">${sub.content}</div>`;
         html += '</div>';
       }
     }
 
-    html += '</section>';
+    html += '</div></div>';
   }
 
   /* Sources */
   if (pageData.sources && pageData.sources.length) {
-    html += '<section class="gov-section" id="sources"><h2>Sources</h2><ul>';
+    html += '<div class="dashboard-section" id="sources"><div class="container">';
+    html += '<h2>Sources</h2><ul>';
     for (const s of pageData.sources) { html += `<li>${s}</li>`; }
-    html += '</ul></section>';
+    html += '</ul></div></div>';
   }
 
   tc.innerHTML = html;
@@ -1983,23 +1997,33 @@ function initToolsRepositoryPage() {
   const tc = document.getElementById('tab-content');
   if (!tc || !pageData) return;
 
-  let html = '<div class="gov-hero">';
+  let html = '';
+
+  /* Hero */
+  html += '<header class="hero"><div class="container">';
+  html += '<p class="section-label">Tools & Repository</p>';
   html += `<h1>${pageData.title}</h1>`;
-  html += `<p class="gov-subtitle">${pageData.subtitle}</p>`;
-  html += '</div>';
+  html += `<p class="subtitle">${pageData.subtitle}</p>`;
+  html += '</div></header>';
 
   /* Section nav grid */
+  html += '<div class="dashboard-section"><div class="container">';
   html += '<div class="gov-nav-grid">';
   for (const sec of pageData.sections) {
-    html += `<a class="gov-nav-card" href="#${sec.id}"><span class="gov-nav-icon">${sec.icon}</span><strong>${sec.label}</strong><p>${sec.summary.slice(0, 100)}\u2026</p></a>`;
+    html += `<a class="gov-nav-card" href="#${sec.id}" onclick="event.preventDefault();document.getElementById('${sec.id}').scrollIntoView({behavior:'smooth',block:'start'})">`;
+    html += `<span class="gov-nav-icon">${sec.icon}</span>`;
+    html += `<span class="gov-nav-label">${sec.label}</span>`;
+    html += '</a>';
   }
   html += '</div>';
+  html += '</div></div>';
 
   /* Sections */
   for (const sec of pageData.sections) {
-    html += `<section class="gov-section" id="${sec.id}">`;
-    html += `<h2><span class="gov-section-icon">${sec.icon}</span> ${sec.label}</h2>`;
-    html += `<p class="gov-section-summary">${sec.summary}</p>`;
+    html += `<div class="dashboard-section" id="${sec.id}"><div class="container">`;
+    html += `<p class="section-label">${sec.label}</p>`;
+    html += `<h2>${sec.label}</h2>`;
+    html += `<p class="page-description">${sec.summary}</p>`;
 
     /* Phases (practitioner guidance) */
     if (sec.phases) {
@@ -2010,20 +2034,24 @@ function initToolsRepositoryPage() {
     if (sec.subsections) {
       for (const sub of sec.subsections) {
         html += `<div class="gov-subsection" id="${sub.id}">`;
-        html += `<div class="gov-subsection-header" onclick="this.parentElement.classList.toggle('open')"><h3>${sub.title}</h3>${chevronSVG()}</div>`;
+        html += `<div class="gov-subsection-header" onclick="this.closest('.gov-subsection').classList.toggle('open')">`;
+        html += `<h3>${sub.title}</h3>`;
+        html += chevronSVG();
+        html += '</div>';
         html += `<div class="gov-subsection-content">${sub.content}</div>`;
         html += '</div>';
       }
     }
 
-    html += '</section>';
+    html += '</div></div>';
   }
 
   /* Sources */
   if (pageData.sources && pageData.sources.length) {
-    html += '<section class="gov-section" id="sources"><h2>Sources</h2><ul>';
+    html += '<div class="dashboard-section" id="sources"><div class="container">';
+    html += '<h2>Sources</h2><ul>';
     for (const s of pageData.sources) { html += `<li>${s}</li>`; }
-    html += '</ul></section>';
+    html += '</ul></div></div>';
   }
 
   tc.innerHTML = html;

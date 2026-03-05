@@ -2,10 +2,8 @@
   "page_type": "people",
   "title": "People & Organisation for the Agentic Enterprise",
   "subtitle": "How the EA team, roles, skills, and organisation must evolve when AI agents become part of the workforce. From traditional architect roles to hybrid human-agent teams.",
-  "description": "This page covers how EA people, roles, skills, and organisational structures must adapt for the agentic enterprise — synthesising TOGAF capability guidance, industry skills frameworks, and emerging AI workforce models.",
+  "description": "This page covers how EA people, roles, skills, and organisational structures must adapt for the agentic enterprise — synthesising traditional capability guidance, industry skills frameworks, and emerging AI workforce models.",
   "sources": [
-    "TOGAF Foundation Course — Part 5: EA Capability and Governance",
-    "TOGAF Series Guide — Architecture Skills Framework (8 categories, 4 proficiency levels)",
     "SFIA Framework — Skills Framework for the Information Age (v9)",
     "BCS / iSAQB — Architecture certification frameworks",
     "BCG (2025) — 'Freedom within a Frame' central platform + distributed domain model",
@@ -17,7 +15,7 @@
       "id": "roles",
       "label": "Architect Roles",
       "icon": "&#128100;",
-      "summary": "Five traditional TOGAF architect roles must evolve to govern non-deterministic, learning-capable agent components. Four entirely new roles are required for agentic organisations.",
+      "summary": "Five traditional architect roles must evolve to govern non-deterministic, learning-capable agent components. Four entirely new roles are required for agentic organisations.",
       "subsections": [
         {
           "id": "traditional-roles",
@@ -35,17 +33,17 @@
       "id": "skills",
       "label": "Skills & Competencies",
       "icon": "&#127891;",
-      "summary": "TOGAF defines eight skills categories across four proficiency levels. The agentic organisation requires a ninth category — AI & Agent skills — and significant enhancement of existing categories.",
+      "summary": "Eight skills categories across four proficiency levels form the foundation. The agentic organisation requires a ninth category — AI & Agent skills — and significant enhancement of existing categories.",
       "subsections": [
         {
           "id": "skills-framework",
           "title": "Architecture Skills Framework",
-          "content": "<p>TOGAF's skills framework defines four proficiency levels applied across skill categories:</p><table class='gov-table'><thead><tr><th>Level</th><th>Label</th><th>Description</th></tr></thead><tbody><tr><td><strong>1</strong></td><td>Background</td><td>Has a background understanding but not applied. Knows where to find expertise.</td></tr><tr><td><strong>2</strong></td><td>Aware</td><td>Has awareness of the area. Can discuss intelligently and identify issues.</td></tr><tr><td><strong>3</strong></td><td>Knowledgeable</td><td>Has detailed knowledge. Can evaluate proposals and define governance requirements.</td></tr><tr><td><strong>4</strong></td><td>Expert</td><td>Has deep expertise. Can design solutions, evaluate alternatives, and set direction.</td></tr></tbody></table><h5>Traditional Skill Categories (TOGAF)</h5><ul><li><strong>Generic</strong> — Leadership, teamwork, communication, facilitation</li><li><strong>Business</strong> — Business processes, strategic planning, change management</li><li><strong>Architecture</strong> — Architecture frameworks, methods, modelling, patterns</li><li><strong>Application</strong> — Software engineering, systems design, integration</li><li><strong>Data</strong> — Data management, analytics, modelling, quality</li><li><strong>Technology</strong> — Infrastructure, platforms, networks, cloud</li><li><strong>Legal</strong> — Procurement, contracts, intellectual property, regulation</li><li><strong>Change</strong> — Transformation, programme management, benefits realisation</li></ul>"
+          "content": "<p>The architecture skills framework defines four proficiency levels applied across skill categories:</p><table class='gov-table'><thead><tr><th>Level</th><th>Label</th><th>Description</th></tr></thead><tbody><tr><td><strong>1</strong></td><td>Background</td><td>Has a background understanding but not applied. Knows where to find expertise.</td></tr><tr><td><strong>2</strong></td><td>Aware</td><td>Has awareness of the area. Can discuss intelligently and identify issues.</td></tr><tr><td><strong>3</strong></td><td>Knowledgeable</td><td>Has detailed knowledge. Can evaluate proposals and define governance requirements.</td></tr><tr><td><strong>4</strong></td><td>Expert</td><td>Has deep expertise. Can design solutions, evaluate alternatives, and set direction.</td></tr></tbody></table><h5>Traditional Skill Categories</h5><ul><li><strong>Generic</strong> — Leadership, teamwork, communication, facilitation</li><li><strong>Business</strong> — Business processes, strategic planning, change management</li><li><strong>Architecture</strong> — Architecture frameworks, methods, modelling, patterns</li><li><strong>Application</strong> — Software engineering, systems design, integration</li><li><strong>Data</strong> — Data management, analytics, modelling, quality</li><li><strong>Technology</strong> — Infrastructure, platforms, networks, cloud</li><li><strong>Legal</strong> — Procurement, contracts, intellectual property, regulation</li><li><strong>Change</strong> — Transformation, programme management, benefits realisation</li></ul>"
         },
         {
           "id": "ai-skills",
           "title": "New: AI & Agent Skills Category",
-          "content": "<p>An entirely new skills category is required. TOGAF's single reference to 'AI and Expert Systems' is inadequate for organisations deploying agents at scale.</p><table class='gov-table'><thead><tr><th>Skill</th><th>Enterprise Architect</th><th>Solution Architect</th><th>Domain Architect</th></tr></thead><tbody><tr><td>AI/ML Fundamentals</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td></tr><tr><td>Agent Design Patterns</td><td>L2 — Aware</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td></tr><tr><td>Prompt Engineering</td><td>L2 — Aware</td><td>L4 — Expert</td><td>L2 — Aware</td></tr><tr><td>Agent Governance & Ethics</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td></tr><tr><td>Agent Testing & Validation</td><td>L2 — Aware</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td></tr><tr><td>Multi-Agent Orchestration</td><td>L3 — Knowledgeable</td><td>L4 — Expert</td><td>L2 — Aware</td></tr><tr><td>AI Platform Evaluation</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td><td>L4 — Expert (Tech)</td></tr><tr><td>Responsible AI</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td></tr></tbody></table>"
+          "content": "<p>An entirely new skills category is required. The traditional single reference to 'AI and Expert Systems' is inadequate for organisations deploying agents at scale.</p><table class='gov-table'><thead><tr><th>Skill</th><th>Enterprise Architect</th><th>Solution Architect</th><th>Domain Architect</th></tr></thead><tbody><tr><td>AI/ML Fundamentals</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td></tr><tr><td>Agent Design Patterns</td><td>L2 — Aware</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td></tr><tr><td>Prompt Engineering</td><td>L2 — Aware</td><td>L4 — Expert</td><td>L2 — Aware</td></tr><tr><td>Agent Governance & Ethics</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td></tr><tr><td>Agent Testing & Validation</td><td>L2 — Aware</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td></tr><tr><td>Multi-Agent Orchestration</td><td>L3 — Knowledgeable</td><td>L4 — Expert</td><td>L2 — Aware</td></tr><tr><td>AI Platform Evaluation</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td><td>L4 — Expert (Tech)</td></tr><tr><td>Responsible AI</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td></tr></tbody></table>"
         },
         {
           "id": "enhanced-generic",
@@ -58,7 +56,7 @@
       "id": "ai-literacy",
       "label": "AI Literacy",
       "icon": "&#129504;",
-      "summary": "AI literacy is a new, continuous learning requirement — not a one-time training exercise. TOGAF assumes static proficiency levels, but AI capabilities evolve monthly. Eight literacy dimensions are required across different audiences.",
+      "summary": "AI literacy is a new, continuous learning requirement — not a one-time training exercise. Traditional EA assumes static proficiency levels, but AI capabilities evolve monthly. Eight literacy dimensions are required across different audiences.",
       "subsections": [
         {
           "id": "literacy-architects",

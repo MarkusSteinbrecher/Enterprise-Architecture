@@ -2,9 +2,8 @@
   "page_type": "maturity",
   "title": "EA Maturity for the Agentic Organisation",
   "subtitle": "Where are you today, and what should you do next? A five-stage maturity model that extends traditional EA assessment frameworks with AI and agent-readiness dimensions.",
-  "description": "This model synthesises established frameworks — TOGAF ACMM, Gartner ITScore, GAO EAMMF, and MIT CISR — with new dimensions required for organisations deploying AI agents. Each stage describes what you will observe in your organisation and prescribes the focused actions to reach the next level.",
+  "description": "This model synthesises established frameworks — ACMM, Gartner ITScore, GAO EAMMF, and MIT CISR — with new dimensions required for organisations deploying AI agents. Each stage describes what you will observe in your organisation and prescribes the focused actions to reach the next level.",
   "sources": [
-    "TOGAF Architecture Capability Maturity Model (ACMM) — 9 architecture elements across 6 levels",
     "Gartner ITScore for Enterprise Architecture — 5 levels across 8 dimensions",
     "US GAO Enterprise Architecture Management Maturity Framework — 7 stages, 59 core elements",
     "MIT CISR Enterprise AI Maturity Model — 4 stages of enterprise AI adoption",
@@ -72,7 +71,7 @@
       "characteristics": {
         "summary": "EA exists as a recognised function but operates inconsistently. Basic processes are defined but not always followed. Architecture reviews happen for some projects but not all. The repository exists but is often incomplete or outdated. AI pilots are underway but lack architectural coordination.",
         "governance": "Architecture Review Board established but meets infrequently. Governance applied to major projects only. Standards documented but compliance not enforced. Dispensation process informal or absent.",
-        "process": "Basic architecture development process defined, loosely based on TOGAF or similar. Applied to strategic initiatives but bypassed for smaller projects. Requirements management reactive rather than systematic.",
+        "process": "Basic architecture development process defined, loosely based on an established framework. Applied to strategic initiatives but bypassed for smaller projects. Requirements management reactive rather than systematic.",
         "people": "One or more dedicated architects appointed. Roles defined but career path unclear. Architecture skills assessed informally. Training ad hoc. Architects perceived as technical authorities but lack business engagement skills.",
         "repository": "Central repository established (EA tool or structured wiki). Application portfolio documented but updates irregular. Basic metamodel defined. No API access. Landscape views generated manually.",
         "value": "EA value demonstrated through specific project successes. Architecture principles published and referenced. Some business stakeholder engagement. No formal KPIs or maturity measurement.",

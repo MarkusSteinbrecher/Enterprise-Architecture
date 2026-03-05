@@ -3,20 +3,13 @@
   "title": "EA Processes for the Agentic Organisation",
   "subtitle": "From phased architecture cycles to continuous, event-driven architecture development. How EA processes must evolve when AI deployment velocity outpaces traditional governance cadences.",
   "description": "This page covers the Architecture Development Method (ADM) and its evolution for agentic organisations — from phased cycles to continuous architecture, dual-speed development, agent-native process design, and automated architecture discovery.",
-  "sources": [
-    "TOGAF ADM — FC Part 1, Chapters 1-13",
-    "TOGAF ADM Techniques — FC Part 2, Chapters 2-10",
-    "TOGAF Applying the ADM — FC Part 3, Chapters 1-4",
-    "TSG Agile Sprints — Applying ADM using Agile",
-    "TSG Practitioners' Approach — Practical ADM Application",
-    "TSG Architecture Project Management — Integration with PM"
-  ],
+  "sources": [],
   "sections": [
     {
       "id": "fundamentals",
       "label": "Process Fundamentals",
       "icon": "&#9881;",
-      "summary": "The Architecture Development Method (ADM) is TOGAF's core process engine — a generic method for developing and managing the lifecycle of an Enterprise Architecture. Critically, it is a reference model of architecture activities, not a mandated waterfall sequence.",
+      "summary": "The Architecture Development Method (ADM) is the core process engine of traditional EA — a generic method for developing and managing the lifecycle of an Enterprise Architecture. Critically, it is a reference model of architecture activities, not a mandated waterfall sequence.",
       "subsections": [
         {
           "id": "adm-overview",
@@ -26,7 +19,7 @@
         {
           "id": "design-characteristics",
           "title": "Key Design Characteristics",
-          "content": "<p>TOGAF explicitly states the ADM is <em>\"a generic method for architecture development\"</em> intended to be <em>\"used as a guide and does not mandate a waterfall approach.\"</em> This is critical but frequently misunderstood.</p><div class='gov-chars-grid'><div class='gov-char'><strong>Reference Model</strong><p>The ADM is a taxonomy of architecture activities, not a mandated sequence. Phases can be applied selectively based on context.</p></div><div class='gov-char'><strong>Iteration Support</strong><p>Part 3 explicitly supports cycles within phases, across phases, and between phases. Architecture Development and Definition Iterations allow revisiting earlier work.</p></div><div class='gov-char'><strong>Landscape Application</strong><p>The ADM operates at three levels — strategic, segment, and capability — allowing different parts of the enterprise to run at different cadences.</p></div><div class='gov-char'><strong>Partitioning</strong><p>Federating architecture work across organisational boundaries, with different partitions at different phases simultaneously.</p></div><div class='gov-char'><strong>Agile Delivery</strong><p>The TSG on Agile Sprints provides guidance for running ADM phases within sprint cycles, producing usable architecture output incrementally.</p></div><div class='gov-char'><strong>Practitioner Flexibility</strong><p>Four practical scenarios — strategy, portfolio, project, solution delivery — demonstrate selective phase application based on context.</p></div></div>"
+          "content": "<p>The ADM is explicitly described as <em>\"a generic method for architecture development\"</em> intended to be <em>\"used as a guide and does not mandate a waterfall approach.\"</em> This is critical but frequently misunderstood.</p><div class='gov-chars-grid'><div class='gov-char'><strong>Reference Model</strong><p>The ADM is a taxonomy of architecture activities, not a mandated sequence. Phases can be applied selectively based on context.</p></div><div class='gov-char'><strong>Iteration Support</strong><p>Part 3 explicitly supports cycles within phases, across phases, and between phases. Architecture Development and Definition Iterations allow revisiting earlier work.</p></div><div class='gov-char'><strong>Landscape Application</strong><p>The ADM operates at three levels — strategic, segment, and capability — allowing different parts of the enterprise to run at different cadences.</p></div><div class='gov-char'><strong>Partitioning</strong><p>Federating architecture work across organisational boundaries, with different partitions at different phases simultaneously.</p></div><div class='gov-char'><strong>Agile Delivery</strong><p>The TSG on Agile Sprints provides guidance for running ADM phases within sprint cycles, producing usable architecture output incrementally.</p></div><div class='gov-char'><strong>Practitioner Flexibility</strong><p>Four practical scenarios — strategy, portfolio, project, solution delivery — demonstrate selective phase application based on context.</p></div></div>"
         },
         {
           "id": "adm-techniques",
@@ -44,7 +37,7 @@
         {
           "id": "evidence",
           "title": "Evidence for the Mismatch",
-          "content": "<p>Six or more independent sources identify this as the most consistently cited barrier to AI-era EA effectiveness:</p><ul><li><strong>Three sources directly cite TOGAF's phased model as misaligned</strong> with AI deployment velocity, arguing that a sequential process introduces structural latency into architecture decisions</li><li><strong>Architecture must become continuous and event-driven</strong>, not phased — shifting from \"architecture as a project activity\" to \"architecture as an always-on capability\"</li><li><strong>Automated architecture discovery</strong> from deployment pipelines, cloud APIs, and CMDBs can replace manual data gathering</li><li><strong>Real-time conformance monitoring</strong> means compliance checking happens at deployment time, not at ADM review gates</li></ul><p class='gov-note'><strong>The acceleration paradox:</strong> Organisations with clean, modular architectures gain 30-50% faster AI adoption, but achieving that modularity requires architecture work that itself takes time. Organisations trapped in legacy complexity cannot architect fast enough to benefit from AI that would help them architect faster.</p>"
+          "content": "<p>Six or more independent sources identify this as the most consistently cited barrier to AI-era EA effectiveness:</p><ul><li><strong>Three sources directly cite the traditional phased model as misaligned</strong> with AI deployment velocity, arguing that a sequential process introduces structural latency into architecture decisions</li><li><strong>Architecture must become continuous and event-driven</strong>, not phased — shifting from \"architecture as a project activity\" to \"architecture as an always-on capability\"</li><li><strong>Automated architecture discovery</strong> from deployment pipelines, cloud APIs, and CMDBs can replace manual data gathering</li><li><strong>Real-time conformance monitoring</strong> means compliance checking happens at deployment time, not at ADM review gates</li></ul><p class='gov-note'><strong>The acceleration paradox:</strong> Organisations with clean, modular architectures gain 30-50% faster AI adoption, but achieving that modularity requires architecture work that itself takes time. Organisations trapped in legacy complexity cannot architect fast enough to benefit from AI that would help them architect faster.</p>"
         },
         {
           "id": "what-breaks",
@@ -67,7 +60,7 @@
         {
           "id": "dual-speed-model",
           "title": "The Dual-Speed Operating Model",
-          "content": "<table class='gov-table'><thead><tr><th>Mode</th><th>Scope</th><th>Cadence</th><th>Method</th></tr></thead><tbody><tr><td><strong>Continuous</strong></td><td>Technology architecture, deployment compliance, infrastructure decisions</td><td>Days to weeks</td><td>Auto-discovered content, automated compliance, event-driven decisions with exception-based human review</td></tr><tr><td><strong>Deliberative</strong></td><td>Business architecture, strategic architecture, operating model design, agent-native process redesign</td><td>Weeks to quarters</td><td>Full ADM phases with sprint-based delivery, compressed cycle times, stakeholder engagement</td></tr></tbody></table><p class='gov-note'>TOGAF's landscape-level application (strategic/segment/capability) provides the conceptual foundation for this split. The innovation is making the different cadences explicit and designing automation for the continuous mode.</p>"
+          "content": "<table class='gov-table'><thead><tr><th>Mode</th><th>Scope</th><th>Cadence</th><th>Method</th></tr></thead><tbody><tr><td><strong>Continuous</strong></td><td>Technology architecture, deployment compliance, infrastructure decisions</td><td>Days to weeks</td><td>Auto-discovered content, automated compliance, event-driven decisions with exception-based human review</td></tr><tr><td><strong>Deliberative</strong></td><td>Business architecture, strategic architecture, operating model design, agent-native process redesign</td><td>Weeks to quarters</td><td>Full ADM phases with sprint-based delivery, compressed cycle times, stakeholder engagement</td></tr></tbody></table><p class='gov-note'>The landscape-level application approach (strategic/segment/capability) provides the conceptual foundation for this split. The innovation is making the different cadences explicit and designing automation for the continuous mode.</p>"
         },
         {
           "id": "continuous-mode",
@@ -108,7 +101,7 @@
       "id": "new-capabilities",
       "label": "New Process Capabilities",
       "icon": "&#127793;",
-      "summary": "Three major new process capabilities are required that have no TOGAF precedent: Continuous Architecture Development, AI-Augmented Architecture Discovery, and Agent-Native Process Design methodology.",
+      "summary": "Three major new process capabilities are required that have no traditional EA precedent: Continuous Architecture Development, AI-Augmented Architecture Discovery, and Agent-Native Process Design methodology.",
       "subsections": [
         {
           "id": "continuous-architecture",
@@ -131,7 +124,7 @@
       "id": "practitioner-guidance",
       "label": "Practitioner Guidance",
       "icon": "&#128736;",
-      "summary": "Concrete actions for EA practitioners, structured by time horizon. These recommendations bridge the gap between TOGAF's phased ADM and the continuous, agent-native process development that agentic organisations require.",
+      "summary": "Concrete actions for EA practitioners, structured by time horizon. These recommendations bridge the gap between the phased ADM and the continuous, agent-native process development that agentic organisations require.",
       "phases": [
         {
           "timeframe": "0-3 months",
