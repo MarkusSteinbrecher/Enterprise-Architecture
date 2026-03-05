@@ -206,8 +206,8 @@ p:last-child { margin-bottom: 0; }
   text-decoration: none;
 }
 
-/* ── Mobile nav (≤768px) ─────────────────────────────── */
-@media (max-width: 768px) {
+/* ── Mobile nav (≤1024px) ────────────────────────────── */
+@media (max-width: 1024px) {
   .top-nav-inner { flex-wrap: wrap; }
   .nav-hamburger { display: block; order: 2; }
   .search-toggle { order: 1; margin-left: auto; }
