@@ -3408,27 +3408,59 @@ a.cap-box:hover { text-decoration: none; }
 /* Role cards grid */
 .people-roles-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: .75rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
   margin: .75rem 0;
 }
 .people-role-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: .85rem 1rem;
+  padding: 1.25rem 1.5rem;
   box-shadow: var(--shadow);
 }
 .people-role-card h5 {
-  font-size: .88rem;
-  margin: 0 0 .35rem;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 .5rem;
   color: var(--text);
+}
+.people-role-card h6 {
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text);
+  margin: 1rem 0 .35rem;
+}
+.people-role-card h6:first-of-type { margin-top: .5rem; }
+.people-role-purpose {
+  font-size: .85rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0 0 .25rem;
+  font-style: italic;
 }
 .people-role-card p {
   font-size: .8rem;
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0 0 .5rem;
+}
+.people-role-card ul {
+  margin: 0 0 .5rem;
+  padding-left: 1.25rem;
+}
+.people-role-card li {
+  font-size: .8rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: .2rem;
+}
+.people-role-card mark {
+  background: #fef08a;
+  padding: 0 .15em;
+  border-radius: 2px;
 }
 .people-role-meta {
   display: flex;
