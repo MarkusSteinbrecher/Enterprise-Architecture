@@ -8,8 +8,8 @@
     { "id": "capabilities", "label": "Capabilities", "href": "capabilities.html" },
     { "id": "governance", "label": "Governance", "href": "governance.html" },
     { "id": "people", "label": "People & Organisation", "href": "people.html" },
-    { "id": "om-processes", "label": "Processes", "href": "#", "disabled": true },
-    { "id": "om-tools", "label": "Tools & Repository", "href": "#", "disabled": true },
+    { "id": "processes", "label": "Processes", "href": "processes.html" },
+    { "id": "tools-repository", "label": "Tools & Repository", "href": "tools-repository.html" },
     { "id": "maturity", "label": "Maturity", "href": "maturity.html" },
     {
       "id": "industries",

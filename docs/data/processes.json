@@ -1,0 +1,205 @@
+{
+  "page_type": "processes",
+  "title": "EA Processes for the Agentic Organisation",
+  "subtitle": "From phased architecture cycles to continuous, event-driven architecture development. How EA processes must evolve when AI deployment velocity outpaces traditional governance cadences.",
+  "description": "This page covers the Architecture Development Method (ADM) and its evolution for agentic organisations — from phased cycles to continuous architecture, dual-speed development, agent-native process design, and automated architecture discovery.",
+  "sources": [
+    "TOGAF ADM — FC Part 1, Chapters 1-13",
+    "TOGAF ADM Techniques — FC Part 2, Chapters 2-10",
+    "TOGAF Applying the ADM — FC Part 3, Chapters 1-4",
+    "TSG Agile Sprints — Applying ADM using Agile",
+    "TSG Practitioners' Approach — Practical ADM Application",
+    "TSG Architecture Project Management — Integration with PM"
+  ],
+  "sections": [
+    {
+      "id": "fundamentals",
+      "label": "Process Fundamentals",
+      "icon": "&#9881;",
+      "summary": "The Architecture Development Method (ADM) is TOGAF's core process engine — a generic method for developing and managing the lifecycle of an Enterprise Architecture. Critically, it is a reference model of architecture activities, not a mandated waterfall sequence.",
+      "subsections": [
+        {
+          "id": "adm-overview",
+          "title": "The ADM Cycle",
+          "content": "<p>The ADM defines a phased cycle comprising a Preliminary Phase, eight named phases (A through H), and a continuous Requirements Management hub:</p><table class='gov-table'><thead><tr><th>Phase</th><th>Purpose</th><th>Key Outputs</th></tr></thead><tbody><tr><td><strong>Preliminary</strong></td><td>Establish architecture capability, define principles, tailor the ADM</td><td>Architecture Principles, Tailored Framework</td></tr><tr><td><strong>A — Vision</strong></td><td>High-level aspirational vision of capabilities and business value</td><td>Architecture Vision, Statement of Architecture Work</td></tr><tr><td><strong>B — Business</strong></td><td>Describe how the enterprise needs to operate to achieve goals</td><td>Business Architecture Definition</td></tr><tr><td><strong>C — Information Systems</strong></td><td>Develop Data and Application Architectures</td><td>Data & Application Architecture Definitions</td></tr><tr><td><strong>D — Technology</strong></td><td>Map logical components onto technology components</td><td>Technology Architecture Definition</td></tr><tr><td><strong>E — Opportunities</strong></td><td>Identify delivery vehicles and implementation approach</td><td>Implementation & Migration Strategy</td></tr><tr><td><strong>F — Migration Planning</strong></td><td>Detailed migration plan with cost/benefit/risk analysis</td><td>Implementation & Migration Plan</td></tr><tr><td><strong>G — Implementation Governance</strong></td><td>Architectural oversight during implementation</td><td>Architecture Compliance Assessments</td></tr><tr><td><strong>H — Change Management</strong></td><td>Manage change to deployed architecture</td><td>Change Requests, Updated Architecture</td></tr><tr><td><strong>Requirements Management</strong></td><td>Continuous management of requirements across all phases</td><td>Requirements Repository</td></tr></tbody></table>"
+        },
+        {
+          "id": "design-characteristics",
+          "title": "Key Design Characteristics",
+          "content": "<p>TOGAF explicitly states the ADM is <em>\"a generic method for architecture development\"</em> intended to be <em>\"used as a guide and does not mandate a waterfall approach.\"</em> This is critical but frequently misunderstood.</p><div class='gov-chars-grid'><div class='gov-char'><strong>Reference Model</strong><p>The ADM is a taxonomy of architecture activities, not a mandated sequence. Phases can be applied selectively based on context.</p></div><div class='gov-char'><strong>Iteration Support</strong><p>Part 3 explicitly supports cycles within phases, across phases, and between phases. Architecture Development and Definition Iterations allow revisiting earlier work.</p></div><div class='gov-char'><strong>Landscape Application</strong><p>The ADM operates at three levels — strategic, segment, and capability — allowing different parts of the enterprise to run at different cadences.</p></div><div class='gov-char'><strong>Partitioning</strong><p>Federating architecture work across organisational boundaries, with different partitions at different phases simultaneously.</p></div><div class='gov-char'><strong>Agile Delivery</strong><p>The TSG on Agile Sprints provides guidance for running ADM phases within sprint cycles, producing usable architecture output incrementally.</p></div><div class='gov-char'><strong>Practitioner Flexibility</strong><p>Four practical scenarios — strategy, portfolio, project, solution delivery — demonstrate selective phase application based on context.</p></div></div>"
+        },
+        {
+          "id": "adm-techniques",
+          "title": "ADM Techniques",
+          "content": "<p>Part 2 provides supporting techniques used across the ADM cycle. These are phase-independent tools drawn upon as needed:</p><table class='gov-table'><thead><tr><th>Technique</th><th>Purpose</th><th>AI-Era Extension Needed</th></tr></thead><tbody><tr><td><strong>Architecture Principles</strong></td><td>General rules and guidelines for architecture</td><td>Add AI-specific principles (agent accountability, model portability)</td></tr><tr><td><strong>Stakeholder Management</strong></td><td>Identify and manage stakeholder concerns</td><td>Add AI agents as stakeholders with machine-readable concerns</td></tr><tr><td><strong>Architecture Patterns</strong></td><td>Reusable solution templates</td><td>Add multi-agent, RAG, model abstraction, human-in-the-loop patterns</td></tr><tr><td><strong>Gap Analysis</strong></td><td>Identify gaps between baseline and target</td><td>Add AI infrastructure, model capability, sovereignty gaps</td></tr><tr><td><strong>Migration Planning</strong></td><td>Techniques for transition planning</td><td>Add AI value progression and dual-speed transitions</td></tr><tr><td><strong>Business Transformation Readiness</strong></td><td>Assess readiness for change</td><td>Add AI readiness dimensions (infrastructure, data, skills, process)</td></tr><tr><td><strong>Risk Management</strong></td><td>Identify and mitigate risks</td><td>Add agent cascade failures, hallucination, adversarial attacks</td></tr><tr><td><strong>Interoperability</strong></td><td>Ensure systems work together</td><td>Add agent-to-agent protocols (MCP, A2A, ACP)</td></tr></tbody></table>"
+        }
+      ]
+    },
+    {
+      "id": "speed-mismatch",
+      "label": "The Speed Mismatch",
+      "icon": "&#9889;",
+      "summary": "The dominant signal across the research corpus is that EA's phased deliberative approach cannot keep pace with AI deployment velocity. The ADM cycle assumes a cadence measured in quarters or years — AI model lifecycles are months, agent deployment cycles are weeks.",
+      "subsections": [
+        {
+          "id": "evidence",
+          "title": "Evidence for the Mismatch",
+          "content": "<p>Six or more independent sources identify this as the most consistently cited barrier to AI-era EA effectiveness:</p><ul><li><strong>Three sources directly cite TOGAF's phased model as misaligned</strong> with AI deployment velocity, arguing that a sequential process introduces structural latency into architecture decisions</li><li><strong>Architecture must become continuous and event-driven</strong>, not phased — shifting from \"architecture as a project activity\" to \"architecture as an always-on capability\"</li><li><strong>Automated architecture discovery</strong> from deployment pipelines, cloud APIs, and CMDBs can replace manual data gathering</li><li><strong>Real-time conformance monitoring</strong> means compliance checking happens at deployment time, not at ADM review gates</li></ul><p class='gov-note'><strong>The acceleration paradox:</strong> Organisations with clean, modular architectures gain 30-50% faster AI adoption, but achieving that modularity requires architecture work that itself takes time. Organisations trapped in legacy complexity cannot architect fast enough to benefit from AI that would help them architect faster.</p>"
+        },
+        {
+          "id": "what-breaks",
+          "title": "What Breaks in the ADM",
+          "content": "<div class='gov-changes'><div class='gov-change-item'><h5>Assumptions That No Longer Hold</h5><ul><li><strong>Architecture has a natural quarterly/yearly cadence</strong> — When model lifecycles are months and agent deployment is weeks, quarterly cycles produce decisions based on outdated assumptions</li><li><strong>Process design precedes technology selection</strong> — The B→C→D→E phase ordering assumes processes are designed first, then technology selected. For agent-native processes, both must be co-designed</li><li><strong>Architecture content is created by humans</strong> — Auto-generation from deployment pipelines, CMDBs, and runtime telemetry replaces manual documentation for large portions of the landscape</li><li><strong>The cycle has a clear start and end</strong> — Continuous architecture development has no beginning or end; different concerns run at different cadences simultaneously</li><li><strong>Outputs are documents</strong> — Enterprise as Code requires machine-readable specifications, not just human-readable deliverables</li></ul></div><div class='gov-change-item'><h5>What Survives and Should Be Protected</h5><ul><li><strong>ADM as a reference model</strong> — The vocabulary of phases names the right categories of architecture work</li><li><strong>Iteration model</strong> — Cycles within and across phases provide the foundation for continuous architecture</li><li><strong>Landscape-level application</strong> — Strategic/segment/capability levels support different cadences</li><li><strong>Architecture partitioning</strong> — Federated work across boundaries supports \"Freedom within a Frame\"</li><li><strong>The technique library</strong> — All ADM techniques remain structurally sound; they need AI extension, not replacement</li><li><strong>Requirements Management as continuous</strong> — Already positioned as a hub; precedent for making other activities continuous</li><li><strong>Practitioners' approach</strong> — Selective phase application based on context is the right foundation</li></ul></div></div>"
+        },
+        {
+          "id": "tensions",
+          "title": "Core Tensions",
+          "content": "<p>The research surfaces two significant tensions that practitioners must navigate:</p><div class='gov-pillars'><div class='gov-pillar'><h5>Speed vs. Thoroughness</h5><p>Process redesign for agent strengths requires deep analysis that takes time, while governance speed demands faster cycles. <strong>Resolution:</strong> Distinguish between activities that must be fast (technology decisions, compliance, deployment governance) and those that should be deliberate (process redesign, operating model, strategic architecture).</p></div><div class='gov-pillar'><h5>Aspiration vs. Tooling Maturity</h5><p>The vision for continuous, automated architecture development exceeds current tooling maturity. Most organisations lack the repository completeness and integration infrastructure. <strong>Resolution:</strong> The path from phased to continuous ADM is itself a multi-year journey — the ADM must reform itself using its current capabilities.</p></div></div>"
+        }
+      ]
+    },
+    {
+      "id": "dual-speed",
+      "label": "Dual-Speed Architecture",
+      "icon": "&#8644;",
+      "summary": "Different architecture concerns require different development cadences. Technology architecture operates at deployment speed (days/weeks), business architecture at strategic speed (quarters), and operating model architecture at organisational change speed (months).",
+      "subsections": [
+        {
+          "id": "dual-speed-model",
+          "title": "The Dual-Speed Operating Model",
+          "content": "<table class='gov-table'><thead><tr><th>Mode</th><th>Scope</th><th>Cadence</th><th>Method</th></tr></thead><tbody><tr><td><strong>Continuous</strong></td><td>Technology architecture, deployment compliance, infrastructure decisions</td><td>Days to weeks</td><td>Auto-discovered content, automated compliance, event-driven decisions with exception-based human review</td></tr><tr><td><strong>Deliberative</strong></td><td>Business architecture, strategic architecture, operating model design, agent-native process redesign</td><td>Weeks to quarters</td><td>Full ADM phases with sprint-based delivery, compressed cycle times, stakeholder engagement</td></tr></tbody></table><p class='gov-note'>TOGAF's landscape-level application (strategic/segment/capability) provides the conceptual foundation for this split. The innovation is making the different cadences explicit and designing automation for the continuous mode.</p>"
+        },
+        {
+          "id": "continuous-mode",
+          "title": "Continuous Mode",
+          "content": "<p>For technology and deployment architecture, the continuous mode operates as an always-on capability:</p><ul><li><strong>Architecture content auto-discovered</strong> from cloud inventory APIs, CI/CD pipeline metadata, service mesh telemetry, and API gateway configurations</li><li><strong>Compliance checked at deployment time</strong> — integrated into CI/CD pipelines, not waiting for ADM review gates</li><li><strong>Architecture decisions automated</strong> for standard patterns — new deployments that conform to approved patterns proceed without human review</li><li><strong>Exception-based escalation</strong> — only novel patterns, significant deviations, or high-risk changes trigger human architect review</li><li><strong>Drift detection</strong> — continuous monitoring alerts when deployed state diverges from target architecture</li></ul>"
+        },
+        {
+          "id": "deliberative-mode",
+          "title": "Deliberative Mode",
+          "content": "<p>For business architecture and strategic decisions, the deliberative mode preserves rigour with compressed timelines:</p><ul><li><strong>Sprint-based ADM delivery</strong> with two-week cycles producing usable architecture output each sprint</li><li><strong>Full stakeholder engagement</strong> through Architecture Vision (Phase A) and iterative review</li><li><strong>Agent-native process design</strong> integrated into Phase B — explicitly asking \"augment or redesign?\" for each business capability</li><li><strong>Model selection framework</strong> integrated into Phase E — cost/accuracy/latency trade-offs, build-versus-fine-tune decisions</li><li><strong>Business Transformation Readiness</strong> extended with AI dimensions — infrastructure capacity, data quality, process maturity, workforce AI literacy</li></ul>"
+        }
+      ]
+    },
+    {
+      "id": "agent-native",
+      "label": "Agent-Native Process Design",
+      "icon": "&#129302;",
+      "summary": "Automating existing human-designed processes with AI agents captures only a fraction of available value. BCG's 10/20/70 rule: 70% of AI success depends on people and processes, not algorithms or technology. Processes must be redesigned from scratch for agent capabilities.",
+      "subsections": [
+        {
+          "id": "augment-vs-redesign",
+          "title": "Augment vs. Redesign",
+          "content": "<p>The research distinguishes two fundamentally different approaches to applying AI to business processes:</p><table class='gov-table'><thead><tr><th>Approach</th><th>Description</th><th>When to Use</th><th>Expected Value</th></tr></thead><tbody><tr><td><strong>Agent-Augmented</strong></td><td>Add AI to existing human-designed processes — chatbots, copilots, automated data entry</td><td>Process is fundamentally human-centric; AI assists specific tasks</td><td>10-30% efficiency gain</td></tr><tr><td><strong>Agent-Native</strong></td><td>Redesign the process from scratch for agent capabilities — parallel execution, 24/7 operation, perfect memory, zero-cost replication</td><td>Process can be reimagined without human constraints as the design baseline</td><td>3-10x throughput, new capabilities</td></tr></tbody></table><p class='gov-note'><strong>POC fatigue:</strong> Organisations running many disconnected AI proofs-of-concept without redesigning underlying processes produce pilot successes that cannot scale. The ADM's Phase E emphasis on identifying individual AI use cases encourages this pattern.</p>"
+        },
+        {
+          "id": "assessment-framework",
+          "title": "Assessment Framework",
+          "content": "<p>Add to Phase B as a standard technique — for each business capability where agent deployment is considered, assess:</p><div class='gov-chars-grid'><div class='gov-char'><strong>Process Complexity</strong><p>How complex is the current process? High complexity with many handoffs and exceptions favours redesign.</p></div><div class='gov-char'><strong>Agent Capability Fit</strong><p>How well do agent strengths (parallel, 24/7, perfect memory) map to process requirements?</p></div><div class='gov-char'><strong>Change Management Effort</strong><p>What is the organisational change cost? Augmentation has lower change cost but lower value.</p></div><div class='gov-char'><strong>Value Uplift</strong><p>What is the expected value difference between augmentation and redesign? Justify the higher cost of redesign.</p></div></div>"
+        },
+        {
+          "id": "design-principles-agents",
+          "title": "Agent-Native Design Principles",
+          "content": "<ul><li><strong>Design for parallelism</strong> — Agents can execute multiple paths simultaneously; don't force sequential workflows when parallel execution is possible</li><li><strong>Design for continuous operation</strong> — Agents don't have shifts, breaks, or working hours; processes can run 24/7 with human oversight at defined checkpoints</li><li><strong>Design for perfect memory</strong> — Agents can recall every prior interaction and decision; don't rebuild context at each step</li><li><strong>Design for zero-cost replication</strong> — Spinning up additional agent instances costs virtually nothing; design processes that can scale horizontally</li><li><strong>Design for human escalation</strong> — Define clear escalation boundaries where human judgement, empathy, or physical presence is essential</li><li><strong>Design for observability</strong> — Every agent decision must be traceable; design processes with logging, audit trails, and explainability built in</li></ul>"
+        }
+      ]
+    },
+    {
+      "id": "new-capabilities",
+      "label": "New Process Capabilities",
+      "icon": "&#127793;",
+      "summary": "Three major new process capabilities are required that have no TOGAF precedent: Continuous Architecture Development, AI-Augmented Architecture Discovery, and Agent-Native Process Design methodology.",
+      "subsections": [
+        {
+          "id": "continuous-architecture",
+          "title": "Continuous Architecture Development",
+          "content": "<p>An always-on architecture capability that continuously discovers, validates, and updates architecture content, replacing discrete phased cycles with a streaming operating model.</p><table class='gov-table'><thead><tr><th>Level</th><th>Description</th></tr></thead><tbody><tr><td><strong>Level 1</strong></td><td>ADM applied as phased cycle with quarterly or longer cadence. All content manually created. Compliance checked at milestone reviews.</td></tr><tr><td><strong>Level 2</strong></td><td>Sprint-based ADM delivery with two-week cycles. Some auto-discovered content (infrastructure topology). Compliance partially automated.</td></tr><tr><td><strong>Level 3</strong></td><td>Dual-speed operation established. Technology architecture on continuous cadence. Business and strategic architecture on deliberative cadence with sprint delivery. Most routine decisions automated.</td></tr><tr><td><strong>Level 4</strong></td><td>Full continuous architecture for technology and information systems. Business architecture on fast-cycle sprints. Content 80%+ auto-discovered. Compliance fully automated with exception-based review.</td></tr><tr><td><strong>Level 5</strong></td><td>Architecture as a continuously operating capability with no distinct cycles. All content maintained in real-time. Decisions automated for all standard patterns. Architects focus on novel situations, strategy, and agent-native process design.</td></tr></tbody></table>"
+        },
+        {
+          "id": "ai-discovery",
+          "title": "AI-Augmented Architecture Discovery",
+          "content": "<p>Automated discovery of architecture content from deployment pipelines, cloud inventory APIs, network topography, runtime telemetry, and service meshes. Replaces manual data gathering for the as-is landscape.</p><table class='gov-table'><thead><tr><th>Level</th><th>Description</th></tr></thead><tbody><tr><td><strong>Level 1</strong></td><td>All architecture content manually gathered and documented. Repository updated during architecture reviews.</td></tr><tr><td><strong>Level 2</strong></td><td>Some automated discovery for cloud infrastructure (IaC state files, cloud inventory APIs). Other domains still manual.</td></tr><tr><td><strong>Level 3</strong></td><td>Automated discovery for infrastructure, application deployment, and integration topology. Service mesh and API gateway data feeds into repository. Manual effort focused on business architecture.</td></tr><tr><td><strong>Level 4</strong></td><td>Comprehensive discovery across infrastructure, deployment, integration, data flows, and compliance. Near-real-time repository updates. Drift detection alerts on divergence.</td></tr><tr><td><strong>Level 5</strong></td><td>Full digital twin of the enterprise technology landscape maintained automatically. Discovery feeds drive automated compliance, gap analysis, and change impact assessment. Human architects work exclusively at design and strategy level.</td></tr></tbody></table>"
+        },
+        {
+          "id": "agent-native-capability",
+          "title": "Agent-Native Process Design Methodology",
+          "content": "<p>A structured methodology for designing business processes natively for AI agent capabilities rather than automating existing human-designed processes. Includes assessment criteria for augment-versus-redesign decisions.</p><table class='gov-table'><thead><tr><th>Level</th><th>Description</th></tr></thead><tbody><tr><td><strong>Level 1</strong></td><td>AI applied to existing processes without redesign. \"Bolt-on\" automation of individual tasks within human-designed workflows.</td></tr><tr><td><strong>Level 2</strong></td><td>Process modifications to accommodate AI (e.g., removing manual data entry). Still fundamentally human-designed processes with AI enhancements.</td></tr><tr><td><strong>Level 3</strong></td><td>Systematic augment-versus-redesign assessment for each business capability. Some processes redesigned from scratch. Phase B explicitly addresses the distinction.</td></tr><tr><td><strong>Level 4</strong></td><td>Agent-native process design is the default starting point where agent execution is feasible. Human-centric design applied only where human judgement, empathy, or physical presence is essential.</td></tr><tr><td><strong>Level 5</strong></td><td>Dynamic process design — processes adapt in real-time based on agent performance and context. Human architects define objectives, constraints, and guardrails; agents optimise execution within those boundaries.</td></tr></tbody></table>"
+        }
+      ]
+    },
+    {
+      "id": "practitioner-guidance",
+      "label": "Practitioner Guidance",
+      "icon": "&#128736;",
+      "summary": "Concrete actions for EA practitioners, structured by time horizon. These recommendations bridge the gap between TOGAF's phased ADM and the continuous, agent-native process development that agentic organisations require.",
+      "phases": [
+        {
+          "timeframe": "0-3 months",
+          "title": "Immediate Actions",
+          "actions": [
+            "Measure your architecture cycle time — calculate elapsed time from request to approved decision for your last five engagements. Compare against AI deployment cadence. If architecture takes longer than deployment, you are performing architecture review theatre.",
+            "Classify your architecture backlog by required cadence — deployment-speed (days/weeks), organisational-change-speed (months), or strategic-speed (quarters/years). This reveals where continuous architecture is most urgent.",
+            "Identify one architecture content area for automated discovery — select the area that stales fastest (typically infrastructure topology) and connect it to an automated data source.",
+            "Add agent-native process design as a Phase B technique — when developing business architecture for AI initiatives, explicitly ask: 'Should we augment the existing process or redesign from scratch?'",
+            "Coordinate with governance changes — faster architecture development without faster governance approval produces bottlenecks."
+          ]
+        },
+        {
+          "timeframe": "3-6 months",
+          "title": "Near-Term Actions",
+          "actions": [
+            "Implement dual-speed architecture development — continuous mode for technology architecture with automated discovery and compliance; deliberative mode for business and strategic architecture with sprint-based delivery.",
+            "Extend Phase E with AI-specific solution selection criteria — model selection guidance covering cost/accuracy/latency trade-offs, build-versus-fine-tune decisions, vendor lock-in assessment.",
+            "Add AI readiness dimensions to Business Transformation Readiness Assessment — infrastructure capacity, data quality, process maturity, workforce AI literacy, weighted by the 10/20/70 rule.",
+            "Develop AI-specific architecture patterns — multi-agent orchestration, model abstraction layer, protocol abstraction (MCP/A2A/ACP), human-in-the-loop, RAG, model routing and gateway patterns.",
+            "Create agent deployment sequencing guidance — define how to sequence agent rollout based on process readiness, data availability, and organisational change capacity."
+          ]
+        },
+        {
+          "timeframe": "6-12 months",
+          "title": "Medium-Term Actions",
+          "actions": [
+            "Transition to continuous architecture for technology domains — automated discovery, CI/CD-integrated compliance, automated standard pattern decisions, exception-based human review.",
+            "Produce machine-readable architecture deliverables — architecture principles, standards, policies in YAML/JSON/policy-as-code formats, serving both human architects and automated governance tools.",
+            "Pilot agent-native process redesign on one value stream — apply zero-based redesign, compare against traditional Phase B → Phase E output, refine the methodology.",
+            "Integrate the ADM with AI value progression planning — Phase One (productivity/cost savings) requires different architecture emphasis than Phase Two (revenue/growth).",
+            "Develop an architecture development playbook for multi-agent systems — agent decomposition, interaction design, failure handling, testing, deployment, and observability."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "adm-phases",
+      "label": "Phase-by-Phase Evolution",
+      "icon": "&#128260;",
+      "summary": "Each ADM phase requires specific adaptations for agentic organisations. This section maps the key changes per phase — what stays, what changes, and what's new.",
+      "subsections": [
+        {
+          "id": "phase-a-evolution",
+          "title": "Phase A — Architecture Vision",
+          "content": "<div class='gov-changes'><div class='gov-change-item'><h5>What Changes</h5><ul><li>Architecture Vision must include an <strong>AI strategy assessment</strong> — where is the organisation on the AI value progression (productivity → revenue)?</li><li>Stakeholder analysis must include <strong>AI/ML teams, data science, and AI ethics/governance</strong> roles</li><li>Scope definition must address <strong>agent boundaries</strong> — which processes are candidates for agent-native redesign?</li><li>The Vision document must be <strong>partially machine-readable</strong> to feed automated governance tools</li></ul></div><div class='gov-change-item'><h5>What's New</h5><ul><li><strong>Agent opportunity mapping</strong> — identify business capabilities where agent deployment could create step-change value</li><li><strong>AI readiness pre-assessment</strong> — quick assessment of infrastructure, data, skills, and process readiness before committing to full architecture development</li><li><strong>Model landscape scan</strong> — survey available AI models and their applicability to identified opportunities</li></ul></div></div>"
+        },
+        {
+          "id": "phase-b-evolution",
+          "title": "Phase B — Business Architecture",
+          "content": "<div class='gov-changes'><div class='gov-change-item'><h5>What Changes</h5><ul><li>Process modelling must include the <strong>augment-versus-redesign</strong> assessment for each capability</li><li>Business scenarios must include <strong>agent scenarios</strong> — how agents participate, what happens when they fail, human-agent handoffs</li><li>Operating model design must produce <strong>executable specifications</strong> (Enterprise as Code), not just documentation</li><li>Organisation design must account for <strong>human-agent teams</strong> and new roles (Agent Owner, Prompt Engineer, AI Ethics Officer)</li></ul></div><div class='gov-change-item'><h5>What's New</h5><ul><li><strong>Zero-based process design</strong> — redesign selected processes from scratch for agent capabilities</li><li><strong>Agent capability mapping</strong> — map agent strengths to business capability requirements</li><li><strong>10/20/70 assessment</strong> — weight initiative planning: 10% algorithms, 20% technology, 70% people and processes</li></ul></div></div>"
+        },
+        {
+          "id": "phase-cd-evolution",
+          "title": "Phases C & D — Information Systems & Technology",
+          "content": "<div class='gov-changes'><div class='gov-change-item'><h5>What Changes</h5><ul><li>Data Architecture must address <strong>AI training data, vector databases, knowledge graphs</strong>, and data sovereignty constraints</li><li>Application Architecture must treat <strong>AI agents as first-class application components</strong> with defined interfaces, SLAs, and lifecycle management</li><li>Technology Architecture must include <strong>AI infrastructure</strong> — GPU compute, model serving platforms, agent runtime environments</li><li>Technology standards must evolve at <strong>AI speed</strong> — model recommendations may have shelf lives of months, not years</li></ul></div><div class='gov-change-item'><h5>What's New</h5><ul><li><strong>AI infrastructure readiness assessment</strong> — only 22% of organisations have infrastructure ready for AI at scale</li><li><strong>Model abstraction layer design</strong> — architectural pattern to avoid model lock-in and enable portability</li><li><strong>Agent communication architecture</strong> — MCP, A2A, ACP protocol selection and integration patterns</li></ul></div></div>"
+        },
+        {
+          "id": "phase-ef-evolution",
+          "title": "Phases E & F — Opportunities, Solutions & Migration",
+          "content": "<div class='gov-changes'><div class='gov-change-item'><h5>What Changes</h5><ul><li>Solution selection must include <strong>model selection framework</strong> — cost/accuracy/latency trade-offs, build vs. fine-tune vs. prompt decisions</li><li>Migration planning must account for <strong>AI value progression</strong> — different architecture emphasis for Phase 1 (productivity) vs. Phase 2 (revenue)</li><li>Build-versus-buy now includes <strong>build vs. fine-tune vs. prompt vs. buy</strong> for AI components</li><li>Cost-benefit analysis must include <strong>AI-specific costs</strong> — inference costs, model retraining, data preparation, sovereignty compliance</li></ul></div><div class='gov-change-item'><h5>What's New</h5><ul><li><strong>Agent deployment sequencing</strong> — prioritise by process readiness, data availability, and change capacity</li><li><strong>Model portfolio strategy</strong> — right-size models to tasks, design for interchange as the market evolves</li><li><strong>Sovereignty-aware deployment planning</strong> — map AI workloads to deployment constraints based on data residency and jurisdictional rules</li></ul></div></div>"
+        },
+        {
+          "id": "phase-gh-evolution",
+          "title": "Phases G & H — Implementation Governance & Change",
+          "content": "<div class='gov-changes'><div class='gov-change-item'><h5>What Changes</h5><ul><li>Implementation Governance becomes <strong>continuous automated compliance</strong> — integrated into CI/CD pipelines, checking at deployment time</li><li>Architecture Compliance Assessments become <strong>automated for standard patterns</strong> with exception-based human review</li><li>Change Management must handle <strong>AI-speed change</strong> — model updates, agent reconfigurations, and capability improvements that occur weekly, not annually</li><li>Architecture contracts must be <strong>machine-readable and automatically enforced</strong></li></ul></div><div class='gov-change-item'><h5>What's New</h5><ul><li><strong>Automated drift detection</strong> — continuous monitoring of deployed state vs. target architecture with automated alerting</li><li><strong>Agent performance governance</strong> — monitoring agent accuracy, cost, latency, and escalation rates against defined thresholds</li><li><strong>Model lifecycle governance</strong> — tracking model versions, deprecation timelines, and replacement planning</li></ul></div></div>"
+        }
+      ]
+    }
+  ]
+}

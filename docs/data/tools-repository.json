@@ -1,0 +1,189 @@
+{
+  "page_type": "tools-repository",
+  "title": "Tools & Repository for the Agentic Organisation",
+  "subtitle": "From curated document stores to live, machine-readable architecture repositories with automated discovery and AI component registries. How EA content management must evolve.",
+  "description": "This page covers the Architecture Repository, Enterprise Metamodel, content framework, building blocks, and the new capabilities required for machine-readable content, continuous repository updating, and AI component registries.",
+  "sources": [
+    "TOGAF Architecture Content — FC Part 4, Chapters 1-7",
+    "TOGAF Core Concepts — FC Part 0, §3.4-3.11",
+    "Enterprise Continuum — FC Part 4, Chapter 6",
+    "Architecture Repository — FC Part 4, Chapter 7",
+    "BCG Enterprise as Code — Operating Models as Executable Specifications",
+    "ISO/IEC 42001 — AI Management Systems"
+  ],
+  "sections": [
+    {
+      "id": "content-framework",
+      "label": "Content Framework",
+      "icon": "&#128218;",
+      "summary": "TOGAF Part 4 provides a comprehensive system for defining, classifying, storing, and governing architecture information. Its layered structure — metamodel, artifacts, deliverables, building blocks, continuum, repository — is one of TOGAF's most extensible contributions.",
+      "subsections": [
+        {
+          "id": "framework-overview",
+          "title": "Framework Structure",
+          "content": "<p>TOGAF's content management operates through a layered architecture with clear separation of concerns:</p><div class='gov-chars-grid'><div class='gov-char'><strong>Metamodel</strong><p>Defines entities, attributes, and relationships that constitute an enterprise architecture — the vocabulary of architecture.</p></div><div class='gov-char'><strong>Artifacts</strong><p>Tangible outputs of architecture work: Catalogs (lists), Matrices (relationships), Diagrams (visual representations).</p></div><div class='gov-char'><strong>Deliverables</strong><p>Formal work products with defined content and approval processes — contain artifacts, flow through governance.</p></div><div class='gov-char'><strong>Building Blocks</strong><p>ABBs (specifications) and SBBs (implementations) — traceable path from requirements to deployed solutions.</p></div><div class='gov-char'><strong>Enterprise Continuum</strong><p>Classification scheme from generic (foundation) to specific (organisation) — enables systematic reuse.</p></div><div class='gov-char'><strong>Repository</strong><p>Persistent store for all architecture content — seven defined areas, governed access, maintained through ADM cycles.</p></div></div><p class='gov-note'>This layered structure accommodates AI extensions without redesign. It is TOGAF's most extensible contribution and the structural discipline that most EA practices lack.</p>"
+        },
+        {
+          "id": "seven-areas",
+          "title": "Architecture Repository — Seven Areas",
+          "content": "<table class='gov-table'><thead><tr><th>Repository Area</th><th>Purpose</th><th>AI-Era Extension</th></tr></thead><tbody><tr><td><strong>Architecture Metamodel</strong></td><td>Defines structure and relationships for content</td><td>Extend with AI entity types (Agent, Model, Prompt, Interaction)</td></tr><tr><td><strong>Architecture Capability</strong></td><td>Documents the architecture function's own capabilities</td><td>Add AI-related EA capabilities and tooling</td></tr><tr><td><strong>Architecture Landscape</strong></td><td>Current-state and target-state representations</td><td>Add AI layer showing agents, models, and AI infrastructure</td></tr><tr><td><strong>Standards Information Base</strong></td><td>Approved standards, references, guidelines</td><td>Add AI governance standards, model evaluation criteria, sovereignty requirements</td></tr><tr><td><strong>Reference Library</strong></td><td>Templates, patterns, reference models</td><td>Add AI architecture patterns, agent design patterns, reference AI architectures</td></tr><tr><td><strong>Governance Repository</strong></td><td>Governance decisions, compliance assessments</td><td>Add agent governance decisions, model approvals, sovereignty assessments</td></tr><tr><td><strong>Requirements Repository</strong></td><td>Requirements managed throughout ADM cycle</td><td>Add AI-specific requirements categories</td></tr></tbody></table><p>In addition, two new repository areas are needed: <strong>Agent Registry</strong> and <strong>Model Registry</strong> (see AI Component Registries section).</p>"
+        },
+        {
+          "id": "what-changes-content",
+          "title": "What Changes for Agentic Organisations",
+          "content": "<div class='gov-changes'><div class='gov-change-item'><h5>Assumptions That No Longer Hold</h5><ul><li><strong>Content is created by human architects</strong> — Significant portions can be auto-discovered from deployment pipelines, cloud APIs, service meshes, and runtime telemetry</li><li><strong>The metamodel covers what matters</strong> — No representation for AI agents, models, prompts, agent interactions, or any AI-specific entity</li><li><strong>Artifacts are documents for humans</strong> — Enterprise as Code requires machine-interpretable content alongside human-readable documentation</li><li><strong>The repository is curated periodically</strong> — AI infrastructure changes weekly, models monthly, agents daily; periodic updates produce perpetually stale content</li><li><strong>Building blocks are stable and long-lived</strong> — AI model SBBs have lifecycles measured in months, not years</li></ul></div><div class='gov-change-item'><h5>What TOGAF Gets Right</h5><ul><li><strong>Content Framework's structural elegance</strong> — Separation of metamodel, artifacts, deliverables, building blocks, and repository accommodates AI extensions without redesign</li><li><strong>Metamodel extensibility</strong> — Explicitly designed for extension; AI entities are exactly the kind of extension it was designed to support</li><li><strong>ABB/SBB distinction</strong> — More valuable for AI than traditional tech because AI SBBs change rapidly while ABBs are more stable</li><li><strong>Enterprise Continuum</strong> — Foundation → Common → Industry → Organisation classification applies directly to AI reference architectures</li><li><strong>Traceability</strong> — Business objectives → requirements → ABBs → SBBs → solutions chain extends naturally to AI components</li></ul></div></div>"
+        }
+      ]
+    },
+    {
+      "id": "metamodel",
+      "label": "Metamodel Extension",
+      "icon": "&#128300;",
+      "summary": "The Enterprise Metamodel needs five core AI entities added as first-class citizens. TOGAF's metamodel was designed for extension — the mechanism is exactly right, only the AI-specific content is missing.",
+      "subsections": [
+        {
+          "id": "new-entities",
+          "title": "Five Core AI Entities",
+          "content": "<table class='gov-table'><thead><tr><th>Entity</th><th>Key Attributes</th><th>Relationships</th></tr></thead><tbody><tr><td><strong>AI Agent</strong></td><td>Identity, role, capabilities, access permissions, decision authority, accountable human owner, deployed models, communication protocols, lifecycle status</td><td>Uses → AI Model, Implements → Business Capability, Governed by → Architecture Principle, Owned by → Actor</td></tr><tr><td><strong>AI Model</strong></td><td>Identity, provider, version, task type, cost per inference, accuracy, latency, deployment location, sovereignty constraints, deprecation date</td><td>Used by → AI Agent, Deployed on → Technology Component, Constrained by → Sovereignty Policy</td></tr><tr><td><strong>Prompt Template</strong></td><td>Identity, purpose, associated model(s), version, owner, effectiveness metrics</td><td>Used by → AI Agent, Optimised for → AI Model, Produces → Business Output</td></tr><tr><td><strong>Agent Interaction</strong></td><td>Source agent, target agent, protocol (MCP/A2A/ACP), data exchanged, frequency, purpose</td><td>Connects → AI Agent to AI Agent, Uses → Communication Protocol</td></tr><tr><td><strong>Model Deployment</strong></td><td>Model identity, infrastructure, location, scaling config, cost, performance SLA</td><td>Deploys → AI Model, Runs on → Technology Component, Governed by → SLA</td></tr></tbody></table><p class='gov-note'>These entities create the vocabulary for discussing AI architecture consistently across the enterprise. Do not wait for tool support — a spreadsheet or simple database is sufficient to start.</p>"
+        },
+        {
+          "id": "new-artifacts",
+          "title": "New Artifact Types",
+          "content": "<p>The catalog/matrix/diagram taxonomy is durable. AI architecture needs new instances within these categories:</p><table class='gov-table'><thead><tr><th>Category</th><th>New Artifact</th><th>Purpose</th></tr></thead><tbody><tr><td><strong>Catalog</strong></td><td>Agent Catalogue</td><td>All agents with role, capabilities, access, owner, status, performance</td></tr><tr><td><strong>Catalog</strong></td><td>Model Portfolio Catalog</td><td>All models with provider, version, task fit, cost, accuracy, lifecycle</td></tr><tr><td><strong>Matrix</strong></td><td>Agent/Capability Matrix</td><td>Mapping agents to business capabilities they support</td></tr><tr><td><strong>Matrix</strong></td><td>Model/Infrastructure Matrix</td><td>Mapping models to deployment infrastructure and locations</td></tr><tr><td><strong>Matrix</strong></td><td>Sovereignty Compliance Matrix</td><td>AI workloads mapped to sovereignty constraints and deployment rules</td></tr><tr><td><strong>Diagram</strong></td><td>Agent Interaction Diagram</td><td>Agent-to-agent communication, delegation patterns, data flows</td></tr><tr><td><strong>Diagram</strong></td><td>AI Infrastructure Diagram</td><td>AI compute, storage, model serving, agent runtime architecture</td></tr><tr><td><strong>Governance</strong></td><td>Model Decision Log</td><td>Model selection decisions with rationale, alternatives, review schedule</td></tr><tr><td><strong>Governance</strong></td><td>AI Cost Allocation Matrix</td><td>Inference, training, infrastructure costs mapped to business capabilities</td></tr></tbody></table>"
+        },
+        {
+          "id": "building-blocks-ai",
+          "title": "AI Building Blocks",
+          "content": "<p>The ABB/SBB distinction maps directly to AI architecture — and becomes <em>more</em> important because AI SBBs are expected to be interchanged frequently as the model market evolves:</p><table class='gov-table'><thead><tr><th>Type</th><th>ABB (Specification)</th><th>SBB (Implementation)</th></tr></thead><tbody><tr><td><strong>Agent</strong></td><td>\"Customer Query Classifier: categorise queries by intent with &gt;90% accuracy, &lt;200ms latency, 1000 req/min\"</td><td>\"GPT-4o-mini with custom prompt, Azure OpenAI eu-west-1, RAG over knowledge base X\"</td></tr><tr><td><strong>Model</strong></td><td>\"Summarisation model: documents up to 50K tokens, extractive + abstractive, &lt;$0.01 per summary\"</td><td>\"Claude 3.5 Haiku via API, $0.003 per 1K output tokens\"</td></tr><tr><td><strong>Infrastructure</strong></td><td>\"Model serving platform: auto-scaling, &lt;100ms p99 latency, multi-model routing\"</td><td>\"AWS SageMaker with Inferentia2, deployed in eu-west-1\"</td></tr></tbody></table><p class='gov-note'>The ABB-to-SBB mapping is the architectural mechanism for model portability. When a better or cheaper model appears, you change the SBB while the ABB remains stable. This is the foundation for avoiding vendor lock-in.</p>"
+        }
+      ]
+    },
+    {
+      "id": "machine-readable",
+      "label": "Machine-Readable Content",
+      "icon": "&#128187;",
+      "summary": "Enterprise as Code requires architecture content that serves two audiences: human architects who need readable documentation, and automated systems that need structured data. Architecture standards must become code, not documents.",
+      "subsections": [
+        {
+          "id": "enterprise-as-code",
+          "title": "Enterprise as Code Vision",
+          "content": "<p>BCG's Enterprise as Code vision proposes that implicit operating models — the unwritten rules, workflows, decision logic, and governance processes — must be codified as executable specifications:</p><ul><li><strong>Architecture policies as code</strong> — deployment standards, technology constraints, and security requirements in policy-as-code languages (Open Policy Agent/Rego, AWS Config Rules, Azure Policy)</li><li><strong>Architecture metamodel as data</strong> — metamodel content in structured formats (YAML, JSON, RDF) that automated tools can query and validate</li><li><strong>Architecture standards as API</strong> — programmatic access to the Standards Information Base so deployment pipelines check compliance automatically</li><li><strong>Dual-format content</strong> — single source of truth generates both human-readable documentation and machine-readable specifications</li></ul><p class='gov-note'><strong>\"Freedom within a Frame\"</strong> — BCG's model proposes centralised architectural guardrails expressed as code, with decentralised innovation operating freely within those guardrails. This reportedly cuts costs by up to 30% and improves time-to-market by 50%.</p>"
+        },
+        {
+          "id": "dual-format",
+          "title": "Dual-Format Content Production",
+          "content": "<p>The gap between architecture intent (human-readable) and architecture enforcement (machine-readable) is the primary reason standards are routinely violated — enforcement depends on human reviewers who cannot check every deployment.</p><table class='gov-table'><thead><tr><th>Content Type</th><th>Human-Readable Format</th><th>Machine-Readable Format</th></tr></thead><tbody><tr><td>Architecture principles</td><td>Document with rationale and implications</td><td>Structured YAML with testable assertions</td></tr><tr><td>Technology standards</td><td>Standards catalogue with guidance</td><td>Policy-as-code rules enforceable in CI/CD</td></tr><tr><td>Compliance rules</td><td>Checklist with pass/fail criteria</td><td>Automated compliance checks (OPA, Config Rules)</td></tr><tr><td>Architecture patterns</td><td>Pattern documentation with diagrams</td><td>Infrastructure-as-code templates, reference architectures</td></tr><tr><td>Deployment policies</td><td>Governance handbook section</td><td>Admission controllers, pipeline gates</td></tr><tr><td>Architecture landscape</td><td>Diagrams and narrative descriptions</td><td>Auto-discovered data in structured APIs</td></tr></tbody></table>"
+        },
+        {
+          "id": "maturity-machine-readable",
+          "title": "Maturity Model",
+          "content": "<table class='gov-table'><thead><tr><th>Level</th><th>Description</th></tr></thead><tbody><tr><td><strong>Level 1</strong></td><td>All architecture content is human-readable only (documents, wikis, diagrams). No machine-readable content exists.</td></tr><tr><td><strong>Level 2</strong></td><td>Some standards expressed as code (technology standards, deployment rules). Repository accessible via basic API. Mix of manual and automated compliance.</td></tr><tr><td><strong>Level 3</strong></td><td>Architecture policies systematically expressed as code. Metamodel content available as structured data. Key artifacts published in dual format. Technology compliance primarily automated.</td></tr><tr><td><strong>Level 4</strong></td><td>Dual-format content production from single source of truth. Full repository API access. AI agents consume content for analysis, compliance, and decision support.</td></tr><tr><td><strong>Level 5</strong></td><td>Content is natively machine-readable with human views generated on demand. AI agents participate in architecture development. Content is an executable specification — Enterprise as Code realised.</td></tr></tbody></table>"
+        }
+      ]
+    },
+    {
+      "id": "registries",
+      "label": "AI Component Registries",
+      "icon": "&#128203;",
+      "summary": "Organisations deploying AI at scale cannot govern what they cannot see. The Agent Registry and Model Registry are new first-class areas of the Architecture Repository — foundational infrastructure for AI-era EA.",
+      "subsections": [
+        {
+          "id": "agent-registry",
+          "title": "Agent Registry",
+          "content": "<p>A dedicated registry of all AI agents deployed in the enterprise. This is the prerequisite for every other agent governance capability — you cannot govern, optimise, or secure what you cannot see.</p><table class='gov-table'><thead><tr><th>Attribute Category</th><th>Fields</th></tr></thead><tbody><tr><td><strong>Identity</strong></td><td>Agent ID, name, version, deployment date, lifecycle status (testing/staging/production/deprecated/retired)</td></tr><tr><td><strong>Capability</strong></td><td>Role description, task type, capabilities, decision authority level, escalation rules</td></tr><tr><td><strong>Accountability</strong></td><td>Accountable human owner, responsible team, governance tier, last review date</td></tr><tr><td><strong>Technical</strong></td><td>Deployed models, communication protocols (MCP/A2A/ACP), infrastructure, deployment location</td></tr><tr><td><strong>Access & Security</strong></td><td>Data inputs/outputs, access permissions, sovereignty constraints, security classification</td></tr><tr><td><strong>Performance</strong></td><td>Accuracy metrics, latency (p50/p95/p99), error rates, cost per interaction, throughput</td></tr></tbody></table><p class='gov-note'>Many organisations cannot answer \"How many AI agents do we have?\" — the Agent Registry answers this question and enables all subsequent governance, optimisation, and security capabilities.</p>"
+        },
+        {
+          "id": "model-registry",
+          "title": "Model Registry",
+          "content": "<p>A dedicated registry of all AI models used across the enterprise. Enables model portfolio management, cost optimisation, and vendor risk management.</p><table class='gov-table'><thead><tr><th>Attribute Category</th><th>Fields</th></tr></thead><tbody><tr><td><strong>Identity</strong></td><td>Model ID, provider, version, task type, capability description</td></tr><tr><td><strong>Performance</strong></td><td>Accuracy metrics by task, latency characteristics, throughput capacity</td></tr><tr><td><strong>Cost</strong></td><td>Cost per inference, monthly spend, cost trend, budget allocation</td></tr><tr><td><strong>Deployment</strong></td><td>Deployment locations, scaling configuration, infrastructure requirements</td></tr><tr><td><strong>Compliance</strong></td><td>Sovereignty constraints, data residency, regulatory classification (EU AI Act risk tier)</td></tr><tr><td><strong>Lifecycle</strong></td><td>Contract terms, SLA commitments, planned deprecation date, alternative models evaluated</td></tr></tbody></table>"
+        },
+        {
+          "id": "registry-maturity",
+          "title": "Registry Maturity Model",
+          "content": "<table class='gov-table'><thead><tr><th>Level</th><th>Description</th></tr></thead><tbody><tr><td><strong>Level 1</strong></td><td>No centralised registry. Agents and models deployed ad hoc with no enterprise visibility. Individual teams may track their own deployments.</td></tr><tr><td><strong>Level 2</strong></td><td>Basic registry established. All agents and models documented with core attributes. Registry manually maintained with quarterly updates.</td></tr><tr><td><strong>Level 3</strong></td><td>Comprehensive registry with full attributes. Automated data collection for some attributes (cost, performance from provider APIs). Registration required before production deployment.</td></tr><tr><td><strong>Level 4</strong></td><td>Registry continuously updated from runtime data. Automated governance: policy checks, cost alerts, performance degradation detection. Model portfolio optimisation informed by registry data.</td></tr><tr><td><strong>Level 5</strong></td><td>Registry is the authoritative control plane for AI component lifecycle. Onboarding, selection, performance management, and retirement all flow through the registry. Automated lifecycle management based on registry policies.</td></tr></tbody></table>"
+        }
+      ]
+    },
+    {
+      "id": "continuous-repo",
+      "label": "Continuous Repository",
+      "icon": "&#128259;",
+      "summary": "The shift from 'architecture as documentation' to 'architecture as continuous discovery'. When deployment pipelines report what was deployed and cloud APIs report what exists, the as-is architecture maintains itself automatically.",
+      "subsections": [
+        {
+          "id": "automated-feeds",
+          "title": "Automated Data Sources",
+          "content": "<table class='gov-table'><thead><tr><th>Data Source</th><th>Content Updated</th><th>Update Frequency</th></tr></thead><tbody><tr><td><strong>Cloud inventory APIs</strong></td><td>Infrastructure landscape — compute, storage, network, managed services</td><td>Near-real-time</td></tr><tr><td><strong>CI/CD pipeline metadata</strong></td><td>Application deployment state, version history, deployment topology</td><td>On each deployment</td></tr><tr><td><strong>Service mesh telemetry</strong></td><td>Integration topology — which services communicate, data flows, protocols</td><td>Continuous</td></tr><tr><td><strong>API gateway configuration</strong></td><td>Service endpoints, API contracts, traffic routing</td><td>On configuration change</td></tr><tr><td><strong>Kubernetes/container orchestration</strong></td><td>Application deployment, scaling, resource allocation</td><td>Continuous</td></tr><tr><td><strong>IaC state files</strong></td><td>Infrastructure definitions, drift from declared state</td><td>On apply</td></tr><tr><td><strong>CMDB integration</strong></td><td>Asset inventory, ownership, support information</td><td>Periodic sync</td></tr><tr><td><strong>Cost management APIs</strong></td><td>FinOps data — spend by service, trend analysis, budget tracking</td><td>Daily/hourly</td></tr></tbody></table>"
+        },
+        {
+          "id": "drift-detection",
+          "title": "Drift Detection & Compliance",
+          "content": "<p>Continuous monitoring that alerts when deployed state diverges from target architecture:</p><ul><li><strong>Configuration drift</strong> — infrastructure deviates from IaC definitions or approved patterns</li><li><strong>Standards drift</strong> — deployed technologies or versions fall outside approved standards</li><li><strong>Architecture drift</strong> — system communication patterns deviate from designed integration topology</li><li><strong>Compliance drift</strong> — deployments violate sovereignty, security, or regulatory constraints</li><li><strong>Cost drift</strong> — AI inference or infrastructure costs exceed defined thresholds</li></ul><p>Drift detection transforms Phase G (Implementation Governance) from periodic compliance reviews to continuous automated monitoring with exception-based human intervention.</p>"
+        },
+        {
+          "id": "repo-maturity",
+          "title": "Repository Maturity Model",
+          "content": "<table class='gov-table'><thead><tr><th>Level</th><th>Description</th></tr></thead><tbody><tr><td><strong>Level 1</strong></td><td>All content manually curated. Repository updated during architecture reviews. Significant portions stale or incomplete.</td></tr><tr><td><strong>Level 2</strong></td><td>Some automated discovery for cloud infrastructure. IaC state files provide partial infrastructure view. Other domains manual.</td></tr><tr><td><strong>Level 3</strong></td><td>Automated discovery for infrastructure, deployment state, and integration topology. Manual effort focused on business architecture and application logic. Basic drift detection.</td></tr><tr><td><strong>Level 4</strong></td><td>Comprehensive automated discovery across all technology domains. Near-real-time updates. Full drift detection with automated alerting. Repository accessible via APIs.</td></tr><tr><td><strong>Level 5</strong></td><td>Full digital twin of the enterprise technology landscape maintained automatically. Discovery feeds drive automated compliance, gap analysis, and change impact. Human architects work exclusively at design and strategy level.</td></tr></tbody></table>"
+        }
+      ]
+    },
+    {
+      "id": "enterprise-continuum",
+      "label": "Enterprise Continuum for AI",
+      "icon": "&#127760;",
+      "summary": "The Enterprise Continuum's classification scheme — from generic to organisation-specific — applies directly to AI architecture assets. Populate each level with AI reference architectures, agent patterns, and model selection criteria for systematic reuse.",
+      "subsections": [
+        {
+          "id": "continuum-levels",
+          "title": "AI Asset Classification",
+          "content": "<table class='gov-table'><thead><tr><th>Level</th><th>Traditional Content</th><th>AI Architecture Content</th></tr></thead><tbody><tr><td><strong>Foundation</strong></td><td>Generic architectures (TOGAF TRM)</td><td>Multi-agent orchestration patterns, standard RAG architecture, model abstraction layer, agent communication patterns</td></tr><tr><td><strong>Common Systems</strong></td><td>Shared across industries</td><td>AI platform architectures, model serving patterns, agent lifecycle management approaches</td></tr><tr><td><strong>Industry-Specific</strong></td><td>Vertical-specific architectures</td><td>Industry-specific AI use cases, domain-specific agent patterns, sector sovereignty requirements</td></tr><tr><td><strong>Organisation-Specific</strong></td><td>Enterprise-tailored</td><td>Custom agent implementations, fine-tuned models, organisation-specific AI governance rules</td></tr></tbody></table>"
+        },
+        {
+          "id": "ai-deliverables",
+          "title": "AI Architecture Section in Deliverables",
+          "content": "<p>Architecture Definition Documents for AI-related initiatives should include a dedicated AI Architecture section:</p><div class='gov-chars-grid'><div class='gov-char'><strong>Agent Architecture</strong><p>Which agents, what roles, how they interact, delegation patterns, escalation rules</p></div><div class='gov-char'><strong>Model Architecture</strong><p>Which models, what tasks, how they are managed, portability requirements, cost optimisation</p></div><div class='gov-char'><strong>AI Infrastructure</strong><p>Compute, storage, platform services, serving infrastructure, scaling approach</p></div><div class='gov-char'><strong>AI Governance</strong><p>Policies, compliance mechanisms, accountability structures, monitoring, audit trails</p></div></div>"
+        }
+      ]
+    },
+    {
+      "id": "practitioner-guidance",
+      "label": "Practitioner Guidance",
+      "icon": "&#128736;",
+      "summary": "Concrete actions for EA practitioners to evolve their architecture content management from periodic human-curated documentation to continuous, machine-readable, AI-aware repositories.",
+      "phases": [
+        {
+          "timeframe": "0-3 months",
+          "title": "Immediate Actions",
+          "actions": [
+            "Extend your metamodel with five core AI entities (Agent, Model, Prompt Template, Agent Interaction, Model Deployment) — a spreadsheet is sufficient to start.",
+            "Create an Agent Registry — document every deployed AI agent with role, data access, decision authority, owner, location, and performance metrics.",
+            "Create a Model Registry — document every AI model in use with provider, version, cost, accuracy, deployment location, and sovereignty status.",
+            "Audit your repository for staleness — assess each of the seven areas for currency, identify which areas are so stale they are actively misleading."
+          ]
+        },
+        {
+          "timeframe": "3-6 months",
+          "title": "Near-Term Actions",
+          "actions": [
+            "Develop new artifact templates: Agent Catalogue, Model Portfolio Matrix, Agent Interaction Diagram, AI Infrastructure Diagram, Sovereignty Compliance Matrix.",
+            "Define AI Building Blocks — establish ABB/SBB patterns for agents and models, creating the architectural mechanism for model portability.",
+            "Connect one automated data source to your repository — cloud inventory API, IaC state files, or CI/CD pipeline metadata for the most dynamic content area.",
+            "Add AI governance content to the Standards Information Base — model evaluation criteria, agent communication standards, sovereignty requirements, AI ethics principles.",
+            "Populate the Enterprise Continuum with AI assets — foundation-level patterns, industry-specific references, and organisation-specific implementations."
+          ]
+        },
+        {
+          "timeframe": "6-12 months",
+          "title": "Medium-Term Actions",
+          "actions": [
+            "Implement machine-readable architecture content — express standards and compliance rules in policy-as-code, expose the metamodel as structured data APIs.",
+            "Implement continuous repository updating for technology domains — automated feeds from cloud APIs, service meshes, CI/CD pipelines, with drift detection.",
+            "Extend the Enterprise Continuum for AI assets — populate each level (Foundation, Common, Industry, Organisation) with AI architecture patterns and reference implementations.",
+            "Create an AI Architecture section in Architecture Definition Documents — covering agent, model, infrastructure, and governance architecture.",
+            "Pilot a digital architecture twin for one domain — comprehensive automated repository maintaining near-real-time representation of deployed state."
+          ]
+        }
+      ]
+    }
+  ]
+}

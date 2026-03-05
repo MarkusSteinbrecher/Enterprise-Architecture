@@ -51,6 +51,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (peek && peek.page_type === 'people') {
       pageData = peek;
       initPeoplePage();
+    } else if (peek && peek.page_type === 'processes') {
+      pageData = peek;
+      initProcessesPage();
+    } else if (peek && peek.page_type === 'tools-repository') {
+      pageData = peek;
+      initToolsRepositoryPage();
     } else {
       await initConceptPage(page);
     }
@@ -1912,6 +1918,126 @@ function renderRoadmapPhases(phases) {
   return html;
 }
 
+/* ── Processes Page ───────────────────────────────────── */
+function initProcessesPage() {
+  const tc = document.getElementById('tab-content');
+  if (!tc || !pageData) return;
+
+  let html = '<div class="gov-hero">';
+  html += `<h1>${pageData.title}</h1>`;
+  html += `<p class="gov-subtitle">${pageData.subtitle}</p>`;
+  html += '</div>';
+
+  /* Section nav grid */
+  html += '<div class="gov-nav-grid">';
+  for (const sec of pageData.sections) {
+    html += `<a class="gov-nav-card" href="#${sec.id}"><span class="gov-nav-icon">${sec.icon}</span><strong>${sec.label}</strong><p>${sec.summary.slice(0, 100)}\u2026</p></a>`;
+  }
+  html += '</div>';
+
+  /* Sections */
+  for (const sec of pageData.sections) {
+    html += `<section class="gov-section" id="${sec.id}">`;
+    html += `<h2><span class="gov-section-icon">${sec.icon}</span> ${sec.label}</h2>`;
+    html += `<p class="gov-section-summary">${sec.summary}</p>`;
+
+    /* Phases (practitioner guidance) */
+    if (sec.phases) {
+      html += renderRoadmapPhases(sec.phases);
+    }
+
+    /* Standard subsections */
+    if (sec.subsections) {
+      for (const sub of sec.subsections) {
+        html += `<div class="gov-subsection" id="${sub.id}">`;
+        html += `<div class="gov-subsection-header" onclick="this.parentElement.classList.toggle('open')"><h3>${sub.title}</h3>${chevronSVG()}</div>`;
+        html += `<div class="gov-subsection-content">${sub.content}</div>`;
+        html += '</div>';
+      }
+    }
+
+    html += '</section>';
+  }
+
+  /* Sources */
+  if (pageData.sources && pageData.sources.length) {
+    html += '<section class="gov-section" id="sources"><h2>Sources</h2><ul>';
+    for (const s of pageData.sources) { html += `<li>${s}</li>`; }
+    html += '</ul></section>';
+  }
+
+  tc.innerHTML = html;
+
+  /* Auto-expand from hash */
+  if (window.location.hash) {
+    const target = document.querySelector(window.location.hash);
+    if (target) {
+      if (target.classList.contains('gov-subsection')) target.classList.add('open');
+      setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }
+}
+
+/* ── Tools & Repository Page ─────────────────────────── */
+function initToolsRepositoryPage() {
+  const tc = document.getElementById('tab-content');
+  if (!tc || !pageData) return;
+
+  let html = '<div class="gov-hero">';
+  html += `<h1>${pageData.title}</h1>`;
+  html += `<p class="gov-subtitle">${pageData.subtitle}</p>`;
+  html += '</div>';
+
+  /* Section nav grid */
+  html += '<div class="gov-nav-grid">';
+  for (const sec of pageData.sections) {
+    html += `<a class="gov-nav-card" href="#${sec.id}"><span class="gov-nav-icon">${sec.icon}</span><strong>${sec.label}</strong><p>${sec.summary.slice(0, 100)}\u2026</p></a>`;
+  }
+  html += '</div>';
+
+  /* Sections */
+  for (const sec of pageData.sections) {
+    html += `<section class="gov-section" id="${sec.id}">`;
+    html += `<h2><span class="gov-section-icon">${sec.icon}</span> ${sec.label}</h2>`;
+    html += `<p class="gov-section-summary">${sec.summary}</p>`;
+
+    /* Phases (practitioner guidance) */
+    if (sec.phases) {
+      html += renderRoadmapPhases(sec.phases);
+    }
+
+    /* Standard subsections */
+    if (sec.subsections) {
+      for (const sub of sec.subsections) {
+        html += `<div class="gov-subsection" id="${sub.id}">`;
+        html += `<div class="gov-subsection-header" onclick="this.parentElement.classList.toggle('open')"><h3>${sub.title}</h3>${chevronSVG()}</div>`;
+        html += `<div class="gov-subsection-content">${sub.content}</div>`;
+        html += '</div>';
+      }
+    }
+
+    html += '</section>';
+  }
+
+  /* Sources */
+  if (pageData.sources && pageData.sources.length) {
+    html += '<section class="gov-section" id="sources"><h2>Sources</h2><ul>';
+    for (const s of pageData.sources) { html += `<li>${s}</li>`; }
+    html += '</ul></section>';
+  }
+
+  tc.innerHTML = html;
+
+  /* Auto-expand from hash */
+  if (window.location.hash) {
+    const target = document.querySelector(window.location.hash);
+    if (target) {
+      if (target.classList.contains('gov-subsection')) target.classList.add('open');
+      setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }
+}
+
 /* ── Site-Wide Search ──────────────────────────────────── */
 let searchIndex = null;
 let searchOverlay = null;
@@ -1935,7 +2061,8 @@ async function buildSearchIndex() {
     'home', 'overview', 'recommendations', 'new-capabilities',
     'ea-operating-model', 'new-capabilities-detail',
     'banking', 'reinsurance', 'pharma',
-    'architecture-reference', 'capabilities', 'maturity', 'governance', 'people'
+    'architecture-reference', 'capabilities', 'maturity', 'governance', 'people',
+    'processes', 'tools-repository'
   ];
   const results = await Promise.all(files.map(f => loadJSON(`data/${f}.json`)));
   const idx = [];
@@ -2111,6 +2238,23 @@ async function buildSearchIndex() {
           for (const ap of sec.anti_patterns) {
             const apText = [ap.title, ap.symptoms, ap.root_cause, ap.impact, ap.fix].join(' ');
             idx.push({ type: 'topic', title: 'Anti-Pattern: ' + ap.title, snippet: truncate(ap.symptoms, 200), href: 'governance.html#' + ap.id, page: 'Governance', _text: apText.toLowerCase() });
+          }
+        }
+      }
+    }
+
+    // Processes & Tools-Repository sections
+    if ((file === 'processes' || file === 'tools-repository') && data.sections) {
+      for (const sec of data.sections) {
+        if (sec.subsections) {
+          for (const sub of sec.subsections) {
+            idx.push({ type: 'topic', title: sub.title, snippet: truncate(stripHTML(sub.content), 200), href: href + '#' + sub.id, page: pageLabel, _text: (sub.title + ' ' + stripHTML(sub.content)).toLowerCase() });
+          }
+        }
+        if (sec.phases) {
+          for (const p of sec.phases) {
+            const pText = [p.title, ...p.actions].join(' ');
+            idx.push({ type: 'topic', title: p.title, snippet: truncate(pText, 200), href: href + '#' + sec.id, page: pageLabel, _text: pText.toLowerCase() });
           }
         }
       }
