@@ -3025,11 +3025,18 @@ a.cap-box:hover { text-decoration: none; }
 .gov-subsection.open .finding-chevron { transform: rotate(180deg); }
 
 /* Governance tables */
+.gov-subsection-content,
+.gov-antipattern-detail,
+.gov-principle-detail {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .gov-table {
   width: 100%;
   border-collapse: collapse;
   font-size: .8rem;
   margin: .75rem 0;
+  min-width: 420px;
 }
 .gov-table th, .gov-table td {
   padding: .5rem .65rem;
@@ -3379,8 +3386,13 @@ a.cap-box:hover { text-decoration: none; }
   .examples-row { gap: .35rem; }
   .example-tag { font-size: .7rem; padding: .2rem .5rem; }
   .gov-chars-grid { grid-template-columns: 1fr; }
-  .gov-decisions-grid { grid-template-columns: 1fr; }
+  .gov-decisions-grid { grid-template-columns: repeat(2, 1fr); }
   .gov-metrics-grid { grid-template-columns: 1fr; }
   .gov-nav-grid { grid-template-columns: repeat(2, 1fr); }
   .gov-principle-detail { padding-left: 1.25rem; }
+  .gov-pillars { grid-template-columns: 1fr; }
+  .gov-changes { grid-template-columns: 1fr; }
+  .gov-table { font-size: .72rem; min-width: 360px; }
+  .gov-table th, .gov-table td { padding: .35rem .45rem; }
+  .gov-code-block pre { font-size: .7rem; }
 }
