@@ -1,0 +1,246 @@
+{
+  "page_type": "people",
+  "title": "People & Organisation for the Agentic Enterprise",
+  "subtitle": "How the EA team, roles, skills, and organisation must evolve when AI agents become part of the workforce. From traditional architect roles to hybrid human-agent teams.",
+  "description": "This page covers how EA people, roles, skills, and organisational structures must adapt for the agentic enterprise — synthesising TOGAF capability guidance, industry skills frameworks, and emerging AI workforce models.",
+  "sources": [
+    "TOGAF Foundation Course — Part 5: EA Capability and Governance",
+    "TOGAF Series Guide — Architecture Skills Framework (8 categories, 4 proficiency levels)",
+    "SFIA Framework — Skills Framework for the Information Age (v9)",
+    "BCS / iSAQB — Architecture certification frameworks",
+    "BCG (2025) — 'Freedom within a Frame' central platform + distributed domain model",
+    "Forrester (2025) — Enterprise Architect value perception research (35% → 47%)",
+    "Singapore IMDA (2026) — Model AI Governance Framework for Agentic AI"
+  ],
+  "sections": [
+    {
+      "id": "roles",
+      "label": "Architect Roles",
+      "icon": "&#128100;",
+      "summary": "Five traditional TOGAF architect roles must evolve to govern non-deterministic, learning-capable agent components. Four entirely new roles are required for agentic organisations.",
+      "subsections": [
+        {
+          "id": "traditional-roles",
+          "title": "Traditional Roles Transformed",
+          "content": "<table class='gov-table'><thead><tr><th>Role</th><th>Traditional Focus</th><th>What Changes for Agentic Organisations</th></tr></thead><tbody><tr><td><strong>Chief Architect</strong></td><td>Strategic technical leadership, architecture landscape oversight, governance authority</td><td>Must position agents as strategic enterprise capability. Manage hybrid human-agent workforce anxiety. Establish decision authority boundaries between humans and agents. Navigate ethical and reputational dimensions of AI deployment.</td></tr><tr><td><strong>Enterprise Architect</strong></td><td>Integration, interoperability, governance of solution components across domains</td><td>Now governs agent components that are non-deterministic and learning-capable. Defines agent interaction standards, human-agent handoff patterns, and agent governance policies. Includes agents as distinct participant types in relationship models.</td></tr><tr><td><strong>Business Architect</strong></td><td>Shape capabilities and systems for business domains</td><td>Makes <mark>delivery model classification</mark> per capability: agent-native, augmented, or human-delivered. Assesses process decomposition for agent reliability. Designs hybrid human-agent team operational models.</td></tr><tr><td><strong>Technology Architect</strong></td><td>Technical domain architecture across data, application, and technology layers</td><td>Understands AI/ML infrastructure, agent orchestration, model serving patterns. <mark>Data quality becomes a hard prerequisite</mark> for agent deployment. Application design must accommodate agent integration (API-first, event-driven, tool-use interfaces).</td></tr><tr><td><strong>Solution Architect</strong></td><td>Deliver new or changed capabilities, ensure fit for purpose</td><td>Designs solutions including agent components. New competencies: prompt engineering, guardrail specification, non-deterministic output validation, human-in-the-loop patterns. Must design for <mark>probabilistic systems</mark> (95% accuracy expected, 5% error requires explicit design).</td></tr></tbody></table>"
+        },
+        {
+          "id": "new-roles",
+          "title": "New Roles Required",
+          "content": "<div class='people-roles-grid'><div class='people-role-card'><h5>AI / Agent Architect</h5><p>Designs multi-agent systems, model integration patterns, and agent communication architectures. Bridges AI engineering and architecture governance. Evaluates model fitness, designs guardrails, and defines agent interaction protocols.</p><div class='people-role-meta'><span class='people-role-tag new'>New Role</span><span class='people-role-tag'>Reports to: Chief Architect</span></div></div><div class='people-role-card'><h5>Agent Governance Lead</h5><p>Focuses on agent behaviour governance, decision authority boundaries, continuous monitoring, and agent risk register management. Interface to ethics and compliance functions. Defines what agents are and are not permitted to do.</p><div class='people-role-meta'><span class='people-role-tag new'>New Role</span><span class='people-role-tag'>Reports to: Enterprise Architect</span></div></div><div class='people-role-card'><h5>Human-Agent Interaction Designer</h5><p>Designs handoff triggers, escalation protocols, feedback loops, trust calibration, and cognitive load management for human supervisors. Ensures agents augment rather than overwhelm their human collaborators.</p><div class='people-role-meta'><span class='people-role-tag new'>New Role</span><span class='people-role-tag'>Reports to: Business Architect</span></div></div><div class='people-role-card'><h5>Agent Operations Architect</h5><p>Infrastructure sizing, model lifecycle management (versioning, rollback, A/B testing), observability design, cost management, and incident response for agent failures. The SRE equivalent for agent systems.</p><div class='people-role-meta'><span class='people-role-tag new'>New Role</span><span class='people-role-tag'>Reports to: Technology Architect</span></div></div></div>"
+        }
+      ]
+    },
+    {
+      "id": "skills",
+      "label": "Skills & Competencies",
+      "icon": "&#127891;",
+      "summary": "TOGAF defines eight skills categories across four proficiency levels. The agentic organisation requires a ninth category — AI & Agent skills — and significant enhancement of existing categories.",
+      "subsections": [
+        {
+          "id": "skills-framework",
+          "title": "Architecture Skills Framework",
+          "content": "<p>TOGAF's skills framework defines four proficiency levels applied across skill categories:</p><table class='gov-table'><thead><tr><th>Level</th><th>Label</th><th>Description</th></tr></thead><tbody><tr><td><strong>1</strong></td><td>Background</td><td>Has a background understanding but not applied. Knows where to find expertise.</td></tr><tr><td><strong>2</strong></td><td>Aware</td><td>Has awareness of the area. Can discuss intelligently and identify issues.</td></tr><tr><td><strong>3</strong></td><td>Knowledgeable</td><td>Has detailed knowledge. Can evaluate proposals and define governance requirements.</td></tr><tr><td><strong>4</strong></td><td>Expert</td><td>Has deep expertise. Can design solutions, evaluate alternatives, and set direction.</td></tr></tbody></table><h5>Traditional Skill Categories (TOGAF)</h5><ul><li><strong>Generic</strong> — Leadership, teamwork, communication, facilitation</li><li><strong>Business</strong> — Business processes, strategic planning, change management</li><li><strong>Architecture</strong> — Architecture frameworks, methods, modelling, patterns</li><li><strong>Application</strong> — Software engineering, systems design, integration</li><li><strong>Data</strong> — Data management, analytics, modelling, quality</li><li><strong>Technology</strong> — Infrastructure, platforms, networks, cloud</li><li><strong>Legal</strong> — Procurement, contracts, intellectual property, regulation</li><li><strong>Change</strong> — Transformation, programme management, benefits realisation</li></ul>"
+        },
+        {
+          "id": "ai-skills",
+          "title": "New: AI & Agent Skills Category",
+          "content": "<p>An entirely new skills category is required. TOGAF's single reference to 'AI and Expert Systems' is inadequate for organisations deploying agents at scale.</p><table class='gov-table'><thead><tr><th>Skill</th><th>Enterprise Architect</th><th>Solution Architect</th><th>Domain Architect</th></tr></thead><tbody><tr><td>AI/ML Fundamentals</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td></tr><tr><td>Agent Design Patterns</td><td>L2 — Aware</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td></tr><tr><td>Prompt Engineering</td><td>L2 — Aware</td><td>L4 — Expert</td><td>L2 — Aware</td></tr><tr><td>Agent Governance & Ethics</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td></tr><tr><td>Agent Testing & Validation</td><td>L2 — Aware</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td></tr><tr><td>Multi-Agent Orchestration</td><td>L3 — Knowledgeable</td><td>L4 — Expert</td><td>L2 — Aware</td></tr><tr><td>AI Platform Evaluation</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td><td>L4 — Expert (Tech)</td></tr><tr><td>Responsible AI</td><td>L4 — Expert</td><td>L3 — Knowledgeable</td><td>L3 — Knowledgeable</td></tr></tbody></table>"
+        },
+        {
+          "id": "enhanced-generic",
+          "title": "Enhanced Generic Skills",
+          "content": "<p>Existing skill categories need significant enhancement for the AI era:</p><ul><li><strong>Leadership</strong> — Now includes leading hybrid human-agent teams, navigating workforce anxiety about automation, and communicating AI strategy credibly</li><li><strong>Communication</strong> — Must translate AI concepts (model risk, probabilistic outcomes, hallucination) for non-technical stakeholders without either overselling or underselling capability</li><li><strong>Facilitation</strong> — Must handle workforce anxiety about agent deployment, facilitate agent-human process redesign, and manage stakeholders who conflate AI marketing with reality</li><li><strong>Systems Thinking</strong> — Critical for understanding emergent behaviour in multi-agent systems where the whole is genuinely different from the sum of parts</li></ul>"
+        }
+      ]
+    },
+    {
+      "id": "ai-literacy",
+      "label": "AI Literacy",
+      "icon": "&#129504;",
+      "summary": "AI literacy is a new, continuous learning requirement — not a one-time training exercise. TOGAF assumes static proficiency levels, but AI capabilities evolve monthly. Eight literacy dimensions are required across different audiences.",
+      "subsections": [
+        {
+          "id": "literacy-architects",
+          "title": "AI Literacy for Architects",
+          "content": "<div class='people-literacy-grid'><div class='people-literacy-card'><h5>AI Foundations</h5><p>Model types and capabilities (LLMs, vision, classification). Deterministic vs. probabilistic systems. Training, fine-tuning, inference mechanics. Model limitations (hallucination, knowledge cutoff, reasoning failures). Cost-performance trade-offs.</p></div><div class='people-literacy-card'><h5>Prompt Engineering as Architecture</h5><p>System prompt architecture (persona, boundaries, constraints). Prompt testing and validation. Prompt versioning and lifecycle management. Prompt security (injection attack defence). Advanced patterns (chain-of-thought, RAG, tool-use).</p></div><div class='people-literacy-card'><h5>Model Evaluation</h5><p>Model architectures at functional level (transformers, multimodal). Benchmark interpretation. Model fit for use cases. Versioning and lifecycle. Provider evaluation (reliability, data practices, lock-in risks).</p></div><div class='people-literacy-card'><h5>AI Ethics & Responsible AI</h5><p>Algorithmic bias (origin, detection, mitigation). Transparency and explainability requirements. Fairness (definition, measurement, tensions). Accountability chains in multi-agent systems. Privacy, consent, and human autonomy.</p></div></div>"
+        },
+        {
+          "id": "literacy-business",
+          "title": "AI Literacy for Business Stakeholders",
+          "content": "<ul><li><strong>What agents can realistically do</strong> — grounded assessment, not vendor marketing</li><li><strong>What they cannot do</strong> — novel reasoning, physical-world understanding, reliable judgement under uncertainty</li><li><strong>Process suitability evaluation</strong> — decision frequency, error tolerance, data availability</li><li><strong>Economic model</strong> — inference costs, development effort, ongoing supervision costs vs. gains</li><li><strong>Performance metrics interpretation</strong> — what accuracy percentages mean in practice</li></ul>"
+        },
+        {
+          "id": "literacy-ops",
+          "title": "AI Literacy for IT Operations",
+          "content": "<ul><li><strong>How agent systems differ</strong> — non-deterministic, model version dependencies, context window limits</li><li><strong>Operational concerns</strong> — latency, token throughput, cost scaling, vendor rate limits</li><li><strong>Monitoring patterns</strong> — drift detection, guardrail activation rates, escalation rates</li><li><strong>Incident response</strong> — distinguish model failures from infrastructure failures</li><li><strong>Cost management</strong> — token budgeting, model tier selection, response caching strategies</li></ul>"
+        },
+        {
+          "id": "literacy-cadence",
+          "title": "Continuous Learning Framework",
+          "content": "<table class='gov-table'><thead><tr><th>Audience</th><th>Refresh Cadence</th><th>Format</th></tr></thead><tbody><tr><td>Enterprise & AI Architects</td><td>Quarterly</td><td>Deep-dive workshops, hands-on labs, model evaluation exercises</td></tr><tr><td>Solution & Domain Architects</td><td>Quarterly</td><td>Pattern reviews, case studies, sandbox experimentation</td></tr><tr><td>Business Stakeholders</td><td>Semi-annual</td><td>Capability briefings, demo sessions, business case reviews</td></tr><tr><td>IT Operations</td><td>Quarterly</td><td>Operational runbooks, incident simulations, cost reviews</td></tr><tr><td>General Organisation</td><td>Annual</td><td>Awareness sessions, policy updates, responsible AI training</td></tr></tbody></table><p>Key principle: <strong>10/20/70 rule</strong> — invest 70% in people and process, 20% in technology enablement, 10% in algorithms and models.</p>"
+        }
+      ]
+    },
+    {
+      "id": "org-models",
+      "label": "Organisation Models",
+      "icon": "&#127970;",
+      "summary": "EA team organisation determines architecture effectiveness. The three classic models — centralised, federated, and hybrid — each require adaptation for the agentic enterprise, particularly around agent ownership and AI centre of excellence integration.",
+      "org_models": [
+        {
+          "id": "centralised",
+          "title": "Centralised",
+          "description": "All architects report to a central EA function. Standards, governance, and tooling are centrally managed. Architects are assigned to projects but maintain central reporting.",
+          "strengths": [
+            "Consistent standards and governance across the enterprise",
+            "Strong architecture community and knowledge sharing",
+            "Clear career paths and professional development",
+            "Efficient resource allocation across priorities"
+          ],
+          "trade_offs": [
+            "Can become disconnected from business delivery ('ivory tower' risk)",
+            "May create bottlenecks if team is undersized",
+            "Business units feel architecture is 'done to them'",
+            "Slower response to domain-specific needs"
+          ],
+          "agentic_fit": "Strong for initial AI governance — central team can establish consistent agent governance standards, maintain the agent registry, and build specialised AI architecture skills. Risk: becomes a bottleneck as agent deployment scales.",
+          "best_for": "Organisations in early AI adoption, regulated industries, or those with fewer than 50 architects"
+        },
+        {
+          "id": "federated",
+          "title": "Federated",
+          "description": "Architects sit within business units or domains. Each domain owns its architecture decisions within enterprise-wide guardrails. A lightweight central team maintains standards and facilitates cross-domain alignment.",
+          "strengths": [
+            "Deep business domain knowledge and engagement",
+            "Faster response to domain-specific needs",
+            "Business units own their architecture decisions",
+            "Architects embedded in delivery — reduces 'ivory tower' perception"
+          ],
+          "trade_offs": [
+            "Inconsistent standards across domains without strong governance",
+            "Duplication of effort and capability across domains",
+            "Weaker architecture community — architects may feel isolated",
+            "Career paths less clear without central function"
+          ],
+          "agentic_fit": "Enables rapid domain-specific agent deployment but risks inconsistent agent governance. Each domain may choose different models, tools, and patterns. Requires strong central guardrails and an agent governance council.",
+          "best_for": "Large, diversified organisations with mature domain teams and strong governance culture"
+        },
+        {
+          "id": "hybrid",
+          "title": "Hybrid (Recommended)",
+          "description": "Central EA team sets strategy, standards, and governance. Domain architects embed in business units for delivery. Centre of Excellence (CoE) provides specialised expertise (including AI). BCG calls this 'Freedom within a Frame.'",
+          "strengths": [
+            "Balances consistency with agility",
+            "Central governance with domain-level delivery speed",
+            "AI CoE provides concentrated expertise without bottleneck",
+            "BCG: cuts costs up to 30%, improves time-to-market by 50%"
+          ],
+          "trade_offs": [
+            "Requires clear RACI — who decides what?",
+            "Matrix management complexity",
+            "Can create tension between central and domain teams",
+            "Needs active governance to prevent drift"
+          ],
+          "agentic_fit": "Best fit for agentic organisations. Central team governs agent standards, maintains registries, and sets governance policies. Domain teams deploy agents within guardrails. AI CoE provides specialist support. <mark>BCG recommended model</mark> for AI at scale.",
+          "best_for": "Most organisations adopting AI at scale, particularly those with 50+ architects"
+        }
+      ]
+    },
+    {
+      "id": "agent-ownership",
+      "label": "Agent Ownership",
+      "icon": "&#129302;",
+      "summary": "Who owns AI agents in the organisation? This is the major unresolved organisational design question. Three models are emerging, each with different implications for EA.",
+      "subsections": [
+        {
+          "id": "ownership-models",
+          "title": "Agent Ownership Models",
+          "content": "<table class='gov-table'><thead><tr><th>Model</th><th>Description</th><th>Pros</th><th>Cons</th></tr></thead><tbody><tr><td><strong>IT-Owned</strong></td><td>Agents treated as technology assets. IT department manages the full lifecycle — deployment, monitoring, retirement.</td><td>Consistent governance, centralised monitoring, security control</td><td>Slow to adapt to business needs, poor business domain context, capacity bottleneck</td></tr><tr><td><strong>Business-Owned</strong></td><td>Agents treated as business process participants. Business units deploy and manage agents for their domain.</td><td>Domain expertise, fast deployment, strong business alignment</td><td>Inconsistent governance, shadow AI risk, fragmented tooling and standards</td></tr><tr><td><strong>Hybrid</strong> <mark>(Recommended)</mark></td><td>Central platform team provides infrastructure, governance, and guardrails. Business domains deploy agents within the platform's constraints.</td><td>Governance + agility, consistent platform, domain flexibility</td><td>Requires clear RACI, platform team can become bottleneck, matrix complexity</td></tr></tbody></table><p>76% of executives view agents as 'coworkers, not tools' — reinforcing the need for organisational frameworks that treat agent management with the same rigour as people management.</p>"
+        },
+        {
+          "id": "agent-service-mgmt",
+          "title": "Agent Service Management Maturity",
+          "content": "<table class='gov-table'><thead><tr><th>Level</th><th>Description</th></tr></thead><tbody><tr><td><strong>1 — Ad Hoc</strong></td><td>Agents deployed without formal onboarding. Monitoring is ad hoc. No registry. Ownership unclear.</td></tr><tr><td><strong>2 — Emerging</strong></td><td>Basic agent registry. Owner assigned per agent. Reactive incident response. Some cost tracking.</td></tr><tr><td><strong>3 — Defined</strong></td><td>Formal onboarding process. Continuous monitoring with SLAs. Performance baselines established. Regular review cycles.</td></tr><tr><td><strong>4 — Managed</strong></td><td>Integrated human-agent workforce management. Automated scaling and cost optimisation. Predictive analytics on agent performance.</td></tr><tr><td><strong>5 — Optimising</strong></td><td>Self-managing agent ecosystem. Automated agent-to-agent orchestration. Continuous optimisation of the agent portfolio.</td></tr></tbody></table>"
+        },
+        {
+          "id": "ai-finops",
+          "title": "AI FinOps as Organisational Capability",
+          "content": "<p>AI spending is rising from 3% to 5% of annual business budgets, yet only <strong>10% of organisations</strong> have mature AI FinOps governance. AI FinOps currently has no natural organisational home — it sits between EA cost analysis, cloud FinOps, and business performance management.</p><h5>Key Cost Categories</h5><ul><li><strong>Inference costs</strong> — per-token charges for production agent operations</li><li><strong>Fine-tuning budgets</strong> — model customisation and specialisation</li><li><strong>Embedding generation & vector storage</strong> — knowledge base maintenance</li><li><strong>GPU compute</strong> — training, inference, on-premises deployment</li><li><strong>Agent orchestration</strong> — multi-agent coordination overhead</li><li><strong>Model provider contracts</strong> — commercial API agreements and commitments</li></ul><p>EA's role: provide the cost tracking framework, define budget thresholds and escalation triggers, and integrate AI costs into enterprise financial governance.</p>"
+        }
+      ]
+    },
+    {
+      "id": "team-building",
+      "label": "Building EA Teams",
+      "icon": "&#128736;",
+      "summary": "Building an effective EA team requires the right mix of skills, the right engagement model, and continuous investment in professional development. The agentic organisation demands architects who can bridge business, technology, and AI.",
+      "subsections": [
+        {
+          "id": "team-sizing",
+          "title": "Team Sizing and Structure",
+          "content": "<table class='gov-table'><thead><tr><th>Organisation Size</th><th>Typical EA Team</th><th>Key Roles</th></tr></thead><tbody><tr><td>Small (< 1,000 employees)</td><td>1-3 architects</td><td>1 Enterprise Architect (often part-time), 1-2 Solution Architects</td></tr><tr><td>Medium (1,000-10,000)</td><td>5-15 architects</td><td>Chief Architect, 2-3 Domain Architects, 5-10 Solution Architects</td></tr><tr><td>Large (10,000-50,000)</td><td>20-50 architects</td><td>Chief Architect, 3-5 Enterprise Architects, 10-15 Domain Architects, 20+ Solution Architects, AI/Agent Architect</td></tr><tr><td>Enterprise (50,000+)</td><td>50-150 architects</td><td>Full architecture function with specialisations, AI CoE, multiple domain teams, global/regional structure</td></tr></tbody></table>"
+        },
+        {
+          "id": "engagement-model",
+          "title": "Architect Engagement Model",
+          "content": "<p>Architects must balance strategic thinking with delivery engagement. Forrester research shows architect perceived value jumped from 35% (2023) to 47% (2025) — but only where architects actively engage in delivery.</p><div class='people-engagement'><div class='people-engage-item'><h5>50% Delivery Embedded</h5><p>Work alongside project teams. Provide hands-on guidance. Solve real problems. Build trust through practical contribution, not theoretical frameworks.</p></div><div class='people-engage-item'><h5>30% Strategic Architecture</h5><p>Develop roadmaps, maintain standards, review patterns, update the technology radar. Ensure architecture evolves with business and technology change.</p></div><div class='people-engage-item'><h5>20% Governance & Community</h5><p>Architecture reviews, compliance assessments, community of practice facilitation, mentoring, and knowledge sharing.</p></div></div>"
+        },
+        {
+          "id": "career-paths",
+          "title": "Career Paths",
+          "content": "<p>Architecture career progression typically follows two tracks — a technical leadership track and a management track:</p><div class='people-career'><div class='people-career-track'><h5>Technical Leadership Track</h5><ol><li>Developer / Engineer</li><li>Senior Developer</li><li>Solution Architect</li><li>Senior Solution Architect</li><li>Domain Architect</li><li>Enterprise Architect</li><li>Chief Architect</li></ol></div><div class='people-career-track'><h5>AI Specialisation Track <mark>(New)</mark></h5><ol><li>ML Engineer / Data Scientist</li><li>Senior ML Engineer</li><li>AI Solution Architect</li><li>AI/Agent Architect</li><li>Lead AI Architect</li><li>Chief AI Architect</li></ol></div></div><p>Key principle: architecture is not a promotion from development — it is a different discipline requiring different skills (systems thinking, stakeholder management, governance, communication). Not every excellent developer becomes an excellent architect.</p>"
+        },
+        {
+          "id": "community",
+          "title": "Community of Practice",
+          "content": "<ul><li><strong>Regular meetups</strong> — Monthly architecture community sessions for knowledge sharing, pattern reviews, and cross-team alignment</li><li><strong>Architecture guilds</strong> — Domain-specific groups (data, integration, security, AI) that develop and maintain standards</li><li><strong>Lunch-and-learn series</strong> — Rotating presentations on emerging technologies, patterns, and lessons learned</li><li><strong>Architecture decision sharing</strong> — ADRs published to a shared, searchable repository so decisions are visible across teams</li><li><strong>External engagement</strong> — Conference attendance, analyst briefings, industry working groups, and open-source contributions</li><li><strong>Mentoring programme</strong> — Senior architects mentor junior architects across a structured development framework</li></ul>"
+        }
+      ]
+    },
+    {
+      "id": "roadmap",
+      "label": "Implementation Roadmap",
+      "icon": "&#128197;",
+      "summary": "A phased approach to evolving the EA people and organisation capability for the agentic enterprise.",
+      "phases": [
+        {
+          "id": "phase-immediate",
+          "timeframe": "0-3 months",
+          "title": "Assess and Extend",
+          "actions": [
+            "Assess AI literacy across the EA team — identify gaps against the AI skills framework",
+            "Identify agent management ownership model — IT, business, or hybrid?",
+            "Extend the EA capability model with Agent Lifecycle Management, Model Portfolio Management, AI FinOps, and AI-Augmented EA Practice",
+            "Start tracking AI costs for the top 10 AI workloads",
+            "Add AI/ML Architect role to ARB composition"
+          ]
+        },
+        {
+          "id": "phase-nearterm",
+          "timeframe": "3-6 months",
+          "title": "Develop and Adopt",
+          "actions": [
+            "Define new EA roles or formally extend existing role definitions for AI responsibilities",
+            "Implement AI competency development programme — start with architects, then business stakeholders",
+            "Adopt AI tools within the EA practice itself (automated documentation, impact analysis, compliance checking)",
+            "Update EA value map to include AI governance value and agent architecture value",
+            "Establish AI architecture community of practice"
+          ]
+        },
+        {
+          "id": "phase-medium",
+          "timeframe": "6-12 months",
+          "title": "Operationalise",
+          "actions": [
+            "Implement Agent Service Management as a managed organisational capability",
+            "Implement AI FinOps with cost tracking, budget thresholds, and escalation triggers",
+            "Add AI dimensions to maturity assessments across all EA domains",
+            "Plan the AI value progression transition — from productivity phase (cost savings) to revenue phase (new value creation)",
+            "Evaluate hybrid human-agent team models and pilot in one domain"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -208,6 +208,7 @@ p:last-child { margin-bottom: 0; }
 
 /* ── Mobile nav (≤768px) ─────────────────────────────── */
 @media (max-width: 768px) {
+  .top-nav-inner { flex-wrap: wrap; }
   .nav-hamburger { display: block; order: 2; }
   .search-toggle { order: 1; margin-left: auto; }
 
@@ -3395,4 +3396,251 @@ a.cap-box:hover { text-decoration: none; }
   .gov-table { font-size: .72rem; min-width: 360px; }
   .gov-table th, .gov-table td { padding: .35rem .45rem; }
   .gov-code-block pre { font-size: .7rem; }
+  .people-roles-grid { grid-template-columns: 1fr; }
+  .people-org-grid { grid-template-columns: 1fr; }
+  .people-literacy-grid { grid-template-columns: 1fr; }
+  .people-engagement { grid-template-columns: 1fr; }
+  .people-career { grid-template-columns: 1fr; }
+}
+
+/* ── People & Organisation Page ──────────────────────── */
+
+/* Role cards grid */
+.people-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .75rem;
+  margin: .75rem 0;
+}
+.people-role-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .85rem 1rem;
+  box-shadow: var(--shadow);
+}
+.people-role-card h5 {
+  font-size: .88rem;
+  margin: 0 0 .35rem;
+  color: var(--text);
+}
+.people-role-card p {
+  font-size: .8rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 .5rem;
+}
+.people-role-meta {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.people-role-tag {
+  font-size: .68rem;
+  padding: .15rem .5rem;
+  border-radius: 100px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.people-role-tag.new {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* Organisation models */
+.people-org-model {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: .75rem;
+  box-shadow: var(--shadow);
+}
+.people-org-model .gov-subsection-header {
+  gap: .5rem;
+}
+.people-recommended {
+  font-size: .68rem;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  padding: .15rem .5rem;
+  border-radius: 100px;
+  flex-shrink: 0;
+}
+.people-org-detail {
+  display: none;
+  padding: 0 1.25rem 1.25rem;
+  font-size: .82rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+.people-org-model.open .people-org-detail { display: block; }
+.people-org-model.open .finding-chevron { transform: rotate(180deg); }
+.people-org-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: .75rem 0;
+}
+.people-org-grid h5 {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 .35rem;
+}
+.people-org-grid ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: .8rem;
+  line-height: 1.6;
+}
+.people-org-agentic {
+  background: var(--accent-light);
+  border-left: 3px solid var(--accent);
+  padding: .65rem .85rem;
+  border-radius: 0 6px 6px 0;
+  margin: .75rem 0;
+}
+.people-org-agentic h5 {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 .25rem;
+}
+.people-org-agentic p { margin: 0; font-size: .8rem; line-height: 1.55; }
+.people-org-best {
+  font-size: .8rem;
+  color: var(--text-secondary);
+  margin-top: .5rem;
+}
+
+/* AI Literacy grid */
+.people-literacy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .75rem;
+  margin: .75rem 0;
+}
+.people-literacy-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: .75rem 1rem;
+}
+.people-literacy-card h5 {
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 .25rem;
+}
+.people-literacy-card p {
+  font-size: .78rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Engagement model */
+.people-engagement {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .75rem;
+  margin: .75rem 0;
+}
+.people-engage-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: .75rem 1rem;
+  text-align: center;
+}
+.people-engage-item h5 {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 0 .35rem;
+}
+.people-engage-item p {
+  font-size: .78rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Career paths */
+.people-career {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: .75rem 0;
+}
+.people-career-track {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: .75rem 1rem;
+}
+.people-career-track h5 {
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 .5rem;
+}
+.people-career-track ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: .8rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+/* Roadmap phases */
+.people-roadmap {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .75rem;
+  margin: .75rem 0;
+}
+.people-phase {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+.people-phase-header {
+  margin-bottom: .65rem;
+}
+.people-phase-time {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  padding: .15rem .5rem;
+  border-radius: 100px;
+  margin-bottom: .35rem;
+}
+.people-phase-title {
+  display: block;
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.people-phase-actions {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: .78rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+.people-phase-actions li { margin-bottom: .35rem; }
+
+@media (max-width: 900px) {
+  .people-roles-grid { grid-template-columns: 1fr; }
+  .people-roadmap { grid-template-columns: 1fr; }
+  .people-engagement { grid-template-columns: 1fr; }
 }

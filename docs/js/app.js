@@ -48,6 +48,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (peek && peek.page_type === 'governance') {
       pageData = peek;
       initGovernancePage();
+    } else if (peek && peek.page_type === 'people') {
+      pageData = peek;
+      initPeoplePage();
     } else {
       await initConceptPage(page);
     }
@@ -1780,6 +1783,135 @@ function renderAntiPatterns(patterns) {
   return html;
 }
 
+/* ── People & Organisation Page ──────────────────────── */
+
+function initPeoplePage() {
+  const el = document.getElementById('tab-content');
+  if (!el || !pageData) return;
+
+  let html = '';
+
+  /* Hero */
+  html += '<header class="hero"><div class="container">';
+  html += '<p class="section-label">People &amp; Organisation</p>';
+  html += `<h1>${pageData.title}</h1>`;
+  html += `<p class="subtitle">${pageData.subtitle}</p>`;
+  html += '</div></header>';
+
+  /* Section navigation */
+  html += '<div class="dashboard-section"><div class="container">';
+  html += '<div class="gov-nav-grid">';
+  for (const sec of pageData.sections) {
+    html += `<a class="gov-nav-card" href="#${sec.id}" onclick="event.preventDefault();document.getElementById('${sec.id}').scrollIntoView({behavior:'smooth',block:'start'})">`;
+    html += `<span class="gov-nav-icon">${sec.icon}</span>`;
+    html += `<span class="gov-nav-label">${sec.label}</span>`;
+    html += '</a>';
+  }
+  html += '</div>';
+  html += '</div></div>';
+
+  /* Render each section */
+  for (const sec of pageData.sections) {
+    html += `<div class="dashboard-section" id="${sec.id}"><div class="container">`;
+    html += `<p class="section-label">${sec.label}</p>`;
+    html += `<h2>${sec.label}</h2>`;
+    html += `<p class="page-description">${sec.summary}</p>`;
+
+    /* Organisation models — special rendering */
+    if (sec.org_models) {
+      html += renderOrgModels(sec.org_models);
+    }
+
+    /* Roadmap phases — special rendering */
+    if (sec.phases) {
+      html += renderRoadmapPhases(sec.phases);
+    }
+
+    /* Standard subsections */
+    if (sec.subsections) {
+      for (const sub of sec.subsections) {
+        html += `<div class="gov-subsection" id="${sub.id}">`;
+        html += `<div class="gov-subsection-header" onclick="this.closest('.gov-subsection').classList.toggle('open')">`;
+        html += `<h3>${sub.title}</h3>`;
+        html += chevronSVG();
+        html += '</div>';
+        html += `<div class="gov-subsection-content">${sub.content}</div>`;
+        html += '</div>';
+      }
+    }
+
+    html += '</div></div>';
+  }
+
+  /* Sources */
+  html += '<div class="dashboard-section"><div class="container">';
+  html += '<div class="maturity-sources">';
+  html += '<h4>Sources &amp; Frameworks</h4>';
+  html += '<ul>';
+  for (const src of pageData.sources) {
+    html += `<li>${src}</li>`;
+  }
+  html += '</ul></div>';
+  html += '</div></div>';
+
+  el.innerHTML = html;
+
+  // Open from hash
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    const target = document.getElementById(hash);
+    if (target) {
+      if (target.classList.contains('gov-subsection')) target.classList.add('open');
+      setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }
+}
+
+function renderOrgModels(models) {
+  let html = '<div class="people-org-models">';
+  for (const m of models) {
+    html += `<div class="people-org-model" id="${m.id}">`;
+    html += `<div class="gov-subsection-header" onclick="this.closest('.people-org-model').classList.toggle('open')">`;
+    html += `<h3>${m.title}</h3>`;
+    if (m.id === 'hybrid') html += '<span class="people-recommended">Recommended</span>';
+    html += chevronSVG();
+    html += '</div>';
+    html += '<div class="people-org-detail">';
+    html += `<p>${m.description}</p>`;
+    html += '<div class="people-org-grid">';
+    html += '<div><h5>Strengths</h5><ul>';
+    for (const s of m.strengths) html += `<li>${s}</li>`;
+    html += '</ul></div>';
+    html += '<div><h5>Trade-offs</h5><ul>';
+    for (const t of m.trade_offs) html += `<li>${t}</li>`;
+    html += '</ul></div>';
+    html += '</div>';
+    html += `<div class="people-org-agentic"><h5>Fit for Agentic Organisations</h5><p>${m.agentic_fit}</p></div>`;
+    html += `<div class="people-org-best"><strong>Best for:</strong> ${m.best_for}</div>`;
+    html += '</div></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderRoadmapPhases(phases) {
+  let html = '<div class="people-roadmap">';
+  for (const p of phases) {
+    html += `<div class="people-phase" id="${p.id}">`;
+    html += `<div class="people-phase-header">`;
+    html += `<span class="people-phase-time">${p.timeframe}</span>`;
+    html += `<span class="people-phase-title">${p.title}</span>`;
+    html += '</div>';
+    html += '<ul class="people-phase-actions">';
+    for (const a of p.actions) {
+      html += `<li>${a}</li>`;
+    }
+    html += '</ul></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
 /* ── Site-Wide Search ──────────────────────────────────── */
 let searchIndex = null;
 let searchOverlay = null;
@@ -1803,7 +1935,7 @@ async function buildSearchIndex() {
     'home', 'overview', 'recommendations', 'new-capabilities',
     'ea-operating-model', 'new-capabilities-detail',
     'banking', 'reinsurance', 'pharma',
-    'architecture-reference', 'capabilities', 'maturity', 'governance'
+    'architecture-reference', 'capabilities', 'maturity', 'governance', 'people'
   ];
   const results = await Promise.all(files.map(f => loadJSON(`data/${f}.json`)));
   const idx = [];
@@ -1939,6 +2071,23 @@ async function buildSearchIndex() {
       for (const s of data.stages) {
         const texts = [s.label, s.tagline, s.characteristics.summary, (s.how_you_know || []).join(' '), (s.next_actions || []).map(a => a.title + ' ' + a.description).join(' ')].join(' ');
         idx.push({ type: 'topic', title: 'Stage ' + s.level + ': ' + s.label, snippet: truncate(stripHTML(s.characteristics.summary), 200), href: 'maturity.html#stage-' + s.level, page: 'Maturity', _text: texts.toLowerCase() });
+      }
+    }
+
+    // People & Organisation sections
+    if (file === 'people' && data.sections) {
+      for (const sec of data.sections) {
+        if (sec.subsections) {
+          for (const sub of sec.subsections) {
+            idx.push({ type: 'topic', title: sub.title, snippet: truncate(stripHTML(sub.content), 200), href: 'people.html#' + sub.id, page: 'People & Organisation', _text: (sub.title + ' ' + stripHTML(sub.content)).toLowerCase() });
+          }
+        }
+        if (sec.org_models) {
+          for (const m of sec.org_models) {
+            const mText = [m.title, m.description, m.agentic_fit, m.best_for, (m.strengths || []).join(' ')].join(' ');
+            idx.push({ type: 'topic', title: m.title + ' Model', snippet: truncate(m.description, 200), href: 'people.html#' + m.id, page: 'People & Organisation', _text: mText.toLowerCase() });
+          }
+        }
       }
     }
 
