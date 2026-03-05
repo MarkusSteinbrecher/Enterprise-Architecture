@@ -5,12 +5,36 @@
   "overview": {
     "what": "An EA Operating Model defines <strong>how</strong> the Enterprise Architecture function operates &mdash; not just what capabilities it has, but how decisions are made, how teams are structured, how work gets done, and how performance is measured. It is the blueprint for running EA as a service to the organisation.",
     "dimensions": [
-      { "icon": "&#9881;", "label": "Capabilities", "description": "What the EA function can do &mdash; the 30 core capabilities that define EA's service portfolio, from architecture vision development to compliance evaluation." },
-      { "icon": "&#9878;", "label": "Governance", "description": "How architecture decisions are made and enforced &mdash; decision rights, review boards, compliance mechanisms, and escalation paths." },
-      { "icon": "&#128101;", "label": "People &amp; Organisation", "description": "Team structure, roles, competencies, and career paths &mdash; including new roles for AI governance and agent architecture." },
-      { "icon": "&#9654;", "label": "Processes", "description": "How architecture work gets done &mdash; the development cycle, reviews, continuous architecture practices, and delivery methodology." },
-      { "icon": "&#128451;", "label": "Tools &amp; Repository", "description": "Platforms and content supporting EA &mdash; including new registries for models, agents, and machine-readable architecture data." },
-      { "icon": "&#128200;", "label": "Performance", "description": "How EA effectiveness is measured &mdash; KPIs, maturity models, stakeholder satisfaction, and value contribution tracking." }
+      {
+        "icon": "&#9881;",
+        "label": "Capabilities",
+        "description": "What the EA function can do &mdash; the 30 core capabilities that define EA's service portfolio, from architecture vision development to compliance evaluation."
+      },
+      {
+        "icon": "&#9878;",
+        "label": "Governance",
+        "description": "How architecture decisions are made and enforced &mdash; decision rights, review boards, compliance mechanisms, and escalation paths."
+      },
+      {
+        "icon": "&#128101;",
+        "label": "People &amp; Organisation",
+        "description": "Team structure, roles, competencies, and career paths &mdash; including new roles for AI governance and agent architecture."
+      },
+      {
+        "icon": "&#9654;",
+        "label": "Processes",
+        "description": "How architecture work gets done &mdash; the development cycle, reviews, continuous architecture practices, and delivery methodology."
+      },
+      {
+        "icon": "&#128451;",
+        "label": "Tools &amp; Repository",
+        "description": "Platforms and content supporting EA &mdash; including new registries for models, agents, and machine-readable architecture data."
+      },
+      {
+        "icon": "&#128200;",
+        "label": "Performance",
+        "description": "How EA effectiveness is measured &mdash; KPIs, maturity models, stakeholder satisfaction, and value contribution tracking."
+      }
     ]
   },
   "operating_models": [
@@ -19,7 +43,11 @@
       "label": "Centralised",
       "best_for": "Regulated industries, early EA maturity, strong compliance needs",
       "description": "A single, central EA team owns all architecture decisions, standards, and governance. Domain and solution architects report into or are closely governed by the central function. This model maximises consistency and control but can become a bottleneck at scale.",
-      "metrics": { "decision_speed": 2, "consistency": 5, "scalability": 2 },
+      "metrics": {
+        "decision_speed": 2,
+        "consistency": 5,
+        "scalability": 2
+      },
       "strengths": [
         "Maximum consistency in standards and architecture decisions across the enterprise",
         "Clear accountability and ownership for architecture governance",
@@ -39,7 +67,11 @@
       "label": "Federated",
       "best_for": "Large enterprises, diverse business units, high domain autonomy",
       "description": "Architecture capability is distributed across business units or domains, each with their own architects who operate with significant autonomy. A lightweight central team may set broad principles but does not control domain-level decisions. This model maximises speed and domain relevance but risks inconsistency.",
-      "metrics": { "decision_speed": 5, "consistency": 2, "scalability": 5 },
+      "metrics": {
+        "decision_speed": 5,
+        "consistency": 2,
+        "scalability": 5
+      },
       "strengths": [
         "Fastest decision-making &mdash; domain architects have authority to act without central approval",
         "Deep business context &mdash; architects are embedded in their domains",
@@ -59,7 +91,11 @@
       "label": "Hybrid (Recommended)",
       "best_for": "Most organisations, especially those deploying AI at scale",
       "description": "Combines a central EA team that sets strategy, standards, and governance with federated domain architects who have autonomy within guardrails. The central team focuses on cross-cutting concerns, enterprise-wide views, and strategic alignment while domains handle domain-specific architecture. This is the most common and recommended model for organisations deploying AI at scale.",
-      "metrics": { "decision_speed": 4, "consistency": 4, "scalability": 4 },
+      "metrics": {
+        "decision_speed": 4,
+        "consistency": 4,
+        "scalability": 4
+      },
       "strengths": [
         "Balances consistency with speed &mdash; guardrails without bottlenecks",
         "Central team can focus on strategic, cross-cutting, and AI-specific concerns",
@@ -73,33 +109,6 @@
         "Needs mature communication and knowledge-sharing practices to function effectively"
       ],
       "agentic_considerations": "The hybrid model is best suited for the agentic organisation. The <strong>central team governs AI standards, model portfolio, agent policies, and sovereignty compliance</strong> while domain architects design agent-augmented solutions within their business context. Policy-as-code enables the central team to enforce standards at scale without becoming a bottleneck. This mirrors the pattern emerging in leading organisations: centralise what must be consistent (AI governance, security, cost controls) and federate what benefits from domain expertise (agent design, use case prioritisation)."
-    }
-  ],
-  "components": [
-    {
-      "label": "EA Governance Model",
-      "description": "How architecture decisions are made and enforced. Covers architecture boards, compliance, standards, and decision rights.",
-      "href": "ea-governance.html"
-    },
-    {
-      "label": "EA Organisation &amp; Roles",
-      "description": "Team structure, roles, competencies, and career paths for the EA function &mdash; including new roles for AI and agent governance.",
-      "href": "ea-roles-skills.html"
-    },
-    {
-      "label": "EA Processes",
-      "description": "How EA work gets done: the development cycle, reviews, and continuous architecture practices.",
-      "href": "ea-development-method.html"
-    },
-    {
-      "label": "EA Repository &amp; Tools",
-      "description": "What tools and content support EA work &mdash; including new registries for models, agents, and machine-readable architecture.",
-      "href": "ea-repository.html"
-    },
-    {
-      "label": "EA Risk &amp; Security",
-      "description": "Risk management and security architecture for the agentic enterprise &mdash; including AI-specific threats and controls.",
-      "href": "risk-security.html"
     }
   ],
   "engagement": {
@@ -242,45 +251,334 @@
     ]
   },
   "subtopics": [
-    { "id": "cap-01-architecture-vision-development", "label": "Architecture Vision Development", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#architecture-vision" },
-    { "id": "cap-02-architecture-roadmap-development", "label": "Architecture Roadmap Development", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#migration-planning" },
-    { "id": "cap-03-transformation-planning", "label": "Transformation Planning", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#opportunities-solutions" },
-    { "id": "cap-04-architecture-requirements-management", "label": "Architecture Requirements Management", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#architecture-vision" },
-    { "id": "cap-05-architecture-view-creation", "label": "Architecture View Creation", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#architecture-vision" },
-    { "id": "cap-06-new-technology-evaluation", "label": "New Technology Evaluation", "group": "Architecture Development \u2014 Common", "impact_category": "A", "href": "ea-development-method.html#technology-architecture" },
-    { "id": "cap-07-strategic-value-driver-definition", "label": "Strategic Value Driver Definition", "group": "Business Architecture", "impact_category": "A", "href": "ea-development-method.html#business-architecture" },
-    { "id": "cap-08-capability-definition", "label": "Business Capability Definition", "group": "Business Architecture", "impact_category": "A", "href": "ea-development-method.html#business-architecture" },
-    { "id": "cap-09-process-modelling", "label": "Process Modelling", "group": "Business Architecture", "impact_category": "A", "href": "ea-development-method.html#business-architecture" },
-    { "id": "cap-10-architecture-validation", "label": "Architecture Validation", "group": "Application Architecture", "impact_category": "A", "href": "ea-development-method.html#application-architecture" },
-    { "id": "cap-11-application-solution-architecture-modelling", "label": "Application/Solution Architecture Modelling", "group": "Application Architecture", "impact_category": "B", "href": "ea-development-method.html#application-architecture" },
-    { "id": "cap-12-integration-architecture-modelling", "label": "Integration Architecture Modelling", "group": "Application Architecture", "impact_category": "B", "href": "ea-development-method.html#application-architecture" },
-    { "id": "cap-13-business-object-modelling", "label": "Business Object Modelling", "group": "Data Architecture", "impact_category": "A", "href": "ea-development-method.html#data-architecture" },
-    { "id": "cap-14-data-architecture-modelling", "label": "Data Architecture Modelling", "group": "Data Architecture", "impact_category": "B", "href": "ea-development-method.html#data-architecture" },
-    { "id": "cap-15-data-flow-modelling", "label": "Data Flow Modelling", "group": "Data Architecture", "impact_category": "B", "href": "ea-development-method.html#data-architecture" },
-    { "id": "cap-16-system-architecture-modelling", "label": "System Architecture Modelling", "group": "Technology Architecture", "impact_category": "B", "href": "ea-development-method.html#technology-architecture" },
-    { "id": "cap-17-network-architecture-modelling", "label": "Network Architecture Modelling", "group": "Technology Architecture", "impact_category": "A", "href": "ea-development-method.html#technology-architecture" },
-    { "id": "cap-18-virtualization-architecture-modelling", "label": "Virtualization Architecture Modelling", "group": "Technology Architecture", "impact_category": "B", "href": "ea-development-method.html#technology-architecture" },
-    { "id": "cap-19-dashboards-views-reports", "label": "Dashboards, Views, Reports", "group": "Architecture Repository", "impact_category": "B", "href": "ea-repository.html#architecture-landscape" },
-    { "id": "cap-20-data-gathering-data-quality", "label": "Data Gathering & Data Quality", "group": "Architecture Repository", "impact_category": "A", "href": "ea-repository.html#architecture-repository" },
-    { "id": "cap-21-repository-support-and-maintenance", "label": "Repository Support & Maintenance", "group": "Architecture Repository", "impact_category": "B", "href": "ea-repository.html#architecture-repository" },
-    { "id": "cap-22-organisation-development", "label": "Organisation Development", "group": "Architecture Management", "impact_category": "B", "href": "ea-roles-skills.html#ea-organisation" },
-    { "id": "cap-23-ea-performance-management", "label": "EA Performance Management", "group": "Architecture Management", "impact_category": "A", "href": "ea-roles-skills.html#ea-maturity" },
-    { "id": "cap-24-ea-process-development", "label": "EA Process Development", "group": "Architecture Management", "impact_category": "A", "href": "ea-roles-skills.html#ea-organisation" },
-    { "id": "cap-25-ea-knowledge-management", "label": "EA Knowledge Management", "group": "Architecture Management", "impact_category": "B", "href": "ea-roles-skills.html#skills-competencies" },
-    { "id": "cap-26-stakeholder-management", "label": "Stakeholder Management", "group": "Architecture Management", "impact_category": "B", "href": "ea-roles-skills.html#architect-roles" },
-    { "id": "cap-27-standards-policies-principles-guidelines", "label": "Standards, Policies, Principles, Guidelines", "group": "Governance, Communication & Change", "impact_category": "A", "href": "ea-governance.html#governance-principles" },
-    { "id": "cap-28-architecture-training", "label": "Architecture Training", "group": "Governance, Communication & Change", "impact_category": "B", "href": "ea-governance.html#governance-framework" },
-    { "id": "cap-29-communication-and-change-management", "label": "Communication & Change Management", "group": "Governance, Communication & Change", "impact_category": "A", "href": "ea-governance.html#governance-framework" },
-    { "id": "cap-30-architecture-compliance-evaluation", "label": "Architecture Compliance Evaluation", "group": "Governance, Communication & Change", "impact_category": "A", "href": "ea-governance.html#architecture-compliance" },
-    { "id": "cap-new-01-agent-lifecycle-management", "label": "Agent Lifecycle Management", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-01-agent-lifecycle-management" },
-    { "id": "cap-new-02-model-portfolio-management", "label": "Model Portfolio Management", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-02-model-portfolio-management" },
-    { "id": "cap-new-03-ai-finops", "label": "AI FinOps", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-03-ai-finops" },
-    { "id": "cap-new-04-continuous-architecture-compliance", "label": "Continuous Architecture Compliance", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-04-continuous-architecture-compliance" },
-    { "id": "cap-new-05-sovereignty-by-design", "label": "Sovereignty-by-Design", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-05-sovereignty-by-design" },
-    { "id": "cap-new-06-enterprise-as-code", "label": "Enterprise as Code", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-06-enterprise-as-code" },
-    { "id": "cap-new-07-agent-communication-architecture", "label": "Agent Communication Architecture", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-07-agent-communication-architecture" },
-    { "id": "cap-new-08-ai-infrastructure-readiness-assessment", "label": "AI Infrastructure Readiness Assessment", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-08-ai-infrastructure-readiness-assessment" },
-    { "id": "cap-new-09-agent-risk-and-observability", "label": "Agent Risk and Observability", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-09-agent-risk-and-observability" },
-    { "id": "cap-new-10-ai-value-progression-management", "label": "AI Value Progression Management", "group": "Net-New for the Agentic Organisation", "impact_category": "C", "href": "new-capabilities.html#cap-new-10-ai-value-progression-management" }
+    {
+      "id": "cap-01-architecture-vision-development",
+      "label": "Architecture Vision Development",
+      "group": "Architecture Development — Common",
+      "impact_category": "A",
+      "href": "capabilities.html#architecture-vision"
+    },
+    {
+      "id": "cap-02-architecture-roadmap-development",
+      "label": "Architecture Roadmap Development",
+      "group": "Architecture Development — Common",
+      "impact_category": "A",
+      "href": "capabilities.html#migration-planning"
+    },
+    {
+      "id": "cap-03-transformation-planning",
+      "label": "Transformation Planning",
+      "group": "Architecture Development — Common",
+      "impact_category": "A",
+      "href": "capabilities.html#opportunities-solutions"
+    },
+    {
+      "id": "cap-04-architecture-requirements-management",
+      "label": "Architecture Requirements Management",
+      "group": "Architecture Development — Common",
+      "impact_category": "A",
+      "href": "capabilities.html#architecture-vision"
+    },
+    {
+      "id": "cap-05-architecture-view-creation",
+      "label": "Architecture View Creation",
+      "group": "Architecture Development — Common",
+      "impact_category": "A",
+      "href": "capabilities.html#architecture-vision"
+    },
+    {
+      "id": "cap-06-new-technology-evaluation",
+      "label": "New Technology Evaluation",
+      "group": "Architecture Development — Common",
+      "impact_category": "A",
+      "href": "capabilities.html#technology-architecture"
+    },
+    {
+      "id": "cap-07-strategic-value-driver-definition",
+      "label": "Strategic Value Driver Definition",
+      "group": "Business Architecture",
+      "impact_category": "A",
+      "href": "capabilities.html#business-architecture"
+    },
+    {
+      "id": "cap-08-capability-definition",
+      "label": "Business Capability Definition",
+      "group": "Business Architecture",
+      "impact_category": "A",
+      "href": "capabilities.html#business-architecture"
+    },
+    {
+      "id": "cap-09-process-modelling",
+      "label": "Process Modelling",
+      "group": "Business Architecture",
+      "impact_category": "A",
+      "href": "capabilities.html#business-architecture"
+    },
+    {
+      "id": "cap-10-architecture-validation",
+      "label": "Architecture Validation",
+      "group": "Application Architecture",
+      "impact_category": "A",
+      "href": "capabilities.html#application-architecture"
+    },
+    {
+      "id": "cap-11-application-solution-architecture-modelling",
+      "label": "Application/Solution Architecture Modelling",
+      "group": "Application Architecture",
+      "impact_category": "B",
+      "href": "capabilities.html#application-architecture"
+    },
+    {
+      "id": "cap-12-integration-architecture-modelling",
+      "label": "Integration Architecture Modelling",
+      "group": "Application Architecture",
+      "impact_category": "B",
+      "href": "capabilities.html#application-architecture"
+    },
+    {
+      "id": "cap-13-business-object-modelling",
+      "label": "Business Object Modelling",
+      "group": "Data Architecture",
+      "impact_category": "A",
+      "href": "capabilities.html#data-architecture"
+    },
+    {
+      "id": "cap-14-data-architecture-modelling",
+      "label": "Data Architecture Modelling",
+      "group": "Data Architecture",
+      "impact_category": "B",
+      "href": "capabilities.html#data-architecture"
+    },
+    {
+      "id": "cap-15-data-flow-modelling",
+      "label": "Data Flow Modelling",
+      "group": "Data Architecture",
+      "impact_category": "B",
+      "href": "capabilities.html#data-architecture"
+    },
+    {
+      "id": "cap-16-system-architecture-modelling",
+      "label": "System Architecture Modelling",
+      "group": "Technology Architecture",
+      "impact_category": "B",
+      "href": "capabilities.html#technology-architecture"
+    },
+    {
+      "id": "cap-17-network-architecture-modelling",
+      "label": "Network Architecture Modelling",
+      "group": "Technology Architecture",
+      "impact_category": "A",
+      "href": "capabilities.html#technology-architecture"
+    },
+    {
+      "id": "cap-18-virtualization-architecture-modelling",
+      "label": "Virtualization Architecture Modelling",
+      "group": "Technology Architecture",
+      "impact_category": "B",
+      "href": "capabilities.html#technology-architecture"
+    },
+    {
+      "id": "cap-19-dashboards-views-reports",
+      "label": "Dashboards, Views, Reports",
+      "group": "Architecture Repository",
+      "impact_category": "B",
+      "href": "capabilities.html#architecture-landscape"
+    },
+    {
+      "id": "cap-20-data-gathering-data-quality",
+      "label": "Data Gathering & Data Quality",
+      "group": "Architecture Repository",
+      "impact_category": "A",
+      "href": "capabilities.html#architecture-repository"
+    },
+    {
+      "id": "cap-21-repository-support-and-maintenance",
+      "label": "Repository Support & Maintenance",
+      "group": "Architecture Repository",
+      "impact_category": "B",
+      "href": "capabilities.html#architecture-repository"
+    },
+    {
+      "id": "cap-22-organisation-development",
+      "label": "Organisation Development",
+      "group": "Architecture Management",
+      "impact_category": "B",
+      "href": "capabilities.html#ea-organisation"
+    },
+    {
+      "id": "cap-23-ea-performance-management",
+      "label": "EA Performance Management",
+      "group": "Architecture Management",
+      "impact_category": "A",
+      "href": "capabilities.html#ea-maturity"
+    },
+    {
+      "id": "cap-24-ea-process-development",
+      "label": "EA Process Development",
+      "group": "Architecture Management",
+      "impact_category": "A",
+      "href": "capabilities.html#ea-organisation"
+    },
+    {
+      "id": "cap-25-ea-knowledge-management",
+      "label": "EA Knowledge Management",
+      "group": "Architecture Management",
+      "impact_category": "B",
+      "href": "capabilities.html#skills-competencies"
+    },
+    {
+      "id": "cap-26-stakeholder-management",
+      "label": "Stakeholder Management",
+      "group": "Architecture Management",
+      "impact_category": "B",
+      "href": "capabilities.html#architect-roles"
+    },
+    {
+      "id": "cap-27-standards-policies-principles-guidelines",
+      "label": "Standards, Policies, Principles, Guidelines",
+      "group": "Governance, Communication & Change",
+      "impact_category": "A",
+      "href": "capabilities.html#governance-principles"
+    },
+    {
+      "id": "cap-28-architecture-training",
+      "label": "Architecture Training",
+      "group": "Governance, Communication & Change",
+      "impact_category": "B",
+      "href": "capabilities.html#governance-framework"
+    },
+    {
+      "id": "cap-29-communication-and-change-management",
+      "label": "Communication & Change Management",
+      "group": "Governance, Communication & Change",
+      "impact_category": "A",
+      "href": "capabilities.html#governance-framework"
+    },
+    {
+      "id": "cap-30-architecture-compliance-evaluation",
+      "label": "Architecture Compliance Evaluation",
+      "group": "Governance, Communication & Change",
+      "impact_category": "A",
+      "href": "capabilities.html#architecture-compliance"
+    },
+    {
+      "id": "cap-31-risk-management-framework",
+      "label": "Risk Management Framework",
+      "group": "Risk, Security & Compliance",
+      "impact_category": "A",
+      "href": "capabilities.html#risk-framework"
+    },
+    {
+      "id": "cap-32-security-architecture",
+      "label": "Security Architecture",
+      "group": "Risk, Security & Compliance",
+      "impact_category": "A",
+      "href": "capabilities.html#security-architecture"
+    },
+    {
+      "id": "cap-33-compliance-framework",
+      "label": "Compliance Framework",
+      "group": "Risk, Security & Compliance",
+      "impact_category": "A",
+      "href": "capabilities.html#compliance-framework"
+    },
+    {
+      "id": "cap-34-ai-threat-landscape",
+      "label": "AI Threat Landscape",
+      "group": "Risk, Security & Compliance",
+      "impact_category": "B",
+      "href": "capabilities.html#ai-threat-landscape"
+    },
+    {
+      "id": "cap-35-agent-risk-cascade-failures",
+      "label": "Agent Risk & Cascade Failures",
+      "group": "Risk, Security & Compliance",
+      "impact_category": "B",
+      "href": "capabilities.html#agent-risk"
+    },
+    {
+      "id": "cap-36-agent-observability",
+      "label": "Agent Observability",
+      "group": "Risk, Security & Compliance",
+      "impact_category": "B",
+      "href": "capabilities.html#agent-observability"
+    },
+    {
+      "id": "cap-37-ai-regulatory-compliance",
+      "label": "AI Regulatory Compliance",
+      "group": "Risk, Security & Compliance",
+      "impact_category": "B",
+      "href": "capabilities.html#ai-compliance"
+    },
+    {
+      "id": "cap-new-01-agent-lifecycle-management",
+      "label": "Agent Lifecycle Management",
+      "group": "Net-New for the Agentic Organisation",
+      "impact_category": "C",
+      "href": "new-capabilities.html#cap-new-01-agent-lifecycle-management"
+    },
+    {
+      "id": "cap-new-02-model-portfolio-management",
+      "label": "Model Portfolio Management",
+      "group": "Net-New for the Agentic Organisation",
+      "impact_category": "C",
+      "href": "new-capabilities.html#cap-new-02-model-portfolio-management"
+    },
+    {
+      "id": "cap-new-03-ai-finops",
+      "label": "AI FinOps",
+      "group": "Net-New for the Agentic Organisation",
+      "impact_category": "C",
+      "href": "new-capabilities.html#cap-new-03-ai-finops"
+    },
+    {
+      "id": "cap-new-04-continuous-architecture-compliance",
+      "label": "Continuous Architecture Compliance",
+      "group": "Net-New for the Agentic Organisation",
+      "impact_category": "C",
+      "href": "new-capabilities.html#cap-new-04-continuous-architecture-compliance"
+    },
+    {
+      "id": "cap-new-05-sovereignty-by-design",
+      "label": "Sovereignty-by-Design",
+      "group": "Net-New for the Agentic Organisation",
+      "impact_category": "C",
+      "href": "new-capabilities.html#cap-new-05-sovereignty-by-design"
+    },
+    {
+      "id": "cap-new-06-enterprise-as-code",
+      "label": "Enterprise as Code",
+      "group": "Net-New for the Agentic Organisation",
+      "impact_category": "C",
+      "href": "new-capabilities.html#cap-new-06-enterprise-as-code"
+    },
+    {
+      "id": "cap-new-07-agent-communication-architecture",
+      "label": "Agent Communication Architecture",
+      "group": "Net-New for the Agentic Organisation",
+      "impact_category": "C",
+      "href": "new-capabilities.html#cap-new-07-agent-communication-architecture"
+    },
+    {
+      "id": "cap-new-08-ai-infrastructure-readiness-assessment",
+      "label": "AI Infrastructure Readiness Assessment",
+      "group": "Net-New for the Agentic Organisation",
+      "impact_category": "C",
+      "href": "new-capabilities.html#cap-new-08-ai-infrastructure-readiness-assessment"
+    },
+    {
+      "id": "cap-new-09-agent-risk-and-observability",
+      "label": "Agent Risk and Observability",
+      "group": "Net-New for the Agentic Organisation",
+      "impact_category": "C",
+      "href": "new-capabilities.html#cap-new-09-agent-risk-and-observability"
+    },
+    {
+      "id": "cap-new-10-ai-value-progression-management",
+      "label": "AI Value Progression Management",
+      "group": "Net-New for the Agentic Organisation",
+      "impact_category": "C",
+      "href": "new-capabilities.html#cap-new-10-ai-value-progression-management"
+    }
   ]
 }

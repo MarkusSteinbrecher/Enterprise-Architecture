@@ -178,7 +178,7 @@
     {
       "id": "ea-development",
       "label": "EA Development Method",
-      "href": "ea-development-method.html",
+      "href": "capabilities.html",
       "industry_context": "Re/insurance EA development must reconcile two fundamentally different cadences: annual actuarial and regulatory cycles (Solvency II ORSA, IFRS 17 closes) that drive long-horizon planning, and continuous AI iteration where agentic capabilities evolve weekly. The fragmented six-system core landscape &mdash; policy admin, claims, billing, reinsurance admin, actuarial platforms, and catastrophe modelling &mdash; means business architecture must map agent boundaries across systems that were never designed to interoperate.",
       "key_adaptations": [
         {
@@ -209,7 +209,7 @@
     {
       "id": "ea-governance",
       "label": "EA Governance",
-      "href": "ea-governance.html",
+      "href": "capabilities.html",
       "industry_context": "Re/insurance faces a governance challenge unlike any other industry: three overlapping regulatory frameworks (Solvency II for capital, IFRS 17 for financial reporting, EU AI Act for AI systems) impose simultaneous constraints on architecture decisions. Every AI agent that touches underwriting or claims is classified as high-risk under the EU AI Act, requiring human oversight, fairness controls, and registration with authorities. Governance must be embedded in the architecture, not bolted on.",
       "key_adaptations": [
         {
@@ -240,7 +240,7 @@
     {
       "id": "ea-repository",
       "label": "EA Repository",
-      "href": "ea-repository.html",
+      "href": "capabilities.html",
       "industry_context": "The re/insurance EA repository must manage an unusually complex information landscape: decades of historical policy and claims data for long-tail liabilities, real-time agent-generated data, both structured (actuarial tables, financial reports) and unstructured (submission PDFs, emails, satellite imagery, audio calls). The Ontology-based semantic layer pattern emerging at Swiss Re, Sompo, and AIG suggests a new reference model for insurance repository architecture.",
       "key_adaptations": [
         {
@@ -271,7 +271,7 @@
     {
       "id": "ea-roles-skills",
       "label": "EA Roles & Skills",
-      "href": "ea-roles-skills.html",
+      "href": "capabilities.html",
       "industry_context": "Re/insurance requires bridge roles that don't exist in other industries: professionals who can translate between deterministic actuarial models and probabilistic AI systems, architects who understand both the fragmented core system landscape and multi-agent orchestration patterns, and compliance specialists for the EU AI Act's insurance-specific high-risk requirements. AI literacy for underwriters and actuaries has been a legal duty since February 2025.",
       "key_adaptations": [
         {
@@ -302,7 +302,7 @@
     {
       "id": "risk-security",
       "label": "Risk & Security",
-      "href": "risk-security.html",
+      "href": "capabilities.html",
       "industry_context": "Re/insurance faces risk dimensions that are unique to the industry: non-deterministic AI making decisions on regulated financial products, pricing fairness requirements under the EU AI Act, long-tail liability exposure from AI-assisted underwriting decisions that create obligations lasting decades, and the need for multi-agent coordination under extreme load during catastrophe events. Traditional IT risk frameworks are insufficient.",
       "key_adaptations": [
         {

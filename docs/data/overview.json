@@ -1,22 +1,69 @@
 {
   "findings": [
-    { "id": "F1", "summary": "Governance cycles run on quarters; AI deploys in weeks. Decisions are made on stale information." },
-    { "id": "F2", "summary": "Task-specific models outperform general-purpose ones at lower cost. Design for interchange, not lock-in." },
-    { "id": "F3", "summary": "Multi-agent systems are the emerging pattern — but bring cascade failures and feedback loops without precedent." },
-    { "id": "F4", "summary": "Automating a broken process produces an automated broken process. Redesign for agent strengths first." },
-    { "id": "F5", "summary": "70% of AI value lies in revenue processes, but most portfolios target productivity. The metrics don't match." },
-    { "id": "F6", "summary": "AI agents need onboarding, performance management, and retirement. They are workforce participants, not tools." },
-    { "id": "F7", "summary": "Only 22% of organisations have AI-ready infrastructure. The brain was built without the nervous system." },
-    { "id": "F8", "summary": "AI agents operate on explicit knowledge. Most organisations have never codified how they actually work." },
-    { "id": "F9", "summary": "Sovereignty is a first-order design input. Organisations treating it as post-hoc compliance will build in the wrong place." }
+    {
+      "id": "F1",
+      "summary": "Governance cycles run on quarters; AI deploys in weeks. Decisions are made on stale information."
+    },
+    {
+      "id": "F2",
+      "summary": "Task-specific models outperform general-purpose ones at lower cost. Design for interchange, not lock-in."
+    },
+    {
+      "id": "F3",
+      "summary": "Multi-agent systems are the emerging pattern — but bring cascade failures and feedback loops without precedent."
+    },
+    {
+      "id": "F4",
+      "summary": "Automating a broken process produces an automated broken process. Redesign for agent strengths first."
+    },
+    {
+      "id": "F5",
+      "summary": "70% of AI value lies in revenue processes, but most portfolios target productivity. The metrics don't match."
+    },
+    {
+      "id": "F6",
+      "summary": "AI agents need onboarding, performance management, and retirement. They are workforce participants, not tools."
+    },
+    {
+      "id": "F7",
+      "summary": "Only 22% of organisations have AI-ready infrastructure. The brain was built without the nervous system."
+    },
+    {
+      "id": "F8",
+      "summary": "AI agents operate on explicit knowledge. Most organisations have never codified how they actually work."
+    },
+    {
+      "id": "F9",
+      "summary": "Sovereignty is a first-order design input. Organisations treating it as post-hoc compliance will build in the wrong place."
+    }
   ],
   "matrix": {
     "dimensions": [
-      { "key": "speed", "label": "Speed", "subtitle": "Governance lags deployment" },
-      { "key": "predictability", "label": "Predictability", "subtitle": "Probabilistic, context-dependent" },
-      { "key": "scale", "label": "Scale", "subtitle": "Models × agents × pipelines" },
-      { "key": "readability", "label": "Machine Readability", "subtitle": "Prose standards, machine consumers" },
-      { "key": "observability", "label": "Observability", "subtitle": "Semantic failure is invisible" }
+      {
+        "key": "speed",
+        "label": "Speed",
+        "subtitle": "Governance lags deployment"
+      },
+      {
+        "key": "predictability",
+        "label": "Predictability",
+        "subtitle": "Probabilistic, context-dependent"
+      },
+      {
+        "key": "scale",
+        "label": "Scale",
+        "subtitle": "Models × agents × pipelines"
+      },
+      {
+        "key": "readability",
+        "label": "Machine Readability",
+        "subtitle": "Prose standards, machine consumers"
+      },
+      {
+        "key": "observability",
+        "label": "Observability",
+        "subtitle": "Semantic failure is invisible"
+      }
     ],
     "objectives": [
       {
@@ -56,9 +103,9 @@
   },
   "domain_summaries": [
     {
-      "id": "ea-development-method",
+      "id": "ea-development",
       "label": "EA Development",
-      "href": "ea-development-method.html",
+      "href": "capabilities.html",
       "bullets": [
         "Development cycles compress from <mark>quarters to weeks</mark> — human review capacity becomes the binding constraint",
         "Every capability needs a <strong>delivery model classification</strong>: human, augmented, or agent-native",
@@ -69,7 +116,7 @@
     {
       "id": "ea-governance",
       "label": "Governance",
-      "href": "ea-governance.html",
+      "href": "capabilities.html",
       "bullets": [
         "Governance speed must <mark>match deployment speed</mark> or agents deploy ungoverned",
         "Architecture Board shifts to <strong>exception-based governance</strong> — automated pre-checks clear conformant deployments",
@@ -80,7 +127,7 @@
     {
       "id": "ea-repository",
       "label": "Repository",
-      "href": "ea-repository.html",
+      "href": "capabilities.html",
       "bullets": [
         "Repository must add <mark>Agent Registry and Model Register</mark> as mandatory components",
         "The metamodel needs <strong>Agent, Model, and Guardrail as first-class entities</strong>",
@@ -91,7 +138,7 @@
     {
       "id": "ea-roles-skills",
       "label": "Roles & Skills",
-      "href": "ea-roles-skills.html",
+      "href": "capabilities.html",
       "bullets": [
         "EA function becomes a <mark>human-agent hybrid team</mark> with its own agents as reference implementation",
         "Every architect role carries <strong>agent governance accountability</strong> — domain architects become more T-shaped, not obsolete",
@@ -102,7 +149,7 @@
     {
       "id": "risk-security",
       "label": "Risk & Security",
-      "href": "risk-security.html",
+      "href": "capabilities.html",
       "bullets": [
         "Traditional risk matrices <mark>cannot score non-deterministic AI failures</mark> — new categories needed for cascade failure, hallucination, emergent behaviour",
         "AI introduces <strong>attack vectors invisible to traditional security</strong>: prompt injection, model extraction, data poisoning",

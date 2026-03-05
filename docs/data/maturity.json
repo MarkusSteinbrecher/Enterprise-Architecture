@@ -1,0 +1,252 @@
+{
+  "page_type": "maturity",
+  "title": "EA Maturity for the Agentic Organisation",
+  "subtitle": "Where are you today, and what should you do next? A five-stage maturity model that extends traditional EA assessment frameworks with AI and agent-readiness dimensions.",
+  "description": "This model synthesises established frameworks — TOGAF ACMM, Gartner ITScore, GAO EAMMF, and MIT CISR — with new dimensions required for organisations deploying AI agents. Each stage describes what you will observe in your organisation and prescribes the focused actions to reach the next level.",
+  "sources": [
+    "TOGAF Architecture Capability Maturity Model (ACMM) — 9 architecture elements across 6 levels",
+    "Gartner ITScore for Enterprise Architecture — 5 levels across 8 dimensions",
+    "US GAO Enterprise Architecture Management Maturity Framework — 7 stages, 59 core elements",
+    "MIT CISR Enterprise AI Maturity Model — 4 stages of enterprise AI adoption",
+    "CSA & Google Cloud (2025) — Governance maturity as strongest predictor of AI readiness"
+  ],
+  "dimensions": [
+    { "id": "governance", "label": "Governance & Decision Rights", "icon": "&#9878;" },
+    { "id": "process", "label": "Architecture Processes", "icon": "&#9654;" },
+    { "id": "people", "label": "People & Skills", "icon": "&#128101;" },
+    { "id": "repository", "label": "Repository & Tools", "icon": "&#128451;" },
+    { "id": "value", "label": "Value & Communication", "icon": "&#128200;" },
+    { "id": "ai_readiness", "label": "AI & Agent Readiness", "icon": "&#129302;" }
+  ],
+  "stages": [
+    {
+      "level": 1,
+      "label": "Initial",
+      "tagline": "Ad hoc, reactive, no formal EA practice",
+      "color": "#dc2626",
+      "characteristics": {
+        "summary": "Architecture happens by accident. Individual heroes make technology decisions without coordination. There is no shared repository, no governance process, and no common vocabulary. AI experiments, if any, are isolated departmental initiatives with no architectural oversight.",
+        "governance": "No formal architecture governance. Technology decisions made locally by project teams or individual managers. No architecture review board. Standards exist only as tribal knowledge.",
+        "process": "No repeatable architecture development process. Architecture artifacts are created sporadically, usually in response to crises. No requirements management. No stakeholder engagement model.",
+        "people": "No dedicated EA roles. Architecture work is performed part-time by senior developers or IT managers. No architecture skills framework. No training programme.",
+        "repository": "No central architecture repository. Documentation scattered across wikis, SharePoint sites, and individual laptops. No metamodel. No landscape visibility.",
+        "value": "EA value is not articulated or measured. Architecture is perceived as overhead. No regular communication with business stakeholders. No architecture principles published.",
+        "ai_readiness": "No AI strategy or agent architecture. Individual teams may experiment with AI tools. No model governance, no agent registry, no AI risk assessment. Data quality unknown."
+      },
+      "how_you_know": [
+        "You cannot answer 'how many applications do we have?' with confidence",
+        "Technology decisions are made in project meetings without architecture input",
+        "There is no architecture review gate in the project delivery process",
+        "AI tools are adopted by individuals without IT or security awareness",
+        "Nobody has the title 'architect' or architecture is a secondary responsibility",
+        "Integration between systems is point-to-point and undocumented"
+      ],
+      "next_actions": [
+        {
+          "title": "Appoint an EA sponsor and a first architect",
+          "description": "Secure senior management commitment. Identify a business-savvy architect to establish the practice. This person needs political capital, not just technical skill."
+        },
+        {
+          "title": "Create a basic application inventory",
+          "description": "Document all applications, their owners, and key integrations. Start with a spreadsheet — don't wait for a tool. This is the foundation of landscape visibility."
+        },
+        {
+          "title": "Establish three architecture principles",
+          "description": "Define no more than three enterprise-wide principles (e.g., 'reuse before build', 'API-first integration', 'data as shared asset'). Socialise them with IT leadership."
+        },
+        {
+          "title": "Introduce a lightweight architecture review",
+          "description": "Require projects above a spend threshold to present their technology choices to the architect. Keep it advisory, not blocking — build trust first."
+        },
+        {
+          "title": "Conduct an AI landscape scan",
+          "description": "Inventory all AI tools, models, and experiments currently in use across the organisation. You cannot govern what you cannot see."
+        }
+      ]
+    },
+    {
+      "level": 2,
+      "label": "Developing",
+      "tagline": "Emerging practices, inconsistently applied",
+      "color": "#d97706",
+      "characteristics": {
+        "summary": "EA exists as a recognised function but operates inconsistently. Basic processes are defined but not always followed. Architecture reviews happen for some projects but not all. The repository exists but is often incomplete or outdated. AI pilots are underway but lack architectural coordination.",
+        "governance": "Architecture Review Board established but meets infrequently. Governance applied to major projects only. Standards documented but compliance not enforced. Dispensation process informal or absent.",
+        "process": "Basic architecture development process defined, loosely based on TOGAF or similar. Applied to strategic initiatives but bypassed for smaller projects. Requirements management reactive rather than systematic.",
+        "people": "One or more dedicated architects appointed. Roles defined but career path unclear. Architecture skills assessed informally. Training ad hoc. Architects perceived as technical authorities but lack business engagement skills.",
+        "repository": "Central repository established (EA tool or structured wiki). Application portfolio documented but updates irregular. Basic metamodel defined. No API access. Landscape views generated manually.",
+        "value": "EA value demonstrated through specific project successes. Architecture principles published and referenced. Some business stakeholder engagement. No formal KPIs or maturity measurement.",
+        "ai_readiness": "AI strategy exists at high level. Pilot AI use cases tracked. Basic AI governance principles defined. No agent registry. No model governance. Data quality assessed for some AI projects. AI skills concentrated in data science teams, not architecture."
+      },
+      "how_you_know": [
+        "You have an architecture review board but it does not review all significant changes",
+        "Architecture principles are documented but people work around them",
+        "Your EA tool exists but architects complain the data is stale",
+        "AI pilots deliver value but each team picks its own models and tools",
+        "Business stakeholders know EA exists but are unclear on what it delivers",
+        "You can produce a landscape diagram but it takes days of manual effort"
+      ],
+      "next_actions": [
+        {
+          "title": "Mandate architecture reviews for all projects above threshold",
+          "description": "Expand governance coverage. Define clear criteria for what triggers a review. Publish the process and make it visible in project delivery frameworks."
+        },
+        {
+          "title": "Establish a Technology Reference Model (TRM)",
+          "description": "Define approved technologies by domain. Classify as strategic, tactical, containment, or emerging. Use the TRM to guide project technology choices."
+        },
+        {
+          "title": "Create architecture role profiles and career paths",
+          "description": "Define competency frameworks for enterprise, domain, and solution architects. Map career progression. This is essential for retention and recruitment."
+        },
+        {
+          "title": "Define AI governance principles and an AI project intake process",
+          "description": "Extend architecture governance to cover AI initiatives. Require AI projects to declare their model choices, data sources, and risk profile."
+        },
+        {
+          "title": "Improve repository freshness — introduce update triggers",
+          "description": "Link repository updates to project milestones (design complete, go-live, decommission). Architecture data should update as part of delivery, not as a separate exercise."
+        },
+        {
+          "title": "Publish regular architecture communications",
+          "description": "Start a cadence of architecture updates: quarterly roadmap reviews, monthly principle spotlight, or architecture decision records. Build visibility and credibility."
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "label": "Defined",
+      "tagline": "Standardised, consistently applied, organisation-wide",
+      "color": "#eab308",
+      "characteristics": {
+        "summary": "EA is a mature, organisation-wide function with standardised processes consistently applied. Governance covers all significant changes. The repository is actively maintained and trusted. Architecture is embedded in project delivery. AI adoption is structured with clear governance, but agent architecture is still emerging.",
+        "governance": "Architecture governance is comprehensive and embedded in delivery processes. All significant changes reviewed. Compliance tracked and reported. Standards consistently applied with formal dispensation process. Architecture Board meets regularly with clear decision rights.",
+        "process": "Architecture development method standardised and adapted to organisational context. Applied consistently across all architecture efforts. Requirements management systematic. Stakeholder engagement model defined with RACI. Iteration cadence established.",
+        "people": "Full EA team with enterprise, domain, and solution architects. Roles well-defined with competency framework. Regular training programme. Architecture community of practice active. Beginning to develop AI architecture skills.",
+        "repository": "Repository actively maintained with defined update processes. Metamodel comprehensive. Landscape views generated from repository data. Content quality measured. Beginning to expose data via APIs for automation.",
+        "value": "EA value measured through KPIs (e.g., reuse rates, standard compliance, project architecture quality). Regular business stakeholder engagement. Architecture principles influence strategy. Value stories communicated regularly.",
+        "ai_readiness": "AI governance integrated with architecture governance. Agent registry established. Model governance defined — model selection, approval, monitoring. AI risk assessment embedded in architecture reviews. AI architecture patterns documented. Data quality gates defined for AI projects. First dedicated AI architect role."
+      },
+      "how_you_know": [
+        "Every project above threshold goes through architecture review — no exceptions",
+        "Your architecture repository is the trusted source for landscape questions",
+        "Business leaders include architects in strategy discussions",
+        "AI initiatives follow a defined governance process with model selection criteria",
+        "You have documented architecture patterns that project teams actually use",
+        "New architects receive structured onboarding and mentoring"
+      ],
+      "next_actions": [
+        {
+          "title": "Implement policy-as-code for architecture standards",
+          "description": "Express architecture standards as machine-executable rules. Integrate with CI/CD pipelines for automated compliance checking. This is the bridge from document-based to automated governance."
+        },
+        {
+          "title": "Make the repository machine-readable with APIs",
+          "description": "Expose architecture data through APIs. Enable agents and automation tools to query the repository. This is a prerequisite for agent-augmented EA."
+        },
+        {
+          "title": "Introduce continuous architecture compliance monitoring",
+          "description": "Move beyond milestone-based reviews. Implement real-time monitoring of architecture conformance. Detect drift between deployed systems and architecture standards."
+        },
+        {
+          "title": "Deploy agent architecture capabilities",
+          "description": "Define agent interaction patterns, human-agent handoff protocols, and guardrail definitions. Document agent architecture as a first-class architecture domain."
+        },
+        {
+          "title": "Develop dual-maturity reporting",
+          "description": "Report on both traditional EA maturity and agent-readiness maturity. Identify gaps between current capability and what planned AI deployments require."
+        },
+        {
+          "title": "Establish an AI/Agent Architect role",
+          "description": "Create a dedicated role bridging AI engineering and enterprise architecture. This person ensures agent deployments conform to architecture standards and governance requirements."
+        }
+      ]
+    },
+    {
+      "level": 4,
+      "label": "Managed",
+      "tagline": "Measured, data-driven, AI-integrated",
+      "color": "#16a34a",
+      "characteristics": {
+        "summary": "EA is measured, optimised, and integrated with AI governance at scale. Architecture decisions are data-driven. Compliance is continuously monitored. The repository serves both humans and agents. AI agent deployment follows mature lifecycle management. The EA function itself begins using AI to augment its own work.",
+        "governance": "Governance is largely automated. Policy-as-code enforces standards in CI/CD pipelines. Architecture Board focuses on exceptions and strategic decisions. Agent deployment governed through automated approval workflows. Real-time compliance dashboards.",
+        "process": "Architecture development is continuous and event-driven, not just project-triggered. Agent-assisted architecture analysis accelerates assessments. Human review focuses on strategy and exceptions. Feedback loops from deployed systems inform architecture evolution.",
+        "people": "Architecture team is a hybrid human-agent workforce. Architects proficient in AI governance, prompt engineering, and agent testing. AI/Agent Architect role established. Cross-functional collaboration with data science and AI engineering teams. Skills assessment includes agent-specific competencies.",
+        "repository": "Repository is machine-readable and API-first. Agents query and update architecture data. Metamodel includes Agent, Model, and Guardrail as first-class entities. Agent Registry and Model Register are operational. Landscape refresh is volatility-driven: continuous for AI components, deliberate for stable systems.",
+        "value": "EA value quantified through business outcome metrics. Architecture compliance correlates with measured quality and cost outcomes. AI FinOps operational — model costs tracked and optimised. Stakeholder satisfaction measured systematically. EA contributes measurably to AI deployment success rates.",
+        "ai_readiness": "Agent lifecycle management mature: registration, approval, deployment, monitoring, incident management, model updates, retirement. Multi-model portfolio governance operational. Agent observability with real-time monitoring. Continuous compliance for agent behaviour. Human-agent collaboration patterns standardised. Data readiness gates enforced."
+      },
+      "how_you_know": [
+        "Architecture compliance is checked automatically in deployment pipelines",
+        "You have a live dashboard showing architecture conformance across the estate",
+        "Agent deployments follow the same governance rigour as application deployments",
+        "Your architects use AI tools to assist with architecture analysis and documentation",
+        "Architecture data is consumed by other systems via APIs, not just read by humans",
+        "You can quantify the cost and performance of your AI model portfolio"
+      ],
+      "next_actions": [
+        {
+          "title": "Implement Enterprise as Code",
+          "description": "Express enterprise architecture as version-controlled, machine-executable code. Architecture definitions, policies, and patterns stored as code alongside application code."
+        },
+        {
+          "title": "Deploy agent-augmented EA practice",
+          "description": "Use AI agents within the EA function itself: automated impact analysis, pattern detection, compliance checking, documentation generation. EA should practise what it governs."
+        },
+        {
+          "title": "Establish predictive architecture analytics",
+          "description": "Use architecture data to predict issues before they occur: technical debt accumulation, capacity constraints, compliance drift, security vulnerability propagation."
+        },
+        {
+          "title": "Create self-healing architecture patterns",
+          "description": "Design patterns where agents automatically detect and remediate minor architecture violations. Human architects handle strategic decisions and complex exceptions."
+        },
+        {
+          "title": "Mature AI value progression management",
+          "description": "Systematically track AI initiatives from experimentation through scaling to optimisation. Measure and report value progression across the AI portfolio."
+        }
+      ]
+    },
+    {
+      "level": 5,
+      "label": "Optimising",
+      "tagline": "Continuously improving, self-adapting, industry-leading",
+      "color": "#065f46",
+      "characteristics": {
+        "summary": "EA is a continuously self-improving, agent-augmented function that drives enterprise transformation. Architecture and AI governance are seamlessly integrated. The enterprise operates as a human-agent hybrid organisation with architecture providing the connective tissue. EA demonstrates measurable, quantified business value and influences enterprise strategy.",
+        "governance": "Governance is continuous, automated, and adaptive. Policies adjust based on measured outcomes. Agent governance is fully integrated — no distinction between 'AI governance' and 'architecture governance'. Self-learning compliance: rules evolve based on pattern analysis of decisions and outcomes.",
+        "process": "Architecture development is real-time and agent-driven. Agents maintain the architecture landscape. Humans direct strategy, handle exceptions, and govern the agents. Architecture changes propagate automatically through Enterprise as Code. Continuous feedback loops between architecture and business outcomes.",
+        "people": "EA function is a reference implementation of the human-agent hybrid organisation. Architects are strategic advisors augmented by agent capabilities. Skills focused on judgement, governance, and strategy rather than manual documentation. Architecture community extends across the enterprise. EA talent is sought after and well-compensated.",
+        "repository": "Repository is a living, self-updating system. Architecture documentation maintained by agents with human oversight. Pattern detection and anomaly identification automated. Repository serves as the enterprise's digital twin. Data quality continuously assured.",
+        "value": "EA value is self-evident through data. Architecture metrics directly correlated with business performance. EA influences corporate strategy. Cost of poor architecture quantified and visible. EA is a competitive advantage.",
+        "ai_readiness": "Organisation operates as a true agentic enterprise. Agent communication architecture mature (MCP, A2A protocols). Sovereign AI deployment capability. AI value fully tracked from experimentation to production. EA governs the agent ecosystem as naturally as it governs the application landscape. The boundary between 'architecture' and 'AI operations' has dissolved."
+      },
+      "how_you_know": [
+        "Architecture compliance is largely self-managing — agents detect and resolve violations",
+        "Your architecture documentation updates itself when systems change",
+        "EA metrics are part of the executive dashboard alongside financial and operational KPIs",
+        "New AI agent deployments follow the same well-understood path as deploying a new application",
+        "Architecture patterns evolve based on measured outcomes, not just architect opinion",
+        "Other organisations benchmark against your EA practice"
+      ],
+      "next_actions": [
+        {
+          "title": "Drive industry standards and thought leadership",
+          "description": "Contribute to industry frameworks for agent architecture and governance. Share patterns and practices through publications and conferences. Shape the profession."
+        },
+        {
+          "title": "Pursue cross-enterprise architecture federation",
+          "description": "Extend architecture governance across the ecosystem: partners, suppliers, customer platforms. Architecture becomes a competitive differentiator in ecosystem orchestration."
+        },
+        {
+          "title": "Invest in architecture research and experimentation",
+          "description": "Dedicate capacity to exploring next-generation patterns: autonomous architecture evolution, cross-organisation agent orchestration, quantum-ready architecture patterns."
+        },
+        {
+          "title": "Continuously recalibrate the maturity model itself",
+          "description": "The maturity model must evolve as the technology and organisational landscape changes. What defines 'Level 5' today may be 'Level 3' in three years."
+        }
+      ]
+    }
+  ]
+}

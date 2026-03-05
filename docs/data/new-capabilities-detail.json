@@ -16,8 +16,14 @@
         "Define retirement criteria and decommissioning procedures including data retention and audit trail preservation"
       ],
       "related_pages": [
-        { "label": "Risk & Security", "href": "risk-security.html" },
-        { "label": "EA Repository", "href": "ea-repository.html" }
+        {
+          "label": "Risk & Security",
+          "href": "capabilities.html"
+        },
+        {
+          "label": "EA Repository",
+          "href": "capabilities.html"
+        }
       ]
     },
     {
@@ -33,8 +39,14 @@
         "Plan deprecation timelines aligned with model provider roadmaps and enterprise migration capacity"
       ],
       "related_pages": [
-        { "label": "EA Development", "href": "ea-development-method.html" },
-        { "label": "Governance", "href": "ea-governance.html" }
+        {
+          "label": "EA Development",
+          "href": "capabilities.html"
+        },
+        {
+          "label": "Governance",
+          "href": "capabilities.html"
+        }
       ]
     },
     {
@@ -50,8 +62,14 @@
         "Produce regular AI cost reports for leadership with trend analysis and optimisation recommendations"
       ],
       "related_pages": [
-        { "label": "Governance", "href": "ea-governance.html" },
-        { "label": "Risk & Security", "href": "risk-security.html" }
+        {
+          "label": "Governance",
+          "href": "capabilities.html"
+        },
+        {
+          "label": "Risk & Security",
+          "href": "capabilities.html"
+        }
       ]
     },
     {
@@ -67,8 +85,14 @@
         "Maintain a living policy catalogue that evolves with architecture standards and AI governance requirements"
       ],
       "related_pages": [
-        { "label": "Governance", "href": "ea-governance.html" },
-        { "label": "EA Development", "href": "ea-development-method.html" }
+        {
+          "label": "Governance",
+          "href": "capabilities.html"
+        },
+        {
+          "label": "EA Development",
+          "href": "capabilities.html"
+        }
       ]
     },
     {
@@ -84,8 +108,14 @@
         "Maintain a sovereignty requirements register updated as regulations evolve across jurisdictions"
       ],
       "related_pages": [
-        { "label": "Risk & Security", "href": "risk-security.html" },
-        { "label": "EA Repository", "href": "ea-repository.html" }
+        {
+          "label": "Risk & Security",
+          "href": "capabilities.html"
+        },
+        {
+          "label": "EA Repository",
+          "href": "capabilities.html"
+        }
       ]
     },
     {
@@ -101,8 +131,14 @@
         "Validate codified rules against actual business practice through structured testing and stakeholder review"
       ],
       "related_pages": [
-        { "label": "EA Repository", "href": "ea-repository.html" },
-        { "label": "EA Development", "href": "ea-development-method.html" }
+        {
+          "label": "EA Repository",
+          "href": "capabilities.html"
+        },
+        {
+          "label": "EA Development",
+          "href": "capabilities.html"
+        }
       ]
     },
     {
@@ -118,8 +154,14 @@
         "Monitor and evaluate emerging protocol standards to inform architecture evolution decisions"
       ],
       "related_pages": [
-        { "label": "EA Development", "href": "ea-development-method.html" },
-        { "label": "EA Repository", "href": "ea-repository.html" }
+        {
+          "label": "EA Development",
+          "href": "capabilities.html"
+        },
+        {
+          "label": "EA Repository",
+          "href": "capabilities.html"
+        }
       ]
     },
     {
@@ -135,8 +177,14 @@
         "Create infrastructure investment roadmaps aligned with AI deployment timelines and value progression"
       ],
       "related_pages": [
-        { "label": "EA Development", "href": "ea-development-method.html" },
-        { "label": "Risk & Security", "href": "risk-security.html" }
+        {
+          "label": "EA Development",
+          "href": "capabilities.html"
+        },
+        {
+          "label": "Risk & Security",
+          "href": "capabilities.html"
+        }
       ]
     },
     {
@@ -152,8 +200,14 @@
         "Create escalation procedures for agent failures including automated containment and human-in-the-loop override"
       ],
       "related_pages": [
-        { "label": "Risk & Security", "href": "risk-security.html" },
-        { "label": "Governance", "href": "ea-governance.html" }
+        {
+          "label": "Risk & Security",
+          "href": "capabilities.html"
+        },
+        {
+          "label": "Governance",
+          "href": "capabilities.html"
+        }
       ]
     },
     {
@@ -169,8 +223,14 @@
         "Track and communicate AI value realisation against the progression plan with regular leadership reporting"
       ],
       "related_pages": [
-        { "label": "EA Development", "href": "ea-development-method.html" },
-        { "label": "Governance", "href": "ea-governance.html" }
+        {
+          "label": "EA Development",
+          "href": "capabilities.html"
+        },
+        {
+          "label": "Governance",
+          "href": "capabilities.html"
+        }
       ]
     }
   ]

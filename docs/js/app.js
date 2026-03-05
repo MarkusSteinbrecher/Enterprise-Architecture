@@ -39,6 +39,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (peek && peek.page_type === 'new-capabilities') {
       pageData = peek;
       initNewCapabilitiesPage();
+    } else if (peek && peek.page_type === 'capabilities') {
+      pageData = peek;
+      initCapabilitiesPage();
+    } else if (peek && peek.page_type === 'maturity') {
+      pageData = peek;
+      initMaturityPage();
+    } else if (peek && peek.page_type === 'governance') {
+      pageData = peek;
+      initGovernancePage();
     } else {
       await initConceptPage(page);
     }
@@ -119,6 +128,8 @@ function renderTopNav() {
         const cActive = child.id === page ? ' active' : '';
         html += `<a class="top-nav-link mobile-nav-child${cActive}" href="${child.href}">${child.label}</a>`;
       }
+    } else if (link.disabled) {
+      html += `<a class="top-nav-link nav-disabled" href="#" title="Coming soon" onclick="event.preventDefault()">${link.label}</a>`;
     } else {
       const isExternal = link.external || link.href.startsWith('http');
       const active = !isExternal && link.id === page ? ' active' : '';
@@ -203,7 +214,7 @@ function renderDashboard() {
   if (!grid || !siteData) return;
 
   const assessment = getAssessment();
-  const pages = siteData.nav.filter(n => n.id !== 'home' && n.id !== 'overview' && !n.external);
+  const pages = siteData.nav.filter(n => n.id !== 'home' && n.id !== 'overview' && !n.external && !n.disabled && !n.children);
 
   if (Object.keys(assessment).length === 0) {
     grid.innerHTML = pages.map(p =>
@@ -662,6 +673,25 @@ function renderContent() {
   }
 }
 
+/* ── Capabilities Page (combined domains) ────────────── */
+function initCapabilitiesPage() {
+  renderGroupedSidebar(pageData.domains, pageData.subtopics);
+  currentTab = 'overview';
+  renderContent();
+}
+
+function renderGroupedSidebar(domains, subtopics) {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  let html = '';
+  for (const d of domains) {
+    const firstSt = subtopics.find(s => s.domain === d.id);
+    const anchor = firstSt ? firstSt.id : d.id;
+    html += `<a class="sidebar-link" href="#${anchor}" data-domain="${d.id}" onclick="event.preventDefault();scrollToTopic('${anchor}')">${d.label}</a>`;
+  }
+  sidebar.innerHTML = html;
+}
+
 /* ── Overview: All topics in one comparison table ────── */
 function renderOverview(el) {
   const isThreeCol = pageData.subtopics[0] && pageData.subtopics[0].changes;
@@ -696,13 +726,21 @@ function renderOverview(el) {
     html += '</div>';
   }
 
+  // Build domain label lookup for capabilities page
+  const domainLabels = {};
+  if (pageData.domains) {
+    for (const d of pageData.domains) domainLabels[d.id] = d.label;
+  }
+
   // One row per subtopic (with optional group headers)
   let currentGroup = null;
   for (const st of pageData.subtopics) {
-    // Group header row when group changes
-    if (st.group && st.group !== currentGroup) {
-      currentGroup = st.group;
-      html += `<div class="compare-group-header"><span class="compare-group-label">${st.group}</span></div>`;
+    // Group header row when group or domain changes
+    const groupKey = st.domain ? st.domain : st.group;
+    const groupLabel = st.domain ? (domainLabels[st.domain] || st.domain) : st.group;
+    if (groupKey && groupKey !== currentGroup) {
+      currentGroup = groupKey;
+      html += `<div class="compare-group-header"><span class="compare-group-label">${groupLabel}</span></div>`;
     }
     const t = st.traditional;
     const tradText = (t && t.summary) ? t.summary : '';
@@ -939,6 +977,12 @@ function renderCapabilityDiagram(subtopics) {
   html += `<div class="cap-boxes">${renderBoxes('Governance, Communication & Change')}</div>`;
   html += '</div>';
 
+  // Risk, Security & Compliance row
+  html += '<div class="cap-diagram-area cap-diagram-risk">';
+  html += '<div class="cap-area-title">Risk, Security &amp; Compliance</div>';
+  html += `<div class="cap-boxes">${renderBoxes('Risk, Security & Compliance')}</div>`;
+  html += '</div>';
+
   // Net-New row
   html += '<div class="cap-diagram-area cap-diagram-new">';
   html += '<div class="cap-area-title">Net-New for the Agentic Organisation</div>';
@@ -1166,8 +1210,8 @@ function initOperatingModelPage() {
   if (pageData.subtopics) {
     html += '<div class="dashboard-section"><div class="container">';
     html += '<p class="section-label">Capability Model</p>';
-    html += '<h2>40 EA Capabilities</h2>';
-    html += '<p class="page-description">30 traditional capabilities (modified or extended for AI) plus 10 net-new capabilities for the agentic organisation. Click any capability to see its detailed analysis on the relevant sub-page.</p>';
+    html += '<h2>47 EA Capabilities</h2>';
+    html += '<p class="page-description">37 traditional capabilities (modified or extended for AI) plus 10 net-new capabilities for the agentic organisation. Click any capability to see its detailed analysis on the relevant sub-page.</p>';
     html += renderCapabilityDiagram(pageData.subtopics);
     html += '</div></div>';
   }
@@ -1486,6 +1530,256 @@ function renderArchSources(sources, layers) {
   return html;
 }
 
+/* ── Maturity Assessment Page ─────────────────────────── */
+
+function initMaturityPage() {
+  const el = document.getElementById('tab-content');
+  if (!el || !pageData) return;
+
+  let html = '';
+
+  /* Hero */
+  html += '<header class="hero"><div class="container">';
+  html += '<p class="section-label">Maturity Assessment</p>';
+  html += `<h1>${pageData.title}</h1>`;
+  html += `<p class="subtitle">${pageData.subtitle}</p>`;
+  html += '</div></header>';
+
+  /* Dimensions overview */
+  html += '<div class="dashboard-section"><div class="container">';
+  html += '<p class="section-label">Assessment Framework</p>';
+  html += '<h2>Six Dimensions of EA Maturity</h2>';
+  html += `<p class="page-description">${pageData.description}</p>`;
+  html += '<div class="om-dim-grid">';
+  for (const dim of pageData.dimensions) {
+    html += `<div class="om-dim-card">
+      <div class="om-dim-icon">${dim.icon}</div>
+      <div class="om-dim-label">${dim.label}</div>
+    </div>`;
+  }
+  html += '</div>';
+  html += '</div></div>';
+
+  /* Stage cards */
+  html += '<div class="dashboard-section"><div class="container">';
+  html += '<p class="section-label">Five Stages</p>';
+  html += '<h2>Where Are You Today?</h2>';
+  html += '<p class="page-description">Each stage describes what you will observe across six dimensions. Identify your current stage, then focus on the prescribed actions to reach the next level.</p>';
+
+  for (const stage of pageData.stages) {
+    html += `<div class="maturity-stage" id="stage-${stage.level}" style="--stage-color:${stage.color}">`;
+
+    /* Stage header */
+    html += `<div class="maturity-stage-header" onclick="this.closest('.maturity-stage').classList.toggle('open')">`;
+    html += `<div class="maturity-stage-badge" style="background:${stage.color}">${stage.level}</div>`;
+    html += '<div class="maturity-stage-info">';
+    html += `<div class="maturity-stage-label">${stage.label}</div>`;
+    html += `<div class="maturity-stage-tagline">${stage.tagline}</div>`;
+    html += '</div>';
+    html += chevronSVG();
+    html += '</div>';
+
+    /* Stage detail */
+    html += '<div class="maturity-stage-detail">';
+
+    /* Summary */
+    html += `<p class="maturity-stage-summary">${stage.characteristics.summary}</p>`;
+
+    /* How you know */
+    html += '<div class="maturity-know-section">';
+    html += '<h4>How You Know You Are Here</h4>';
+    html += '<ul class="maturity-know-list">';
+    for (const item of stage.how_you_know) {
+      html += `<li>${item}</li>`;
+    }
+    html += '</ul></div>';
+
+    /* Dimension details */
+    html += '<div class="maturity-dimensions">';
+    for (const dim of pageData.dimensions) {
+      const text = stage.characteristics[dim.id];
+      if (!text) continue;
+      html += `<div class="maturity-dim-card">`;
+      html += `<div class="maturity-dim-header">${dim.icon} ${dim.label}</div>`;
+      html += `<p class="maturity-dim-text">${text}</p>`;
+      html += '</div>';
+    }
+    html += '</div>';
+
+    /* Next actions */
+    html += '<div class="maturity-actions-section">';
+    html += `<h4>Focused Actions to Reach ${stage.level < 5 ? 'Stage ' + (stage.level + 1) : 'Excellence'}</h4>`;
+    html += '<div class="maturity-actions-grid">';
+    for (const action of stage.next_actions) {
+      html += `<div class="maturity-action-card">`;
+      html += `<div class="maturity-action-title">${action.title}</div>`;
+      html += `<p class="maturity-action-desc">${action.description}</p>`;
+      html += '</div>';
+    }
+    html += '</div></div>';
+
+    html += '</div>'; // maturity-stage-detail
+    html += '</div>'; // maturity-stage
+  }
+
+  /* Sources */
+  html += '<div class="maturity-sources">';
+  html += '<h4>Framework Sources</h4>';
+  html += '<ul>';
+  for (const src of pageData.sources) {
+    html += `<li>${src}</li>`;
+  }
+  html += '</ul></div>';
+
+  html += '</div></div>'; // container, section
+
+  el.innerHTML = html;
+
+  // Open from hash
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    const target = document.getElementById(hash);
+    if (target) {
+      target.classList.add('open');
+      setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }
+}
+
+/* ── Governance Page ─────────────────────────────────── */
+
+function initGovernancePage() {
+  const el = document.getElementById('tab-content');
+  if (!el || !pageData) return;
+
+  let html = '';
+
+  /* Hero */
+  html += '<header class="hero"><div class="container">';
+  html += '<p class="section-label">Governance</p>';
+  html += `<h1>${pageData.title}</h1>`;
+  html += `<p class="subtitle">${pageData.subtitle}</p>`;
+  html += '</div></header>';
+
+  /* Section navigation */
+  html += '<div class="dashboard-section"><div class="container">';
+  html += '<div class="gov-nav-grid">';
+  for (const sec of pageData.sections) {
+    html += `<a class="gov-nav-card" href="#${sec.id}" onclick="event.preventDefault();document.getElementById('${sec.id}').scrollIntoView({behavior:'smooth',block:'start'})">`;
+    html += `<span class="gov-nav-icon">${sec.icon}</span>`;
+    html += `<span class="gov-nav-label">${sec.label}</span>`;
+    html += '</a>';
+  }
+  html += '</div>';
+  html += '</div></div>';
+
+  /* Render each section */
+  for (const sec of pageData.sections) {
+    html += `<div class="dashboard-section" id="${sec.id}"><div class="container">`;
+    html += `<p class="section-label">${sec.label}</p>`;
+    html += `<h2>${sec.label}</h2>`;
+    html += `<p class="page-description">${sec.summary}</p>`;
+
+    /* Principles section — special rendering */
+    if (sec.principles) {
+      html += renderPrinciples(sec.principles);
+    }
+
+    /* Anti-patterns section — special rendering */
+    if (sec.anti_patterns) {
+      html += renderAntiPatterns(sec.anti_patterns);
+    }
+
+    /* Standard subsections */
+    if (sec.subsections) {
+      for (const sub of sec.subsections) {
+        html += `<div class="gov-subsection" id="${sub.id}">`;
+        html += `<div class="gov-subsection-header" onclick="this.closest('.gov-subsection').classList.toggle('open')">`;
+        html += `<h3>${sub.title}</h3>`;
+        html += chevronSVG();
+        html += '</div>';
+        html += `<div class="gov-subsection-content">${sub.content}</div>`;
+        html += '</div>';
+      }
+    }
+
+    html += '</div></div>';
+  }
+
+  /* Sources */
+  html += '<div class="dashboard-section"><div class="container">';
+  html += '<div class="maturity-sources">';
+  html += '<h4>Sources &amp; Frameworks</h4>';
+  html += '<ul>';
+  for (const src of pageData.sources) {
+    html += `<li>${src}</li>`;
+  }
+  html += '</ul></div>';
+  html += '</div></div>';
+
+  el.innerHTML = html;
+
+  // Open from hash
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    const target = document.getElementById(hash);
+    if (target) {
+      if (target.classList.contains('gov-subsection')) target.classList.add('open');
+      setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }
+}
+
+function renderPrinciples(principles) {
+  let html = '<div class="gov-principles">';
+  for (let i = 0; i < principles.length; i++) {
+    const p = principles[i];
+    html += `<div class="gov-principle" id="${p.id}">`;
+    html += `<div class="gov-principle-header" onclick="this.closest('.gov-principle').classList.toggle('open')">`;
+    html += `<span class="gov-principle-num">${i + 1}</span>`;
+    html += `<div class="gov-principle-info">`;
+    html += `<div class="gov-principle-title">${p.title}</div>`;
+    html += `<div class="gov-principle-stmt">${p.statement}</div>`;
+    html += '</div>';
+    html += chevronSVG();
+    html += '</div>';
+    html += '<div class="gov-principle-detail">';
+    html += `<div class="gov-principle-section"><h5>Rationale</h5><p>${p.rationale}</p></div>`;
+    html += '<div class="gov-principle-section"><h5>Implications</h5><ul>';
+    for (const imp of p.implications) {
+      html += `<li>${imp}</li>`;
+    }
+    html += '</ul></div>';
+    if (p.example) {
+      html += `<div class="gov-principle-example"><strong>Example:</strong> ${p.example}</div>`;
+    }
+    html += '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderAntiPatterns(patterns) {
+  let html = '<div class="gov-antipatterns">';
+  for (const ap of patterns) {
+    html += `<div class="gov-antipattern" id="${ap.id}">`;
+    html += `<div class="gov-antipattern-header" onclick="this.closest('.gov-antipattern').classList.toggle('open')">`;
+    html += `<div class="gov-antipattern-title">${ap.title}</div>`;
+    html += chevronSVG();
+    html += '</div>';
+    html += '<div class="gov-antipattern-detail">';
+    html += `<div class="gov-ap-row"><div class="gov-ap-label">Symptoms</div><p>${ap.symptoms}</p></div>`;
+    html += `<div class="gov-ap-row"><div class="gov-ap-label">Root Cause</div><p>${ap.root_cause}</p></div>`;
+    html += `<div class="gov-ap-row"><div class="gov-ap-label">Impact</div><p>${ap.impact}</p></div>`;
+    html += `<div class="gov-ap-row gov-ap-fix"><div class="gov-ap-label">Fix</div><p>${ap.fix}</p></div>`;
+    html += '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
 /* ── Site-Wide Search ──────────────────────────────────── */
 let searchIndex = null;
 let searchOverlay = null;
@@ -1508,10 +1802,8 @@ async function buildSearchIndex() {
   const files = [
     'home', 'overview', 'recommendations', 'new-capabilities',
     'ea-operating-model', 'new-capabilities-detail',
-    'ea-development-method', 'ea-governance',
-    'ea-repository', 'ea-roles-skills', 'risk-security',
     'banking', 'reinsurance', 'pharma',
-    'architecture-reference'
+    'architecture-reference', 'capabilities', 'maturity', 'governance'
   ];
   const results = await Promise.all(files.map(f => loadJSON(`data/${f}.json`)));
   const idx = [];
@@ -1639,6 +1931,39 @@ async function buildSearchIndex() {
       for (const m of data.operating_models) {
         const texts = [m.label, m.description, m.best_for, m.agentic_considerations, (m.strengths || []).join(' '), (m.trade_offs || []).join(' ')].join(' ');
         idx.push({ type: 'topic', title: m.label + ' Operating Model', snippet: truncate(stripHTML(m.description), 200), href: 'ea-operating-model.html#om-type-' + m.id, page: 'Operating Model', _text: texts.toLowerCase() });
+      }
+    }
+
+    // Maturity stages
+    if (file === 'maturity' && data.stages) {
+      for (const s of data.stages) {
+        const texts = [s.label, s.tagline, s.characteristics.summary, (s.how_you_know || []).join(' '), (s.next_actions || []).map(a => a.title + ' ' + a.description).join(' ')].join(' ');
+        idx.push({ type: 'topic', title: 'Stage ' + s.level + ': ' + s.label, snippet: truncate(stripHTML(s.characteristics.summary), 200), href: 'maturity.html#stage-' + s.level, page: 'Maturity', _text: texts.toLowerCase() });
+      }
+    }
+
+    // Governance sections, principles, anti-patterns
+    if (file === 'governance' && data.sections) {
+      for (const sec of data.sections) {
+        const secTexts = [sec.label, sec.summary];
+        if (sec.subsections) {
+          for (const sub of sec.subsections) {
+            secTexts.push(sub.title, stripHTML(sub.content));
+            idx.push({ type: 'topic', title: sub.title, snippet: truncate(stripHTML(sub.content), 200), href: 'governance.html#' + sub.id, page: 'Governance', _text: (sub.title + ' ' + stripHTML(sub.content)).toLowerCase() });
+          }
+        }
+        if (sec.principles) {
+          for (const p of sec.principles) {
+            const pText = [p.title, p.statement, p.rationale, (p.implications || []).join(' '), p.example || ''].join(' ');
+            idx.push({ type: 'topic', title: p.title, snippet: truncate(p.statement, 200), href: 'governance.html#' + p.id, page: 'Governance', _text: pText.toLowerCase() });
+          }
+        }
+        if (sec.anti_patterns) {
+          for (const ap of sec.anti_patterns) {
+            const apText = [ap.title, ap.symptoms, ap.root_cause, ap.impact, ap.fix].join(' ');
+            idx.push({ type: 'topic', title: 'Anti-Pattern: ' + ap.title, snippet: truncate(ap.symptoms, 200), href: 'governance.html#' + ap.id, page: 'Governance', _text: apText.toLowerCase() });
+          }
+        }
       }
     }
   });
