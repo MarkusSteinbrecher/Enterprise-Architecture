@@ -6,6 +6,8 @@ let siteData = null;
 let pageData = null;
 let currentSubtopic = null;
 let currentTab = 'overview';
+let sidebarCollapsed = false;
+let sidebarMobileOpen = false;
 
 const STORAGE_KEY = 'ea-agentic-assessment';
 
@@ -14,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   siteData = await loadJSON('data/site.json');
   if (!siteData) return;
 
-  renderTopNav();
+  renderAppShell();
 
   const page = getPageId();
   if (page === 'home') {
@@ -106,91 +108,200 @@ function chevronSVG() {
   return '<svg class="finding-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>';
 }
 
-/* ── Top Navigation ──────────────────────────────────── */
-function renderTopNav() {
-  const nav = document.getElementById('top-nav');
-  if (!nav || !siteData) return;
+/* ── App Shell: Sidebar + Topbar ────────────────────── */
+const NAV_ICONS = {
+  'overview': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
+  'ea-operating-model': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
+  'architecture-reference': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21h16M4 21V8l8-5 8 5v13M9 21v-6h6v6"/></svg>',
+  'new-capabilities': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7L12 16.4 5.7 21l2.3-7-6-4.6h7.6z"/></svg>',
+  'capabilities': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>',
+  'governance': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  'people': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',
+  'processes': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>',
+  'tools-repository': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
+  'maturity': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  'industries': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1"/><rect x="5" y="3" width="14" height="18" rx="1"/></svg>'
+};
+
+function renderAppShell() {
+  const sidebar = document.getElementById('app-sidebar');
+  const topbar = document.getElementById('topbar');
+  if (!sidebar || !topbar || !siteData) return;
 
   const page = getPageId();
+  const currentNav = siteData.nav.find(n => n.id === page) ||
+    siteData.nav.find(n => n.children && n.children.some(c => c.id === page));
+  const pageLabel = currentNav ? (currentNav.children ?
+    (currentNav.children.find(c => c.id === page) || {}).label || currentNav.label : currentNav.label)
+    : siteData.brand;
 
-  /* ── Brand + hamburger button (mobile) ── */
-  let html = `<a class="top-nav-brand" href="overview.html">${siteData.brand || 'EA for AI'}</a>`;
-  html += '<button class="nav-hamburger" aria-label="Menu">&#9776;</button>';
+  // ── Sidebar HTML ──
+  let sHtml = '';
+  sHtml += '<div class="app-sidebar-header">';
+  sHtml += '<a class="app-sidebar-brand" href="overview.html">EA \u00B7 Agentic Org</a>';
+  sHtml += '<button class="sidebar-collapse-btn" aria-label="Collapse sidebar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 3H3M21 12H8M21 21H3M4 8l4 4-4 4"/></svg></button>';
+  sHtml += '</div>';
+  sHtml += '<nav class="app-sidebar-nav">';
 
-  /* ── Link list (horizontal on desktop, vertical drawer on mobile) ── */
-  html += '<div class="top-nav-links">';
   for (const link of siteData.nav) {
     if (link.children) {
-      /* Desktop: dropdown. Mobile: group label + children inline */
       const childActive = link.children.some(c => c.id === page);
-      html += `<div class="top-nav-dropdown${childActive ? ' active' : ''}">`;
-      html += `<button class="top-nav-link dropdown-trigger${childActive ? ' active' : ''}">${link.label} \u25BE</button>`;
-      html += '<div class="dropdown-menu">';
+      sHtml += '<div class="sidebar-nav-group' + (childActive ? ' open' : '') + '">';
+      sHtml += '<button class="sidebar-nav-group-label">' + (NAV_ICONS[link.id] || '') + '<span>' + link.label + '</span><span class="group-chevron-wrap"><svg class="group-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg></span></button>';
+      sHtml += '<div class="sidebar-nav-children">';
       for (const child of link.children) {
-        const cActive = child.id === page ? ' active' : '';
-        html += `<a class="dropdown-item${cActive}" href="${child.href}">${child.label}</a>`;
+        const active = child.id === page ? ' active' : '';
+        sHtml += '<a class="sidebar-nav-child' + active + '" href="' + child.href + '">' + child.label + '</a>';
       }
-      html += '</div></div>';
-      /* Mobile-only: flat links with indent */
-      html += `<span class="mobile-nav-group">${link.label}</span>`;
-      for (const child of link.children) {
-        const cActive = child.id === page ? ' active' : '';
-        html += `<a class="top-nav-link mobile-nav-child${cActive}" href="${child.href}">${child.label}</a>`;
-      }
-    } else if (link.disabled) {
-      html += `<a class="top-nav-link nav-disabled" href="#" title="Coming soon" onclick="event.preventDefault()">${link.label}</a>`;
+      sHtml += '</div></div>';
+    } else if (link.external || (link.href && link.href.startsWith('http'))) {
+      sHtml += '<a class="sidebar-nav-item" href="' + link.href + '" target="_blank" rel="noopener">' + (NAV_ICONS[link.id] || '') + '<span class="sidebar-nav-item-label">' + link.label + '</span></a>';
     } else {
-      const isExternal = link.external || link.href.startsWith('http');
-      const active = !isExternal && link.id === page ? ' active' : '';
-      const target = isExternal ? ' target="_blank" rel="noopener"' : '';
-      html += `<a class="top-nav-link${active}" href="${link.href}"${target}>${link.label}</a>`;
+      const active = link.id === page ? ' active' : '';
+      sHtml += '<a class="sidebar-nav-item' + active + '" href="' + link.href + '">' + (NAV_ICONS[link.id] || '') + '<span class="sidebar-nav-item-label">' + link.label + '</span></a>';
     }
   }
-  html += '</div>';
-  /* Search icon — outside links div so it's always visible on mobile */
-  html += '<button class="search-toggle" aria-label="Search">'
-    + '<svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/></svg>'
-    + '</button>';
-  nav.innerHTML = html;
 
-  /* ── Hamburger toggle ── */
-  const hamburger = nav.querySelector('.nav-hamburger');
-  const links = nav.querySelector('.top-nav-links');
-  hamburger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    links.classList.toggle('open');
-    hamburger.classList.toggle('open');
+  sHtml += '</nav>';
+  sHtml += '<div id="sidebar-subtopics"></div>';
+  sidebar.innerHTML = sHtml;
+
+  // ── Topbar HTML ──
+  const darkMode = localStorage.getItem('ea-theme-mode') === 'dark';
+  const sunIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+  const moonIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+
+  let tHtml = '';
+  tHtml += '<button class="topbar-hamburger" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>';
+  tHtml += '<span class="topbar-title">' + pageLabel + '</span>';
+  tHtml += '<span class="topbar-spacer"></span>';
+
+  // Theme accent picker
+  tHtml += '<div class="theme-picker">';
+  const savedAccent = localStorage.getItem('ea-theme-accent') || 'blue';
+  const accents = [
+    { id: 'blue', color: '#2563EB' },
+    { id: 'teal', color: '#0D9488' },
+    { id: 'amber', color: '#D97706' }
+  ];
+  for (const a of accents) {
+    const act = a.id === savedAccent ? ' active' : '';
+    tHtml += '<button class="theme-pick' + act + '" data-accent="' + a.id + '" style="background:' + a.color + '" aria-label="' + a.id + ' theme"></button>';
+  }
+  tHtml += '</div>';
+
+  // Search
+  tHtml += '<button class="topbar-search-btn" aria-label="Search"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/></svg></button>';
+
+  // Dark mode toggle
+  tHtml += '<button class="dark-toggle" aria-label="Toggle dark mode">' + (darkMode ? sunIcon : moonIcon) + '</button>';
+
+  topbar.innerHTML = tHtml;
+
+  // ── Event Listeners ──
+
+  // Sidebar collapse (desktop)
+  const collapseBtn = sidebar.querySelector('.sidebar-collapse-btn');
+  collapseBtn.addEventListener('click', () => {
+    const layout = document.querySelector('.app-layout');
+    layout.classList.toggle('sidebar-collapsed');
+    sidebarCollapsed = layout.classList.contains('sidebar-collapsed');
+    localStorage.setItem('ea-sidebar-collapsed', sidebarCollapsed);
   });
 
-  /* ── Desktop dropdown: click only ── */
-  function positionDropdown(dd) {
-    const menu = dd.querySelector('.dropdown-menu');
-    const btn = dd.querySelector('.dropdown-trigger');
-    if (!menu || !btn) return;
-    const r = btn.getBoundingClientRect();
-    menu.style.top = (r.bottom + 4) + 'px';
-    menu.style.left = r.left + 'px';
+  // Restore sidebar collapsed state
+  if (localStorage.getItem('ea-sidebar-collapsed') === 'true') {
+    document.querySelector('.app-layout').classList.add('sidebar-collapsed');
+    sidebarCollapsed = true;
   }
-  function closeAllDropdowns() {
-    nav.querySelectorAll('.top-nav-dropdown.open').forEach(d => d.classList.remove('open'));
-  }
-  nav.querySelectorAll('.top-nav-dropdown').forEach(dd => {
-    const btn = dd.querySelector('.dropdown-trigger');
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const opening = !dd.classList.contains('open');
-      closeAllDropdowns();
-      if (opening) { dd.classList.add('open'); positionDropdown(dd); }
+
+  // Mobile hamburger
+  const hamburger = topbar.querySelector('.topbar-hamburger');
+  hamburger.addEventListener('click', () => {
+    sidebar.classList.toggle('mobile-open');
+    let overlay = document.querySelector('.sidebar-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'sidebar-overlay';
+      document.querySelector('.app-layout').appendChild(overlay);
+      overlay.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+      });
+    }
+    overlay.classList.toggle('active');
+  });
+
+  // Industries group toggle
+  sidebar.querySelectorAll('.sidebar-nav-group-label').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.sidebar-nav-group').classList.toggle('open');
     });
   });
-  document.addEventListener('click', (e) => {
-    closeAllDropdowns();
-    if (!nav.contains(e.target)) { links.classList.remove('open'); hamburger.classList.remove('open'); }
+
+  // Search button
+  topbar.querySelector('.topbar-search-btn').addEventListener('click', () => openSearch());
+
+  // Dark mode toggle
+  topbar.querySelector('.dark-toggle').addEventListener('click', toggleDarkMode);
+
+  // Theme accent picker
+  topbar.querySelectorAll('.theme-pick').forEach(btn => {
+    btn.addEventListener('click', () => {
+      topbar.querySelectorAll('.theme-pick').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyAccentTheme(btn.dataset.accent);
+      localStorage.setItem('ea-theme-accent', btn.dataset.accent);
+    });
   });
 
-  /* ── Search toggle ── */
-  const searchBtn = nav.querySelector('.search-toggle');
-  if (searchBtn) searchBtn.addEventListener('click', (e) => { e.stopPropagation(); openSearch(); });
+  // Initialize theme
+  initTheme();
+}
+
+function initTheme() {
+  // Dark mode
+  const savedMode = localStorage.getItem('ea-theme-mode');
+  if (savedMode === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+  // Accent theme
+  const savedAccent = localStorage.getItem('ea-theme-accent');
+  if (savedAccent) applyAccentTheme(savedAccent);
+}
+
+function toggleDarkMode() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('ea-theme-mode', 'light');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('ea-theme-mode', 'dark');
+  }
+  // Update icon
+  const btn = document.querySelector('.dark-toggle');
+  if (btn) {
+    const sunIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+    const moonIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+    btn.innerHTML = !isDark ? sunIcon : moonIcon;
+  }
+}
+
+function applyAccentTheme(id) {
+  const themes = {
+    blue:  { accent: '#2563EB', hover: '#1D4ED8', light: null, text: '#1E40AF' },
+    teal:  { accent: '#0D9488', hover: '#0F766E', light: '#F0FDFA', text: '#115E59' },
+    amber: { accent: '#D97706', hover: '#B45309', light: '#FFFBEB', text: '#92400E' }
+  };
+  const t = themes[id];
+  if (!t) return;
+  const root = document.documentElement.style;
+  root.setProperty('--accent', t.accent);
+  root.setProperty('--accent-hover', t.hover);
+  if (t.light) root.setProperty('--accent-light', t.light);
+  else root.removeProperty('--accent-light');
+  root.setProperty('--accent-text', t.text);
 }
 
 /* ── Home Page ───────────────────────────────────────── */
@@ -622,16 +733,15 @@ async function initConceptPage(pageId) {
 }
 
 function renderSidebar(subtopics) {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
-
-  let html = '<div class="sidebar-section">';
-  html += '<div class="sidebar-heading">Topics</div>';
+  const el = document.getElementById('sidebar-subtopics');
+  if (!el) return;
+  let html = '<div class="sidebar-subtopics">';
+  html += '<div class="sidebar-subtopics-heading">Topics</div>';
   for (const st of subtopics) {
-    html += `<a class="sidebar-link" href="#${st.id}" data-subtopic="${st.id}" onclick="event.preventDefault();scrollToTopic('${st.id}')">${st.label}</a>`;
+    html += `<a class="sidebar-subtopic-link" href="#${st.id}" data-subtopic="${st.id}" onclick="event.preventDefault();scrollToTopic('${st.id}')">${st.label}</a>`;
   }
   html += '</div>';
-  sidebar.innerHTML = html;
+  el.innerHTML = html;
 }
 
 function initTabs() {
@@ -654,7 +764,7 @@ function scrollToTopic(id) {
     if (!row.classList.contains('open')) row.classList.add('open');
   }
   // Highlight sidebar
-  document.querySelectorAll('.sidebar-link').forEach(link => {
+  document.querySelectorAll('.sidebar-subtopic-link').forEach(link => {
     link.classList.toggle('active', link.dataset.subtopic === id);
   });
 }
@@ -662,7 +772,7 @@ function scrollToTopic(id) {
 function selectSubtopic(id) {
   currentSubtopic = pageData.subtopics.find(s => s.id === id);
   if (!currentSubtopic) return;
-  document.querySelectorAll('.sidebar-link').forEach(link => {
+  document.querySelectorAll('.sidebar-subtopic-link').forEach(link => {
     link.classList.toggle('active', link.dataset.subtopic === id);
   });
   if (currentTab === 'assessment') renderContent();
@@ -690,15 +800,17 @@ function initCapabilitiesPage() {
 }
 
 function renderGroupedSidebar(domains, subtopics) {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
-  let html = '';
+  const el = document.getElementById('sidebar-subtopics');
+  if (!el) return;
+  let html = '<div class="sidebar-subtopics">';
+  html += '<div class="sidebar-subtopics-heading">Domains</div>';
   for (const d of domains) {
     const firstSt = subtopics.find(s => s.domain === d.id);
     const anchor = firstSt ? firstSt.id : d.id;
-    html += `<a class="sidebar-link" href="#${anchor}" data-domain="${d.id}" onclick="event.preventDefault();scrollToTopic('${anchor}')">${d.label}</a>`;
+    html += `<a class="sidebar-subtopic-link" href="#${anchor}" data-domain="${d.id}" onclick="event.preventDefault();scrollToTopic('${anchor}')">${d.label}</a>`;
   }
-  sidebar.innerHTML = html;
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 /* ── Overview: All topics in one comparison table ────── */
@@ -1013,7 +1125,7 @@ window.toggleTopic = function(id) {
   const row = document.getElementById('topic-' + id);
   if (row) row.classList.toggle('open');
   // Update sidebar highlight
-  document.querySelectorAll('.sidebar-link').forEach(link => {
+  document.querySelectorAll('.sidebar-subtopic-link').forEach(link => {
     link.classList.toggle('active', link.dataset.subtopic === id && row.classList.contains('open'));
   });
 };

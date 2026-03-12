@@ -5,70 +5,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Overview — EA for the Agentic Organisation</title>
   <meta name="description" content="How Enterprise Architecture must evolve for organisations deploying AI agents at scale. Overview of key findings and impact across EA's core objectives.">
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
-
-<!-- Disclaimer -->
-<div class="disclaimer-bar">
-  <div class="container">
-    <strong>Work in Progress</strong> &mdash; AI-generated content.
+<div class="disclaimer-bar"><div class="container"><strong>Work in Progress</strong> &mdash; AI-generated content.</div></div>
+<div class="app-layout">
+  <aside class="app-sidebar" id="app-sidebar"></aside>
+  <div class="main-area">
+    <header class="topbar" id="topbar"></header>
+    <div class="main-scroll">
+      <!-- Hero -->
+      <header class="hero">
+        <div class="container">
+          <p class="section-label">Overview</p>
+          <h1>EA for the Agentic Organisation</h1>
+          <p class="subtitle">How Enterprise Architecture must evolve when AI agents become part of the enterprise workforce. An analysis of what changes across EA's core objectives — assessing, planning, and governing — when speed, autonomy, and scale shift fundamentally.</p>
+        </div>
+      </header>
+      <!-- Findings Summary -->
+      <div class="dashboard-section" id="findings-summary-section">
+        <div class="container">
+          <p class="section-label">Key Findings</p>
+          <h2>Findings from Internet Research</h2>
+          <a class="insight-btn" href="https://markussteinbrecher.github.io/insight/" target="_blank" rel="noopener">Explore with Insight &#8594;</a>
+          <div id="findings-summary"></div>
+        </div>
+      </div>
+      <!-- Impact Matrix -->
+      <div class="dashboard-section" id="matrix-section">
+        <div class="container">
+          <p class="section-label">Impact Matrix</p>
+          <h2>How AI Transforms EA's Core Objectives</h2>
+          <p class="page-description">Three fundamental EA objectives mapped against the dimensions that change when AI agents enter the enterprise.</p>
+          <div id="impact-matrix"></div>
+        </div>
+      </div>
+      <!-- Domain Summaries -->
+      <div class="dashboard-section" id="domain-summaries-section">
+        <div class="container">
+          <p class="section-label">What Changes by Domain</p>
+          <h2>Key Shifts Across EA Capabilities</h2>
+          <div id="domain-summaries"></div>
+        </div>
+      </div>
+      <!-- New Capabilities -->
+      <div class="dashboard-section" id="capabilities-section">
+        <div class="container">
+          <p class="section-label">New for the Agentic Organisation</p>
+          <h2>Ten New Capabilities</h2>
+          <p class="page-description">Capabilities with no traditional EA equivalent — required for organisations deploying AI agents at scale.</p>
+          <div class="capabilities-grid" id="capabilities-grid"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
-
-<!-- Top Navigation -->
-<nav class="top-nav">
-  <div class="container top-nav-inner" id="top-nav"></div>
-</nav>
-
-<!-- Hero -->
-<header class="hero">
-  <div class="container">
-    <p class="section-label">Overview</p>
-    <h1>EA for the Agentic Organisation</h1>
-    <p class="subtitle">How Enterprise Architecture must evolve when AI agents become part of the enterprise workforce. An analysis of what changes across EA's core objectives — assessing, planning, and governing — when speed, autonomy, and scale shift fundamentally.</p>
-  </div>
-</header>
-
-<!-- Findings Summary -->
-<div class="dashboard-section" id="findings-summary-section">
-  <div class="container">
-    <p class="section-label">Key Findings</p>
-    <h2>Findings from Internet Research</h2>
-    <a class="insight-btn" href="https://markussteinbrecher.github.io/insight/" target="_blank" rel="noopener">Explore with Insight &#8594;</a>
-    <div id="findings-summary"></div>
-  </div>
-</div>
-
-<!-- Impact Matrix -->
-<div class="dashboard-section" id="matrix-section">
-  <div class="container">
-    <p class="section-label">Impact Matrix</p>
-    <h2>How AI Transforms EA's Core Objectives</h2>
-    <p class="page-description">Three fundamental EA objectives mapped against the dimensions that change when AI agents enter the enterprise.</p>
-    <div id="impact-matrix"></div>
-  </div>
-</div>
-
-<!-- Domain Summaries -->
-<div class="dashboard-section" id="domain-summaries-section">
-  <div class="container">
-    <p class="section-label">What Changes by Domain</p>
-    <h2>Key Shifts Across EA Capabilities</h2>
-    <div id="domain-summaries"></div>
-  </div>
-</div>
-
-<!-- New Capabilities -->
-<div class="dashboard-section" id="capabilities-section">
-  <div class="container">
-    <p class="section-label">New for the Agentic Organisation</p>
-    <h2>Ten New Capabilities</h2>
-    <p class="page-description">Capabilities with no traditional EA equivalent — required for organisations deploying AI agents at scale.</p>
-    <div class="capabilities-grid" id="capabilities-grid"></div>
-  </div>
-</div>
-
-<script src="js/app.js?v=9"></script>
+<script src="js/app.js?v=10"></script>
 </body>
 </html>
