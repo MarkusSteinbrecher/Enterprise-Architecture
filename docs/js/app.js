@@ -183,17 +183,18 @@ function renderAppShell() {
   tHtml += '<span class="topbar-title">' + pageLabel + '</span>';
   tHtml += '<span class="topbar-spacer"></span>';
 
-  // Theme accent picker
+  // Theme picker (icon buttons like Insight)
   tHtml += '<div class="theme-picker">';
-  const savedAccent = localStorage.getItem('ea-theme-accent') || 'blue';
-  const accents = [
-    { id: 'blue', color: '#2563EB' },
-    { id: 'teal', color: '#0D9488' },
-    { id: 'amber', color: '#D97706' }
+  const savedPalette = parseInt(localStorage.getItem('ea-theme-palette') || '1');
+  const themeIcons = [
+    `<svg ${ICON_ATTRS} width="14" height="14"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
+    `<svg ${ICON_ATTRS} width="14" height="14"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`,
+    `<svg ${ICON_ATTRS} width="14" height="14"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`
   ];
-  for (const a of accents) {
-    const act = a.id === savedAccent ? ' active' : '';
-    tHtml += '<button class="theme-pick' + act + '" data-accent="' + a.id + '" style="background:' + a.color + '" aria-label="' + a.id + ' theme"></button>';
+  const themeNames = ['Warm', 'Cool', 'Yello'];
+  for (let i = 0; i < 3; i++) {
+    const act = i === savedPalette ? ' active' : '';
+    tHtml += '<button class="theme-pick' + act + '" data-palette="' + i + '" title="' + themeNames[i] + '" aria-label="Theme: ' + themeNames[i] + '">' + themeIcons[i] + '</button>';
   }
   tHtml += '</div>';
 
@@ -252,13 +253,14 @@ function renderAppShell() {
   // Dark mode toggle
   topbar.querySelector('.dark-toggle').addEventListener('click', toggleDarkMode);
 
-  // Theme accent picker
+  // Theme palette picker
   topbar.querySelectorAll('.theme-pick').forEach(btn => {
     btn.addEventListener('click', () => {
       topbar.querySelectorAll('.theme-pick').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      applyAccentTheme(btn.dataset.accent);
-      localStorage.setItem('ea-theme-accent', btn.dataset.accent);
+      const idx = parseInt(btn.dataset.palette);
+      applyThemePalette(idx);
+      localStorage.setItem('ea-theme-palette', String(idx));
     });
   });
 
@@ -266,15 +268,56 @@ function renderAppShell() {
   initTheme();
 }
 
+/* ── Theme system (ported from Insight) ─────────────── */
+const THEME_PALETTES = [
+  { id: 'warm', name: 'Warm', light: {
+    '--bg': '#F5F3EE', '--surface': '#FFFFFF', '--surface-dark': '#1B1B18',
+    '--sidebar-bg': '#F0ECE4', '--sidebar-hover': '#E8E3D9', '--sidebar-active': '#E0DAD0',
+    '--text': '#1B1B18', '--text-secondary': '#64635E', '--text-muted': '#9B9A95',
+    '--border': '#E5E2DB', '--border-light': '#EDEAE4',
+    '--accent': '#D97757', '--accent-hover': '#C4663F', '--accent-light': '#FAE6DD', '--accent-text': '#B34D2B',
+  }, dark: {
+    '--bg': '#1C1A17', '--surface': '#252220', '--surface-dark': '#161412',
+    '--sidebar-bg': '#161412', '--sidebar-hover': '#2A2622', '--sidebar-active': '#3D3830',
+    '--text': '#E8E4DE', '--text-secondary': '#A8A49C', '--text-muted': '#7A766E',
+    '--border': '#3D3830', '--border-light': '#2E2B28',
+    '--accent': '#E89070', '--accent-hover': '#F5A080', '--accent-light': '#3D2A1E', '--accent-text': '#F5B090',
+  }},
+  { id: 'cool', name: 'Cool', light: {
+    '--bg': '#F8FAFC', '--surface': '#FFFFFF', '--surface-dark': '#0F172A',
+    '--sidebar-bg': '#F1F5F9', '--sidebar-hover': '#E2E8F0', '--sidebar-active': '#CBD5E1',
+    '--text': '#0F172A', '--text-secondary': '#64748B', '--text-muted': '#94A3B8',
+    '--border': '#E2E8F0', '--border-light': '#F1F5F9',
+    '--accent': '#2563EB', '--accent-hover': '#1D4ED8', '--accent-light': '#EFF6FF', '--accent-text': '#1E40AF',
+  }, dark: {
+    '--bg': '#0F172A', '--surface': '#1E293B', '--surface-dark': '#0C1322',
+    '--sidebar-bg': '#0C1322', '--sidebar-hover': '#1E293B', '--sidebar-active': '#334155',
+    '--text': '#E2E8F0', '--text-secondary': '#94A3B8', '--text-muted': '#64748B',
+    '--border': '#334155', '--border-light': '#1E293B',
+    '--accent': '#60A5FA', '--accent-hover': '#93C5FD', '--accent-light': '#172136', '--accent-text': '#93C5FD',
+  }},
+  { id: 'yello', name: 'Yello', light: {
+    '--bg': '#FEFCE8', '--surface': '#FFFFFF', '--surface-dark': '#1A1700',
+    '--sidebar-bg': '#FEF9C3', '--sidebar-hover': '#FDE047', '--sidebar-active': '#FACC15',
+    '--text': '#1A1700', '--text-secondary': '#716810', '--text-muted': '#A39E40',
+    '--border': '#EAE070', '--border-light': '#FEF9C3',
+    '--accent': '#EAB308', '--accent-hover': '#CA8A04', '--accent-light': '#FEF9C3', '--accent-text': '#854D0E',
+  }, dark: {
+    '--bg': '#18160A', '--surface': '#1E1C0E', '--surface-dark': '#121006',
+    '--sidebar-bg': '#121006', '--sidebar-hover': '#2A2710', '--sidebar-active': '#3D3A18',
+    '--text': '#FEF9C3', '--text-secondary': '#E0D860', '--text-muted': '#8A8430',
+    '--border': '#3D3A18', '--border-light': '#2A2710',
+    '--accent': '#FACC15', '--accent-hover': '#FDE047', '--accent-light': '#2A2710', '--accent-text': '#FDE68A',
+  }},
+];
+
 function initTheme() {
-  // Dark mode
   const savedMode = localStorage.getItem('ea-theme-mode');
   if (savedMode === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
   }
-  // Accent theme
-  const savedAccent = localStorage.getItem('ea-theme-accent');
-  if (savedAccent) applyAccentTheme(savedAccent);
+  const savedPalette = parseInt(localStorage.getItem('ea-theme-palette') || '1');
+  applyThemePalette(savedPalette);
 }
 
 function toggleDarkMode() {
@@ -286,6 +329,9 @@ function toggleDarkMode() {
     document.documentElement.setAttribute('data-theme', 'dark');
     localStorage.setItem('ea-theme-mode', 'dark');
   }
+  // Re-apply palette for new mode
+  const idx = parseInt(localStorage.getItem('ea-theme-palette') || '1');
+  applyThemePalette(idx);
   // Update icon
   const btn = document.querySelector('.dark-toggle');
   if (btn) {
@@ -295,20 +341,15 @@ function toggleDarkMode() {
   }
 }
 
-function applyAccentTheme(id) {
-  const themes = {
-    blue:  { accent: '#2563EB', hover: '#1D4ED8', light: null, text: '#1E40AF' },
-    teal:  { accent: '#0D9488', hover: '#0F766E', light: '#F0FDFA', text: '#115E59' },
-    amber: { accent: '#D97706', hover: '#B45309', light: '#FFFBEB', text: '#92400E' }
-  };
-  const t = themes[id];
-  if (!t) return;
+function applyThemePalette(index) {
+  const palette = THEME_PALETTES[index];
+  if (!palette) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const colors = isDark ? palette.dark : palette.light;
   const root = document.documentElement.style;
-  root.setProperty('--accent', t.accent);
-  root.setProperty('--accent-hover', t.hover);
-  if (t.light) root.setProperty('--accent-light', t.light);
-  else root.removeProperty('--accent-light');
-  root.setProperty('--accent-text', t.text);
+  for (const [token, value] of Object.entries(colors)) {
+    root.setProperty(token, value);
+  }
 }
 
 /* ── Home Page ───────────────────────────────────────── */
