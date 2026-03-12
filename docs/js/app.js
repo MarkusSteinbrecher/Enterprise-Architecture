@@ -180,7 +180,7 @@ function renderAppShell() {
 
   let tHtml = '';
   tHtml += `<button class="topbar-hamburger" aria-label="Menu"><svg ${ICON_ATTRS}><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>`;
-  tHtml += '<span class="topbar-title">' + pageLabel + '</span>';
+  tHtml += '<span class="topbar-title">' + pageLabel + ' <span class="wip-badge">Work in progress</span></span>';
   tHtml += '<span class="topbar-spacer"></span>';
 
   // Theme picker (icon buttons like Insight)
