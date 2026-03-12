@@ -59,6 +59,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (peek && peek.page_type === 'tools-repository') {
       pageData = peek;
       initToolsRepositoryPage();
+    } else if (peek && peek.page_type === 'agentic-ea') {
+      pageData = peek;
+      initAgenticEAPage();
+    } else if (peek && peek.page_type === 'poc-demo') {
+      pageData = peek;
+      initPocDemoPage();
     } else {
       await initConceptPage(page);
     }
@@ -2488,6 +2494,128 @@ function highlightMatch(text, query) {
   if (!text || !query) return text || '';
   const esc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return text.replace(new RegExp('(' + esc + ')', 'gi'), '<mark>$1</mark>');
+}
+
+/* ── Agentic EA Page ────────────────────────────────── */
+function initAgenticEAPage() {
+  const container = document.getElementById('agentic-ea-content') || document.querySelector('.main-scroll');
+  if (!pageData) return;
+  const d = pageData;
+  let html = '';
+
+  // Hero
+  html += `<header class="hero"><div class="container">
+    <h1>${d.title}</h1>
+    <p class="hero-sub">${d.hero.subline}</p>
+    <div class="stats-bar">${d.hero.stats.map(s => `<div class="stat-card"><div class="stat-value">${s.value}</div><div class="stat-label">${s.label}</div><div class="stat-detail">${s.detail}</div></div>`).join('')}</div>
+  </div></header>`;
+
+  // Sections
+  for (const sec of d.sections) {
+    html += `<div class="dashboard-section"><div class="container">`;
+    html += `<h2>${sec.title}</h2><p>${sec.content}</p>`;
+
+    if (sec.points) {
+      html += `<div class="findings-grid">${sec.points.map(p => `<div class="finding-card"><h3>${p.title}</h3><p>${p.description}</p></div>`).join('')}</div>`;
+    }
+
+    if (sec.tiers) {
+      html += `<div class="comparison-sections">`;
+      for (const tier of sec.tiers) {
+        html += `<div class="finding-card"><h3>${tier.name}</h3><p class="tier-role"><strong>${tier.role}</strong></p><p>${tier.details}</p><ul>${tier.elements.map(e => `<li>${e}</li>`).join('')}</ul></div>`;
+      }
+      html += `</div>`;
+    }
+
+    if (sec.stereotypes) {
+      html += `<div class="table-wrapper"><table class="data-table"><thead><tr><th>Stereotype</th><th>Parent Type</th><th>Description</th></tr></thead><tbody>`;
+      for (const st of sec.stereotypes) {
+        html += `<tr><td><strong>${st.name}</strong></td><td>${st.parent}</td><td>${st.description}</td></tr>`;
+      }
+      html += `</tbody></table></div>`;
+    }
+
+    if (sec.cases) {
+      html += `<div class="findings-grid">`;
+      for (const uc of sec.cases) {
+        html += `<div class="finding-card"><h3>${uc.title}</h3><p><strong>Input:</strong> ${uc.input}</p><p><strong>Output:</strong> ${uc.output}</p><details><summary>Workflow</summary><ol>${uc.workflow.map(w => `<li>${w}</li>`).join('')}</ol></details></div>`;
+      }
+      html += `</div>`;
+    }
+
+    if (sec.comparison) {
+      html += `<div class="table-wrapper"><table class="data-table"><thead><tr><th>Dimension</th><th>Traditional EA</th><th>Graph-Based EA</th></tr></thead><tbody>`;
+      for (const row of sec.comparison) {
+        html += `<tr><td><strong>${row.dimension}</strong></td><td>${row.traditional}</td><td><mark>${row.graph}</mark></td></tr>`;
+      }
+      html += `</tbody></table></div>`;
+    }
+
+    html += `</div></div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+/* ── PoC Demo Page ──────────────────────────────────── */
+function initPocDemoPage() {
+  const container = document.getElementById('poc-demo-content') || document.querySelector('.main-scroll');
+  if (!pageData) return;
+  const d = pageData;
+  let html = '';
+
+  // Hero
+  html += `<header class="hero"><div class="container">
+    <h1>${d.title}</h1>
+    <p class="hero-sub">${d.hero.subline}</p>
+    <div class="stats-bar">${d.hero.stats.map(s => `<div class="stat-card"><div class="stat-value">${s.value}</div><div class="stat-label">${s.label}</div><div class="stat-detail">${s.detail}</div></div>`).join('')}</div>
+  </div></header>`;
+
+  // Context
+  html += `<div class="dashboard-section"><div class="container">
+    <h2>${d.context.title}</h2>
+    <p>${d.context.description}</p>
+    <ul>${d.context.highlights.map(h => `<li>${h}</li>`).join('')}</ul>
+  </div></div>`;
+
+  // Repository Overview
+  const ro = d.repository_overview;
+  html += `<div class="dashboard-section"><div class="container">
+    <h2>${ro.title}</h2>
+    <div class="table-wrapper"><table class="data-table"><thead><tr><th>Layer</th><th>Elements</th><th>Examples</th></tr></thead><tbody>`;
+  for (const layer of ro.layers) {
+    html += `<tr><td><strong>${layer.name}</strong></td><td>${layer.count}</td><td>${layer.examples.join(', ')}</td></tr>`;
+  }
+  html += `</tbody></table></div></div></div>`;
+
+  // Deliverable Samples
+  html += `<div class="dashboard-section"><div class="container">
+    <h2>Sample Deliverables</h2>
+    <p>Each deliverable was produced by the Business Architect Agent operating on the live repository through MCP tools.</p>
+    <div class="findings-grid">`;
+
+  for (const sample of d.deliverable_samples) {
+    html += `<div class="finding-card">
+      <div class="finding-tag">${sample.use_case}</div>
+      <h3>${sample.title}</h3>
+      <p>${sample.summary}</p>
+      <details><summary>Key Findings</summary><ul>${sample.key_findings.map(f => `<li>${f}</li>`).join('')}</ul></details>
+      <div class="sample-meta"><span>${sample.element_count} elements</span> · <span>${sample.tool_calls} tool calls</span></div>
+    </div>`;
+  }
+  html += `</div></div></div>`;
+
+  // Technology Stack
+  const ts = d.technology_stack;
+  html += `<div class="dashboard-section"><div class="container">
+    <h2>${ts.title}</h2>
+    <div class="table-wrapper"><table class="data-table"><thead><tr><th>Component</th><th>Role</th><th>Detail</th></tr></thead><tbody>`;
+  for (const comp of ts.components) {
+    html += `<tr><td><strong>${comp.name}</strong></td><td>${comp.role}</td><td>${comp.detail}</td></tr>`;
+  }
+  html += `</tbody></table></div></div></div>`;
+
+  container.innerHTML = html;
 }
 
 // Global keyboard shortcut: "/" to open search

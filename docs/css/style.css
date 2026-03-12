@@ -3917,3 +3917,36 @@ a.cap-box:hover { text-decoration: none; }
   .people-roadmap { grid-template-columns: 1fr; }
   .people-engagement { grid-template-columns: 1fr; }
 }
+
+/* ── Agentic EA & PoC Demo Pages ─────────────────────── */
+.tier-role {
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: .5rem;
+}
+
+.comparison-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.finding-tag {
+  display: inline-block;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(37, 99, 235, .08);
+  padding: .2rem .6rem;
+  border-radius: 4px;
+  margin-bottom: .5rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.sample-meta {
+  margin-top: .75rem;
+  font-size: .82rem;
+  color: var(--text-secondary);
+}

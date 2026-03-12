@@ -1,0 +1,133 @@
+{
+  "page_type": "poc-demo",
+  "title": "PoC Demonstration",
+  "subtitle": "Hitachi Energy — Agentic EA in Action",
+  "description": "Proof of concept demonstrating agentic Enterprise Architecture with synthetic but realistic Hitachi Energy data.",
+
+  "hero": {
+    "headline": "From Theory to Practice",
+    "subline": "A working proof of concept with Hitachi Energy's architecture: Neo4j graph database, 32 MCP tools, and a Business Architect Agent producing real deliverables from a living repository.",
+    "stats": [
+      {"value": "400", "label": "Elements", "detail": "Across 7 layers"},
+      {"value": "662", "label": "Relationships", "detail": "11 ArchiMate types"},
+      {"value": "50", "label": "AI Extensions", "detail": "Agents, models, KBs"},
+      {"value": "5", "label": "Use Cases", "detail": "Tested deliverables"}
+    ]
+  },
+
+  "context": {
+    "title": "Hitachi Energy",
+    "description": "Global power and energy technology company headquartered in Zurich, Switzerland. Major business areas include Grid Automation, Grid Integration, High Voltage Products, Transformers, and Service & Operations.",
+    "highlights": [
+      "Critical infrastructure — grid operations are life-safety systems",
+      "Complex application landscape (Lumada APM, SCADA/EMS, SAP S/4HANA, IoT platforms)",
+      "Hybrid technology stack (on-premise SCADA + Azure cloud + edge computing)",
+      "8 global facilities across 4 continents",
+      "Strong AI adoption trajectory (predictive maintenance, grid optimization, digital twins)"
+    ]
+  },
+
+  "repository_overview": {
+    "title": "Repository Contents",
+    "layers": [
+      {"name": "Strategy", "count": 25, "examples": ["5 business units", "8 capabilities", "6 value streams"]},
+      {"name": "Business", "count": 80, "examples": ["10 roles", "15 processes", "12 services", "15 objects"]},
+      {"name": "Application", "count": 100, "examples": ["25 components (Lumada, SCADA, SAP)", "20 services", "15 data objects"]},
+      {"name": "Technology", "count": 90, "examples": ["Azure K8s clusters", "SCADA servers", "Edge nodes", "TimescaleDB"]},
+      {"name": "Physical", "count": 30, "examples": ["8 facilities (Zurich, Ludvika, Raleigh)", "Power transformers", "5 grid networks"]},
+      {"name": "Motivation", "count": 25, "examples": ["CTO, VP Grid Automation", "Grid Modernization", "99.99% uptime goal"]},
+      {"name": "AI Extensions", "count": 50, "examples": ["8 AI agents", "6 models", "4 knowledge bases", "4 guardrails"]}
+    ]
+  },
+
+  "deliverable_samples": [
+    {
+      "id": "sample-uc1",
+      "use_case": "UC1: Capability Gap Analysis",
+      "title": "Predictive Maintenance AI Agent Coverage",
+      "input": "Analyze capability gaps for implementing predictive maintenance using AI agents across all grid assets",
+      "summary": "Analysis revealed 3 of 8 capabilities have partial AI coverage. Predictive Maintenance capability has the highest readiness (score 4/5) with Lumada APM and the Predictive Maintenance Agent already in place. Asset Management and Grid Protection have significant gaps — no AI agents assigned, limited data integration.",
+      "key_findings": [
+        "Predictive Maintenance: partial coverage — agent exists but lacks grid-wide deployment",
+        "Asset Management: missing — no AI agent, manual health scoring",
+        "Grid Protection: missing — safety-critical, requires human-in-the-loop design",
+        "Grid Monitoring: fully covered — SCADA + Grid Optimization Agent + real-time telemetry"
+      ],
+      "element_count": 42,
+      "tool_calls": 8
+    },
+    {
+      "id": "sample-uc2",
+      "use_case": "UC2: Impact Assessment",
+      "title": "Legacy SCADA Replacement Impact",
+      "input": "Assess the impact of replacing legacy SCADA/EMS with a cloud-native grid management platform",
+      "summary": "Replacing the SCADA/EMS system (he-app-comp-002) impacts 87 elements across 5 layers. 12 direct dependencies include Grid Telemetry Store, OPC-UA Gateway, and 3 AI agents. Safety-critical: Grid Protection and Fault Diagnosis systems depend on SCADA real-time data feeds.",
+      "key_findings": [
+        "87 elements impacted across Business, Application, Technology, Physical, AI layers",
+        "12 direct dependencies, 34 indirect, 41 potential",
+        "[SAFETY-CRITICAL] Grid Protection relies on SCADA telemetry — migration requires parallel-run",
+        "3 AI agents (Grid Optimization, Fault Diagnosis, Predictive Maintenance) need reintegration",
+        "Air-gapped SCADA network must be redesigned for cloud connectivity"
+      ],
+      "element_count": 87,
+      "tool_calls": 12
+    },
+    {
+      "id": "sample-uc3",
+      "use_case": "UC3: Process Readiness",
+      "title": "Transformer Order-to-Delivery Agent Readiness",
+      "input": "Assess the Transformer Order-to-Delivery process for AI agent readiness",
+      "summary": "Overall readiness: 2.8/5. Design sub-process scores highest (3.5) with PLM integration and Design Validation Agent. Assembly scores lowest (1.5) — manual, safety-critical, limited data capture. Testing is ready for AI augmentation (score 3.0) with Digital Twin potential.",
+      "key_findings": [
+        "Design: 3.5/5 — PLM system + Design Optimization Model available",
+        "Procurement: 2.5/5 — SAP integration exists but manual supplier qualification",
+        "Assembly: 1.5/5 — manual, safety-critical, human-in-the-loop required",
+        "Testing: 3.0/5 — Digital Twin platform could enable AI-assisted test validation",
+        "Shipping: 3.0/5 — Supply Chain Portal provides tracking, agent could optimize logistics"
+      ],
+      "element_count": 35,
+      "tool_calls": 10
+    },
+    {
+      "id": "sample-uc4",
+      "use_case": "UC4: ADR",
+      "title": "Agent Orchestration Protocol Selection",
+      "input": "Select agent orchestration protocol for grid operations",
+      "summary": "Evaluated MCP, A2A, and custom protocol. Decision: MCP as primary with A2A for inter-agent communication. MCP aligns with 4 of 6 architecture principles (Interoperability Standards, Secure by Design). Custom protocol rejected — violates Interoperability Standards principle.",
+      "key_findings": [
+        "MCP selected: mature tooling, stdio transport, broad LLM support",
+        "A2A complementary: agent-to-agent workflows for multi-step grid operations",
+        "Custom protocol rejected: maintenance burden, violates Interoperability Standards",
+        "Safety principle satisfied: both MCP and A2A support human-in-the-loop patterns"
+      ],
+      "element_count": 18,
+      "tool_calls": 7
+    },
+    {
+      "id": "sample-uc5",
+      "use_case": "UC5: Stakeholder View",
+      "title": "Grid Automation Technology Landscape",
+      "input": "Generate Grid Automation technology landscape view for CTO review",
+      "summary": "Layered view scoped to Grid Automation showing 52 elements across 4 layers. Technology layer: 3 Azure K8s clusters, SCADA servers, edge nodes. Application layer: SCADA/EMS, Lumada APM, IoT Platform, 3 AI agents. Business layer: Grid Monitoring, Fault Management, Predictive Maintenance processes.",
+      "key_findings": [
+        "52 elements in view, spanning Technology → Application → Business → Strategy",
+        "Hybrid infrastructure: on-premise SCADA + Azure cloud + edge computing at substations",
+        "3 AI agents active in Grid Automation scope",
+        "Single point of failure: SCADA/EMS serves 8 downstream components"
+      ],
+      "element_count": 52,
+      "tool_calls": 6
+    }
+  ],
+
+  "technology_stack": {
+    "title": "PoC Technology Stack",
+    "components": [
+      {"name": "Neo4j Community Edition", "role": "Graph database", "detail": "Docker-based, property graph with native Cypher traversal"},
+      {"name": "Python MCP Server", "role": "Tool layer", "detail": "32 tools via Model Context Protocol (stdio transport)"},
+      {"name": "Claude Code", "role": "Agent runtime", "detail": "Business Architect persona with CLAUDE.md instructions"},
+      {"name": "ArchiMate 3.2", "role": "Metamodel", "detail": "60 element types + 8 AI stereotypes, ~300 relationship rules"},
+      {"name": "Pydantic", "role": "Validation", "detail": "Input/output schema validation for all 32 tools"}
+    ]
+  }
+}

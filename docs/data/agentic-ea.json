@@ -1,0 +1,162 @@
+{
+  "page_type": "agentic-ea",
+  "title": "Agentic Enterprise Architecture",
+  "subtitle": "EA as an Agentic Function",
+  "description": "Moving from describing how EA must change to building EA that operates through AI agents on graph-based repositories.",
+
+  "hero": {
+    "headline": "From Framework to Function",
+    "subline": "Enterprise Architecture becomes an agentic capability — AI agents that operate on living architecture models to produce deliverables, assess impact, and guide decisions in real time.",
+    "stats": [
+      {"value": "32", "label": "MCP Tools", "detail": "Query, analysis, validation"},
+      {"value": "5", "label": "Use Cases", "detail": "Gap analysis to stakeholder views"},
+      {"value": "400+", "label": "Elements", "detail": "Full ArchiMate model"},
+      {"value": "11", "label": "Relationship Types", "detail": "Native graph traversal"}
+    ]
+  },
+
+  "sections": [
+    {
+      "id": "vision",
+      "title": "The Vision: EA as an Agentic Function",
+      "content": "Traditional EA produces documents and diagrams that become stale the moment they are published. Agentic EA inverts this: <mark>the repository is the living architecture</mark>, and AI agents continuously operate on it to produce deliverables on demand. The architect's role shifts from document author to repository curator and agent supervisor.",
+      "points": [
+        {
+          "title": "Living Repository",
+          "description": "Architecture models maintained in a graph database, auto-collected from source systems, always current. No more PowerPoint archaeology."
+        },
+        {
+          "title": "Agent Personas",
+          "description": "Specialized AI agents (Business Architect, Governance Agent, Repository Agent) with defined personas, tools, and output templates."
+        },
+        {
+          "title": "On-Demand Deliverables",
+          "description": "Gap analyses, impact assessments, ADRs, and stakeholder views generated in minutes from the live repository — not weeks from interviews."
+        },
+        {
+          "title": "Human-in-the-Loop",
+          "description": "Architects review, validate, and refine agent outputs. Agents handle data gathering and pattern recognition; humans provide judgment and context."
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "title": "Agent-Repository Architecture",
+      "content": "The architecture follows a clean three-tier pattern: <mark>Graph Repository → MCP Tool Layer → Agent Personas</mark>. Each tier has a distinct responsibility.",
+      "tiers": [
+        {
+          "name": "Graph Repository (Neo4j)",
+          "role": "Source of truth",
+          "details": "ArchiMate 3.2 metamodel with AI extensions. Native relationship types enable multi-hop traversal. Full-text search, constraint validation, viewpoint enforcement.",
+          "elements": ["60 element types", "11 relationship types", "~300 validation rules", "15+ viewpoints", "8 AI stereotypes"]
+        },
+        {
+          "name": "MCP Tool Layer (32 tools)",
+          "role": "Structured graph access",
+          "details": "Python MCP server exposing query, mutation, analysis, viewpoint, and validation tools. Tools provide structured data; they don't interpret or advise.",
+          "elements": ["10 query tools", "6 mutation tools", "8 analysis tools", "4 viewpoint tools", "4 validation tools"]
+        },
+        {
+          "name": "Agent Personas",
+          "role": "Interpretation and composition",
+          "details": "Claude Code with specialized CLAUDE.md personas. Each agent has defined use cases, output templates, and domain expertise. The persona layer is where business judgment happens.",
+          "elements": ["Business Architect", "Governance Agent (future)", "Repository Agent (future)"]
+        }
+      ]
+    },
+    {
+      "id": "extensions",
+      "title": "ArchiMate Extensions for AI",
+      "content": "Standard ArchiMate lacks concepts for AI agents, models, and knowledge bases. Using the ArchiMate Profile/Stereotype mechanism, we extend the metamodel without breaking compliance. <mark>Stereotypes inherit all valid relationships from their parent type</mark>.",
+      "stereotypes": [
+        {"name": "AI Agent", "parent": "Application Component", "icon": "agent", "description": "Autonomous agent that perceives, reasons, and acts within the enterprise"},
+        {"name": "AI Model", "parent": "Application Component", "icon": "model", "description": "LLM, ML model, or other AI model deployed in the enterprise"},
+        {"name": "Knowledge Base", "parent": "Data Object", "icon": "knowledge", "description": "Structured knowledge store for RAG, reasoning, or agent context"},
+        {"name": "Vector Store", "parent": "Data Object", "icon": "vector", "description": "Embedding database for semantic search and retrieval"},
+        {"name": "Agent Protocol", "parent": "Application Interface", "icon": "protocol", "description": "MCP, A2A, or custom agent communication endpoint"},
+        {"name": "Prompt Template", "parent": "Artifact", "icon": "prompt", "description": "Reusable prompt definition for agent behavior"},
+        {"name": "Guardrail", "parent": "Application Function", "icon": "shield", "description": "Safety or quality gate validating agent inputs/outputs"},
+        {"name": "AI Orchestrator", "parent": "Application Component", "icon": "orchestrator", "description": "Multi-agent coordinator managing agent workflows"}
+      ]
+    },
+    {
+      "id": "use-cases",
+      "title": "Use Cases",
+      "content": "Five use cases demonstrate the full range of agentic EA deliverables, from strategic analysis to operational views.",
+      "cases": [
+        {
+          "id": "uc1",
+          "title": "Capability Gap Analysis",
+          "input": "Strategic objective (e.g., 'Implement predictive maintenance using AI agents')",
+          "workflow": ["Search capabilities", "Get capability tree", "Get realizations", "Identify gaps", "Get principles", "Compose deliverable"],
+          "output": "Structured gap analysis with coverage classification, supporting applications, and prioritized recommendations"
+        },
+        {
+          "id": "uc2",
+          "title": "Impact Assessment",
+          "input": "Proposed change (e.g., 'Replace legacy SCADA with cloud-native platform')",
+          "workflow": ["Find element", "Traverse 4 hops", "Classify severity", "Get tech stack", "Get process chain", "Compose"],
+          "output": "Multi-layer impact analysis with severity classification, safety-critical flags, and business process traces"
+        },
+        {
+          "id": "uc3",
+          "title": "Process Agent-Readiness",
+          "input": "Business process (e.g., 'Transformer order-to-delivery')",
+          "workflow": ["Find process", "Get sub-processes", "Get supporting apps", "Score each", "Identify redesign opportunities"],
+          "output": "Per-sub-process readiness scores (1-5), human-in-the-loop requirements, and redesign recommendations"
+        },
+        {
+          "id": "uc4",
+          "title": "Architecture Decision Record",
+          "input": "Decision context (e.g., 'Select agent orchestration protocol')",
+          "workflow": ["Get principles", "Find scope elements", "Evaluate options", "Compose ADR"],
+          "output": "Standard ADR with 3+ options, principle alignment, consequences, and element-level impact"
+        },
+        {
+          "id": "uc5",
+          "title": "Stakeholder View",
+          "input": "Viewpoint request (e.g., 'Grid Automation technology landscape for CTO')",
+          "workflow": ["Find scope", "Get viewpoint rules", "Traverse 3 hops", "Filter by viewpoint", "Compose narrative"],
+          "output": "ArchiMate-compliant view with stakeholder-appropriate narrative and exportable JSON"
+        }
+      ]
+    },
+    {
+      "id": "graph-repository",
+      "title": "Graph-Based EA Repository",
+      "content": "The shift from document-based to <mark>graph-based EA repositories</mark> is foundational. A property graph naturally represents ArchiMate's element-relationship model, and native traversal enables the multi-hop queries that make impact analysis and dependency tracing possible.",
+      "comparison": [
+        {
+          "dimension": "Data Model",
+          "traditional": "Tables, documents, diagrams",
+          "graph": "Property graph with typed nodes and relationships"
+        },
+        {
+          "dimension": "Traversal",
+          "traditional": "SQL JOINs, manual trace",
+          "graph": "Native path traversal (e.g., -[:SERVING*1..4]->)"
+        },
+        {
+          "dimension": "Impact Analysis",
+          "traditional": "Manual, incomplete, stale",
+          "graph": "Automated multi-hop in milliseconds"
+        },
+        {
+          "dimension": "Validation",
+          "traditional": "Manual review",
+          "graph": "Metamodel rules as graph constraints"
+        },
+        {
+          "dimension": "Agent Access",
+          "traditional": "Not possible",
+          "graph": "MCP tools expose structured queries"
+        },
+        {
+          "dimension": "Freshness",
+          "traditional": "Point-in-time snapshots",
+          "graph": "Auto-collected from source systems"
+        }
+      ]
+    }
+  ]
+}
