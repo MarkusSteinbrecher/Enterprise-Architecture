@@ -65,6 +65,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (peek && peek.page_type === 'poc-demo') {
       pageData = peek;
       initPocDemoPage();
+    } else if (peek && peek.page_type === 'ea-process') {
+      pageData = peek;
+      initEAProcessPage();
+    } else if (peek && peek.page_type === 'repository-explorer') {
+      pageData = peek;
+      initRepositoryExplorerPage();
     } else {
       await initConceptPage(page);
     }
@@ -114,6 +120,10 @@ function chevronSVG() {
   return `<svg class="finding-chevron" ${ICON_ATTRS} width="20" height="20"><path d="m6 9 6 6 6-6"/></svg>`;
 }
 
+function outputSVG(size = 16) {
+  return `<svg ${ICON_ATTRS} width="${size}" height="${size}"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 18v-4"/><path d="m14 15-4 4-4-4"/></svg>`;
+}
+
 /* ── App Shell: Sidebar + Topbar ────────────────────── */
 const ICON_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"';
 const NAV_ICONS = {
@@ -146,7 +156,7 @@ function renderAppShell() {
   let sHtml = '';
   sHtml += '<div class="app-sidebar-header">';
   sHtml += '<a class="app-sidebar-brand" href="overview.html">EA \u00B7 Agentic Org</a>';
-  sHtml += '<button class="sidebar-collapse-btn" aria-label="Collapse sidebar"><svg ${ICON_ATTRS} width="16" height="16"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></button>';
+  sHtml += `<button class="sidebar-collapse-btn" aria-label="Collapse sidebar"><svg ${ICON_ATTRS} width="16" height="16"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></button>`;
   sHtml += '</div>';
   sHtml += '<nav class="app-sidebar-nav">';
 
@@ -154,7 +164,7 @@ function renderAppShell() {
     if (link.children) {
       const childActive = link.children.some(c => c.id === page);
       sHtml += '<div class="sidebar-nav-group' + (childActive ? ' open' : '') + '">';
-      sHtml += '<button class="sidebar-nav-group-label">' + (NAV_ICONS[link.id] || '') + '<span>' + link.label + '</span><span class="group-chevron-wrap"><svg class="group-chevron" ${ICON_ATTRS} width="16" height="16"><path d="m6 9 6 6 6-6"/></svg></span></button>';
+      sHtml += '<button class="sidebar-nav-group-label">' + (NAV_ICONS[link.id] || '') + '<span>' + link.label + '</span><span class="group-chevron-wrap"><svg class="group-chevron" ' + ICON_ATTRS + ' width="16" height="16"><path d="m6 9 6 6 6-6"/></svg></span></button>';
       sHtml += '<div class="sidebar-nav-children">';
       for (const child of link.children) {
         const active = child.id === page ? ' active' : '';
@@ -181,6 +191,7 @@ function renderAppShell() {
   let tHtml = '';
   tHtml += `<button class="topbar-hamburger" aria-label="Menu"><svg ${ICON_ATTRS}><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>`;
   tHtml += '<span class="topbar-title">' + pageLabel + ' <span class="wip-badge">Work in progress</span></span>';
+  tHtml += '<div id="topbar-phase-nav"></div>';
   tHtml += '<span class="topbar-spacer"></span>';
 
   // Theme picker (icon buttons like Insight)
@@ -199,7 +210,7 @@ function renderAppShell() {
   tHtml += '</div>';
 
   // Search
-  tHtml += '<button class="topbar-search-btn" aria-label="Search"><svg ${ICON_ATTRS} width="18" height="18"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>';
+  tHtml += `<button class="topbar-search-btn" aria-label="Search"><svg ${ICON_ATTRS} width="18" height="18"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>`;
 
   // Dark mode toggle
   tHtml += '<button class="dark-toggle" aria-label="Toggle dark mode">' + (darkMode ? sunIcon : moonIcon) + '</button>';
@@ -2657,6 +2668,1765 @@ function initPocDemoPage() {
   html += `</tbody></table></div></div></div>`;
 
   container.innerHTML = html;
+}
+
+/* ── Repository Explorer Page ──────────────────────── */
+function initRepositoryExplorerPage() {
+  const container = document.getElementById('repository-explorer-content') || document.querySelector('.main-scroll');
+  if (!pageData) return;
+  const d = pageData;
+  const layerColors = {};
+  d.layers.forEach(l => { layerColors[l.name] = l.color; });
+  let html = '';
+
+  // Hero
+  html += `<header class="hero"><div class="container">
+    <h1>${d.title}</h1>
+    <p class="hero-sub">${d.hero.subline}</p>
+    <div class="stats-bar">${d.hero.stats.map(s => `<div class="stat-card"><div class="stat-value">${s.value}</div><div class="stat-label">${s.label}</div><div class="stat-detail">${s.detail}</div></div>`).join('')}</div>
+  </div></header>`;
+
+  // Layer overview cards
+  html += `<div class="dashboard-section"><div class="container">
+    <h2>Architecture Layers</h2>
+    <div class="repo-layers-grid">
+      ${d.layers.map(l => `<div class="repo-layer-card" data-layer="${l.name}" style="--layer-color: ${l.color}">
+        <div class="repo-layer-header">
+          <div class="repo-layer-count">${l.count}</div>
+          <div class="repo-layer-name">${l.name}</div>
+        </div>
+        <div class="repo-layer-types">${l.types.slice(0, 5).map(t => `<span class="repo-type-chip">${t.type} <strong>${t.count}</strong></span>`).join('')}${l.types.length > 5 ? `<span class="repo-type-chip repo-type-more">+${l.types.length - 5} more</span>` : ''}</div>
+      </div>`).join('')}
+    </div>
+  </div></div>`;
+
+  // Graph visualization
+  html += `<div class="dashboard-section repo-graph-section"><div class="container">
+    <h2>Relationship Graph</h2>
+    <p class="repo-graph-desc">${d.graph.description}. Click a node to highlight connections. Use layer filters to focus the view.</p>
+    <div class="repo-graph-controls">
+      <button class="repo-graph-filter active" data-filter="all">All Layers</button>
+      ${d.layers.map(l => `<button class="repo-graph-filter" data-filter="${l.name}" style="--filter-color: ${l.color}">${l.name}</button>`).join('')}
+    </div>
+    <div class="repo-graph-container" id="repo-graph"></div>
+    <div class="repo-graph-legend">
+      ${d.layers.map(l => `<span class="repo-legend-item"><span class="repo-legend-dot" style="background: ${l.color}"></span>${l.name}</span>`).join('')}
+    </div>
+  </div></div>`;
+
+  // Relationship types
+  html += `<div class="dashboard-section"><div class="container">
+    <h2>Relationship Types</h2>
+    <div class="repo-rel-types">
+      ${d.relationship_types.map(r => `<div class="repo-rel-bar">
+        <div class="repo-rel-label">${r.type}</div>
+        <div class="repo-rel-track"><div class="repo-rel-fill" style="width: ${Math.round(r.count / d.relationships.length * 100)}%"></div></div>
+        <div class="repo-rel-count">${r.count}</div>
+      </div>`).join('')}
+    </div>
+  </div></div>`;
+
+  // Element explorer
+  html += `<div class="dashboard-section"><div class="container">
+    <h2>Element Explorer</h2>
+    <div class="repo-explorer-controls">
+      <input type="text" class="repo-search-input" id="repo-search" placeholder="Search elements by name, type, or description..." />
+      <div class="repo-filter-pills" id="repo-layer-filters">
+        <button class="repo-pill active" data-layer="all">All <span class="repo-pill-count">${d.elements.length}</span></button>
+        ${d.layers.map(l => `<button class="repo-pill" data-layer="${l.name}" style="--pill-color: ${l.color}">${l.name} <span class="repo-pill-count">${l.count}</span></button>`).join('')}
+      </div>
+    </div>
+    <div class="repo-results-info" id="repo-results-info">Showing ${d.elements.length} elements</div>
+    <div class="repo-elements-grid" id="repo-elements-grid"></div>
+    <div class="repo-show-more-wrap" id="repo-show-more-wrap">
+      <button class="repo-show-more-btn" id="repo-show-more">Show More</button>
+    </div>
+  </div></div>`;
+
+  container.innerHTML = html;
+
+  // ── Element Explorer logic ──
+  const PAGE_SIZE = 30;
+  let currentLayer = 'all';
+  let searchQuery = '';
+  let visibleCount = PAGE_SIZE;
+
+  function getFilteredElements() {
+    return d.elements.filter(e => {
+      const matchLayer = currentLayer === 'all' || e.layer === currentLayer;
+      if (!matchLayer) return false;
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return e.name.toLowerCase().includes(q) || e.type.toLowerCase().includes(q) ||
+             e.description.toLowerCase().includes(q) || e.id.toLowerCase().includes(q) ||
+             (e.stereotype && e.stereotype.toLowerCase().includes(q));
+    });
+  }
+
+  function renderElements() {
+    const filtered = getFilteredElements();
+    const grid = document.getElementById('repo-elements-grid');
+    const info = document.getElementById('repo-results-info');
+    const showMoreWrap = document.getElementById('repo-show-more-wrap');
+    const showing = Math.min(visibleCount, filtered.length);
+
+    info.textContent = filtered.length === d.elements.length
+      ? `Showing ${showing} of ${filtered.length} elements`
+      : `${filtered.length} elements match${filtered.length !== d.elements.length ? '' : ''} — showing ${showing}`;
+
+    grid.innerHTML = filtered.slice(0, visibleCount).map(e => {
+      const color = layerColors[e.layer] || '#64748b';
+      return `<div class="repo-elem-card">
+        <div class="repo-elem-header">
+          <span class="repo-elem-layer-dot" style="background: ${color}" title="${e.layer}"></span>
+          <span class="repo-elem-name">${highlightSearch(e.name)}</span>
+          ${e.stereotype ? `<span class="repo-elem-stereotype">${e.stereotype}</span>` : ''}
+        </div>
+        <div class="repo-elem-type">${highlightSearch(e.type)}</div>
+        <p class="repo-elem-desc">${highlightSearch(e.description)}</p>
+        <div class="repo-elem-id">${e.id}</div>
+      </div>`;
+    }).join('');
+
+    showMoreWrap.style.display = visibleCount >= filtered.length ? 'none' : 'flex';
+  }
+
+  function highlightSearch(text) {
+    if (!searchQuery) return text;
+    const re = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return text.replace(re, '<mark>$1</mark>');
+  }
+
+  // Layer filter pills
+  document.querySelectorAll('.repo-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.repo-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentLayer = btn.dataset.layer;
+      visibleCount = PAGE_SIZE;
+      renderElements();
+    });
+  });
+
+  // Search input
+  document.getElementById('repo-search').addEventListener('input', (e) => {
+    searchQuery = e.target.value.trim();
+    visibleCount = PAGE_SIZE;
+    renderElements();
+  });
+
+  // Show more
+  document.getElementById('repo-show-more').addEventListener('click', () => {
+    visibleCount += PAGE_SIZE;
+    renderElements();
+  });
+
+  // Layer card click → filter elements
+  document.querySelectorAll('.repo-layer-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const layer = card.dataset.layer;
+      currentLayer = layer;
+      document.querySelectorAll('.repo-pill').forEach(b => b.classList.toggle('active', b.dataset.layer === layer));
+      visibleCount = PAGE_SIZE;
+      renderElements();
+      document.getElementById('repo-search').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  renderElements();
+
+  // ── D3 Graph Visualization ──
+  if (typeof d3 !== 'undefined' && d.graph.nodes.length > 0) {
+    initRepoGraph(d, layerColors);
+  }
+}
+
+function initRepoGraph(d, layerColors) {
+  const container = document.getElementById('repo-graph');
+  const width = container.clientWidth;
+  const height = Math.min(600, Math.max(400, width * 0.5));
+
+  const svg = d3.select('#repo-graph')
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('viewBox', [0, 0, width, height]);
+
+  // Zoom group
+  const g = svg.append('g');
+  svg.call(d3.zoom().scaleExtent([0.3, 4]).on('zoom', (event) => {
+    g.attr('transform', event.transform);
+  }));
+
+  // Build lookup
+  const nodeMap = new Map(d.graph.nodes.map(n => [n.id, {...n}]));
+  const nodes = d.graph.nodes.map(n => ({...n}));
+  const links = d.graph.edges.filter(e => nodeMap.has(e.source) && nodeMap.has(e.target)).map(e => ({...e}));
+
+  // Simulation
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(n => n.id).distance(60).strength(0.4))
+    .force('charge', d3.forceManyBody().strength(-120))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collision', d3.forceCollide().radius(12));
+
+  // Links
+  const link = g.append('g').attr('class', 'repo-g-links')
+    .selectAll('line')
+    .data(links)
+    .join('line')
+    .attr('stroke', '#cbd5e1')
+    .attr('stroke-width', 0.5)
+    .attr('stroke-opacity', 0.4);
+
+  // Nodes
+  const node = g.append('g').attr('class', 'repo-g-nodes')
+    .selectAll('circle')
+    .data(nodes)
+    .join('circle')
+    .attr('r', n => 3 + Math.sqrt(n.connections) * 1.5)
+    .attr('fill', n => layerColors[n.layer] || '#64748b')
+    .attr('stroke', '#fff')
+    .attr('stroke-width', 0.8)
+    .style('cursor', 'pointer')
+    .call(d3.drag()
+      .on('start', (event, d) => { if (!event.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; })
+      .on('end', (event, d) => { if (!event.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+    );
+
+  // Tooltip
+  const tooltip = d3.select('#repo-graph')
+    .append('div')
+    .attr('class', 'repo-graph-tooltip')
+    .style('opacity', 0);
+
+  node.on('mouseover', (event, nd) => {
+    tooltip.transition().duration(150).style('opacity', 1);
+    tooltip.html(`<strong>${nd.name}</strong><br/><span>${nd.stereotype || nd.type}</span><br/><span class="repo-tt-layer">${nd.layer}</span> · ${nd.connections} connections`)
+      .style('left', (event.offsetX + 12) + 'px')
+      .style('top', (event.offsetY - 10) + 'px');
+  })
+  .on('mouseout', () => { tooltip.transition().duration(300).style('opacity', 0); })
+  .on('click', (event, nd) => {
+    // Highlight connected nodes
+    const connectedIds = new Set();
+    connectedIds.add(nd.id);
+    links.forEach(l => {
+      const sid = typeof l.source === 'object' ? l.source.id : l.source;
+      const tid = typeof l.target === 'object' ? l.target.id : l.target;
+      if (sid === nd.id) connectedIds.add(tid);
+      if (tid === nd.id) connectedIds.add(sid);
+    });
+
+    node.attr('opacity', n => connectedIds.has(n.id) ? 1 : 0.1)
+        .attr('stroke-width', n => n.id === nd.id ? 2.5 : 0.8);
+    link.attr('stroke-opacity', l => {
+      const sid = typeof l.source === 'object' ? l.source.id : l.source;
+      const tid = typeof l.target === 'object' ? l.target.id : l.target;
+      return (sid === nd.id || tid === nd.id) ? 0.8 : 0.05;
+    }).attr('stroke-width', l => {
+      const sid = typeof l.source === 'object' ? l.source.id : l.source;
+      const tid = typeof l.target === 'object' ? l.target.id : l.target;
+      return (sid === nd.id || tid === nd.id) ? 1.5 : 0.5;
+    });
+  });
+
+  // Click background to reset
+  svg.on('click', (event) => {
+    if (event.target === svg.node()) {
+      node.attr('opacity', 1).attr('stroke-width', 0.8);
+      link.attr('stroke-opacity', 0.4).attr('stroke-width', 0.5);
+    }
+  });
+
+  // Tick
+  sim.on('tick', () => {
+    link.attr('x1', l => l.source.x).attr('y1', l => l.source.y)
+        .attr('x2', l => l.target.x).attr('y2', l => l.target.y);
+    node.attr('cx', n => n.x).attr('cy', n => n.y);
+  });
+
+  // Layer filter for graph
+  document.querySelectorAll('.repo-graph-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.repo-graph-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      if (filter === 'all') {
+        node.attr('opacity', 1);
+        link.attr('stroke-opacity', 0.4);
+      } else {
+        node.attr('opacity', n => n.layer === filter ? 1 : 0.08);
+        link.attr('stroke-opacity', l => {
+          const s = typeof l.source === 'object' ? l.source : nodeMap.get(l.source);
+          const t = typeof l.target === 'object' ? l.target : nodeMap.get(l.target);
+          return (s && s.layer === filter) || (t && t.layer === filter) ? 0.6 : 0.03;
+        });
+      }
+    });
+  });
+}
+
+/* ── EA Process Page ────────────────────────────────── */
+
+function renderPhaseV2(phase) {
+  let h = '';
+
+  // Description
+  if (phase.v2_description) {
+    h += `<p class="ep-v2-description">${phase.v2_description}</p>`;
+  }
+
+  // ── Section 1: Objectives ──
+  h += `<div class="ep-v2-section">
+    <div class="ep-v2-section-header"><h3>Objectives</h3></div>
+    <div class="ep-v2-section-body">`;
+  (phase.v2_objectives || []).forEach(obj => {
+    h += `<div class="ep-v2-objective">
+      <div class="ep-v2-objective-text">${obj.text}</div>`;
+    if (obj.sub_items && obj.sub_items.length) {
+      h += `<ul class="ep-v2-sub-items">${obj.sub_items.map(s => `<li>${s}</li>`).join('')}</ul>`;
+    }
+    h += `</div>`;
+  });
+  h += `<div class="ep-v2-user-input">
+    <label class="ep-v2-input-label">Your context &amp; objectives</label>
+    <textarea class="ep-v2-user-textarea" data-phase="${phase.id}" data-field="objectives" rows="3" placeholder="Describe your organisation's specific objectives for this phase..."></textarea>
+  </div>`;
+  h += `</div></div>`;
+
+  // ── Section 1b: Maturity Self-Assessment (Preliminary only) ──
+  if (phase.v2_maturity) {
+    const mat = phase.v2_maturity;
+    h += `<div class="ep-v2-section">
+      <div class="ep-v2-section-header"><h3>Maturity Self-Assessment</h3></div>
+      <div class="ep-v2-section-body">
+        <p class="ep-v2-maturity-intro">${mat.intro}</p>
+        <div class="ep-v2-maturity-grid">
+          <div class="ep-v2-maturity-header-row">
+            <div class="ep-v2-maturity-dim-header">Dimension</div>
+            <div class="ep-v2-maturity-scale-header">Current</div>
+            <div class="ep-v2-maturity-scale-header">Target</div>
+          </div>`;
+    mat.dimensions.forEach(dim => {
+      h += `<div class="ep-v2-maturity-row" data-dim="${dim.id}">
+        <div class="ep-v2-maturity-dim">
+          <div class="ep-v2-maturity-dim-label">${dim.label}</div>
+          <div class="ep-v2-maturity-dim-desc">${dim.description}</div>
+        </div>
+        <div class="ep-v2-maturity-radios" data-target="current">
+          ${mat.levels.map(l => `<label class="ep-v2-maturity-radio" title="${l.label}">
+            <input type="radio" name="mat-current-${dim.id}" data-phase="${phase.id}" data-dim="${dim.id}" data-kind="current" value="${l.value}">
+            <span class="ep-v2-maturity-pip" data-level="${l.value}">${l.value}</span>
+          </label>`).join('')}
+        </div>
+        <div class="ep-v2-maturity-radios" data-target="target">
+          ${mat.levels.map(l => `<label class="ep-v2-maturity-radio" title="${l.label}">
+            <input type="radio" name="mat-target-${dim.id}" data-phase="${phase.id}" data-dim="${dim.id}" data-kind="target" value="${l.value}">
+            <span class="ep-v2-maturity-pip" data-level="${l.value}">${l.value}</span>
+          </label>`).join('')}
+        </div>
+      </div>`;
+    });
+    h += `</div>
+      <div class="ep-v2-maturity-summary" data-phase="${phase.id}"></div>
+    </div></div>`;
+  }
+
+  // ── Section 2: Inputs ──
+  h += `<div class="ep-v2-section">
+    <div class="ep-v2-section-header"><h3>Inputs</h3></div>
+    <div class="ep-v2-section-body"><div class="ep-v2-input-grid">`;
+  const inputs = phase.v2_inputs || {};
+  const inputCategories = [
+    { key: 'reference_materials', label: 'Reference Materials' },
+    { key: 'non_architectural_inputs', label: 'Non-Architectural Inputs' },
+    { key: 'architectural_inputs', label: 'Architectural Inputs' }
+  ];
+  inputCategories.forEach(cat => {
+    const items = inputs[cat.key] || [];
+    if (items.length) {
+      h += `<div class="ep-v2-input-card">
+        <h4>${cat.label}</h4>
+        <ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>
+      </div>`;
+    }
+  });
+  h += `</div></div></div>`;
+
+  // ── Section 3: Steps ──
+  const mermaidCode = phase.v2_mermaid || '';
+  h += `<div class="ep-v2-section">
+    <div class="ep-v2-section-header">
+      <h3>Steps</h3>
+      <div class="ep-v2-view-toggle">
+        <button class="ep-v2-toggle-btn active" data-view="diagram">Diagram</button>
+        <button class="ep-v2-toggle-btn" data-view="agent">Agent View</button>
+      </div>
+    </div>
+    <div class="ep-v2-section-body">`;
+
+  // Diagram view — diagram on top, single step detail below
+  const steps = phase.v2_steps || [];
+  h += `<div class="ep-v2-steps-view active" data-view="diagram">
+    <div class="ep-v2-diagram-top">
+      <pre class="mermaid">${mermaidCode.replace(/&/g,'&amp;')}</pre>
+    </div>
+    <div class="ep-v2-step-nav">
+      ${steps.map((s, i) => `<button class="ep-v2-step-pill${i === 0 ? ' active' : ''}" data-step="${s.number}" title="${s.name}">${s.number}</button>`).join('')}
+    </div>
+    <div class="ep-v2-step-detail-panel">`;
+  steps.forEach((step, i) => {
+    const outputTags = (step.outputs || []).map(o => `<span class="ep-v2-step-output">${outputSVG(12)}${o}</span>`).join('');
+    h += `<div class="ep-v2-step-detail${i === 0 ? ' active' : ''}" data-step="${step.number}">
+      <div class="ep-v2-step-num">${step.number}</div>
+      <div class="ep-v2-step-content">
+        <h4>${step.name}</h4>
+        <p>${step.description}</p>`;
+    if (step.sub_steps && step.sub_steps.length) {
+      h += `<ul>${step.sub_steps.map(s => `<li>${s}</li>`).join('')}</ul>`;
+    }
+    if (outputTags) {
+      h += `<div class="ep-v2-step-outputs">${outputTags}</div>`;
+    }
+    // EA Repository integration for Step 1 (Scoping)
+    if (step.number === 1) {
+      h += `<div class="ep-v2-repo-panel">
+        <div class="ep-v2-repo-header">
+          <span>EA Repository</span>
+          <button class="ep-v2-repo-load" data-phase="${phase.id}">Load Elements</button>
+        </div>
+        <div class="ep-v2-repo-filters">
+          <select class="ep-v2-repo-layer" data-phase="${phase.id}">
+            <option value="">All Layers</option>
+            <option value="Strategy">Strategy</option>
+            <option value="Business" selected>Business</option>
+            <option value="Application">Application</option>
+            <option value="Technology">Technology</option>
+            <option value="Motivation">Motivation</option>
+          </select>
+          <select class="ep-v2-repo-type" data-phase="${phase.id}">
+            <option value="">All Types</option>
+          </select>
+        </div>
+        <div class="ep-v2-repo-results" data-phase="${phase.id}">
+          <p class="ep-v2-repo-hint">Connect to your EA Repository at <a href="http://localhost:3000" target="_blank">localhost:3000</a> to load architecture elements for scoping.</p>
+        </div>
+      </div>`;
+    }
+    // User input for this step
+    h += `<div class="ep-v2-user-input">
+      <textarea class="ep-v2-user-textarea" data-phase="${phase.id}" data-field="step-${step.number}" rows="2" placeholder="Your input for this step..."></textarea>
+    </div>`;
+    h += `</div></div>`;
+  });
+  h += `</div></div>`;
+
+  // Agent view (source code)
+  h += `<div class="ep-v2-steps-view" data-view="agent">
+    <div class="ep-v2-agent-code-wrap">
+      <div class="ep-v2-agent-code-header">
+        <span>Mermaid Diagram Code</span>
+        <button class="ep-v2-copy-btn" data-copy="mermaid">Copy</button>
+      </div>
+      <pre class="ep-v2-agent-code"><code>${mermaidCode.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code></pre>
+    </div>
+  </div>`;
+
+  h += `</div></div>`;
+
+  // ── Section 4: Outputs ──
+  h += `<div class="ep-v2-section">
+    <div class="ep-v2-section-header"><h3>Outputs</h3></div>
+    <div class="ep-v2-section-body">`;
+
+  if (phase.worked_deliverables && phase.worked_deliverables.length) {
+    // Expandable deliverable accordion (reuses ep-wd-* pattern)
+    h += `<div class="ep-wd-list">`;
+    phase.worked_deliverables.forEach((wd, idx) => {
+      h += `<div class="ep-wd-item">
+        <button class="ep-wd-toggle" aria-expanded="false">
+          <span class="ep-wd-num">${idx + 1}</span>
+          <div class="ep-wd-label">
+            <span class="ep-wd-name">${wd.name}</span>
+            <span class="ep-wd-summary">${wd.summary}</span>
+          </div>
+          <span class="ep-section-chevron">${chevronSVG()}</span>
+        </button>
+        <div class="ep-wd-body">
+          <div class="ep-deliv-tabs">
+            <button class="ep-deliv-tab active" data-wd="${wd.id}" data-view="repository">Repository View</button>
+            <button class="ep-deliv-tab" data-wd="${wd.id}" data-view="agent">Agent View</button>
+          </div>
+          <div class="ep-deliv-panel active" data-wd="${wd.id}" data-panel="repository">
+            ${wd.sections.map(s => `<div class="ep-human-section"><h4>${s.heading}</h4>${s.content}</div>`).join('')}
+          </div>
+          <div class="ep-deliv-panel" data-wd="${wd.id}" data-panel="agent">
+            <div class="ep-yaml-filename">${wd.yaml.filename}</div>
+            <div class="ep-yaml-wrap">
+              <button class="ep-yaml-copy" data-yaml-id="${wd.id}" title="Copy YAML">Copy</button>
+              <pre class="ep-output-yaml" id="ep-wd-yaml-${wd.id}">${wd.yaml.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    });
+    h += `</div>`;
+  } else {
+    // Simple output card grid (no deliverable detail)
+    h += `<div class="ep-v2-output-grid">`;
+    (phase.v2_outputs || []).forEach(out => {
+      h += `<div class="ep-v2-output-card">
+        <div class="ep-v2-output-icon">${outputSVG(20)}</div>
+        <h4>${out.name}</h4>
+        <p>${out.description}</p>
+      </div>`;
+    });
+    h += `</div>`;
+  }
+
+  h += `</div></div>`;
+
+  return h;
+}
+
+function renderWorkedPhase(phase) {
+  let h = '';
+
+  // ── Process Description (interactive Q&A form) ──
+  if (phase.process && phase.process.length) {
+    h += `<div class="ep-worked-section">
+      <h3 class="ep-worked-heading">Process Description</h3>`;
+    phase.process.forEach((sec, qi) => {
+      const qid = phase.id + '-q' + qi;
+      h += `<div class="ep-qa" data-qid="${qid}">
+        <h4 class="ep-qa-question">${sec.question}</h4>
+        <div class="ep-qa-answer">${sec.answer}</div>`;
+      if (sec.steps) {
+        h += `<div class="ep-steps-timeline">
+          ${sec.steps.map(s => `<div class="ep-step">
+            <span class="ep-step-num">${s.number}</span>
+            <div class="ep-step-body">
+              <strong>${s.name}</strong>
+              <p>${s.description}</p>
+              <div class="ep-step-outputs">${s.outputs.map(o => `<span class="ep-step-output">${o}</span>`).join('')}</div>
+            </div>
+          </div>`).join('')}
+        </div>`;
+      }
+      h += `<div class="ep-qa-input">
+        <span class="ep-qa-input-label">${sec.input_prompt}</span>
+        <div class="ep-qa-radios">
+          <label class="ep-radio"><input type="radio" name="${qid}" value="confirmed"> Confirmed</label>
+          <label class="ep-radio"><input type="radio" name="${qid}" value="revise"> Needs revision</label>
+          <label class="ep-radio"><input type="radio" name="${qid}" value="open"> Open</label>
+        </div>
+        <textarea class="ep-qa-text" data-qid="${qid}" placeholder="Your input, changes, or additional context..." rows="3"></textarea>
+      </div>
+      </div>`;
+    });
+    h += `</div>`;
+  }
+
+  // ── Artefacts & Deliverables (plain heading, accordion list) ──
+  h += `<div class="ep-worked-section">
+    <h3 class="ep-worked-heading">Artefacts &amp; Deliverables</h3>
+    <div class="ep-wd-list">`;
+
+  phase.worked_deliverables.forEach((wd, idx) => {
+    const isFirst = idx === 0;
+    h += `<div class="ep-wd-item${isFirst ? ' open' : ''}">
+      <button class="ep-wd-toggle" aria-expanded="${isFirst}">
+        <span class="ep-wd-num">${idx + 1}</span>
+        <div class="ep-wd-label">
+          <span class="ep-wd-name">${wd.name}</span>
+          <span class="ep-wd-summary">${wd.summary}</span>
+        </div>
+        <span class="ep-section-chevron">${chevronSVG()}</span>
+      </button>
+      <div class="ep-wd-body${isFirst ? ' open' : ''}">
+        <div class="ep-deliv-tabs">
+          <button class="ep-deliv-tab active" data-wd="${wd.id}" data-view="repository">Repository View</button>
+          <button class="ep-deliv-tab" data-wd="${wd.id}" data-view="agent">Agent View</button>
+        </div>
+        <div class="ep-deliv-panel active" data-wd="${wd.id}" data-panel="repository">
+          ${wd.sections.map(s => `<div class="ep-human-section"><h4>${s.heading}</h4>${s.content}</div>`).join('')}
+        </div>
+        <div class="ep-deliv-panel" data-wd="${wd.id}" data-panel="agent">
+          <div class="ep-yaml-filename">${wd.yaml.filename}</div>
+          <div class="ep-yaml-wrap">
+            <button class="ep-yaml-copy" data-yaml-id="${wd.id}" title="Copy YAML">Copy</button>
+            <pre class="ep-output-yaml" id="ep-wd-yaml-${wd.id}">${wd.yaml.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  h += `</div></div>`;
+  return h;
+}
+
+function initEAProcessPage() {
+  const container = document.getElementById('ea-process-content') || document.querySelector('.main-scroll');
+  if (!pageData) return;
+  const d = pageData;
+  const phases = d.phases;
+  const EP_STORAGE = 'ea-process-v3';
+
+  // ── Storage helpers ──
+  function loadInputs(phaseId) {
+    try { return (JSON.parse(localStorage.getItem(EP_STORAGE)) || {})[phaseId] || {}; } catch { return {}; }
+  }
+  function saveInput(phaseId, fieldId, value) {
+    const all = JSON.parse(localStorage.getItem(EP_STORAGE)) || {};
+    if (!all[phaseId]) all[phaseId] = {};
+    all[phaseId][fieldId] = value;
+    localStorage.setItem(EP_STORAGE, JSON.stringify(all));
+  }
+  function clearInputs(phaseId) {
+    const all = JSON.parse(localStorage.getItem(EP_STORAGE)) || {};
+    delete all[phaseId];
+    localStorage.setItem(EP_STORAGE, JSON.stringify(all));
+  }
+
+  // ── Structured list parser ──
+  function parseStructuredList(text, columns) {
+    if (!text) return [];
+    return text.split('\n').filter(l => l.trim()).map(line => {
+      const parts = line.split('|').map(s => s.trim());
+      const obj = {};
+      columns.forEach((col, i) => { obj[col] = parts[i] || ''; });
+      return obj;
+    });
+  }
+
+  // ── YAML generators per phase ──
+  function yamlLine(indent, key, value) {
+    return ' '.repeat(indent) + key + ': ' + value;
+  }
+  function yamlLines(indent, lines) {
+    return lines.filter(l => l.trim()).map(l => ' '.repeat(indent) + '- ' + l.trim()).join('\n');
+  }
+  function yamlEsc(s) { return /[:#\[\]{}&*!|>'"%@`]/.test(s) ? '"' + s.replace(/"/g, '\\"') + '"' : s; }
+
+  // ── ID generation helpers ──
+  function makeId(prefix, i) { return prefix + '-' + String(i + 1).padStart(3, '0'); }
+  function today() { return new Date().toISOString().split('T')[0]; }
+  function yamlHeader(name, type, togafPhase, filename) {
+    let h = `# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    h += `# ${name} — EA Repository Artefact\n`;
+    h += `# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    h += `schema: ea-repository/v1\n\n`;
+    h += `artifact:\n  type: ${type}\n  name: ${yamlEsc(name)}\n  togaf_phase: ${yamlEsc(togafPhase)}\n  filename: ${filename}\n\n`;
+    return h;
+  }
+
+  // Heuristic: classify process step for agent suitability
+  function classifyStep(step, performer) {
+    const s = (step + ' ' + performer).toLowerCase();
+    if (/customer|handover|acceptance|sign|approv/i.test(s)) return { decision: 'judgment', suitability: 'human-only', score: 1 };
+    if (/creative|design|architect|engineer.*design/i.test(s)) return { decision: 'creative', suitability: 'agent-assisted', score: 2 };
+    if (/review|assess|evaluat|plan|manag/i.test(s)) return { decision: 'judgment', suitability: 'agent-assisted', score: 3 };
+    if (/receiv|order|sourc|ship|logist|schedul|test|monitor|report|catalog|check/i.test(s)) return { decision: 'structured', suitability: 'agent-autonomous', score: 5 };
+    return { decision: 'judgment', suitability: 'agent-assisted', score: 3 };
+  }
+
+  // Heuristic: classify technology for agent capabilities
+  function classifyTech(name, category) {
+    const s = (name + ' ' + category).toLowerCase();
+    const agentHosting = /kubernetes|container|cloud|openai|llm|agent/i.test(s);
+    const mcpCompat = /graph|neo4j|api|rest|grpc|openai|vector|qdrant/i.test(s);
+    return { agent_hosting: agentHosting, mcp_compatible: mcpCompat };
+  }
+
+  const generators = {
+    'preliminary': function(inputs) {
+      const principles = parseStructuredList(inputs.principles, ['name', 'statement', 'rationale', 'implications']);
+      let y = yamlHeader('Principles Catalog', 'catalog', 'Preliminary', 'principles-catalog.yaml');
+      y += `metadata:\n  organisation: ${yamlEsc(inputs.org_name || '...')}\n  industry: ${inputs.industry || '...'}\n  framework: ArchiMate 3.2 + AI Extensions\n  generated: ${today()}\n\n`;
+      y += `elements:\n`;
+      principles.forEach((p, i) => {
+        const id = makeId('PRINC', i);
+        y += `  - id: ${id}\n`;
+        y += `    type: Principle\n`;
+        y += `    archimate_type: Principle\n`;
+        y += `    layer: Motivation\n`;
+        y += `    name: ${yamlEsc(p.name)}\n`;
+        y += `    attributes:\n`;
+        y += `      statement: ${yamlEsc(p.statement)}\n`;
+        y += `      rationale: ${yamlEsc(p.rationale)}\n`;
+        y += `      implications: ${yamlEsc(p.implications)}\n`;
+        y += `    agentic_extension:\n`;
+        y += `      machine_readable: true\n`;
+        y += `      enforcement_action: warn\n`;
+        y += `      auto_verifiable: true\n\n`;
+      });
+      if (principles.length > 1) {
+        y += `relationships:\n`;
+        principles.forEach((p, i) => {
+          if (i > 0) {
+            y += `  - source: ${makeId('PRINC', i)}\n    target: ${makeId('PRINC', 0)}\n    type: ASSOCIATION\n    description: "Principles in same catalog"\n`;
+          }
+        });
+      }
+      return y.trimEnd();
+    },
+
+    'phase-a': function(inputs) {
+      const stakeholders = parseStructuredList(inputs.stakeholders, ['role', 'concern', 'power', 'interest']);
+      let y = yamlHeader('Stakeholder Map', 'matrix', 'A - Architecture Vision', 'stakeholder-map.yaml');
+      y += `metadata:\n  initiative: ${yamlEsc(inputs.initiative_name || '...')}\n  generated: ${today()}\n\n`;
+      y += `context: |\n`;
+      (inputs.business_problem || '...').split('\n').forEach(l => { y += `  ${l}\n`; });
+      y += `\nelements:\n`;
+      const engagementMap = { 'high-high': 'manage_closely', 'high-medium': 'keep_satisfied', 'high-low': 'keep_satisfied', 'medium-high': 'keep_informed', 'medium-medium': 'keep_informed', 'medium-low': 'monitor', 'low-high': 'keep_informed', 'low-medium': 'monitor', 'low-low': 'monitor' };
+      stakeholders.forEach((s, i) => {
+        const id = makeId('STK', i);
+        const power = (s.power || 'medium').toLowerCase().trim();
+        const interest = (s.interest || 'medium').toLowerCase().trim();
+        const engagement = engagementMap[power + '-' + interest] || 'keep_informed';
+        y += `  - id: ${id}\n`;
+        y += `    type: Stakeholder\n`;
+        y += `    archimate_type: BusinessActor\n`;
+        y += `    layer: Business\n`;
+        y += `    name: ${yamlEsc(s.role)}\n`;
+        y += `    attributes:\n`;
+        y += `      concern: ${yamlEsc(s.concern)}\n`;
+        y += `      power: ${power}\n`;
+        y += `      interest: ${interest}\n`;
+        y += `      engagement_strategy: ${engagement}\n`;
+        y += `    agentic_extension:\n`;
+        const agentInt = power === 'high' ? 'Receives automated architecture reports and compliance dashboards' : 'Included in periodic status summaries';
+        y += `      agent_interaction: ${yamlEsc(agentInt)}\n`;
+        y += `      notification_channel: ${power === 'high' ? 'direct' : 'digest'}\n\n`;
+      });
+      if (stakeholders.length > 1) {
+        y += `relationships:\n`;
+        for (let i = 0; i < stakeholders.length; i++) {
+          for (let j = i + 1; j < stakeholders.length && j <= i + 1; j++) {
+            y += `  - source: ${makeId('STK', i)}\n    target: ${makeId('STK', j)}\n    type: ASSOCIATION\n    description: "Stakeholder interaction"\n`;
+          }
+        }
+      }
+      return y.trimEnd();
+    },
+
+    'phase-b': function(inputs) {
+      const steps = parseStructuredList(inputs.process_steps, ['step', 'performer', 'inputs', 'outputs']);
+      let y = yamlHeader('Process Flow Catalog', 'catalog', 'B - Business Architecture', 'process-catalog.yaml');
+      y += `metadata:\n  process: ${yamlEsc(inputs.process_name || '...')}\n  owner: ${yamlEsc(inputs.process_owner || '...')}\n  generated: ${today()}\n\n`;
+      y += `elements:\n`;
+      let autoCount = 0, assistCount = 0, humanCount = 0;
+      steps.forEach((s, i) => {
+        const id = makeId('PROC', i);
+        const cls = classifyStep(s.step, s.performer);
+        if (cls.suitability === 'agent-autonomous') autoCount++;
+        else if (cls.suitability === 'agent-assisted') assistCount++;
+        else humanCount++;
+        y += `  - id: ${id}\n`;
+        y += `    type: BusinessProcess\n`;
+        y += `    archimate_type: BusinessProcess\n`;
+        y += `    layer: Business\n`;
+        y += `    name: ${yamlEsc(s.step)}\n`;
+        y += `    attributes:\n`;
+        y += `      sequence: ${i + 1}\n`;
+        y += `      performer: ${yamlEsc(s.performer)}\n`;
+        y += `      inputs: ${yamlEsc(s.inputs)}\n`;
+        y += `      outputs: ${yamlEsc(s.outputs)}\n`;
+        y += `    agentic_extension:\n`;
+        y += `      decision_type: ${cls.decision}\n`;
+        y += `      agent_suitability: ${cls.suitability}\n`;
+        y += `      readiness_score: ${cls.score}  # 1=human-only, 3=assisted, 5=autonomous\n\n`;
+      });
+      if (steps.length > 1) {
+        y += `relationships:\n`;
+        for (let i = 0; i < steps.length - 1; i++) {
+          y += `  - source: ${makeId('PROC', i)}\n    target: ${makeId('PROC', i + 1)}\n    type: TRIGGERING\n    description: "Sequential process flow"\n`;
+        }
+        y += `\n`;
+      }
+      y += `summary:\n  total_steps: ${steps.length}\n  agent_autonomous: ${autoCount}\n  agent_assisted: ${assistCount}\n  human_only: ${humanCount}\n`;
+      y += `  agent_coverage: ${steps.length ? Math.round((autoCount + assistCount) / steps.length * 100) : 0}%\n`;
+      return y.trimEnd();
+    },
+
+    'phase-c': function(inputs) {
+      const apps = parseStructuredList(inputs.applications, ['name', 'description', 'classification', 'owner', 'status']);
+      const ifaces = parseStructuredList(inputs.interfaces || '', ['from', 'to', 'protocol', 'data']);
+      let y = yamlHeader('Application Portfolio Catalog', 'catalog', 'C - Information Systems Architecture', 'application-portfolio.yaml');
+      y += `metadata:\n  scope: ${yamlEsc(inputs.scope || '...')}\n  generated: ${today()}\n\n`;
+      y += `elements:\n`;
+      apps.forEach((a, i) => {
+        const id = makeId('APP', i);
+        const status = (a.status || 'active').toLowerCase().trim();
+        const classification = (a.classification || 'supporting').toLowerCase().trim();
+        const isMcpAccessible = /neo4j|repository|graph|mcp/i.test(a.name + ' ' + a.description);
+        const hasApi = /api|rest|sap|erp|lumada/i.test(a.name + ' ' + a.description);
+        y += `  - id: ${id}\n`;
+        y += `    type: ApplicationComponent\n`;
+        y += `    archimate_type: ApplicationComponent\n`;
+        y += `    layer: Application\n`;
+        y += `    name: ${yamlEsc(a.name)}\n`;
+        y += `    attributes:\n`;
+        y += `      description: ${yamlEsc(a.description)}\n`;
+        y += `      classification: ${classification}\n`;
+        y += `      business_owner: ${yamlEsc(a.owner)}\n`;
+        y += `      status: ${status}\n`;
+        y += `    agentic_extension:\n`;
+        y += `      mcp_accessible: ${isMcpAccessible}\n`;
+        y += `      api_available: ${hasApi}\n`;
+        y += `      integration_protocol: ${isMcpAccessible ? 'MCP' : hasApi ? 'REST API' : 'none'}\n\n`;
+      });
+      if (ifaces.length) {
+        y += `relationships:\n`;
+        const appNames = apps.map(a => a.name.toLowerCase().trim());
+        ifaces.forEach((iface, i) => {
+          const fromIdx = appNames.findIndex(n => iface.from.toLowerCase().trim().includes(n) || n.includes(iface.from.toLowerCase().trim()));
+          const toIdx = appNames.findIndex(n => iface.to.toLowerCase().trim().includes(n) || n.includes(iface.to.toLowerCase().trim()));
+          const fromId = fromIdx >= 0 ? makeId('APP', fromIdx) : 'APP-???';
+          const toId = toIdx >= 0 ? makeId('APP', toIdx) : 'APP-???';
+          y += `  - source: ${fromId}\n    target: ${toId}\n    type: SERVING\n`;
+          y += `    attributes:\n      protocol: ${yamlEsc(iface.protocol)}\n      data_exchanged: ${yamlEsc(iface.data)}\n`;
+        });
+      }
+      return y.trimEnd();
+    },
+
+    'phase-d': function(inputs) {
+      const techs = parseStructuredList(inputs.technologies, ['name', 'category', 'vendor', 'version', 'status']);
+      let y = yamlHeader('Technology Portfolio Catalog', 'catalog', 'D - Technology Architecture', 'technology-portfolio.yaml');
+      y += `metadata:\n  scope: ${yamlEsc(inputs.scope || '...')}\n  generated: ${today()}\n\n`;
+      y += `elements:\n`;
+      techs.forEach((t, i) => {
+        const id = makeId('NODE', i);
+        const category = (t.category || 'platform').toLowerCase().trim();
+        const archType = /database|data/i.test(category) ? 'SystemSoftware' : /middleware/i.test(category) ? 'SystemSoftware' : 'Node';
+        const cls = classifyTech(t.name, category);
+        y += `  - id: ${id}\n`;
+        y += `    type: ${archType}\n`;
+        y += `    archimate_type: ${archType}\n`;
+        y += `    layer: Technology\n`;
+        y += `    name: ${yamlEsc(t.name)}\n`;
+        y += `    attributes:\n`;
+        y += `      category: ${category}\n`;
+        y += `      vendor: ${yamlEsc(t.vendor)}\n`;
+        y += `      version: ${yamlEsc(t.version)}\n`;
+        y += `      status: ${(t.status || 'current').toLowerCase().trim()}\n`;
+        y += `    agentic_extension:\n`;
+        y += `      agent_hosting_capable: ${cls.agent_hosting}\n`;
+        y += `      mcp_compatible: ${cls.mcp_compatible}\n\n`;
+      });
+      return y.trimEnd();
+    },
+
+    'phase-e': function(inputs) {
+      const gaps = parseStructuredList(inputs.gaps, ['capability', 'baseline', 'target', 'gap', 'priority']);
+      let y = yamlHeader('Gap Analysis Matrix', 'matrix', 'E - Opportunities & Solutions', 'gap-analysis.yaml');
+      y += `metadata:\n  scope: ${yamlEsc(inputs.scope || '...')}\n  generated: ${today()}\n\n`;
+      y += `elements:\n`;
+      gaps.forEach((g, i) => {
+        const id = makeId('GAP', i);
+        const capId = makeId('CAP', i);
+        const priority = (g.priority || 'medium').toLowerCase().trim();
+        // Heuristic agent readiness: high priority = lower readiness (bigger gap)
+        const readiness = priority === 'high' ? 2 : priority === 'medium' ? 3 : 4;
+        y += `  - id: ${id}\n`;
+        y += `    type: Gap\n`;
+        y += `    layer: Strategy\n`;
+        y += `    name: ${yamlEsc(g.capability)}\n`;
+        y += `    attributes:\n`;
+        y += `      capability_ref: ${capId}\n`;
+        y += `      baseline: ${yamlEsc(g.baseline)}\n`;
+        y += `      target: ${yamlEsc(g.target)}\n`;
+        y += `      gap_description: ${yamlEsc(g.gap)}\n`;
+        y += `      priority: ${priority}\n`;
+        y += `    agentic_extension:\n`;
+        y += `      agent_readiness: ${readiness}  # 1=not ready, 5=ready for agent augmentation\n`;
+        y += `      agent_value: ${priority === 'high' ? 'high' : 'medium'}  # estimated value of agent augmentation\n\n`;
+      });
+      if (gaps.length > 1) {
+        y += `relationships:\n`;
+        gaps.forEach((g, i) => {
+          y += `  - source: ${makeId('GAP', i)}\n    target: ${makeId('CAP', i)}\n    type: ASSOCIATION\n    description: "Gap identified for capability"\n`;
+        });
+      }
+      y += `\nsummary:\n  total_gaps: ${gaps.length}\n  high_priority: ${gaps.filter(g => (g.priority || '').toLowerCase().trim() === 'high').length}\n  medium_priority: ${gaps.filter(g => (g.priority || '').toLowerCase().trim() === 'medium').length}\n  low_priority: ${gaps.filter(g => (g.priority || '').toLowerCase().trim() === 'low').length}\n`;
+      return y.trimEnd();
+    },
+
+    'phase-f': function(inputs) {
+      const wps = parseStructuredList(inputs.work_packages, ['name', 'capabilities', 'quarter', 'dependencies']);
+      let y = yamlHeader('Architecture Roadmap', 'deliverable', 'F - Migration Planning', 'architecture-roadmap.yaml');
+      y += `metadata:\n  timeline: ${yamlEsc(inputs.timeline || '...')}\n  generated: ${today()}\n\n`;
+      y += `elements:\n`;
+      const wpNames = wps.map(w => w.name.toLowerCase().trim());
+      wps.forEach((w, i) => {
+        const id = makeId('WP', i);
+        const isFoundation = i === 0 || /foundation|setup|base/i.test(w.name);
+        const isAgent = /agent|autonomous|ai/i.test(w.name + ' ' + w.capabilities);
+        const agentLevel = isFoundation ? 'foundation' : isAgent ? 'autonomous' : 'enabling';
+        y += `  - id: ${id}\n`;
+        y += `    type: WorkPackage\n`;
+        y += `    layer: Implementation\n`;
+        y += `    name: ${yamlEsc(w.name)}\n`;
+        y += `    attributes:\n`;
+        y += `      capabilities_delivered: ${yamlEsc(w.capabilities)}\n`;
+        y += `      planned_quarter: ${yamlEsc(w.quarter)}\n`;
+        y += `      dependencies: ${yamlEsc(w.dependencies)}\n`;
+        y += `    agentic_extension:\n`;
+        y += `      agent_involvement: ${agentLevel}\n`;
+        y += `      agent_capabilities_enabled:\n`;
+        if (isFoundation) y += `        - repository_queries\n        - validation\n`;
+        else if (isAgent) y += `        - autonomous_monitoring\n        - proactive_recommendations\n`;
+        else y += `        - data_access\n        - analysis\n`;
+        y += `\n`;
+      });
+      if (wps.length > 1) {
+        y += `relationships:\n`;
+        wps.forEach((w, i) => {
+          if (i === 0) return;
+          // Find dependency index
+          const deps = (w.dependencies || '').toLowerCase().trim();
+          if (deps === 'none' || !deps) return;
+          const depIdx = wpNames.findIndex(n => deps.includes(n));
+          if (depIdx >= 0 && depIdx !== i) {
+            y += `  - source: ${makeId('WP', depIdx)}\n    target: ${makeId('WP', i)}\n    type: TRIGGERING\n    attributes:\n      dependency_type: finish-to-start\n`;
+          }
+        });
+      }
+      return y.trimEnd();
+    },
+
+    'phase-g': function(inputs) {
+      const items = parseStructuredList(inputs.checklist, ['area', 'requirement', 'status', 'evidence']);
+      let y = yamlHeader('Compliance Assessment', 'deliverable', 'G - Implementation Governance', 'compliance-assessment.yaml');
+      y += `metadata:\n  project: ${yamlEsc(inputs.project_name || '...')}\n  generated: ${today()}\n\n`;
+      y += `elements:\n`;
+      items.forEach((item, i) => {
+        const id = makeId('CA', i);
+        const status = (item.status || 'partial').toLowerCase().trim();
+        const autoVerifiable = /data|version|api|log|boundary/i.test(item.requirement);
+        y += `  - id: ${id}\n`;
+        y += `    type: ComplianceItem\n`;
+        y += `    layer: Governance\n`;
+        y += `    name: ${yamlEsc(item.area + ' — ' + item.requirement.substring(0, 50))}\n`;
+        y += `    attributes:\n`;
+        y += `      architecture_area: ${yamlEsc(item.area)}\n`;
+        y += `      requirement: ${yamlEsc(item.requirement)}\n`;
+        y += `      status: ${status}\n`;
+        y += `      evidence: ${yamlEsc(item.evidence)}\n`;
+        y += `    agentic_extension:\n`;
+        y += `      auto_verifiable: ${autoVerifiable}\n`;
+        y += `      monitoring_frequency: ${autoVerifiable ? 'continuous' : 'periodic'}\n`;
+        y += `      last_verified: ${today()}\n\n`;
+      });
+      const compliant = items.filter(i => (i.status || '').toLowerCase().trim() === 'compliant').length;
+      const partial = items.filter(i => (i.status || '').toLowerCase().trim() === 'partial').length;
+      const nonCompliant = items.filter(i => (i.status || '').toLowerCase().trim() === 'non-compliant').length;
+      y += `summary:\n  total_items: ${items.length}\n  compliant: ${compliant}\n  partial: ${partial}\n  non_compliant: ${nonCompliant}\n`;
+      y += `  compliance_rate: ${items.length ? Math.round(compliant / items.length * 100) : 0}%\n`;
+      return y.trimEnd();
+    },
+
+    'phase-h': function(inputs) {
+      const impacts = parseStructuredList(inputs.impacted_elements, ['element', 'layer', 'impact', 'severity']);
+      let y = yamlHeader('Architecture Change Request', 'deliverable', 'H - Architecture Change Management', 'change-request.yaml');
+      y += `metadata:\n  generated: ${today()}\n\n`;
+      y += `elements:\n`;
+      // Change Request element
+      y += `  - id: CR-001\n`;
+      y += `    type: ChangeRequest\n`;
+      y += `    layer: Governance\n`;
+      y += `    name: ${yamlEsc(inputs.change_title || '...')}\n`;
+      y += `    attributes:\n`;
+      y += `      description: |\n`;
+      (inputs.change_detail || '...').split('\n').forEach(l => { y += `        ${l}\n`; });
+      y += `      status: submitted\n`;
+      y += `      priority: ${impacts.some(i => (i.severity || '').toLowerCase().trim() === 'high') ? 'high' : 'medium'}\n`;
+      const directCount = impacts.filter(i => (i.impact || '').toLowerCase().trim() === 'direct').length;
+      const layers = [...new Set(impacts.map(i => (i.layer || '').trim()))].filter(Boolean);
+      y += `      classification: ${layers.length >= 3 ? 're_architecting' : directCount >= 3 ? 'incremental' : 'simplification'}\n`;
+      y += `    agentic_extension:\n`;
+      y += `      auto_detected: false\n`;
+      y += `      impact_analysis_method: graph_traversal\n`;
+      y += `      impacted_elements_count: ${impacts.length}\n`;
+      y += `      cross_layer_impact: ${layers.length >= 2}\n\n`;
+      // Impact elements
+      impacts.forEach((imp, i) => {
+        const id = makeId('IMPACT', i);
+        y += `  - id: ${id}\n`;
+        y += `    type: ImpactAssessment\n`;
+        y += `    layer: Governance\n`;
+        y += `    name: ${yamlEsc('Impact on ' + imp.element)}\n`;
+        y += `    attributes:\n`;
+        y += `      element_name: ${yamlEsc(imp.element)}\n`;
+        y += `      architecture_layer: ${yamlEsc(imp.layer)}\n`;
+        y += `      impact_type: ${(imp.impact || 'indirect').toLowerCase().trim()}\n`;
+        y += `      severity: ${(imp.severity || 'medium').toLowerCase().trim()}\n\n`;
+      });
+      if (impacts.length) {
+        y += `relationships:\n`;
+        impacts.forEach((imp, i) => {
+          y += `  - source: CR-001\n    target: ${makeId('IMPACT', i)}\n    type: ASSOCIATION\n    description: "Change impacts element"\n`;
+        });
+      }
+      return y.trimEnd();
+    },
+
+    'requirements-management': function(inputs) {
+      const reqs = parseStructuredList(inputs.requirements, ['id', 'description', 'priority', 'category', 'traces_to']);
+      let y = yamlHeader('Requirements Catalog', 'catalog', 'Requirements Management', 'requirements-catalog.yaml');
+      y += `metadata:\n  source: ${yamlEsc(inputs.source || '...')}\n  generated: ${today()}\n\n`;
+      y += `elements:\n`;
+      reqs.forEach((r, i) => {
+        const id = r.id || makeId('REQ', i);
+        const priority = (r.priority || 'should').toLowerCase().trim();
+        const category = (r.category || 'business').toLowerCase().trim();
+        const autoValidated = /accuracy|response|log|trail|compli/i.test(r.description);
+        y += `  - id: ${id}\n`;
+        y += `    type: Requirement\n`;
+        y += `    archimate_type: Requirement\n`;
+        y += `    layer: Motivation\n`;
+        y += `    name: ${yamlEsc(r.description.substring(0, 60))}\n`;
+        y += `    attributes:\n`;
+        y += `      description: ${yamlEsc(r.description)}\n`;
+        y += `      priority: ${priority}\n`;
+        y += `      category: ${category}\n`;
+        y += `      traces_to: ${yamlEsc(r.traces_to)}\n`;
+        y += `      status: active\n`;
+        y += `    agentic_extension:\n`;
+        y += `      auto_validated: ${autoValidated}\n`;
+        y += `      validation_method: ${autoValidated ? 'automated_coverage_check' : 'manual_review'}\n`;
+        y += `      validation_status: pending\n\n`;
+      });
+      if (reqs.length > 0) {
+        y += `relationships:\n`;
+        reqs.forEach((r, i) => {
+          if (r.traces_to) {
+            const traceId = r.traces_to.match(/^[A-Z]+-\d+/) ? r.traces_to.match(/^[A-Z]+-\d+/)[0] : null;
+            if (traceId) {
+              y += `  - source: ${r.id || makeId('REQ', i)}\n    target: ${traceId}\n    type: REALIZATION\n    description: "Requirement realized by element"\n`;
+            }
+          }
+        });
+        y += `\n`;
+      }
+      const must = reqs.filter(r => (r.priority || '').toLowerCase().trim() === 'must').length;
+      const should = reqs.filter(r => (r.priority || '').toLowerCase().trim() === 'should').length;
+      const could = reqs.filter(r => (r.priority || '').toLowerCase().trim() === 'could').length;
+      y += `summary:\n  total: ${reqs.length}\n  must_have: ${must}\n  should_have: ${should}\n  could_have: ${could}\n`;
+      return y.trimEnd();
+    }
+  };
+
+  function generateYAML(phaseId, inputs) {
+    const gen = generators[phaseId];
+    return gen ? gen(inputs) : '# No generator defined for this phase';
+  }
+
+  function getFieldValues(phaseId, phase) {
+    const saved = loadInputs(phaseId);
+    const vals = {};
+    (phase.deliverable.fields || []).forEach(f => {
+      vals[f.id] = saved[f.id] !== undefined ? saved[f.id] : (f.default || '');
+    });
+    return vals;
+  }
+
+  // ── Render ──
+  let html = '';
+
+  // Phase navigator pills — injected into topbar
+  const topbarPhaseNav = document.getElementById('topbar-phase-nav');
+  if (topbarPhaseNav) {
+    topbarPhaseNav.innerHTML = `<div class="ep-phase-nav">
+      ${phases.map((p, i) => `<button class="ep-phase-pill${i === 0 ? ' active' : ''}" data-phase="${p.id}" style="--phase-color: ${p.color}" title="${p.name}">
+        <span class="ep-pill-code">${p.code}</span>
+        <span class="ep-pill-name">${p.name}</span>
+      </button>`).join('')}
+    </div>`;
+  }
+
+  // Phase detail panels
+  html += `<div class="ep-detail-wrap"><div class="container">`;
+  for (let i = 0; i < phases.length; i++) {
+    const p = phases[i];
+    const prevIdx = i === 0 ? null : i - 1;
+    const nextIdx = i === phases.length - 1 ? null : i + 1;
+    html += `<div class="ep-phase-detail${i === 0 ? ' active' : ''}" id="ep-detail-${p.id}">`;
+
+    // Phase header
+    html += `<div class="ep-phase-header" style="border-color: ${p.color}">
+      <div class="ep-phase-badge" style="background: ${p.color}">${p.code}</div>
+      <h2>${p.name}</h2>
+      ${p.worked_deliverables ? '<span class="ep-phase-subtitle">AI Transformation Programme — Preliminary Phase</span>' : ''}
+    </div>`;
+
+    if (p.phase_version === 'v2') {
+      // ── V2 path: TOGAF-structured sections ──
+      html += renderPhaseV2(p);
+    } else if (p.worked_deliverables) {
+      // ── Worked deliverables path ──
+      html += renderWorkedPhase(p);
+    } else {
+      // ── Existing path: TOGAF descriptions + YAML generator ──
+      const dl = p.deliverable;
+
+      // Section 1: Process Description (collapsible)
+      html += `<div class="ep-section ep-collapsible">
+        <button class="ep-section-toggle" aria-expanded="true">
+          <h3>Process Description</h3>
+          <span class="ep-section-chevron">${chevronSVG()}</span>
+        </button>
+        <div class="ep-section-body open">
+          <div class="ep-desc-block">
+            <div class="ep-desc-traditional">
+              <h4>Traditional EA</h4>
+              <p class="ep-togaf-summary">${p.togaf_summary}</p>
+              <h5>Objectives</h5>
+              <ul>${p.objectives.map(o => `<li>${o}</li>`).join('')}</ul>
+              <h5>Steps</h5>
+              <ol>${p.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+            </div>
+            <div class="ep-desc-agentic">
+              <h4>Agentic Organisation</h4>
+              ${p.agentic_shift.split('\n\n').map(para => `<p>${para}</p>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+      // Section 2: Deliverables (collapsible)
+      html += `<div class="ep-section ep-collapsible">
+        <button class="ep-section-toggle" aria-expanded="true">
+          <h3>Deliverables</h3>
+          <span class="ep-section-chevron">${chevronSVG()}</span>
+        </button>
+        <div class="ep-section-body open">
+          <div class="ep-togaf-deliverables">
+            ${p.togaf_deliverables.map(td => `<div class="ep-togaf-card">
+              <span class="ep-togaf-name">${td.name}</span>
+              <span class="ep-togaf-desc">${td.desc}</span>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+
+      // Section 3: Example — YAML Twin (collapsible)
+      html += `<div class="ep-section ep-collapsible">
+        <button class="ep-section-toggle" aria-expanded="true">
+          <h3>Example: ${dl.name}</h3>
+          <span class="ep-section-chevron">${chevronSVG()}</span>
+        </button>
+        <div class="ep-section-body open">
+          <div class="ep-deliverable-hero" style="border-left: 4px solid ${p.color}">
+            <div class="ep-deliv-meta">
+              <span class="ep-deliv-source">TOGAF Artefact: ${dl.togaf_source}</span>
+            </div>
+            <p>${dl.description}</p>
+            <div class="ep-deliv-produces"><strong>Produces:</strong> ${dl.what_it_produces}</div>
+          </div>
+        </div>
+      </div>`;
+
+      // Create Deliverable (expandable form)
+      html += `<div class="ep-section ep-create-section">
+        <button class="ep-create-toggle" data-phase="${p.id}" style="--phase-color: ${p.color}">
+          <span class="ep-create-toggle-text">Generate YAML Twin</span>
+          <span class="ep-create-toggle-icon">${chevronSVG()}</span>
+        </button>
+        <div class="ep-create-content" id="ep-create-${p.id}">
+          <div class="ep-create-form">`;
+
+      // Form fields
+      const saved = loadInputs(p.id);
+      (dl.fields || []).forEach(f => {
+        const val = saved[f.id] !== undefined ? saved[f.id] : (f.default || '');
+        let input = '';
+        if (f.type === 'text') {
+          input = `<input type="text" class="ep-form-input" data-phase="${p.id}" data-field="${f.id}" placeholder="${f.placeholder || ''}" value="${String(val).replace(/"/g, '&quot;')}" />`;
+        } else if (f.type === 'textarea' || f.type === 'structured-list') {
+          const rows = f.type === 'structured-list' ? Math.max(4, (val || '').split('\n').length + 1) : 3;
+          const formatHint = f.format ? `<div class="ep-format-hint">Format: <code>${f.format}</code></div>` : '';
+          input = `${formatHint}<textarea class="ep-form-textarea${f.type === 'structured-list' ? ' ep-structured' : ''}" data-phase="${p.id}" data-field="${f.id}" placeholder="${f.placeholder || ''}" rows="${rows}">${val}</textarea>`;
+        } else if (f.type === 'select') {
+          input = `<select class="ep-form-select" data-phase="${p.id}" data-field="${f.id}">
+            <option value="">— Select —</option>
+            ${(f.options || []).map(o => `<option value="${o}"${val === o ? ' selected' : ''}>${o}</option>`).join('')}
+          </select>`;
+        }
+        const isWide = f.type === 'structured-list' || f.type === 'textarea';
+        html += `<div class="ep-form-group${f.required ? ' ep-required' : ''}${isWide ? ' ep-form-wide' : ''}">
+          <label class="ep-form-label">${f.label}${f.required ? ' *' : ''}</label>
+          ${input}
+          ${f.help ? `<div class="ep-form-help">${f.help}</div>` : ''}
+        </div>`;
+      });
+
+      html += `</div>
+          <div class="ep-output-wrap">
+            <div class="ep-output-header">
+              <span class="ep-output-title">Repository Artefact (YAML)</span>
+              <div class="ep-output-actions">
+                <button class="ep-reset-btn" data-phase="${p.id}" title="Reset to example values">Reset</button>
+                <button class="ep-copy-btn" data-phase="${p.id}" title="Copy to clipboard">Copy</button>
+              </div>
+            </div>
+            <pre class="ep-output-yaml" id="ep-yaml-${p.id}"></pre>
+          </div>
+        </div>
+      </div>`;
+    } // end if/else worked_deliverables
+
+    // Prev/Next
+    html += `<div class="ep-phase-nav-bottom">`;
+    if (prevIdx !== null) {
+      html += `<button class="ep-nav-btn ep-nav-prev" data-phase="${phases[prevIdx].id}">
+        <span class="ep-nav-arrow">&larr;</span>
+        <span><span class="ep-nav-label">Previous</span><span class="ep-nav-phase-name">${phases[prevIdx].name}</span></span>
+      </button>`;
+    } else { html += `<div></div>`; }
+    if (nextIdx !== null) {
+      html += `<button class="ep-nav-btn ep-nav-next" data-phase="${phases[nextIdx].id}">
+        <span><span class="ep-nav-label">Next</span><span class="ep-nav-phase-name">${phases[nextIdx].name}</span></span>
+        <span class="ep-nav-arrow">&rarr;</span>
+      </button>`;
+    } else { html += `<div></div>`; }
+    html += `</div></div>`;
+  }
+  html += `</div></div>`;
+
+  container.innerHTML = html;
+
+  // ── V2: Mermaid rendering & event handlers ──
+  if (typeof mermaid !== 'undefined') {
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
+    // Only process visible mermaid elements (skip those in closed accordion panels)
+    const visibleMermaid = Array.from(container.querySelectorAll('.mermaid')).filter(el => {
+      const body = el.closest('.ep-wd-body');
+      return !body || body.classList.contains('open');
+    });
+    mermaid.run({ nodes: visibleMermaid }).then(() => {
+      // Trim SVG viewBox to content bounds — removes dagre centering padding
+      container.querySelectorAll('.mermaid svg').forEach(svg => {
+        const bbox = svg.getBBox();
+        const pad = 8;
+        svg.setAttribute('viewBox', `${bbox.x - pad} ${bbox.y - pad} ${bbox.width + pad * 2} ${bbox.height + pad * 2}`);
+        svg.removeAttribute('width');
+        svg.style.width = (bbox.width + pad * 2) + 'px';
+        svg.style.maxWidth = '100%';
+        svg.style.height = 'auto';
+      });
+    });
+  }
+
+  // V2 interactive step selection (called by Mermaid click callbacks + pills)
+  function highlightStep(num) {
+    // Update pills
+    container.querySelectorAll('.ep-v2-step-pill').forEach(p =>
+      p.classList.toggle('active', parseInt(p.dataset.step) === num));
+    // Update detail panels
+    container.querySelectorAll('.ep-v2-step-detail').forEach(d =>
+      d.classList.toggle('active', parseInt(d.dataset.step) === num));
+    // Highlight active node in SVG
+    const svg = container.querySelector('.mermaid svg');
+    if (svg) {
+      svg.querySelectorAll('.node').forEach(n => {
+        const id = n.id || '';
+        const isStep = /flowchart-S\d/.test(id);
+        if (!isStep) { n.style.opacity = ''; return; }
+        const match = id.match(/flowchart-S(\d)/);
+        const isActive = match && parseInt(match[1]) === num;
+        n.style.opacity = isActive ? '1' : '0.45';
+        n.style.transition = 'opacity 0.2s';
+      });
+    }
+  }
+  // Expose for Mermaid click callbacks
+  window.selectStep = function(nodeId) {
+    const m = nodeId.match(/\d+/);
+    if (m) highlightStep(parseInt(m[0]));
+  };
+
+  // Step pill clicks
+  container.querySelectorAll('.ep-v2-step-pill').forEach(pill => {
+    pill.addEventListener('click', function() {
+      highlightStep(parseInt(this.dataset.step));
+    });
+  });
+
+  // V2 view toggle (diagram / agent)
+  container.querySelectorAll('.ep-v2-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const view = this.dataset.view;
+      const section = this.closest('.ep-v2-section');
+      section.querySelectorAll('.ep-v2-toggle-btn').forEach(b => b.classList.toggle('active', b === this));
+      section.querySelectorAll('.ep-v2-steps-view').forEach(v => v.classList.toggle('active', v.dataset.view === view));
+    });
+  });
+
+  // V2 copy button
+  container.querySelectorAll('.ep-v2-copy-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const code = this.closest('.ep-v2-agent-code-wrap').querySelector('code');
+      if (code) {
+        navigator.clipboard.writeText(code.textContent).then(() => {
+          this.textContent = 'Copied!';
+          setTimeout(() => { this.textContent = 'Copy'; }, 2000);
+        });
+      }
+    });
+  });
+
+  // ── V2 User Inputs: localStorage save/load ──
+  const V2_INPUT_KEY = 'ea-process-v2-inputs';
+  function loadV2Inputs() {
+    try { return JSON.parse(localStorage.getItem(V2_INPUT_KEY)) || {}; } catch { return {}; }
+  }
+  function saveV2Input(phaseId, fieldId, value) {
+    const all = loadV2Inputs();
+    if (!all[phaseId]) all[phaseId] = {};
+    all[phaseId][fieldId] = value;
+    localStorage.setItem(V2_INPUT_KEY, JSON.stringify(all));
+  }
+
+  // Restore saved values
+  const v2Saved = loadV2Inputs();
+  container.querySelectorAll('.ep-v2-user-textarea').forEach(ta => {
+    const pid = ta.dataset.phase;
+    const fid = ta.dataset.field;
+    if (v2Saved[pid] && v2Saved[pid][fid]) ta.value = v2Saved[pid][fid];
+  });
+
+  // Auto-save on input
+  container.addEventListener('input', (e) => {
+    const ta = e.target.closest('.ep-v2-user-textarea');
+    if (ta) saveV2Input(ta.dataset.phase, ta.dataset.field, ta.value);
+  });
+
+  // ── V2 Maturity Self-Assessment: save/load/summary ──
+  function loadMaturityScores(phaseId) {
+    const all = loadV2Inputs();
+    return (all[phaseId] && all[phaseId].maturity) || {};
+  }
+  function saveMaturityScore(phaseId, dimId, kind, value) {
+    const all = loadV2Inputs();
+    if (!all[phaseId]) all[phaseId] = {};
+    if (!all[phaseId].maturity) all[phaseId].maturity = {};
+    if (!all[phaseId].maturity[dimId]) all[phaseId].maturity[dimId] = {};
+    all[phaseId].maturity[dimId][kind] = parseInt(value);
+    localStorage.setItem(V2_INPUT_KEY, JSON.stringify(all));
+    updateMaturitySummary(phaseId);
+  }
+  function updateMaturitySummary(phaseId) {
+    const scores = loadMaturityScores(phaseId);
+    const dims = Object.keys(scores);
+    const summaryEl = container.querySelector(`.ep-v2-maturity-summary[data-phase="${phaseId}"]`);
+    if (!summaryEl) return;
+    let currentSum = 0, targetSum = 0, currentCount = 0, targetCount = 0;
+    dims.forEach(d => {
+      if (scores[d].current) { currentSum += scores[d].current; currentCount++; }
+      if (scores[d].target) { targetSum += scores[d].target; targetCount++; }
+    });
+    if (currentCount === 0 && targetCount === 0) {
+      summaryEl.innerHTML = '';
+      return;
+    }
+    const avgCurrent = currentCount ? (currentSum / currentCount).toFixed(1) : '—';
+    const avgTarget = targetCount ? (targetSum / targetCount).toFixed(1) : '—';
+    const gap = (currentCount && targetCount) ? (targetSum / targetCount - currentSum / currentCount).toFixed(1) : '—';
+    summaryEl.innerHTML = `<div class="ep-v2-maturity-summary-bar">
+      <div class="ep-v2-maturity-stat"><span class="ep-v2-maturity-stat-val">${avgCurrent}</span><span class="ep-v2-maturity-stat-label">Avg Current</span></div>
+      <div class="ep-v2-maturity-stat"><span class="ep-v2-maturity-stat-val">${avgTarget}</span><span class="ep-v2-maturity-stat-label">Avg Target</span></div>
+      <div class="ep-v2-maturity-stat ep-v2-maturity-gap"><span class="ep-v2-maturity-stat-val">${gap !== '—' ? '+' + gap : '—'}</span><span class="ep-v2-maturity-stat-label">Gap</span></div>
+    </div>`;
+  }
+
+  // Restore maturity radio states
+  container.querySelectorAll('.ep-v2-maturity-radio input[type="radio"]').forEach(radio => {
+    const pid = radio.dataset.phase;
+    const dim = radio.dataset.dim;
+    const kind = radio.dataset.kind;
+    const scores = loadMaturityScores(pid);
+    if (scores[dim] && scores[dim][kind] === parseInt(radio.value)) {
+      radio.checked = true;
+    }
+  });
+  // Trigger initial summary
+  phases.filter(p => p.v2_maturity).forEach(p => updateMaturitySummary(p.id));
+
+  // Save maturity on change
+  container.addEventListener('change', (e) => {
+    const radio = e.target.closest('.ep-v2-maturity-radio input[type="radio"]');
+    if (radio) {
+      saveMaturityScore(radio.dataset.phase, radio.dataset.dim, radio.dataset.kind, radio.value);
+    }
+  });
+
+  // ── V2 Phase Context (callable per phase) ──
+  const EA_REPO_URL = 'http://localhost:3000';
+
+  window.getPhaseContext = async function(phaseId) {
+    const all = loadV2Inputs();
+    const phaseData = all[phaseId] || {};
+    const sponsorInput = {};
+    const maturityAssessment = phaseData.maturity || {};
+    Object.keys(phaseData).forEach(k => {
+      if (k !== 'maturity') sponsorInput[k] = phaseData[k];
+    });
+    const phase = phases.find(p => p.id === phaseId);
+    // Fetch repository summary (element counts per layer)
+    let repoSummary = null;
+    try {
+      const layers = ['Strategy', 'Business', 'Application', 'Technology', 'Motivation'];
+      const counts = {};
+      await Promise.all(layers.map(async (layer) => {
+        const res = await fetch(`${EA_REPO_URL}/api/v1/elements?layer=${layer}`);
+        if (res.ok) { const data = await res.json(); counts[layer.toLowerCase()] = data.length; }
+        else { counts[layer.toLowerCase()] = 0; }
+      }));
+      repoSummary = counts;
+    } catch (e) {
+      // Repository unavailable — leave summary null
+    }
+    return {
+      exported_at: new Date().toISOString(),
+      phase: phaseId,
+      phase_name: phase ? phase.name : phaseId,
+      sponsor_input: sponsorInput,
+      maturity_assessment: maturityAssessment,
+      ea_repository: { url: EA_REPO_URL, summary: repoSummary }
+    };
+  };
+
+  // Business layer type options
+  const BUSINESS_TYPES = [
+    { value: 'BusinessActor', label: 'Business Actor' },
+    { value: 'BusinessRole', label: 'Business Role' },
+    { value: 'BusinessProcess', label: 'Business Process' },
+    { value: 'BusinessFunction', label: 'Business Function' },
+    { value: 'BusinessService', label: 'Business Service' },
+    { value: 'BusinessObject', label: 'Business Object' },
+    { value: 'BusinessEvent', label: 'Business Event' },
+    { value: 'BusinessInteraction', label: 'Business Interaction' },
+    { value: 'BusinessCollaboration', label: 'Business Collaboration' },
+    { value: 'BusinessInterface', label: 'Business Interface' },
+    { value: 'Product', label: 'Product' },
+    { value: 'Contract', label: 'Contract' },
+    { value: 'Representation', label: 'Representation' }
+  ];
+
+  // Layer → type mapping
+  const LAYER_TYPES = {
+    Strategy: ['Resource', 'Capability', 'CourseOfAction', 'ValueStream'],
+    Business: BUSINESS_TYPES.map(t => t.value),
+    Application: ['ApplicationComponent', 'ApplicationService', 'ApplicationFunction', 'ApplicationInterface', 'ApplicationEvent', 'ApplicationInteraction', 'ApplicationCollaboration', 'ApplicationProcess', 'DataObject'],
+    Technology: ['Node', 'Device', 'SystemSoftware', 'TechnologyService', 'TechnologyFunction', 'TechnologyInterface', 'TechnologyEvent', 'TechnologyInteraction', 'TechnologyCollaboration', 'TechnologyProcess', 'Artifact', 'CommunicationNetwork', 'Path', 'Facility', 'Equipment', 'Material', 'DistributionNetwork'],
+    Motivation: ['Stakeholder', 'Driver', 'Assessment', 'Goal', 'Outcome', 'Principle', 'Requirement', 'Constraint', 'Meaning', 'Value']
+  };
+
+  // Update type dropdown when layer changes
+  container.addEventListener('change', (e) => {
+    const layerSelect = e.target.closest('.ep-v2-repo-layer');
+    if (layerSelect) {
+      const layer = layerSelect.value;
+      const typeSelect = layerSelect.parentElement.querySelector('.ep-v2-repo-type');
+      if (typeSelect) {
+        typeSelect.innerHTML = '<option value="">All Types</option>';
+        const types = LAYER_TYPES[layer] || [];
+        types.forEach(t => {
+          const label = t.replace(/([A-Z])/g, ' $1').trim();
+          typeSelect.innerHTML += `<option value="${t}">${label}</option>`;
+        });
+      }
+    }
+  });
+
+  // Load elements from EA Repository
+  container.addEventListener('click', (e) => {
+    const loadBtn = e.target.closest('.ep-v2-repo-load');
+    if (!loadBtn) return;
+
+    const phaseId = loadBtn.dataset.phase;
+    const panel = container.querySelector(`.ep-v2-repo-results[data-phase="${phaseId}"]`);
+    const layerSelect = container.querySelector(`.ep-v2-repo-layer[data-phase="${phaseId}"]`);
+    const typeSelect = container.querySelector(`.ep-v2-repo-type[data-phase="${phaseId}"]`);
+    if (!panel) return;
+
+    const layer = layerSelect ? layerSelect.value : '';
+    const type = typeSelect ? typeSelect.value : '';
+
+    loadBtn.textContent = 'Loading...';
+    loadBtn.disabled = true;
+    panel.innerHTML = '<p class="ep-v2-repo-hint">Connecting to EA Repository...</p>';
+
+    const params = new URLSearchParams();
+    if (layer) params.set('layer', layer);
+    if (type) params.set('type', type);
+
+    fetch(`${EA_REPO_URL}/api/v1/elements?${params}`)
+      .then(r => {
+        if (!r.ok) throw new Error('Server error');
+        return r.json();
+      })
+      .then(elements => {
+        loadBtn.textContent = 'Load Elements';
+        loadBtn.disabled = false;
+        if (!elements || elements.length === 0) {
+          panel.innerHTML = '<p class="ep-v2-repo-hint">No elements found for the selected filters.</p>';
+          return;
+        }
+        let html = `<div class="ep-v2-repo-count">${elements.length} element${elements.length !== 1 ? 's' : ''} from EA Repository</div>`;
+        html += '<div class="ep-v2-repo-table-wrap"><table class="ep-v2-repo-table"><thead><tr><th>Name</th><th>Type</th><th>Layer</th><th>Description</th></tr></thead><tbody>';
+        elements.forEach(el => {
+          const typeLabel = el.type.replace(/([A-Z])/g, ' $1').trim();
+          const desc = el.description ? (el.description.length > 80 ? el.description.substring(0, 80) + '...' : el.description) : '';
+          html += `<tr><td><strong>${el.name}</strong></td><td><span class="ep-v2-repo-type-badge">${typeLabel}</span></td><td>${el.layer}</td><td>${desc}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        panel.innerHTML = html;
+      })
+      .catch(() => {
+        loadBtn.textContent = 'Load Elements';
+        loadBtn.disabled = false;
+        panel.innerHTML = '<p class="ep-v2-repo-hint ep-v2-repo-offline">EA Repository is not running. Start it with <code>ea serve</code> at <a href="http://localhost:3000" target="_blank">localhost:3000</a></p>';
+      });
+  });
+
+  // ── Sponsor input: load & save ──
+  const sponsorInputCache = {};
+  (function loadSponsorInput() {
+    fetch('data/ea-process-input.json').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(data => {
+      Object.assign(sponsorInputCache, data);
+      // Populate form controls
+      container.querySelectorAll('.ep-qa').forEach(qa => {
+        const qid = qa.dataset.qid;
+        if (!qid || !data[qid]) return;
+        const saved = data[qid];
+        if (saved.status) {
+          const radio = qa.querySelector(`input[name="${qid}"][value="${saved.status}"]`);
+          if (radio) radio.checked = true;
+        }
+        if (saved.comment) {
+          const ta = qa.querySelector('.ep-qa-text');
+          if (ta) ta.value = saved.comment;
+        }
+      });
+    });
+  })();
+
+  function saveSponsorInput(qid, status, comment) {
+    sponsorInputCache[qid] = { status: status || '', comment: comment || '' };
+    fetch('/api/save-input', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sponsorInputCache)
+    }).catch(() => {});
+  }
+
+  container.addEventListener('change', (e) => {
+    const radio = e.target.closest('input[type="radio"]');
+    if (radio && radio.name) {
+      const qa = radio.closest('.ep-qa');
+      if (qa) {
+        const qid = qa.dataset.qid;
+        const ta = qa.querySelector('.ep-qa-text');
+        saveSponsorInput(qid, radio.value, ta ? ta.value : '');
+      }
+      return;
+    }
+  });
+
+  container.addEventListener('input', (e) => {
+    const ta = e.target.closest('.ep-qa-text');
+    if (ta) {
+      const qa = ta.closest('.ep-qa');
+      if (qa) {
+        const qid = qa.dataset.qid;
+        const checked = qa.querySelector(`input[name="${qid}"]:checked`);
+        saveSponsorInput(qid, checked ? checked.value : '', ta.value);
+      }
+      return;
+    }
+  });
+
+  // ── YAML generation ──
+  function updateYAML(phaseId) {
+    const phase = phases.find(p => p.id === phaseId);
+    if (!phase) return;
+    const vals = getFieldValues(phaseId, phase);
+    const el = document.getElementById(`ep-yaml-${phaseId}`);
+    if (el) el.textContent = generateYAML(phaseId, vals);
+  }
+
+  // Initialize all YAMLs (only for phases with the old form-based deliverable)
+  phases.filter(p => !p.worked_deliverables).forEach(p => updateYAML(p.id));
+
+  // Form input listeners
+  container.addEventListener('input', (e) => {
+    const el = e.target;
+    if (el.dataset.phase && el.dataset.field) {
+      saveInput(el.dataset.phase, el.dataset.field, el.value);
+      updateYAML(el.dataset.phase);
+    }
+  });
+  container.addEventListener('change', (e) => {
+    const el = e.target;
+    if (el.dataset.phase && el.dataset.field) {
+      saveInput(el.dataset.phase, el.dataset.field, el.value);
+      updateYAML(el.dataset.phase);
+    }
+  });
+
+  // Copy buttons & worked deliverable interactions
+  container.addEventListener('click', (e) => {
+    // Worked deliverable: tab switching
+    const tabBtn = e.target.closest('.ep-deliv-tab');
+    if (tabBtn) {
+      const wdId = tabBtn.dataset.wd;
+      const view = tabBtn.dataset.view;
+      const wdBody = tabBtn.closest('.ep-wd-body');
+      if (wdBody) {
+        wdBody.querySelectorAll(`.ep-deliv-tab[data-wd="${wdId}"]`).forEach(t => t.classList.toggle('active', t.dataset.view === view));
+        wdBody.querySelectorAll(`.ep-deliv-panel[data-wd="${wdId}"]`).forEach(p => p.classList.toggle('active', p.dataset.panel === view));
+      }
+      return;
+    }
+
+    // Worked deliverable: YAML copy
+    const yamlCopy = e.target.closest('.ep-yaml-copy');
+    if (yamlCopy) {
+      const wdId = yamlCopy.dataset.yamlId;
+      const pre = document.getElementById(`ep-wd-yaml-${wdId}`);
+      if (pre) {
+        navigator.clipboard.writeText(pre.textContent).then(() => {
+          yamlCopy.textContent = 'Copied!';
+          yamlCopy.classList.add('ep-copied');
+          setTimeout(() => { yamlCopy.textContent = 'Copy'; yamlCopy.classList.remove('ep-copied'); }, 2000);
+        });
+      }
+      return;
+    }
+
+    const copyBtn = e.target.closest('.ep-copy-btn');
+    if (copyBtn) {
+      const phaseId = copyBtn.dataset.phase;
+      const phase = phases.find(p => p.id === phaseId);
+      const vals = getFieldValues(phaseId, phase);
+      const yaml = generateYAML(phaseId, vals);
+      navigator.clipboard.writeText(yaml).then(() => {
+        copyBtn.textContent = 'Copied!';
+        copyBtn.classList.add('ep-copied');
+        setTimeout(() => { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('ep-copied'); }, 2000);
+      });
+      return;
+    }
+
+    // Reset buttons
+    const resetBtn = e.target.closest('.ep-reset-btn');
+    if (resetBtn) {
+      const phaseId = resetBtn.dataset.phase;
+      const phase = phases.find(p => p.id === phaseId);
+      clearInputs(phaseId);
+      // Restore defaults to form fields
+      const createEl = document.getElementById(`ep-create-${phaseId}`);
+      if (createEl && phase) {
+        phase.deliverable.fields.forEach(f => {
+          const input = createEl.querySelector(`[data-field="${f.id}"]`);
+          if (input) {
+            if (input.tagName === 'SELECT') input.value = f.default || '';
+            else if (input.tagName === 'TEXTAREA') input.value = f.default || '';
+            else input.value = f.default || '';
+          }
+        });
+      }
+      updateYAML(phaseId);
+      return;
+    }
+
+    // Create toggle
+    const toggle = e.target.closest('.ep-create-toggle');
+    if (toggle) {
+      const content = document.getElementById(`ep-create-${toggle.dataset.phase}`);
+      if (content) {
+        const isOpen = content.classList.toggle('open');
+        toggle.classList.toggle('open', isOpen);
+      }
+      return;
+    }
+
+    // Worked deliverable item toggle
+    const wdToggle = e.target.closest('.ep-wd-toggle');
+    if (wdToggle) {
+      const item = wdToggle.closest('.ep-wd-item');
+      const body = wdToggle.nextElementSibling;
+      if (item && body) {
+        const isOpen = item.classList.toggle('open');
+        body.classList.toggle('open', isOpen);
+        wdToggle.setAttribute('aria-expanded', isOpen);
+        // Render any unprocessed Mermaid diagrams inside the expanded panel
+        if (isOpen && typeof mermaid !== 'undefined') {
+          const unprocessed = body.querySelectorAll('pre.mermaid:not([data-processed])');
+          if (unprocessed.length) {
+            mermaid.run({ nodes: unprocessed }).then(() => {
+              body.querySelectorAll('.mermaid svg').forEach(svg => {
+                const bbox = svg.getBBox();
+                const pad = 8;
+                svg.setAttribute('viewBox', `${bbox.x - pad} ${bbox.y - pad} ${bbox.width + pad * 2} ${bbox.height + pad * 2}`);
+                svg.removeAttribute('width');
+                svg.style.width = (bbox.width + pad * 2) + 'px';
+                svg.style.maxWidth = '100%';
+                svg.style.height = 'auto';
+              });
+            });
+          }
+        }
+      }
+      return;
+    }
+
+    // Section collapse toggle
+    const secToggle = e.target.closest('.ep-section-toggle');
+    if (secToggle) {
+      const body = secToggle.nextElementSibling;
+      if (body && body.classList.contains('ep-section-body')) {
+        const isOpen = body.classList.toggle('open');
+        secToggle.setAttribute('aria-expanded', isOpen);
+      }
+      return;
+    }
+  });
+
+  // ── Phase switching ──
+  function switchPhase(phaseId) {
+    document.querySelectorAll('.ep-phase-pill').forEach(btn => btn.classList.toggle('active', btn.dataset.phase === phaseId));
+    document.querySelectorAll('.ep-phase-detail').forEach(panel => panel.classList.toggle('active', panel.id === `ep-detail-${phaseId}`));
+    const activePill = document.querySelector(`.ep-phase-pill[data-phase="${phaseId}"]`);
+    if (activePill) activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    // Scroll the main content area back to top
+    const scroll = document.querySelector('.main-scroll');
+    if (scroll) scroll.scrollTop = 0;
+  }
+
+  document.querySelectorAll('.ep-phase-pill').forEach(btn => {
+    btn.addEventListener('click', () => switchPhase(btn.dataset.phase));
+  });
+  document.querySelectorAll('.ep-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchPhase(btn.dataset.phase));
+  });
+
+  // Keyboard nav
+  document.addEventListener('keydown', (e) => {
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+    const currentPanel = document.querySelector('.ep-phase-detail.active');
+    if (!currentPanel) return;
+    const currentId = currentPanel.id.replace('ep-detail-', '');
+    const idx = phases.findIndex(p => p.id === currentId);
+    if (e.key === 'ArrowLeft' && idx > 0) { e.preventDefault(); switchPhase(phases[idx - 1].id); }
+    else if (e.key === 'ArrowRight' && idx < phases.length - 1) { e.preventDefault(); switchPhase(phases[idx + 1].id); }
+  });
 }
 
 // Global keyboard shortcut: "/" to open search
