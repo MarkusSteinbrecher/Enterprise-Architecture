@@ -8,14 +8,14 @@ Two databases are available:
 
 | Client | Database path | Description |
 |--------|--------------|-------------|
-| Swiss Bank | `/Users/markus/Code/EA Repository/ea-repository/ea_repository.db` | 48 elements, 45 relationships — banking sample |
-| Energy Client | `/Users/markus/Code/EA Repository/ea-repository/energy_client.db` | 212 elements, 107 relationships — energy company (Hitachi Energy-inspired) |
+| Swiss Bank | `/Users/markus/Code/EA Repository/ea-repository/data/swiss-bank.db` | 48 elements, 45 relationships — banking sample |
+| Energy Client | `/Users/markus/Code/EA Repository/ea-repository/data/energy-company.db` | 212 elements, 107 relationships — energy company (Hitachi Energy-inspired) |
 
 Set the alias for your target client. Default to the **Energy Client** unless the user specifies otherwise:
 
 ```bash
 EA_BIN="/Users/markus/Code/EA Repository/ea-repository/ea"
-EA_DB="/Users/markus/Code/EA Repository/ea-repository/energy_client.db"
+EA_DB="/Users/markus/Code/EA Repository/ea-repository/data/energy-company.db"
 ```
 
 All commands follow this pattern:

@@ -10,7 +10,7 @@ Start by verifying all prerequisites:
 
 2. **Test EA Repository** — Check if the EA Repository CLI is available:
    ```bash
-   "/Users/markus/Code/EA Repository/ea-repository/ea" --db "/Users/markus/Code/EA Repository/ea-repository/energy_client.db" --format json stats
+   "/Users/markus/Code/EA Repository/ea-repository/ea" --db "/Users/markus/Code/EA Repository/ea-repository/data/energy-company.db" --format json stats
    ```
    If this returns JSON with `layers` and `summary`, the repository is available. Note the element counts per layer — agents will use these. If it fails, note unavailability but continue.
 

@@ -26,7 +26,7 @@ Also read `agents/ea-repository.md` for shared reference across all agents.
 
 ```bash
 EA_BIN="/Users/markus/Code/EA Repository/ea-repository/ea"
-EA_DB="/Users/markus/Code/EA Repository/ea-repository/energy_client.db"
+EA_DB="/Users/markus/Code/EA Repository/ea-repository/data/energy-company.db"
 
 # Existing principles, constraints, requirements
 "$EA_BIN" --db "$EA_DB" --format json element list --layer Motivation --type Principle

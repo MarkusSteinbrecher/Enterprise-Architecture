@@ -13,7 +13,7 @@ Two client databases:
 | Client | Database | Elements | Relationships |
 |--------|----------|----------|---------------|
 | Swiss Bank | `ea_repository.db` | 48 | 45 |
-| **Energy Client** | `energy_client.db` | 212 | 107 |
+| **Energy Client** | `data/energy-company.db` | 212 | 107 |
 
 Default to the **Energy Client** unless the user specifies otherwise.
 
@@ -21,7 +21,7 @@ Default to the **Energy Client** unless the user specifies otherwise.
 
 ```bash
 EA_BIN="/Users/markus/Code/EA Repository/ea-repository/ea"
-EA_DB="/Users/markus/Code/EA Repository/ea-repository/energy_client.db"
+EA_DB="/Users/markus/Code/EA Repository/ea-repository/data/energy-company.db"
 
 "$EA_BIN" --db "$EA_DB" --format json <command> [flags]
 ```
@@ -261,7 +261,7 @@ Full metamodel reference: `/Users/markus/Code/EA Repository/ea-repository/Docume
 - Source systems: manual (29), ServiceNow (12), AWS (7)
 - Key entities: Avaloq core banking, Digital Banking Portal, AML/KYC Platform, CRM (Salesforce)
 
-### Energy Client (`energy_client.db`)
+### Energy Client (`data/energy-company.db`)
 - **212 elements** across 6 layers (Strategy: 56, Business: 84, Application: 28, Technology: 18, Physical: 5, Motivation: 21)
 - **107 relationships** (Composition, Realization, Serving, Access, Influence, Assignment)
 - Hitachi Energy-inspired: 5 business units, 43 capabilities (3-level hierarchy), 10 global locations
