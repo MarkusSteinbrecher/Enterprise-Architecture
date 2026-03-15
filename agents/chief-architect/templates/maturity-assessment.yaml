@@ -1,0 +1,95 @@
+metadata:
+  deliverable: "Maturity Assessment Report"
+  phase: preliminary
+  author: chief-architect
+  created: ""
+  status: draft
+  version: "1.0"
+
+assessment:
+  method: "Self-assessment validated by Chief Architect"
+  date: ""
+  participants: []
+
+scores:
+  - dimension: "Governance & Decision Rights"
+    id: governance
+    current: 0
+    target: 0
+    gap: 0
+    evidence: ""
+    findings: ""
+  - dimension: "Architecture Processes"
+    id: processes
+    current: 0
+    target: 0
+    gap: 0
+    evidence: ""
+    findings: ""
+  - dimension: "People & Skills"
+    id: people
+    current: 0
+    target: 0
+    gap: 0
+    evidence: ""
+    findings: ""
+  - dimension: "Repository & Tools"
+    id: repository
+    current: 0
+    target: 0
+    gap: 0
+    evidence: ""
+    findings: ""
+  - dimension: "Value & Communication"
+    id: value
+    current: 0
+    target: 0
+    gap: 0
+    evidence: ""
+    findings: ""
+  - dimension: "AI & Agent Readiness"
+    id: ai_readiness
+    current: 0
+    target: 0
+    gap: 0
+    evidence: ""
+    findings: ""
+
+summary:
+  average_current: 0
+  average_target: 0
+  average_gap: 0
+  top_gaps:
+    - dimension: ""
+      gap: 0
+      priority_reason: ""
+  strengths:
+    - dimension: ""
+      score: 0
+      note: ""
+
+action_plan:
+  immediate:
+    - action: ""
+      dimension: ""
+      expected_impact: ""
+      timeline: "0-3 months"
+  short_term:
+    - action: ""
+      dimension: ""
+      expected_impact: ""
+      timeline: "3-6 months"
+  medium_term:
+    - action: ""
+      dimension: ""
+      expected_impact: ""
+      timeline: "6-18 months"
+
+maturity_trajectory:
+  six_months: ""
+  twelve_months: ""
+  eighteen_months: ""
+
+cross_references: []
+assumptions: []
+open_questions: []

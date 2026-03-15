@@ -71,6 +71,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (peek && peek.page_type === 'repository-explorer') {
       pageData = peek;
       initRepositoryExplorerPage();
+    } else if (peek && peek.page_type === 'process-analysis') {
+      pageData = peek;
+      initProcessAnalysisPage();
+    } else if (peek && peek.page_type === 'agent-blueprint') {
+      pageData = peek;
+      initAgentBlueprintPage();
     } else {
       await initConceptPage(page);
     }
@@ -2979,9 +2985,19 @@ function renderPhaseV2(phase) {
   }
 
   // ── Section 1: Objectives ──
-  h += `<div class="ep-v2-section">
-    <div class="ep-v2-section-header"><h3>Objectives</h3></div>
-    <div class="ep-v2-section-body">`;
+  // Section definitions for nav
+  const v2Sections = [
+    { id: 'p1-objectives', code: 'P1', label: 'Objectives' },
+    { id: 'p2-maturity', code: 'P2', label: 'Maturity' },
+    { id: 'p3-inputs', code: 'P3', label: 'Inputs' },
+    { id: 'p4-steps', code: 'P4', label: 'Steps' },
+    { id: 'p5-outputs', code: 'P5', label: 'Outputs' },
+    { id: 'p6-request', code: 'P6', label: 'Request' }
+  ];
+
+  h += `<div class="ep-v2-section ep-v2-collapsible" id="ep-sec-p1-objectives">
+    <button class="ep-v2-section-header ep-v2-section-toggle" aria-expanded="true"><span class="ep-v2-sec-badge">P1</span><h3>Objectives</h3><span class="ep-section-chevron">${chevronSVG()}</span></button>
+    <div class="ep-v2-section-body open">`;
   (phase.v2_objectives || []).forEach(obj => {
     h += `<div class="ep-v2-objective">
       <div class="ep-v2-objective-text">${obj.text}</div>`;
@@ -2990,53 +3006,50 @@ function renderPhaseV2(phase) {
     }
     h += `</div>`;
   });
-  h += `<div class="ep-v2-user-input">
-    <label class="ep-v2-input-label">Your context &amp; objectives</label>
-    <textarea class="ep-v2-user-textarea" data-phase="${phase.id}" data-field="objectives" rows="3" placeholder="Describe your organisation's specific objectives for this phase..."></textarea>
+  h += `<div class="ep-v2-sponsor-input">
+    <label class="ep-v2-sponsor-label">Input from Sponsor</label>
+    <textarea class="ep-v2-user-textarea ep-v2-sponsor-textarea" data-phase="${phase.id}" data-field="objectives" rows="3" placeholder="Describe your organisation's specific objectives for this phase..."></textarea>
   </div>`;
+
+  // EA Agent Analysis
+  h += `<div class="ep-v2-agent-output" data-phase="${phase.id}" data-section="objectives">
+    <div class="ep-v2-agent-header">
+      <label class="ep-v2-agent-label">EA Agent Analysis</label>
+      <div class="ep-v2-agent-actions">
+        <div class="ep-v2-agent-tabs">
+          <button class="ep-v2-agent-tab active" data-show="view">View</button>
+          <button class="ep-v2-agent-tab" data-show="source">Source</button>
+        </div>
+      </div>
+    </div>
+    <div class="ep-v2-agent-view active" data-phase="${phase.id}" data-section="objectives"></div>
+    <div class="ep-v2-agent-source" data-phase="${phase.id}" data-section="objectives"></div>
+    <div class="ep-v2-agent-empty" data-phase="${phase.id}" data-section="objectives">
+      <p>Run <code>/ea-preliminary-analysis objectives</code> to generate the EA Agent's analysis of the sponsor's objectives.</p>
+    </div>
+  </div>`;
+
   h += `</div></div>`;
 
-  // ── Section 1b: Maturity Self-Assessment (Preliminary only) ──
+  // ── Section 2: Maturity Self-Assessment (from EA Repository) ──
   if (phase.v2_maturity) {
-    const mat = phase.v2_maturity;
-    h += `<div class="ep-v2-section">
-      <div class="ep-v2-section-header"><h3>Maturity Self-Assessment</h3></div>
-      <div class="ep-v2-section-body">
-        <p class="ep-v2-maturity-intro">${mat.intro}</p>
-        <div class="ep-v2-maturity-grid">
-          <div class="ep-v2-maturity-header-row">
-            <div class="ep-v2-maturity-dim-header">Dimension</div>
-            <div class="ep-v2-maturity-scale-header">Current</div>
-            <div class="ep-v2-maturity-scale-header">Target</div>
-          </div>`;
-    mat.dimensions.forEach(dim => {
-      h += `<div class="ep-v2-maturity-row" data-dim="${dim.id}">
-        <div class="ep-v2-maturity-dim">
-          <div class="ep-v2-maturity-dim-label">${dim.label}</div>
-          <div class="ep-v2-maturity-dim-desc">${dim.description}</div>
+    h += `<div class="ep-v2-section ep-v2-collapsible" id="ep-sec-p2-maturity">
+      <button class="ep-v2-section-header ep-v2-section-toggle" aria-expanded="true"><span class="ep-v2-sec-badge">P2</span><h3>Maturity Self-Assessment</h3><span class="ep-section-chevron">${chevronSVG()}</span></button>
+      <div class="ep-v2-section-body open">
+        <div class="ep-v2-maturity-repo" id="ep-maturity-repo">
+          <p class="ep-v2-repo-hint">Loading maturity data from EA Repository...</p>
         </div>
-        <div class="ep-v2-maturity-radios" data-target="current">
-          ${mat.levels.map(l => `<label class="ep-v2-maturity-radio" title="${l.label}">
-            <input type="radio" name="mat-current-${dim.id}" data-phase="${phase.id}" data-dim="${dim.id}" data-kind="current" value="${l.value}">
-            <span class="ep-v2-maturity-pip" data-level="${l.value}">${l.value}</span>
-          </label>`).join('')}
+        <div class="ep-v2-sponsor-input">
+          <label class="ep-v2-sponsor-label">Input from Sponsor</label>
+          <textarea class="ep-v2-user-textarea ep-v2-sponsor-textarea" data-phase="${phase.id}" data-field="maturity" rows="2" placeholder="Notes on current maturity, known gaps, or priorities..."></textarea>
         </div>
-        <div class="ep-v2-maturity-radios" data-target="target">
-          ${mat.levels.map(l => `<label class="ep-v2-maturity-radio" title="${l.label}">
-            <input type="radio" name="mat-target-${dim.id}" data-phase="${phase.id}" data-dim="${dim.id}" data-kind="target" value="${l.value}">
-            <span class="ep-v2-maturity-pip" data-level="${l.value}">${l.value}</span>
-          </label>`).join('')}
-        </div>
-      </div>`;
-    });
-    h += `</div>
-      <div class="ep-v2-maturity-summary" data-phase="${phase.id}"></div>
-    </div></div>`;
+      </div>
+    </div>`;
   }
 
   // ── Section 2: Inputs ──
-  h += `<div class="ep-v2-section">
-    <div class="ep-v2-section-header"><h3>Inputs</h3></div>
+  h += `<div class="ep-v2-section ep-v2-collapsible" id="ep-sec-p3-inputs">
+    <button class="ep-v2-section-header ep-v2-section-toggle" aria-expanded="false"><span class="ep-v2-sec-badge">P3</span><h3>Inputs</h3><span class="ep-section-chevron">${chevronSVG()}</span></button>
     <div class="ep-v2-section-body"><div class="ep-v2-input-grid">`;
   const inputs = phase.v2_inputs || {};
   const inputCategories = [
@@ -3053,19 +3066,25 @@ function renderPhaseV2(phase) {
       </div>`;
     }
   });
-  h += `</div></div></div>`;
+  h += `</div>
+    <div class="ep-v2-sponsor-input">
+      <label class="ep-v2-sponsor-label">Input from Sponsor</label>
+      <textarea class="ep-v2-user-textarea ep-v2-sponsor-textarea" data-phase="${phase.id}" data-field="inputs" rows="2" placeholder="Additional reference materials, documents, or architectural inputs..."></textarea>
+    </div>
+  </div></div>`;
 
   // ── Section 3: Steps ──
   const mermaidCode = phase.v2_mermaid || '';
-  h += `<div class="ep-v2-section">
-    <div class="ep-v2-section-header">
-      <h3>Steps</h3>
-      <div class="ep-v2-view-toggle">
+  h += `<div class="ep-v2-section ep-v2-collapsible" id="ep-sec-p4-steps">
+    <button class="ep-v2-section-header ep-v2-section-toggle" aria-expanded="true">
+      <span class="ep-v2-sec-badge">P4</span><h3>Steps</h3>
+      <span class="ep-section-chevron">${chevronSVG()}</span>
+    </button>
+    <div class="ep-v2-section-body open">
+      <div class="ep-v2-view-toggle" style="margin-bottom:.75rem">
         <button class="ep-v2-toggle-btn active" data-view="diagram">Diagram</button>
         <button class="ep-v2-toggle-btn" data-view="agent">Agent View</button>
-      </div>
-    </div>
-    <div class="ep-v2-section-body">`;
+      </div>`;
 
   // Diagram view — diagram on top, single step detail below
   const steps = phase.v2_steps || [];
@@ -3092,33 +3111,29 @@ function renderPhaseV2(phase) {
     }
     // EA Repository integration for Step 1 (Scoping)
     if (step.number === 1) {
-      h += `<div class="ep-v2-repo-panel">
-        <div class="ep-v2-repo-header">
-          <span>EA Repository</span>
-          <button class="ep-v2-repo-load" data-phase="${phase.id}">Load Elements</button>
+      h += `<div class="ep-v2-agent-output" data-phase="${phase.id}" data-section="step1-scope">
+        <div class="ep-v2-agent-header">
+          <label class="ep-v2-agent-label">EA Agent — Capability Scope</label>
+          <div class="ep-v2-agent-actions">
+            <span class="ep-v2-scope-summary" id="ep-scope-summary"></span>
+          </div>
         </div>
-        <div class="ep-v2-repo-filters">
-          <select class="ep-v2-repo-layer" data-phase="${phase.id}">
-            <option value="">All Layers</option>
-            <option value="Strategy">Strategy</option>
-            <option value="Business" selected>Business</option>
-            <option value="Application">Application</option>
-            <option value="Technology">Technology</option>
-            <option value="Motivation">Motivation</option>
-          </select>
-          <select class="ep-v2-repo-type" data-phase="${phase.id}">
-            <option value="">All Types</option>
-          </select>
-        </div>
-        <div class="ep-v2-repo-results" data-phase="${phase.id}">
-          <p class="ep-v2-repo-hint">Connect to your EA Repository at <a href="http://localhost:3000" target="_blank">localhost:3000</a> to load architecture elements for scoping.</p>
+        <div id="ep-scope-table-wrap"></div>
+        <div class="ep-v2-agent-empty" id="ep-scope-empty">
+          <p>No scope data yet. Run the EA Agent to scope capabilities from the EA Repository, or click <strong>Load from Repository</strong> below.</p>
+          <button class="ep-v2-agent-run ep-scope-load-btn" data-phase="${phase.id}">Load from Repository</button>
         </div>
       </div>`;
+      h += `<div class="ep-v2-sponsor-input">
+        <label class="ep-v2-sponsor-label">Input from Sponsor</label>
+        <textarea class="ep-v2-user-textarea ep-v2-sponsor-textarea" data-phase="${phase.id}" data-field="step1-comment" rows="2" placeholder="Comments on the scope — any capabilities to add, remove, or reclassify..."></textarea>
+      </div>`;
+    } else {
+      // User input for other steps
+      h += `<div class="ep-v2-user-input">
+        <textarea class="ep-v2-user-textarea" data-phase="${phase.id}" data-field="step-${step.number}" rows="2" placeholder="Your input for this step..."></textarea>
+      </div>`;
     }
-    // User input for this step
-    h += `<div class="ep-v2-user-input">
-      <textarea class="ep-v2-user-textarea" data-phase="${phase.id}" data-field="step-${step.number}" rows="2" placeholder="Your input for this step..."></textarea>
-    </div>`;
     h += `</div></div>`;
   });
   h += `</div></div>`;
@@ -3136,10 +3151,10 @@ function renderPhaseV2(phase) {
 
   h += `</div></div>`;
 
-  // ── Section 4: Outputs ──
-  h += `<div class="ep-v2-section">
-    <div class="ep-v2-section-header"><h3>Outputs</h3></div>
-    <div class="ep-v2-section-body">`;
+  // ── Section 5: Outputs ──
+  h += `<div class="ep-v2-section ep-v2-collapsible" id="ep-sec-p5-outputs">
+    <button class="ep-v2-section-header ep-v2-section-toggle" aria-expanded="true"><span class="ep-v2-sec-badge">P5</span><h3>Outputs</h3><span class="ep-section-chevron">${chevronSVG()}</span></button>
+    <div class="ep-v2-section-body open">`;
 
   if (phase.worked_deliverables && phase.worked_deliverables.length) {
     // Expandable deliverable accordion (reuses ep-wd-* pattern)
@@ -3187,6 +3202,34 @@ function renderPhaseV2(phase) {
   }
 
   h += `</div></div>`;
+
+  // ── Section 5: Request for Architecture Work ──
+  h += `<div class="ep-v2-section ep-v2-collapsible" id="ep-sec-p6-request">
+    <button class="ep-v2-section-header ep-v2-section-toggle" aria-expanded="true"><span class="ep-v2-sec-badge">P6</span><h3>Request for Architecture Work</h3><span class="ep-section-chevron">${chevronSVG()}</span></button>
+    <div class="ep-v2-section-body open">
+      <p class="ep-v2-description">The Request for Architecture Work is the formal contract between the sponsor and the EA team. It consolidates all inputs collected in this phase — objectives, maturity baseline, scoped organisations, principles, and governance — into a single document that authorises the ADM cycle to proceed.</p>
+      <div class="ep-v2-agent-output" data-phase="${phase.id}" data-section="request-for-arch-work">
+        <div class="ep-v2-agent-header">
+          <label class="ep-v2-agent-label">EA Agent — Request for Architecture Work</label>
+          <div class="ep-v2-agent-actions">
+            <div class="ep-v2-agent-tabs">
+              <button class="ep-v2-agent-tab active" data-show="view">View</button>
+              <button class="ep-v2-agent-tab" data-show="source">Source</button>
+            </div>
+          </div>
+        </div>
+        <div class="ep-v2-agent-view active" data-phase="${phase.id}" data-section="request-for-arch-work"></div>
+        <div class="ep-v2-agent-source" data-phase="${phase.id}" data-section="request-for-arch-work"></div>
+        <div class="ep-v2-agent-empty" data-phase="${phase.id}" data-section="request-for-arch-work">
+          <p>Complete the sections above (objectives, maturity assessment, inputs), then run <code>/ea-preliminary-analysis request-for-arch-work</code> to generate the Request for Architecture Work.</p>
+        </div>
+      </div>
+      <div class="ep-v2-sponsor-input">
+        <label class="ep-v2-sponsor-label">Input from Sponsor</label>
+        <textarea class="ep-v2-user-textarea ep-v2-sponsor-textarea" data-phase="${phase.id}" data-field="request-for-arch-work" rows="3" placeholder="Comments, amendments, or approval notes for the Request for Architecture Work..."></textarea>
+      </div>
+    </div>
+  </div>`;
 
   return h;
 }
@@ -3738,16 +3781,16 @@ function initEAProcessPage() {
   // ── Render ──
   let html = '';
 
-  // Phase navigator pills — injected into topbar
-  const topbarPhaseNav = document.getElementById('topbar-phase-nav');
-  if (topbarPhaseNav) {
-    topbarPhaseNav.innerHTML = `<div class="ep-phase-nav">
-      ${phases.map((p, i) => `<button class="ep-phase-pill${i === 0 ? ' active' : ''}" data-phase="${p.id}" style="--phase-color: ${p.color}" title="${p.name}">
+  // ADM sub-nav bar — cycle selector + phase pills, rendered below the topbar
+  html += `<div class="ep-adm-bar">
+    <div class="ep-cycle-bar" id="ep-cycle-bar"></div>
+    <div class="ep-phase-nav">
+      ${phases.map((p, i) => `<button class="ep-phase-pill${i === 0 ? ' active' : ''}" data-phase="${p.id}" style="--phase-color: ${p.color}" title="${p.name}" onclick="document.querySelectorAll('.ep-phase-pill').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelectorAll('.ep-phase-detail').forEach(d=>d.classList.toggle('active',d.id==='ep-detail-${p.id}'));document.querySelector('.main-scroll').scrollTop=0;">
         <span class="ep-pill-code">${p.code}</span>
         <span class="ep-pill-name">${p.name}</span>
       </button>`).join('')}
-    </div>`;
-  }
+    </div>
+  </div>`;
 
   // Phase detail panels
   html += `<div class="ep-detail-wrap"><div class="container">`;
@@ -3757,16 +3800,28 @@ function initEAProcessPage() {
     const nextIdx = i === phases.length - 1 ? null : i + 1;
     html += `<div class="ep-phase-detail${i === 0 ? ' active' : ''}" id="ep-detail-${p.id}">`;
 
-    // Phase header
-    html += `<div class="ep-phase-header" style="border-color: ${p.color}">
-      <div class="ep-phase-badge" style="background: ${p.color}">${p.code}</div>
-      <h2>${p.name}</h2>
-      ${p.worked_deliverables ? '<span class="ep-phase-subtitle">AI Transformation Programme — Preliminary Phase</span>' : ''}
-    </div>`;
+    // Phase header removed — phase name is already in the nav pills
 
     if (p.phase_version === 'v2') {
-      // ── V2 path: TOGAF-structured sections ──
+      // ── V2 path: side nav + TOGAF-structured sections ──
+      const secs = [
+        { id: 'p1-objectives', code: 'P1', label: 'Objectives' },
+        { id: 'p2-maturity', code: 'P2', label: 'Maturity' },
+        { id: 'p3-inputs', code: 'P3', label: 'Inputs' },
+        { id: 'p4-steps', code: 'P4', label: 'Steps' },
+        { id: 'p5-outputs', code: 'P5', label: 'Outputs' },
+        { id: 'p6-request', code: 'P6', label: 'Request' }
+      ];
+      html += `<div class="ep-v2-layout">
+        <nav class="ep-v2-sidenav">
+          ${secs.map((s, si) => `<a class="ep-v2-sidenav-item${si === 0 ? ' active' : ''}" href="#ep-sec-${s.id}" data-sec="${s.id}">
+            <span class="ep-v2-sidenav-code">${s.code}</span>
+            <span class="ep-v2-sidenav-label">${s.label}</span>
+          </a>`).join('')}
+        </nav>
+        <div class="ep-v2-main">`;
       html += renderPhaseV2(p);
+      html += `</div></div>`;
     } else if (p.worked_deliverables) {
       // ── Worked deliverables path ──
       html += renderWorkedPhase(p);
@@ -3957,6 +4012,155 @@ function initEAProcessPage() {
     });
   });
 
+  // ── Step 1 Scope Display (hierarchical) ──
+  function renderScopeTable() {
+    const data = activeCycleData();
+    const scope = data.preliminary && data.preliminary.step1_scope;
+    const wrap = document.getElementById('ep-scope-table-wrap');
+    const empty = document.getElementById('ep-scope-empty');
+    const summaryEl = document.getElementById('ep-scope-summary');
+    if (!wrap) return;
+
+    if (!scope || !scope.tree || !scope.tree.length) {
+      wrap.innerHTML = '';
+      if (empty) empty.style.display = '';
+      if (summaryEl) summaryEl.textContent = '';
+      return;
+    }
+
+    if (empty) empty.style.display = 'none';
+    const prios = scope.priorities || {};
+    const p1 = Object.values(prios).filter(function(v) { return v === 1; }).length;
+    const p2 = Object.values(prios).filter(function(v) { return v === 2; }).length;
+    if (summaryEl) summaryEl.textContent = p1 + ' Prio 1 \u00b7 ' + p2 + ' Prio 2';
+
+    function prioSelect(capId) {
+      var val = prios[capId] || 0;
+      return '<select class="ep-scope-select" data-cap-id="' + capId + '">'
+        + '<option value="0"' + (val === 0 ? ' selected' : '') + '>\u2014</option>'
+        + '<option value="1"' + (val === 1 ? ' selected' : '') + '>Prio 1</option>'
+        + '<option value="2"' + (val === 2 ? ' selected' : '') + '>Prio 2</option>'
+        + '</select>';
+    }
+
+    function prioClass(capId) {
+      var val = prios[capId] || 0;
+      if (val === 1) return ' ep-scope-prio1';
+      if (val === 2) return ' ep-scope-prio2';
+      return '';
+    }
+
+    function renderNode(node, depth) {
+      var hasKids = node.children && node.children.length > 0;
+      var h = '';
+      if (depth === 0) {
+        h += '<div class="ep-scope-l0">';
+        h += '<div class="ep-scope-l0-header">';
+        h += '<strong>' + node.name + '</strong>';
+        if (hasKids) h += '<span class="ep-scope-group-count">' + node.children.length + '</span>';
+        h += prioSelect(node.id);
+        h += '</div>';
+        if (hasKids) {
+          h += '<div class="ep-scope-l0-body">';
+          node.children.forEach(function(child) { h += renderNode(child, 1); });
+          h += '</div>';
+        }
+        h += '</div>';
+      } else if (depth === 1) {
+        h += '<div class="ep-scope-l1">';
+        h += '<button class="ep-scope-l1-header' + prioClass(node.id) + '">';
+        if (hasKids) h += '<span class="ep-section-chevron">' + chevronSVG() + '</span>';
+        h += '<span class="ep-scope-l1-name">' + node.name + '</span>';
+        if (hasKids) h += '<span class="ep-scope-group-count">' + node.children.length + '</span>';
+        h += prioSelect(node.id);
+        h += '</button>';
+        if (hasKids) {
+          h += '<div class="ep-scope-l2-body">';
+          node.children.forEach(function(child) { h += renderNode(child, 2); });
+          h += '</div>';
+        }
+        h += '</div>';
+      } else {
+        h += '<div class="ep-scope-l2-row' + prioClass(node.id) + '">';
+        h += '<span class="ep-scope-l2-name">' + node.name + '</span>';
+        h += prioSelect(node.id);
+        h += '</div>';
+      }
+      return h;
+    }
+
+    var html = '';
+    scope.tree.forEach(function(root) { html += renderNode(root, 0); });
+    wrap.innerHTML = html;
+
+  }
+
+  // L1 collapse/expand (delegated)
+  container.addEventListener('click', function(e) {
+    var header = e.target.closest('.ep-scope-l1-header');
+    if (!header) return;
+    if (e.target.closest('.ep-scope-select')) return;
+    e.preventDefault();
+    header.closest('.ep-scope-l1').classList.toggle('open');
+  });
+
+  // Handle priority changes
+  container.addEventListener('change', function(e) {
+    var sel = e.target.closest('.ep-scope-select');
+    if (!sel) return;
+    var capId = sel.dataset.capId;
+    var newPrio = parseInt(sel.value);
+    var data = activeCycleData();
+    var scope = data.preliminary && data.preliminary.step1_scope;
+    if (!scope || !scope.priorities) return;
+    if (newPrio === 0) {
+      delete scope.priorities[capId];
+    } else {
+      scope.priorities[capId] = newPrio;
+    }
+    persistAll();
+    var p1 = Object.values(scope.priorities).filter(function(v) { return v === 1; }).length;
+    var p2 = Object.values(scope.priorities).filter(function(v) { return v === 2; }).length;
+    var summaryEl = document.getElementById('ep-scope-summary');
+    if (summaryEl) summaryEl.textContent = p1 + ' Prio 1 \u00b7 ' + p2 + ' Prio 2';
+    var row = sel.closest('.ep-scope-l1-header, .ep-scope-l2-row');
+    if (row) {
+      row.classList.remove('ep-scope-prio1', 'ep-scope-prio2');
+      if (newPrio === 1) row.classList.add('ep-scope-prio1');
+      if (newPrio === 2) row.classList.add('ep-scope-prio2');
+    }
+  });
+
+  // Render scope on page load
+  setTimeout(renderScopeTable, 200);
+
+  // Patch populateFormFromCycle to also render scope
+  var origPopulateScope = populateFormFromCycle;
+  populateFormFromCycle = function() {
+    origPopulateScope();
+    renderScopeTable();
+  };
+
+
+  // V2 collapsible sections
+  container.querySelectorAll('.ep-v2-section-toggle').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const expanded = this.getAttribute('aria-expanded') === 'true';
+      this.setAttribute('aria-expanded', !expanded);
+      const body = this.nextElementSibling;
+      body.classList.toggle('open', !expanded);
+      this.querySelector('.ep-section-chevron').style.transform = expanded ? '' : 'rotate(180deg)';
+    });
+  });
+
+  // V2 maturity domain expand/collapse
+  container.querySelectorAll('.ep-v2-mat-domain-header').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const domain = this.closest('.ep-v2-mat-domain');
+      domain.classList.toggle('open');
+    });
+  });
+
   // V2 view toggle (diagram / agent)
   container.querySelectorAll('.ep-v2-toggle-btn').forEach(btn => {
     btn.addEventListener('click', function() {
@@ -3980,25 +4184,245 @@ function initEAProcessPage() {
     });
   });
 
-  // ── V2 User Inputs: localStorage save/load ──
+  // ── Constants ──
+  const EA_REPO_URL = 'http://localhost:3000';
+
+  // ── ADM Cycle Management ──
   const V2_INPUT_KEY = 'ea-process-v2-inputs';
-  function loadV2Inputs() {
-    try { return JSON.parse(localStorage.getItem(V2_INPUT_KEY)) || {}; } catch { return {}; }
-  }
-  function saveV2Input(phaseId, fieldId, value) {
-    const all = loadV2Inputs();
-    if (!all[phaseId]) all[phaseId] = {};
-    all[phaseId][fieldId] = value;
-    localStorage.setItem(V2_INPUT_KEY, JSON.stringify(all));
+  let store = { active_cycle: null, cycles: {} };
+
+  function activeCycleData() {
+    if (!store.active_cycle || !store.cycles[store.active_cycle]) return {};
+    return store.cycles[store.active_cycle].phases || {};
   }
 
-  // Restore saved values
-  const v2Saved = loadV2Inputs();
-  container.querySelectorAll('.ep-v2-user-textarea').forEach(ta => {
-    const pid = ta.dataset.phase;
-    const fid = ta.dataset.field;
-    if (v2Saved[pid] && v2Saved[pid][fid]) ta.value = v2Saved[pid][fid];
-  });
+  function loadV2Inputs() {
+    return activeCycleData();
+  }
+
+  function saveV2Input(phaseId, fieldId, value) {
+    const cd = ensureCyclePhase(phaseId);
+    cd[fieldId] = value;
+    persistAll();
+  }
+
+  function ensureCyclePhase(phaseId) {
+    if (!store.active_cycle) return {};
+    const cycle = store.cycles[store.active_cycle];
+    if (!cycle.phases) cycle.phases = {};
+    if (!cycle.phases[phaseId]) cycle.phases[phaseId] = {};
+    return cycle.phases[phaseId];
+  }
+
+  let persistTimer;
+  function persistAll() {
+    localStorage.setItem(V2_INPUT_KEY, JSON.stringify(store));
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(() => {
+      fetch('/api/save-v2-inputs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(store)
+      }).catch(() => {});
+    }, 500);
+  }
+
+  let availableClients = [];
+
+  function createCycle(name, client) {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cycle-' + Date.now();
+    if (store.cycles[slug]) return slug;
+    store.cycles[slug] = {
+      name: name,
+      client: client || '',
+      created: new Date().toISOString().split('T')[0],
+      phases: {}
+    };
+    store.active_cycle = slug;
+    persistAll();
+    return slug;
+  }
+
+  function getActiveCycleClient() {
+    if (!store.active_cycle || !store.cycles[store.active_cycle]) return '';
+    return store.cycles[store.active_cycle].client || '';
+  }
+
+  function switchCycle(slug) {
+    if (!store.cycles[slug]) return;
+    store.active_cycle = slug;
+    persistAll();
+    populateFormFromCycle();
+  }
+
+  function deleteCycle(slug) {
+    if (!store.cycles[slug]) return;
+    delete store.cycles[slug];
+    const remaining = Object.keys(store.cycles);
+    store.active_cycle = remaining.length ? remaining[0] : null;
+    persistAll();
+    renderCycleSelector();
+    populateFormFromCycle();
+  }
+
+  function populateFormFromCycle() {
+    const data = activeCycleData();
+    // Clear and restore textareas
+    container.querySelectorAll('.ep-v2-user-textarea').forEach(ta => { ta.value = ''; });
+    container.querySelectorAll('.ep-v2-user-textarea').forEach(ta => {
+      const pid = ta.dataset.phase;
+      const fid = ta.dataset.field;
+      if (data[pid] && data[pid][fid]) ta.value = data[pid][fid];
+    });
+  }
+
+  function renderCycleSelector() {
+    const bar = document.getElementById('ep-cycle-bar');
+    if (!bar) return;
+    const slugs = Object.keys(store.cycles);
+    const active = store.active_cycle;
+    const activeCycle = store.cycles[active] || {};
+    const clientLabel = activeCycle.client ? activeCycle.client.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'No client';
+    bar.innerHTML = `
+      <select class="ep-cycle-select" id="ep-cycle-select">
+        ${slugs.map(s => {
+          const c = store.cycles[s];
+          const cl = c.client ? c.client.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : '';
+          return '<option value="' + s + '"' + (s === active ? ' selected' : '') + '>' + c.name + (cl ? ' — ' + cl : '') + '</option>';
+        }).join('')}
+      </select>
+      <span class="ep-cycle-client-badge" title="EA Repository Client">${clientLabel}</span>
+      <button class="ep-cycle-btn ep-cycle-new" id="ep-cycle-new-btn" title="New ADM Cycle">+ New Cycle</button>
+      ${slugs.length > 1 ? '<button class="ep-cycle-btn ep-cycle-delete" id="ep-cycle-delete-btn" title="Delete active cycle">Delete</button>' : ''}
+    `;
+    document.getElementById('ep-cycle-select').addEventListener('change', function() {
+      switchCycle(this.value);
+      renderCycleSelector();
+    });
+    document.getElementById('ep-cycle-new-btn').addEventListener('click', function() {
+      showNewCycleDialog();
+    });
+    const delBtn = document.getElementById('ep-cycle-delete-btn');
+    if (delBtn) {
+      delBtn.addEventListener('click', function() {
+        const name = store.cycles[store.active_cycle]?.name || store.active_cycle;
+        if (confirm(`Delete cycle "${name}"? This cannot be undone.`)) {
+          deleteCycle(store.active_cycle);
+        }
+      });
+    }
+  }
+
+  function showNewCycleDialog() {
+    // Remove existing dialog if any
+    const existing = document.getElementById('ep-new-cycle-dialog');
+    if (existing) existing.remove();
+
+    const dialog = document.createElement('div');
+    dialog.id = 'ep-new-cycle-dialog';
+    dialog.className = 'ep-cycle-dialog-overlay';
+    dialog.innerHTML = `
+      <div class="ep-cycle-dialog">
+        <h3>New ADM Cycle</h3>
+        <div class="ep-cycle-dialog-field">
+          <label>Cycle Name</label>
+          <input type="text" id="ep-new-cycle-name" placeholder="e.g. AI Transformation 2026" autofocus />
+        </div>
+        <div class="ep-cycle-dialog-field">
+          <label>EA Repository Client</label>
+          <select id="ep-new-cycle-client">
+            <option value="">— No client —</option>
+            ${availableClients.map(c => '<option value="' + c.slug + '">' + c.name + '</option>').join('')}
+          </select>
+          <span class="ep-cycle-dialog-hint">Links this cycle to a client's architecture data</span>
+        </div>
+        <div class="ep-cycle-dialog-actions">
+          <button class="ep-cycle-btn" id="ep-new-cycle-cancel">Cancel</button>
+          <button class="ep-cycle-btn ep-cycle-new" id="ep-new-cycle-create">Create Cycle</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+
+    dialog.addEventListener('click', function(e) {
+      if (e.target === dialog || e.target.id === 'ep-new-cycle-cancel') {
+        dialog.remove();
+      }
+      if (e.target.id === 'ep-new-cycle-create') {
+        const name = document.getElementById('ep-new-cycle-name').value.trim();
+        const client = document.getElementById('ep-new-cycle-client').value;
+        if (!name) return;
+        createCycle(name, client);
+        dialog.remove();
+        renderCycleSelector();
+        populateFormFromCycle();
+      }
+    });
+
+    document.getElementById('ep-new-cycle-name').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('ep-new-cycle-create').click();
+      if (e.key === 'Escape') dialog.remove();
+    });
+  }
+
+  // ── Load store and initialise ──
+  (async function initCycles() {
+    // Fetch available EA Repository clients
+    try {
+      const r = await fetch(`${EA_REPO_URL}/`);
+      if (r.ok) {
+        const html = await r.text();
+        const matches = html.match(/data-slug="([^"]+)"/g) || [];
+        availableClients = matches.map(m => {
+          const slug = m.match(/data-slug="([^"]+)"/)[1];
+          return { slug, name: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') };
+        });
+      }
+    } catch {}
+    // Also scan the data directory for .db files as fallback
+    if (!availableClients.length) {
+      // Hardcode known clients from our repository
+      availableClients = [
+        { slug: 'energy-company', name: 'Energy Company' },
+        { slug: 'scor-client', name: 'SCOR Client' },
+        { slug: 'banking-client', name: 'Banking Client' }
+      ];
+    }
+
+    // Try server file first
+    try {
+      const r = await fetch('data/ea-process-v2-inputs.json');
+      if (r.ok) {
+        const data = await r.json();
+        if (data.cycles) {
+          store = data;
+        } else if (Object.keys(data).length > 0) {
+          store = {
+            active_cycle: 'default',
+            cycles: { 'default': { name: 'Default Cycle', client: '', created: new Date().toISOString().split('T')[0], phases: data } }
+          };
+        }
+      }
+    } catch {}
+    // Merge localStorage as fallback
+    try {
+      const local = JSON.parse(localStorage.getItem(V2_INPUT_KEY)) || {};
+      if (local.cycles) {
+        if (!store.active_cycle) store = local;
+      } else if (Object.keys(local).length > 0 && !store.active_cycle) {
+        store = {
+          active_cycle: 'default',
+          cycles: { 'default': { name: 'Default Cycle', client: '', created: new Date().toISOString().split('T')[0], phases: local } }
+        };
+      }
+    } catch {}
+    // Ensure at least one cycle exists
+    if (!store.active_cycle || Object.keys(store.cycles).length === 0) {
+      createCycle('ADM Cycle 1', '');
+    }
+    renderCycleSelector();
+    populateFormFromCycle();
+  })();
 
   // Auto-save on input
   container.addEventListener('input', (e) => {
@@ -4006,68 +4430,190 @@ function initEAProcessPage() {
     if (ta) saveV2Input(ta.dataset.phase, ta.dataset.field, ta.value);
   });
 
-  // ── V2 Maturity Self-Assessment: save/load/summary ──
-  function loadMaturityScores(phaseId) {
-    const all = loadV2Inputs();
-    return (all[phaseId] && all[phaseId].maturity) || {};
-  }
-  function saveMaturityScore(phaseId, dimId, kind, value) {
-    const all = loadV2Inputs();
-    if (!all[phaseId]) all[phaseId] = {};
-    if (!all[phaseId].maturity) all[phaseId].maturity = {};
-    if (!all[phaseId].maturity[dimId]) all[phaseId].maturity[dimId] = {};
-    all[phaseId].maturity[dimId][kind] = parseInt(value);
-    localStorage.setItem(V2_INPUT_KEY, JSON.stringify(all));
-    updateMaturitySummary(phaseId);
-  }
-  function updateMaturitySummary(phaseId) {
-    const scores = loadMaturityScores(phaseId);
-    const dims = Object.keys(scores);
-    const summaryEl = container.querySelector(`.ep-v2-maturity-summary[data-phase="${phaseId}"]`);
-    if (!summaryEl) return;
-    let currentSum = 0, targetSum = 0, currentCount = 0, targetCount = 0;
-    dims.forEach(d => {
-      if (scores[d].current) { currentSum += scores[d].current; currentCount++; }
-      if (scores[d].target) { targetSum += scores[d].target; targetCount++; }
-    });
-    if (currentCount === 0 && targetCount === 0) {
-      summaryEl.innerHTML = '';
+  // ── V2 Maturity: fetch from EA Repository ──
+  function loadMaturityFromRepo() {
+    const wrap = document.getElementById('ep-maturity-repo');
+    if (!wrap) return;
+    const cycleClient = getActiveCycleClient();
+    if (!cycleClient) {
+      wrap.innerHTML = '<p class="ep-v2-repo-hint">No EA Repository client assigned to this cycle.</p>';
       return;
     }
-    const avgCurrent = currentCount ? (currentSum / currentCount).toFixed(1) : '—';
-    const avgTarget = targetCount ? (targetSum / targetCount).toFixed(1) : '—';
-    const gap = (currentCount && targetCount) ? (targetSum / targetCount - currentSum / currentCount).toFixed(1) : '—';
-    summaryEl.innerHTML = `<div class="ep-v2-maturity-summary-bar">
-      <div class="ep-v2-maturity-stat"><span class="ep-v2-maturity-stat-val">${avgCurrent}</span><span class="ep-v2-maturity-stat-label">Avg Current</span></div>
-      <div class="ep-v2-maturity-stat"><span class="ep-v2-maturity-stat-val">${avgTarget}</span><span class="ep-v2-maturity-stat-label">Avg Target</span></div>
-      <div class="ep-v2-maturity-stat ep-v2-maturity-gap"><span class="ep-v2-maturity-stat-val">${gap !== '—' ? '+' + gap : '—'}</span><span class="ep-v2-maturity-stat-label">Gap</span></div>
-    </div>`;
+
+    // Switch to the cycle's client first
+    fetch(EA_REPO_URL + '/api/clients/switch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'slug=' + encodeURIComponent(cycleClient),
+      credentials: 'include'
+    })
+    .then(function() { return fetch(EA_REPO_URL + '/api/v1/maturity', { credentials: 'include' }); })
+    .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
+    .then(function(data) {
+      var h = '';
+
+      // Summary bar
+      var s = data.summary || {};
+      h += '<div class="ep-v2-maturity-summary-bar">';
+      h += '<div class="ep-v2-maturity-stat"><span class="ep-v2-maturity-stat-val">' + (s.avg_current || 0).toFixed(1) + '</span><span class="ep-v2-maturity-stat-label">Avg Current</span></div>';
+      h += '<div class="ep-v2-maturity-stat"><span class="ep-v2-maturity-stat-val">' + (s.avg_target || 0).toFixed(1) + '</span><span class="ep-v2-maturity-stat-label">Avg Target</span></div>';
+      h += '<div class="ep-v2-maturity-stat ep-v2-maturity-gap"><span class="ep-v2-maturity-stat-val">+' + (s.gap || 0).toFixed(1) + '</span><span class="ep-v2-maturity-stat-label">Gap</span></div>';
+      h += '</div>';
+
+      // Assessment info
+      var a = data.assessment || {};
+      if (a.name) {
+        h += '<p class="ep-v2-maturity-meta">' + a.name + ' &middot; ' + (a.status || '') + ' &middot; ' + (a.assessed_at || '') + '</p>';
+      }
+
+      // Domain cards
+      (data.domains || []).forEach(function(dom) {
+        h += '<div class="ep-v2-mat-domain" data-domain="' + dom.id + '">';
+        h += '<button class="ep-v2-mat-domain-header">';
+        h += '<div class="ep-v2-mat-domain-info">';
+        h += '<strong>' + dom.label + '</strong>';
+        h += '<span class="ep-v2-mat-domain-desc">' + (dom.avg_current || 0).toFixed(1) + ' &rarr; ' + (dom.avg_target || 0).toFixed(1) + ' (gap: +' + ((dom.avg_target || 0) - (dom.avg_current || 0)).toFixed(1) + ')</span>';
+        h += '</div>';
+        h += '<span class="ep-section-chevron">' + chevronSVG() + '</span>';
+        h += '</button>';
+        h += '<div class="ep-v2-mat-domain-body">';
+        h += '<div class="ep-v2-maturity-grid">';
+        h += '<div class="ep-v2-maturity-header-row">';
+        h += '<div class="ep-v2-maturity-dim-header">Capability</div>';
+        h += '<div class="ep-v2-maturity-scale-header">Current</div>';
+        h += '<div class="ep-v2-maturity-scale-header">Target</div>';
+        h += '<div class="ep-v2-maturity-scale-header">Gap</div>';
+        h += '</div>';
+        (dom.capabilities || []).forEach(function(cap) {
+          var cur = cap.current || 0;
+          var tgt = cap.target || 0;
+          var gap = tgt - cur;
+          var gapCls = gap > 2 ? 'ep-gap-high' : gap > 0 ? 'ep-gap-med' : 'ep-gap-none';
+          h += '<div class="ep-v2-maturity-row">';
+          h += '<div class="ep-v2-maturity-dim"><div class="ep-v2-maturity-dim-label">' + cap.name + '</div></div>';
+          h += '<div class="ep-v2-maturity-val"><span class="ep-v2-mat-level" data-level="' + cur + '">' + (cur || '—') + '</span></div>';
+          h += '<div class="ep-v2-maturity-val"><span class="ep-v2-mat-level" data-level="' + tgt + '">' + (tgt || '—') + '</span></div>';
+          h += '<div class="ep-v2-maturity-val"><span class="ep-v2-mat-gap ' + gapCls + '">' + (gap > 0 ? '+' + gap : gap === 0 ? '—' : gap) + '</span></div>';
+          h += '</div>';
+        });
+        h += '</div></div></div>';
+      });
+
+      // Link to EA Repository
+      h += '<p class="ep-v2-maturity-link"><a href="' + EA_REPO_URL + '/maturity" target="_blank">Edit scores in EA Repository &rarr;</a></p>';
+
+      wrap.innerHTML = h;
+
+      // Domain expand/collapse
+      wrap.querySelectorAll('.ep-v2-mat-domain-header').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          this.closest('.ep-v2-mat-domain').classList.toggle('open');
+        });
+      });
+    })
+    .catch(function() {
+      wrap.innerHTML = '<p class="ep-v2-repo-hint ep-v2-repo-offline">EA Repository is not running. Start it with <code>ea serve</code> at <a href="http://localhost:3000" target="_blank">localhost:3000</a></p>';
+    });
   }
 
-  // Restore maturity radio states
-  container.querySelectorAll('.ep-v2-maturity-radio input[type="radio"]').forEach(radio => {
-    const pid = radio.dataset.phase;
-    const dim = radio.dataset.dim;
-    const kind = radio.dataset.kind;
-    const scores = loadMaturityScores(pid);
-    if (scores[dim] && scores[dim][kind] === parseInt(radio.value)) {
-      radio.checked = true;
-    }
-  });
-  // Trigger initial summary
-  phases.filter(p => p.v2_maturity).forEach(p => updateMaturitySummary(p.id));
+  // Load maturity data on page init
+  setTimeout(loadMaturityFromRepo, 300);
 
-  // Save maturity on change
-  container.addEventListener('change', (e) => {
-    const radio = e.target.closest('.ep-v2-maturity-radio input[type="radio"]');
-    if (radio) {
-      saveMaturityScore(radio.dataset.phase, radio.dataset.dim, radio.dataset.kind, radio.value);
+  // Reload when cycle changes
+  var origPopulateMat = populateFormFromCycle;
+  populateFormFromCycle = function() {
+    origPopulateMat();
+    loadMaturityFromRepo();
+  };
+
+  // ── EA Agent Analysis: tabs, generate, load/save ──
+  function renderAgentMarkdown(md) {
+    if (typeof marked !== 'undefined') {
+      return marked.parse(md);
     }
+    // Minimal fallback if marked.js not loaded
+    return md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  }
+
+  function loadAgentOutput(phaseId, section) {
+    const data = activeCycleData();
+    return (data[phaseId] && data[phaseId]._agent && data[phaseId]._agent[section]) || null;
+  }
+
+  function saveAgentOutput(phaseId, section, markdown) {
+    const cd = ensureCyclePhase(phaseId);
+    if (!cd._agent) cd._agent = {};
+    cd._agent[section] = markdown;
+    persistAll();
+  }
+
+  function showAgentOutput(phaseId, section) {
+    const md = loadAgentOutput(phaseId, section);
+    const viewEl = container.querySelector(`.ep-v2-agent-view[data-phase="${phaseId}"][data-section="${section}"]`);
+    const srcEl = container.querySelector(`.ep-v2-agent-source[data-phase="${phaseId}"][data-section="${section}"]`);
+    const emptyEl = container.querySelector(`.ep-v2-agent-empty[data-phase="${phaseId}"][data-section="${section}"]`);
+    if (!viewEl) return;
+    if (md) {
+      viewEl.innerHTML = `<div class="ep-v2-agent-md">${renderAgentMarkdown(md)}</div>`;
+      srcEl.innerHTML = `<pre><code>${md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code></pre>`;
+      emptyEl.style.display = 'none';
+      viewEl.closest('.ep-v2-agent-output').classList.add('has-content');
+    } else {
+      viewEl.innerHTML = '';
+      srcEl.innerHTML = '';
+      emptyEl.style.display = '';
+      viewEl.closest('.ep-v2-agent-output').classList.remove('has-content');
+    }
+  }
+
+  // Tab switching
+  container.addEventListener('click', (e) => {
+    const tab = e.target.closest('.ep-v2-agent-tab');
+    if (tab) {
+      const wrap = tab.closest('.ep-v2-agent-output');
+      const show = tab.dataset.show;
+      wrap.querySelectorAll('.ep-v2-agent-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      wrap.querySelector('.ep-v2-agent-view').classList.toggle('active', show === 'view');
+      wrap.querySelector('.ep-v2-agent-source').classList.toggle('active', show === 'source');
+      return;
+    }
+
   });
+
+  // Restore agent outputs on page load / cycle switch
+  function restoreAllAgentOutputs() {
+    container.querySelectorAll('.ep-v2-agent-output').forEach(el => {
+      const phaseId = el.dataset.phase;
+      const section = el.dataset.section;
+      if (!phaseId || !section) return;
+      const existing = loadAgentOutput(phaseId, section);
+      if (existing) {
+        showAgentOutput(phaseId, section);
+      } else {
+        // Try loading from markdown file on disk
+        fetch(`data/ea-agent/${phaseId}-${section}.md`)
+          .then(r => { if (!r.ok) throw new Error(); return r.text(); })
+          .then(md => {
+            saveAgentOutput(phaseId, section, md);
+            showAgentOutput(phaseId, section);
+          })
+          .catch(() => showAgentOutput(phaseId, section));
+      }
+    });
+  }
+
+  // Patch populateFormFromCycle to also restore agent outputs
+  const origPopulate = populateFormFromCycle;
+  populateFormFromCycle = function() {
+    origPopulate();
+    restoreAllAgentOutputs();
+  };
+
+  // Initial restore
+  setTimeout(restoreAllAgentOutputs, 100);
 
   // ── V2 Phase Context (callable per phase) ──
-  const EA_REPO_URL = 'http://localhost:3000';
-
   window.getPhaseContext = async function(phaseId) {
     const all = loadV2Inputs();
     const phaseData = all[phaseId] || {};
@@ -4127,69 +4673,67 @@ function initEAProcessPage() {
     Motivation: ['Stakeholder', 'Driver', 'Assessment', 'Goal', 'Outcome', 'Principle', 'Requirement', 'Constraint', 'Meaning', 'Value']
   };
 
-  // Update type dropdown when layer changes
-  container.addEventListener('change', (e) => {
-    const layerSelect = e.target.closest('.ep-v2-repo-layer');
-    if (layerSelect) {
-      const layer = layerSelect.value;
-      const typeSelect = layerSelect.parentElement.querySelector('.ep-v2-repo-type');
-      if (typeSelect) {
-        typeSelect.innerHTML = '<option value="">All Types</option>';
-        const types = LAYER_TYPES[layer] || [];
-        types.forEach(t => {
-          const label = t.replace(/([A-Z])/g, ' $1').trim();
-          typeSelect.innerHTML += `<option value="${t}">${label}</option>`;
-        });
-      }
-    }
-  });
-
-  // Load elements from EA Repository
+  // Load client list for EA Repository dropdown
+  (function loadRepoClients() {
+  // Load capabilities from EA Repository (uses the cycle's client)
   container.addEventListener('click', (e) => {
     const loadBtn = e.target.closest('.ep-v2-repo-load');
     if (!loadBtn) return;
 
     const phaseId = loadBtn.dataset.phase;
     const panel = container.querySelector(`.ep-v2-repo-results[data-phase="${phaseId}"]`);
-    const layerSelect = container.querySelector(`.ep-v2-repo-layer[data-phase="${phaseId}"]`);
-    const typeSelect = container.querySelector(`.ep-v2-repo-type[data-phase="${phaseId}"]`);
     if (!panel) return;
 
-    const layer = layerSelect ? layerSelect.value : '';
-    const type = typeSelect ? typeSelect.value : '';
+    const cycleClient = getActiveCycleClient();
+    if (!cycleClient) {
+      panel.innerHTML = '<p class="ep-v2-repo-hint">No EA Repository client assigned to this cycle. Edit the cycle or create a new one with a client selected.</p>';
+      return;
+    }
 
     loadBtn.textContent = 'Loading...';
     loadBtn.disabled = true;
     panel.innerHTML = '<p class="ep-v2-repo-hint">Connecting to EA Repository...</p>';
 
-    const params = new URLSearchParams();
-    if (layer) params.set('layer', layer);
-    if (type) params.set('type', type);
-
-    fetch(`${EA_REPO_URL}/api/v1/elements?${params}`)
+    // Switch to the cycle's client, then fetch capabilities
+    fetch(`${EA_REPO_URL}/api/clients/switch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `slug=${encodeURIComponent(cycleClient)}`,
+      credentials: 'include'
+    })
+      .then(() => fetch(`${EA_REPO_URL}/api/v1/elements?layer=Strategy&type=Capability`, { credentials: 'include' }))
       .then(r => {
         if (!r.ok) throw new Error('Server error');
         return r.json();
       })
       .then(elements => {
-        loadBtn.textContent = 'Load Elements';
+        loadBtn.textContent = 'Load Capabilities';
         loadBtn.disabled = false;
         if (!elements || elements.length === 0) {
-          panel.innerHTML = '<p class="ep-v2-repo-hint">No elements found for the selected filters.</p>';
+          panel.innerHTML = '<p class="ep-v2-repo-hint">No capabilities found for this client.</p>';
           return;
         }
-        let html = `<div class="ep-v2-repo-count">${elements.length} element${elements.length !== 1 ? 's' : ''} from EA Repository</div>`;
-        html += '<div class="ep-v2-repo-table-wrap"><table class="ep-v2-repo-table"><thead><tr><th>Name</th><th>Type</th><th>Layer</th><th>Description</th></tr></thead><tbody>';
+        elements.sort((a, b) => {
+          const la = (a.properties && JSON.parse(a.properties || '{}').level) || 99;
+          const lb = (b.properties && JSON.parse(b.properties || '{}').level) || 99;
+          return la - lb || a.name.localeCompare(b.name);
+        });
+        const clientLabel = cycleClient.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        let html = `<div class="ep-v2-repo-count">${elements.length} capabilities from <strong>${clientLabel}</strong></div>`;
+        html += '<div class="ep-v2-repo-table-wrap"><table class="ep-v2-repo-table"><thead><tr><th>ID</th><th>Capability</th><th>Description</th></tr></thead><tbody>';
         elements.forEach(el => {
-          const typeLabel = el.type.replace(/([A-Z])/g, ' $1').trim();
-          const desc = el.description ? (el.description.length > 80 ? el.description.substring(0, 80) + '...' : el.description) : '';
-          html += `<tr><td><strong>${el.name}</strong></td><td><span class="ep-v2-repo-type-badge">${typeLabel}</span></td><td>${el.layer}</td><td>${desc}</td></tr>`;
+          let props = {};
+          try { props = JSON.parse(el.properties || '{}'); } catch {}
+          const level = props.level !== undefined ? props.level : '';
+          const indent = level ? '&nbsp;'.repeat(level * 3) : '';
+          const desc = el.description ? (el.description.length > 100 ? el.description.substring(0, 100) + '...' : el.description) : '';
+          html += `<tr><td><code>${el.id}</code></td><td>${indent}<strong>${el.name}</strong></td><td>${desc}</td></tr>`;
         });
         html += '</tbody></table></div>';
         panel.innerHTML = html;
       })
       .catch(() => {
-        loadBtn.textContent = 'Load Elements';
+        loadBtn.textContent = 'Load Capabilities';
         loadBtn.disabled = false;
         panel.innerHTML = '<p class="ep-v2-repo-hint ep-v2-repo-offline">EA Repository is not running. Start it with <code>ea serve</code> at <a href="http://localhost:3000" target="_blank">localhost:3000</a></p>';
       });
@@ -4410,12 +4954,44 @@ function initEAProcessPage() {
     if (scroll) scroll.scrollTop = 0;
   }
 
-  document.querySelectorAll('.ep-phase-pill').forEach(btn => {
-    btn.addEventListener('click', () => switchPhase(btn.dataset.phase));
+  document.addEventListener('click', (e) => {
+    const pill = e.target.closest('.ep-phase-pill');
+    if (pill) { switchPhase(pill.dataset.phase); return; }
+    const navBtn = e.target.closest('.ep-nav-btn');
+    if (navBtn) { switchPhase(navBtn.dataset.phase); return; }
+    // Sidenav clicks
+    const sideItem = e.target.closest('.ep-v2-sidenav-item');
+    if (sideItem) {
+      e.preventDefault();
+      const target = document.getElementById('ep-sec-' + sideItem.dataset.sec);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
-  document.querySelectorAll('.ep-nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchPhase(btn.dataset.phase));
+
+  // Scroll-spy for sidenav — use IntersectionObserver for reliability
+  const sidenavItems = {};
+  document.querySelectorAll('.ep-v2-sidenav-item').forEach(function(item) {
+    sidenavItems[item.dataset.sec] = item;
   });
+
+  if (Object.keys(sidenavItems).length) {
+    const observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        const secId = entry.target.id.replace('ep-sec-', '');
+        const navItem = sidenavItems[secId];
+        if (navItem) {
+          if (entry.isIntersecting) {
+            Object.values(sidenavItems).forEach(function(n) { n.classList.remove('active'); });
+            navItem.classList.add('active');
+          }
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    document.querySelectorAll('[id^="ep-sec-p"]').forEach(function(sec) {
+      observer.observe(sec);
+    });
+  }
 
   // Keyboard nav
   document.addEventListener('keydown', (e) => {
@@ -4427,6 +5003,793 @@ function initEAProcessPage() {
     if (e.key === 'ArrowLeft' && idx > 0) { e.preventDefault(); switchPhase(phases[idx - 1].id); }
     else if (e.key === 'ArrowRight' && idx < phases.length - 1) { e.preventDefault(); switchPhase(phases[idx + 1].id); }
   });
+  });
+}
+
+/* ── Process Analysis Page ─────────────────────────────── */
+function initProcessAnalysisPage() {
+  const container = document.getElementById('process-analysis-content') || document.querySelector('.main-scroll');
+  if (!pageData) return;
+  const d = pageData;
+
+  function ratingBadge(r) {
+    const cls = r === 'high' ? 'priority-high' : r === 'medium' ? 'priority-medium' : 'priority-low';
+    return `<span class="priority-badge ${cls}">${r}</span>`;
+  }
+  function approachBadge(a) {
+    const map = { 'agent-native': 'impact-new', 'agent-augmented': 'impact-modify', 'hybrid': 'impact-extend' };
+    return `<span class="impact-badge ${map[a] || 'impact-unchanged'}">${a}</span>`;
+  }
+  function techChip(t) { return `<span class="pa-tech-chip">${t}</span>`; }
+  function chevron() { return `<svg class="pa-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`; }
+
+  // ── Hero ──
+  let html = `<header class="hero"><div class="container">
+    <h1>${d.title}</h1>
+    <p class="subtitle">${d.subtitle}</p>
+    <div class="pa-stats-bar">
+      <div class="pa-stat"><span class="pa-stat-num">${d.stats.total_processes}</span><span class="pa-stat-label">Processes</span></div>
+      <div class="pa-stat"><span class="pa-stat-num pa-high">${d.stats.high_impact}</span><span class="pa-stat-label">High Impact</span></div>
+      <div class="pa-stat"><span class="pa-stat-num pa-medium">${d.stats.medium_impact}</span><span class="pa-stat-label">Medium Impact</span></div>
+      <div class="pa-stat"><span class="pa-stat-num pa-low">${d.stats.low_impact}</span><span class="pa-stat-label">Low Impact</span></div>
+      <div class="pa-stat"><span class="pa-stat-num">${d.stats.applications_linked}</span><span class="pa-stat-label">Apps Linked</span></div>
+      <div class="pa-stat"><span class="pa-stat-num">${d.stats.roles_linked}</span><span class="pa-stat-label">Roles Linked</span></div>
+    </div>
+  </div></header>`;
+
+  // ── Impact overview cards ──
+  html += `<div class="dashboard-section"><div class="container">
+    <h2>Value Stream Overview</h2>
+    <div class="pa-vs-grid">`;
+  d.value_streams.forEach(vs => {
+    html += `<div class="pa-vs-card">
+      <div class="pa-vs-card-header">
+        <h3>${vs.name}</h3>
+        ${ratingBadge(vs.overall_rating)}
+      </div>
+      <p class="pa-vs-desc">${vs.description}</p>
+      <div class="pa-vs-meta"><span>${vs.process_count} processes</span></div>
+    </div>`;
+  });
+  html += `</div></div></div>`;
+
+  // ── Value stream sections ──
+  d.value_streams.forEach((vs, vsIdx) => {
+    html += `<div class="dashboard-section"><div class="container">
+      <div class="pa-vs-header" data-vs="${vsIdx}">
+        <h2>${vs.name} ${ratingBadge(vs.overall_rating)}</h2>
+        ${chevron()}
+      </div>
+      <div class="pa-vs-body open" id="pa-vs-${vsIdx}">`;
+
+    // Mermaid diagram
+    html += `<div class="pa-flow-wrap">
+      <h3>Process Flow</h3>
+      <div class="mermaid">${vs.mermaid}</div>
+    </div>`;
+
+    // Process table
+    html += `<div class="pa-process-list">`;
+    vs.processes.forEach((p, pIdx) => {
+      const ai = p.ai_impact;
+      html += `<div class="pa-process-card${p.is_parent ? ' pa-parent' : ''}" data-proc="${vsIdx}-${pIdx}">
+        <div class="pa-process-header">
+          <div class="pa-process-title">
+            ${p.is_parent ? '<span class="pa-parent-icon">&#9654;</span>' : ''}
+            <strong>${p.name}</strong>
+            <span class="pa-owner">${p.owner}</span>
+          </div>
+          <div class="pa-process-badges">
+            ${ratingBadge(ai.rating)}
+            ${approachBadge(ai.approach)}
+            ${chevron()}
+          </div>
+        </div>
+        <div class="pa-process-summary">${ai.summary}</div>
+        <div class="pa-process-detail" id="pa-detail-${vsIdx}-${pIdx}">
+          <div class="pa-detail-grid">
+            <div class="pa-detail-col">
+              <h4>Current State</h4>
+              <p>${ai.current_state}</p>
+            </div>
+            <div class="pa-detail-col">
+              <h4>AI Opportunity</h4>
+              <p>${ai.ai_opportunity}</p>
+            </div>
+          </div>
+          <div class="pa-detail-row">
+            <div class="pa-detail-item"><strong>Estimated Value:</strong> ${ai.estimated_value}</div>
+            <div class="pa-detail-item"><strong>Readiness:</strong> ${ratingBadge(ai.readiness)}</div>
+          </div>
+          <div class="pa-detail-row">
+            <div class="pa-detail-item"><strong>Techniques:</strong> ${ai.techniques.map(techChip).join(' ')}</div>
+          </div>`;
+      if (ai.barriers && ai.barriers.length) {
+        html += `<div class="pa-detail-row"><div class="pa-detail-item"><strong>Barriers:</strong> ${ai.barriers.join(' &bull; ')}</div></div>`;
+      }
+      // Linked elements
+      if (p.roles.length || p.applications.length || p.data_objects.length) {
+        html += `<div class="pa-linked">`;
+        if (p.roles.length) html += `<div class="pa-linked-group"><span class="pa-linked-label">Roles:</span> ${p.roles.map(r => `<span class="pa-linked-tag pa-tag-role">${r}</span>`).join(' ')}</div>`;
+        if (p.applications.length) html += `<div class="pa-linked-group"><span class="pa-linked-label">Applications:</span> ${p.applications.map(a => `<span class="pa-linked-tag pa-tag-app">${a}</span>`).join(' ')}</div>`;
+        if (p.data_objects.length) html += `<div class="pa-linked-group"><span class="pa-linked-label">Data:</span> ${p.data_objects.map(o => `<span class="pa-linked-tag pa-tag-data">${o.name} <small>(${o.access})</small></span>`).join(' ')}</div>`;
+        html += `</div>`;
+      }
+      html += `</div></div>`;
+    });
+    html += `</div></div></div>`;
+  });
+
+  // ── Cross-cutting analysis ──
+  html += `<div class="dashboard-section"><div class="container">
+    <h2>Cross-Cutting Analysis</h2>
+    <div class="pa-cross-grid">`;
+
+  // Technique frequency
+  html += `<div class="pa-cross-card">
+    <h3>AI Technique Frequency</h3>
+    <div class="pa-technique-list">`;
+  d.cross_cutting.technique_frequency.slice(0, 10).forEach(t => {
+    const pct = Math.round(t.count / 20 * 100);
+    html += `<div class="pa-technique-row">
+      <span class="pa-technique-name">${t.technique}</span>
+      <div class="pa-technique-bar"><div class="pa-technique-fill" style="width:${Math.max(pct, 8)}%"></div></div>
+      <span class="pa-technique-count">${t.count}</span>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  // Approach distribution
+  const appr = d.cross_cutting.approach_distribution;
+  html += `<div class="pa-cross-card">
+    <h3>AI Approach Distribution</h3>
+    <div class="pa-approach-list">
+      <div class="pa-approach-item"><span class="impact-badge impact-new">agent-native</span><span class="pa-approach-count">${appr['agent-native']} processes</span><p class="pa-approach-desc">AI agents operate autonomously with minimal human oversight</p></div>
+      <div class="pa-approach-item"><span class="impact-badge impact-modify">agent-augmented</span><span class="pa-approach-count">${appr['agent-augmented']} processes</span><p class="pa-approach-desc">AI assists human experts, enhancing their capabilities</p></div>
+      <div class="pa-approach-item"><span class="impact-badge impact-extend">hybrid</span><span class="pa-approach-count">${appr['hybrid']} processes</span><p class="pa-approach-desc">Mix of autonomous and human-driven activities</p></div>
+    </div>
+  </div>`;
+
+  // Readiness heat map
+  const rd = d.cross_cutting.readiness_summary;
+  html += `<div class="pa-cross-card">
+    <h3>Implementation Readiness</h3>
+    <div class="pa-readiness-bars">
+      <div class="pa-readiness-item"><span class="pa-readiness-label">High</span><div class="pa-readiness-bar"><div class="pa-readiness-fill pa-fill-high" style="width:${rd.high / 20 * 100}%"></div></div><span>${rd.high}</span></div>
+      <div class="pa-readiness-item"><span class="pa-readiness-label">Medium</span><div class="pa-readiness-bar"><div class="pa-readiness-fill pa-fill-medium" style="width:${rd.medium / 20 * 100}%"></div></div><span>${rd.medium}</span></div>
+      <div class="pa-readiness-item"><span class="pa-readiness-label">Low</span><div class="pa-readiness-bar"><div class="pa-readiness-fill pa-fill-low" style="width:${rd.low / 20 * 100}%"></div></div><span>${rd.low}</span></div>
+    </div>
+  </div>`;
+
+  html += `</div></div></div>`;
+
+  // ── Methodology note ──
+  html += `<div class="dashboard-section"><div class="container">
+    <div class="pa-methodology">${d.methodology_note}</div>
+  </div></div>`;
+
+  container.innerHTML = html;
+
+  // ── Mermaid rendering ──
+  if (typeof mermaid !== 'undefined') {
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
+    const visibleMermaid = Array.from(container.querySelectorAll('.mermaid')).filter(el => {
+      const body = el.closest('.pa-vs-body');
+      return !body || body.classList.contains('open');
+    });
+    mermaid.run({ nodes: visibleMermaid }).then(() => {
+      container.querySelectorAll('.mermaid svg').forEach(svg => {
+        const bbox = svg.getBBox();
+        const pad = 8;
+        svg.setAttribute('viewBox', `${bbox.x - pad} ${bbox.y - pad} ${bbox.width + pad * 2} ${bbox.height + pad * 2}`);
+        svg.removeAttribute('width');
+        svg.style.width = (bbox.width + pad * 2) + 'px';
+        svg.style.maxWidth = '100%';
+        svg.style.height = 'auto';
+      });
+    });
+  }
+
+  // ── Event handlers ──
+  // Value stream expand/collapse
+  container.querySelectorAll('.pa-vs-header').forEach(h => {
+    h.addEventListener('click', function() {
+      const idx = this.dataset.vs;
+      const body = document.getElementById(`pa-vs-${idx}`);
+      body.classList.toggle('open');
+      this.classList.toggle('open');
+      // Re-render mermaid in newly opened sections
+      if (body.classList.contains('open') && typeof mermaid !== 'undefined') {
+        const unrendered = body.querySelectorAll('.mermaid:not([data-processed])');
+        if (unrendered.length) {
+          mermaid.run({ nodes: Array.from(unrendered) }).then(() => {
+            body.querySelectorAll('.mermaid svg').forEach(svg => {
+              const bbox = svg.getBBox();
+              const pad = 8;
+              svg.setAttribute('viewBox', `${bbox.x - pad} ${bbox.y - pad} ${bbox.width + pad * 2} ${bbox.height + pad * 2}`);
+              svg.removeAttribute('width');
+              svg.style.width = (bbox.width + pad * 2) + 'px';
+              svg.style.maxWidth = '100%';
+              svg.style.height = 'auto';
+            });
+          });
+        }
+      }
+    });
+  });
+
+  // Process card expand/collapse
+  container.querySelectorAll('.pa-process-header').forEach(h => {
+    h.addEventListener('click', function() {
+      const card = this.closest('.pa-process-card');
+      card.classList.toggle('open');
+    });
+  });
+}
+
+/* ── Agent Blueprint Page ──────────────────────────────── */
+function initAgentBlueprintPage() {
+  const container = document.getElementById('agent-blueprint-content') || document.querySelector('.main-scroll');
+  if (!pageData) return;
+  const d = pageData;
+  let activeProcessIdx = 0;
+
+  function chevron() { return `<svg class="ab-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`; }
+  function autonomyBadge(a) {
+    const map = { 'agent-native': 'impact-new', 'agent-augmented': 'impact-modify', 'hybrid': 'impact-extend' };
+    return `<span class="impact-badge ${map[a] || 'impact-unchanged'}">${a}</span>`;
+  }
+  function levelColor(l) {
+    const map = { 'life-safety': '#7f1d1d', 'equipment': '#dc2626', 'operational': '#d97706', 'regulatory': '#7c3aed', 'data-privacy': '#7f1d1d', 'accuracy': '#dc2626', 'service-quality': '#d97706', 'data-integrity': '#dc2626', 'brand': '#2563eb' };
+    return map[l] || '#64748b';
+  }
+  function levelLabel(l) {
+    const map = { 'life-safety': 'Life Safety', 'equipment': 'Equipment', 'operational': 'Operational', 'regulatory': 'Regulatory', 'data-privacy': 'Data Privacy', 'accuracy': 'Accuracy', 'service-quality': 'Service Quality', 'data-integrity': 'Data Integrity', 'brand': 'Brand' };
+    return map[l] || l.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+  function layerBadge(l) {
+    const map = { 'Business': 'ab-layer-business', 'Application': 'ab-layer-app', 'Technology': 'ab-layer-tech', 'Physical': 'ab-layer-physical' };
+    return `<span class="ab-layer-badge ${map[l] || ''}">${l}</span>`;
+  }
+
+  function fixMermaidSvg(svgList) {
+    svgList.forEach(svg => {
+      const bbox = svg.getBBox();
+      const pad = 8;
+      svg.setAttribute('viewBox', `${bbox.x - pad} ${bbox.y - pad} ${bbox.width + pad * 2} ${bbox.height + pad * 2}`);
+      svg.removeAttribute('width');
+      svg.style.width = (bbox.width + pad * 2) + 'px';
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+    });
+  }
+
+  // ── Derive client list ──
+  const clients = [...new Set(d.processes.map(p => p.client))];
+
+  // ── Render page shell: hero + client filter + selector + content area ──
+  let shell = `<header class="hero"><div class="container">
+    <h1>${d.title}</h1>
+    <p class="subtitle">${d.subtitle}</p>
+  </div></header>`;
+
+  shell += `<div class="dashboard-section ab-selector-section"><div class="container">`;
+  if (clients.length > 1) {
+    shell += `<div class="ab-client-filter" id="ab-client-filter">
+      <button class="ab-client-btn active" data-client="all">All</button>
+      ${clients.map(c => `<button class="ab-client-btn" data-client="${c}">${c}</button>`).join('')}
+    </div>`;
+  }
+  shell += `<div class="ab-process-selector" id="ab-process-selector">
+      ${d.processes.map((p, i) => `<button class="ab-selector-card${i === 0 ? ' active' : ''}" data-idx="${i}" data-client="${p.client}">
+        <span class="ab-selector-category">${p.client} &middot; ${p.category}</span>
+        <strong>${p.name}</strong>
+        <span class="ab-selector-summary">${p.summary}</span>
+        <span class="ab-selector-meta">${p.agent_steps.length} steps &middot; ${p.architecture_elements.length} elements</span>
+      </button>`).join('')}
+    </div>
+  </div></div>`;
+
+  shell += `<div id="ab-process-content"></div>`;
+
+  container.innerHTML = shell;
+
+  function renderBlueprint(proc) {
+    const target = document.getElementById('ab-process-content');
+    const po = proc.process_overview;
+    const totalDur = po.current_timeline.map(t => t.duration).join(' + ');
+
+    let html = '';
+
+    // ── Stats bar ──
+    html += `<div class="dashboard-section"><div class="container">
+      <div class="ab-stats-bar">
+        ${proc.hero_stats.map(s => `<div class="ab-stat"><span class="ab-stat-num ${s.class}">${s.value}</span><span class="ab-stat-label">${s.label}</span></div>`).join('')}
+      </div>
+    </div></div>`;
+
+    // ── Feasibility Summary ──
+    const fs = proc.feasibility_summary;
+    const scoreColor = fs.score >= 8.5 ? '#16a34a' : fs.score >= 7 ? '#d97706' : '#dc2626';
+    const riskColors = { low: '#16a34a', medium: '#d97706', high: '#dc2626' };
+    html += `<div class="dashboard-section"><div class="container">
+      <h2>AI-Support Feasibility</h2>
+      <div class="ab-feas-card">
+        <div class="ab-feas-score" style="border-color: ${scoreColor}">
+          <span class="ab-feas-score-num" style="color: ${scoreColor}">${fs.score}</span>
+          <span class="ab-feas-score-of">/10</span>
+          <span class="ab-feas-score-label">${fs.score_label}</span>
+        </div>
+        <div class="ab-feas-metrics">
+          <div class="ab-feas-metric">
+            <span class="ab-feas-metric-label">Time Savings</span>
+            <span class="ab-feas-metric-value">${fs.time_reduction}</span>
+            <span class="ab-feas-metric-detail">${fs.time_current} → ${fs.time_target}</span>
+          </div>
+          <div class="ab-feas-metric">
+            <span class="ab-feas-metric-label">Risk</span>
+            <span class="ab-feas-metric-value" style="color: ${riskColors[fs.risk_level] || '#64748b'}">${fs.risk_level}</span>
+            <span class="ab-feas-metric-detail">${fs.risk_rationale.split('.')[0]}</span>
+          </div>
+          <div class="ab-feas-metric">
+            <span class="ab-feas-metric-label">Autonomy</span>
+            <span class="ab-feas-metric-value">${fs.autonomy_rate}%</span>
+            <span class="ab-feas-metric-detail">without human involvement</span>
+          </div>
+          <div class="ab-feas-metric">
+            <span class="ab-feas-metric-label">Token Cost</span>
+            <span class="ab-feas-metric-value">${fs.token_estimate.cost_per_execution}</span>
+            <span class="ab-feas-metric-detail">per execution (${fs.token_estimate.per_execution} tokens)</span>
+          </div>
+          <div class="ab-feas-metric">
+            <span class="ab-feas-metric-label">Volume</span>
+            <span class="ab-feas-metric-value">${fs.estimated_volume.split('(')[0].trim()}</span>
+            <span class="ab-feas-metric-detail">${fs.token_estimate.annual_estimate}/year est. cost</span>
+          </div>
+          <div class="ab-feas-metric">
+            <span class="ab-feas-metric-label">Complexity</span>
+            <span class="ab-feas-metric-value" style="color: ${riskColors[fs.implementation_complexity] || '#64748b'}">${fs.implementation_complexity}</span>
+            <span class="ab-feas-metric-detail">${fs.complexity_rationale.split(';')[0]}</span>
+          </div>
+        </div>
+      </div>
+      <div class="ab-feas-detail-grid">
+        <div class="ab-feas-detail-col">
+          <h4>Token Breakdown</h4>
+          <div class="ab-token-breakdown">
+            ${fs.token_estimate.breakdown.map(b => `<div class="ab-token-row">
+              <strong>${b.step}</strong>
+              <span class="ab-token-count">${b.tokens}</span>
+              <span class="ab-token-note">${b.note}</span>
+            </div>`).join('')}
+          </div>
+        </div>
+        <div class="ab-feas-detail-col">
+          <h4>Key Risks</h4>
+          <ul class="ab-feas-list ab-feas-risks">${fs.key_risks.map(r => `<li>${r}</li>`).join('')}</ul>
+        </div>
+        <div class="ab-feas-detail-col">
+          <h4>Key Benefits</h4>
+          <ul class="ab-feas-list ab-feas-benefits">${fs.key_benefits.map(b => `<li>${b}</li>`).join('')}</ul>
+        </div>
+      </div>
+    </div></div>`;
+
+    // ── Process Overview ──
+    html += `<div class="dashboard-section"><div class="container">
+      <h2>Process Overview</h2>
+      <p class="ab-overview-desc">${po.description}</p>
+
+      <div class="ab-flow-comparison">
+        <div class="ab-flow-card">
+          <h3>Current State</h3>
+          <div class="ab-diagram-wrap">
+            <div class="ab-diagram-tabs">
+              <button class="ab-diagram-tab active" data-show="view">Diagram</button>
+              <button class="ab-diagram-tab" data-show="source">Source</button>
+            </div>
+            <div class="ab-diagram-view active"><div class="mermaid">${po.mermaid}</div></div>
+            <div class="ab-diagram-source"><pre><code>${po.mermaid.replace(/\\n/g, '\n').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code></pre></div>
+          </div>
+        </div>
+        <div class="ab-flow-card ab-flow-ai">
+          <h3>AI Agent State</h3>
+          <div class="ab-diagram-wrap">
+            <div class="ab-diagram-tabs">
+              <button class="ab-diagram-tab active" data-show="view">Diagram</button>
+              <button class="ab-diagram-tab" data-show="source">Source</button>
+            </div>
+            <div class="ab-diagram-view active"><div class="mermaid">${fs.ai_process_mermaid}</div></div>
+            <div class="ab-diagram-source"><pre><code>${fs.ai_process_mermaid.replace(/\\n/g, '\n').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code></pre></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ab-timeline-card">
+        <h3>Current State Timeline</h3>
+        <div class="ab-timeline-horizontal">
+          ${po.current_timeline.map((t, i) => `<div class="ab-tl-step">
+            <div class="ab-tl-step-header"><span class="ab-tl-step-num">${i + 1}</span><strong>${t.phase}</strong><span class="ab-timeline-dur">${t.duration}</span></div>
+            <p>${t.description}</p>
+          </div>`).join('')}
+        </div>
+      </div>
+
+      <h3 style="margin-top:1.5rem">Pain Points</h3>
+      <div class="ab-pain-grid">
+        ${po.pain_points.map(p => `<div class="ab-pain-card">
+          <strong>${p.title}</strong>
+          <p>${p.description}</p>
+        </div>`).join('')}
+      </div>
+    </div></div>`;
+
+    // ── Agent Steps ──
+    html += `<div class="dashboard-section"><div class="container">
+      <h2>Agent Steps</h2>
+      <p class="ab-section-intro">${proc.agent_steps.length} steps in a pipeline. Each card shows what the agent needs (context, skills, tools), how it decides (decision logic), what it produces (outputs), and what it must not do (guardrails).</p>`;
+    proc.agent_steps.forEach((step, idx) => {
+      const hasRoles = step.involved_roles && step.involved_roles.length > 0;
+      html += `<div class="ab-step-card" data-step="${idx}">
+        <div class="ab-step-header">
+          <div class="ab-step-title">
+            <span class="ab-step-num">${step.step_number}</span>
+            <div>
+              <strong>${step.name}</strong>
+              <span class="ab-agent-name">${step.agent_name}</span>
+            </div>
+          </div>
+          <div class="ab-step-badges">
+            ${autonomyBadge(step.autonomy)}
+            <span class="ab-target-badge">${step.target_time}</span>
+            ${chevron()}
+          </div>
+        </div>
+        <div class="ab-step-summary">${step.summary}</div>
+        <div class="ab-step-detail" id="ab-step-detail-${idx}">
+          <p class="ab-autonomy-desc">${step.autonomy_description}</p>
+
+          <div class="ab-inner-section">
+            <h4>Context Data</h4>
+            <table class="ab-context-table">
+              <thead><tr><th>Source</th><th>Type</th><th>Description</th><th>Access</th></tr></thead>
+              <tbody>${step.context_data.map(c => `<tr><td><strong>${c.source}</strong></td><td>${c.type}</td><td>${c.description}</td><td><code>${c.access}</code></td></tr>`).join('')}</tbody>
+            </table>
+          </div>
+
+          <div class="ab-inner-section">
+            <h4>Skills</h4>
+            <div class="ab-skills-grid">
+              ${step.skills.map(s => `<div class="ab-skill-card">
+                <div class="ab-skill-header"><strong>${s.name}</strong><span class="ab-skill-type">${s.type}</span></div>
+                <p>${s.description}</p>
+              </div>`).join('')}
+            </div>
+          </div>
+
+          <div class="ab-inner-section">
+            <h4>Tools & Data</h4>
+            <table class="ab-tool-table">
+              <thead><tr><th>Tool</th><th>Purpose</th><th>Access</th><th>Element</th></tr></thead>
+              <tbody>${step.tools_and_data.map(t => `<tr><td><strong>${t.tool}</strong></td><td>${t.purpose}</td><td><code>${t.access}</code></td><td><code>${t.element_id}</code></td></tr>`).join('')}</tbody>
+            </table>
+          </div>
+
+          <div class="ab-inner-section">
+            <h4>Guardrails</h4>
+            <div class="ab-guardrails-list">
+              ${step.guardrails.map(g => `<div class="ab-guardrail-item" style="border-left-color: ${levelColor(g.level)}">
+                <div class="ab-guardrail-header"><strong>${g.rule}</strong><span class="ab-guardrail-level" style="color: ${levelColor(g.level)}">${levelLabel(g.level)}</span></div>
+                <p>${g.description}</p>
+              </div>`).join('')}
+            </div>
+          </div>
+
+          <div class="ab-inner-section">
+            <h4>Decision Logic</h4>
+            <div class="ab-decision-wrap">
+              <div class="mermaid">${step.decision_logic_mermaid}</div>
+            </div>
+          </div>
+
+          <div class="ab-inner-section">
+            <h4>Outputs</h4>
+            <div class="ab-outputs-grid">
+              ${step.outputs.map(o => `<div class="ab-output-card">
+                <div class="ab-output-header"><strong>${o.name}</strong><span class="ab-output-format">${o.format}</span></div>
+                <p>${o.description}</p>
+                <span class="ab-output-consumer">Consumer: ${o.consumer}</span>
+              </div>`).join('')}
+            </div>
+          </div>
+
+          ${hasRoles ? `<div class="ab-inner-section">
+            <h4>Involved Roles</h4>
+            <div class="ab-roles-list">
+              ${step.involved_roles.map(r => `<div class="ab-role-item">
+                <span class="pa-linked-tag pa-tag-role">${r.role}</span>
+                <span class="ab-role-desc">${r.involvement}</span>
+                <code class="ab-role-id">${r.element_id}</code>
+              </div>`).join('')}
+            </div>
+          </div>` : ''}
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+
+    // ── Orchestration ──
+    const orch = proc.orchestration;
+    html += `<div class="dashboard-section"><div class="container">
+      <h2>Orchestration</h2>
+      <p class="ab-section-intro">${orch.description}</p>
+      <div class="ab-orch-diagram">
+        <h3>Sequence Diagram</h3>
+        <div class="mermaid">${orch.mermaid}</div>
+      </div>
+
+      <h3 style="margin-top:1.5rem">Agent Handoffs</h3>
+      <div class="ab-handoffs-grid">
+        ${orch.handoffs.map(h => `<div class="ab-handoff-card">
+          <div class="ab-handoff-flow"><span class="ab-handoff-from">${h.from}</span><span class="ab-handoff-arrow">&rarr;</span><span class="ab-handoff-to">${h.to}</span></div>
+          <div class="ab-handoff-trigger"><strong>Trigger:</strong> ${h.trigger}</div>
+          <div class="ab-handoff-payload"><strong>Payload:</strong> ${h.payload}</div>
+          <div class="ab-handoff-latency"><strong>Latency:</strong> ${h.latency}</div>
+        </div>`).join('')}
+      </div>
+
+      <h3 style="margin-top:1.5rem">Shared State: ${orch.shared_state.name}</h3>
+      <p class="ab-shared-desc">${orch.shared_state.description}</p>
+      <div class="ab-lifecycle">
+        ${orch.shared_state.stages.map((s, i) => `<div class="ab-lifecycle-stage">
+          <div class="ab-lifecycle-marker"><span class="ab-lifecycle-num">${i + 1}</span></div>
+          <div class="ab-lifecycle-content">
+            <strong>${s.stage}</strong><span class="ab-lifecycle-owner">${s.owner}</span>
+            <p>${s.fields_added}</p>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div></div>`;
+
+    // ── Guardrails Framework ──
+    const gf = proc.guardrails_framework;
+    html += `<div class="dashboard-section"><div class="container">
+      <h2>Guardrails Framework</h2>
+      <p class="ab-section-intro">${gf.description}</p>
+      <div class="ab-levels-grid">
+        ${gf.levels.map(l => `<div class="ab-level-card" style="border-left-color: ${l.color}">
+          <div class="ab-level-header">
+            <span class="ab-level-priority">P${l.priority}</span>
+            <strong>${l.label}</strong>
+          </div>
+          <p class="ab-level-desc">${l.description}</p>
+          <ul class="ab-level-rules">
+            ${l.rules.map(r => `<li>${r}</li>`).join('')}
+          </ul>
+        </div>`).join('')}
+      </div>
+
+      <h3 style="margin-top:1.5rem">Human Gates</h3>
+      <table class="ab-gates-table">
+        <thead><tr><th>Gate</th><th>Trigger</th><th>Approver</th><th>Agent Step</th><th>Description</th></tr></thead>
+        <tbody>${gf.human_gates.map(g => `<tr><td><strong>${g.gate}</strong></td><td>${g.trigger}</td><td><span class="pa-linked-tag pa-tag-role">${g.approver}</span></td><td>${g.agent_step}</td><td>${g.description}</td></tr>`).join('')}</tbody>
+      </table>
+    </div></div>`;
+
+    // ── Implementation Reference ──
+    if (proc.implementation && proc.implementation.length) {
+      const cats = { model: [], skill: [], guardrail: [] };
+      proc.implementation.forEach(item => {
+        if (cats[item.category]) cats[item.category].push(item);
+      });
+      const catMeta = {
+        model: { label: 'Data Models', desc: 'Pydantic models defining the shared data structures that flow between agents' },
+        skill: { label: 'Skills', desc: 'Async functions implementing each agent capability — ML inference, graph traversal, text generation' },
+        guardrail: { label: 'Guardrails', desc: 'Validation checks that run before or after each agent action — blocking, escalating, or logging' }
+      };
+      html += `<div class="dashboard-section"><div class="container">
+        <h2>Implementation Reference</h2>
+        <p class="ab-section-intro">How each model, skill, and guardrail would be implemented in Python. Toggle between the structured view and the source code.</p>`;
+
+      for (const [cat, items] of Object.entries(cats)) {
+        if (!items.length) continue;
+        const meta = catMeta[cat];
+        html += `<div class="ab-impl-group">
+          <h3>${meta.label} <span class="ab-impl-count">${items.length}</span></h3>
+          <p class="ab-impl-group-desc">${meta.desc}</p>`;
+        items.forEach((item, idx) => {
+          const uid = `impl-${cat}-${idx}`;
+          const escapedCode = item.code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          html += `<div class="ab-impl-card" data-uid="${uid}">
+            <div class="ab-impl-header">
+              <div class="ab-impl-title">
+                <code class="ab-impl-name">${item.name}</code>
+                <span class="ab-impl-step">${item.agent_step}</span>
+                ${item.level ? `<span class="ab-guardrail-level" style="color: ${levelColor(item.level)}">${levelLabel(item.level)}</span>` : ''}
+              </div>
+              ${chevron()}
+            </div>
+            <div class="ab-impl-body" id="${uid}-body">
+              <div class="ab-impl-tabs">
+                <button class="ab-impl-tab active" data-tab="view" data-uid="${uid}">View</button>
+                <button class="ab-impl-tab" data-tab="code" data-uid="${uid}">Source Code</button>
+              </div>
+              <div class="ab-impl-panel ab-impl-view active" id="${uid}-view">
+                <p class="ab-impl-desc">${item.description}</p>
+              </div>
+              <div class="ab-impl-panel ab-impl-code" id="${uid}-code">
+                <pre><code>${escapedCode}</code></pre>
+              </div>
+            </div>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div></div>`;
+    }
+
+    // ── Architecture Elements ──
+    html += `<div class="dashboard-section"><div class="container">
+      <h2>Architecture Elements</h2>
+      <p class="ab-section-intro">All ${proc.architecture_elements.length} ArchiMate elements involved in this blueprint, linked to the EA Repository with typed IDs.</p>
+      <table class="ab-element-table">
+        <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Layer</th><th>Role in Blueprint</th></tr></thead>
+        <tbody>${proc.architecture_elements.map(e => `<tr><td><code>${e.id}</code></td><td><strong>${e.name}</strong></td><td>${e.type}</td><td>${layerBadge(e.layer)}</td><td>${e.role_in_blueprint}</td></tr>`).join('')}</tbody>
+      </table>
+    </div></div>`;
+
+    // ── Methodology Note ──
+    html += `<div class="dashboard-section"><div class="container">
+      <div class="pa-methodology">${d.methodology_note}</div>
+    </div></div>`;
+
+    target.innerHTML = html;
+
+    // ── Fullscreen overlay (create once) ──
+    if (!document.getElementById('ab-fullscreen-overlay')) {
+      const overlay = document.createElement('div');
+      overlay.id = 'ab-fullscreen-overlay';
+      overlay.className = 'ab-fs-overlay';
+      overlay.innerHTML = '<div class="ab-fs-content"><button class="ab-fs-close" title="Close">&times;</button><div class="ab-fs-body"></div></div>';
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay || e.target.closest('.ab-fs-close')) {
+          overlay.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) {
+          overlay.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      });
+    }
+
+    function addExpandButtons(scope) {
+      scope.querySelectorAll('.mermaid').forEach(el => {
+        if (el.previousElementSibling && el.previousElementSibling.classList.contains('ab-expand-btn')) return;
+        const parent = el.parentElement;
+        parent.style.position = 'relative';
+        const btn = document.createElement('button');
+        btn.className = 'ab-expand-btn';
+        btn.title = 'View fullscreen';
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const svg = el.querySelector('svg');
+          if (!svg) return;
+          const overlay = document.getElementById('ab-fullscreen-overlay');
+          const body = overlay.querySelector('.ab-fs-body');
+          body.innerHTML = '';
+          const clone = svg.cloneNode(true);
+          clone.style.width = '100%';
+          clone.style.maxWidth = 'none';
+          clone.style.height = 'auto';
+          body.appendChild(clone);
+          overlay.classList.add('open');
+          document.body.style.overflow = 'hidden';
+        });
+        parent.insertBefore(btn, el);
+      });
+    }
+
+    // ── Mermaid rendering ──
+    if (typeof mermaid !== 'undefined') {
+      mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
+      const visibleMermaid = Array.from(target.querySelectorAll('.mermaid')).filter(el => {
+        const detail = el.closest('.ab-step-detail');
+        return !detail;
+      });
+      mermaid.run({ nodes: visibleMermaid }).then(() => {
+        fixMermaidSvg(target.querySelectorAll('.mermaid svg'));
+        addExpandButtons(target);
+      });
+    }
+
+    // ── Step card expand/collapse ──
+    target.querySelectorAll('.ab-step-header').forEach(h => {
+      h.addEventListener('click', function() {
+        const card = this.closest('.ab-step-card');
+        card.classList.toggle('open');
+        if (card.classList.contains('open') && typeof mermaid !== 'undefined') {
+          const unrendered = card.querySelectorAll('.mermaid:not([data-processed])');
+          if (unrendered.length) {
+            mermaid.run({ nodes: Array.from(unrendered) }).then(() => {
+              fixMermaidSvg(card.querySelectorAll('.mermaid svg'));
+              addExpandButtons(card);
+            });
+          }
+        }
+      });
+    });
+
+    // ── Implementation card expand/collapse ──
+    target.querySelectorAll('.ab-impl-header').forEach(h => {
+      h.addEventListener('click', function() {
+        this.closest('.ab-impl-card').classList.toggle('open');
+      });
+    });
+
+    // ── Diagram view/source tabs ──
+    target.querySelectorAll('.ab-diagram-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        const wrap = this.closest('.ab-diagram-wrap');
+        const show = this.dataset.show;
+        wrap.querySelectorAll('.ab-diagram-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        wrap.querySelector('.ab-diagram-view').classList.toggle('active', show === 'view');
+        wrap.querySelector('.ab-diagram-source').classList.toggle('active', show === 'source');
+      });
+    });
+
+    // ── Implementation view/code tabs ──
+    target.querySelectorAll('.ab-impl-tab').forEach(tab => {
+      tab.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const uid = this.dataset.uid;
+        const which = this.dataset.tab;
+        const card = this.closest('.ab-impl-card');
+        card.querySelectorAll('.ab-impl-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        card.querySelectorAll('.ab-impl-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(`${uid}-${which}`).classList.add('active');
+      });
+    });
+  }
+
+  // ── Render first process ──
+  renderBlueprint(d.processes[0]);
+
+  // ── Process selector events ──
+  document.getElementById('ab-process-selector').addEventListener('click', function(e) {
+    const btn = e.target.closest('.ab-selector-card');
+    if (!btn) return;
+    const idx = parseInt(btn.dataset.idx);
+    if (idx === activeProcessIdx) return;
+    activeProcessIdx = idx;
+    this.querySelectorAll('.ab-selector-card').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderBlueprint(d.processes[idx]);
+    document.getElementById('ab-process-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // ── Client filter events ──
+  const clientFilter = document.getElementById('ab-client-filter');
+  if (clientFilter) {
+    clientFilter.addEventListener('click', function(e) {
+      const btn = e.target.closest('.ab-client-btn');
+      if (!btn) return;
+      const client = btn.dataset.client;
+      this.querySelectorAll('.ab-client-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cards = document.querySelectorAll('.ab-selector-card');
+      cards.forEach(card => {
+        card.style.display = (client === 'all' || card.dataset.client === client) ? '' : 'none';
+      });
+    });
+  }
+
 }
 
 // Global keyboard shortcut: "/" to open search

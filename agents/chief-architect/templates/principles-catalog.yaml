@@ -1,0 +1,32 @@
+metadata:
+  deliverable: "Architecture Principles Catalog"
+  phase: preliminary
+  author: chief-architect
+  created: ""
+  status: draft
+  version: "1.0"
+  ea_repository:
+    connected: false
+    elements_referenced: 0
+
+principles:
+  - id: AP-001
+    name: ""
+    domain: ""  # business | data | application | technology | ai-agent
+    statement: ""
+    rationale: ""
+    implications:
+      - ""
+    source: ""  # sponsor input | business principle | industry standard
+    related_business_principle: ""
+    governance: ""  # how compliance is checked
+
+governance:
+  principle_owner: ""
+  review_cadence: ""
+  dispensation_process: ""
+  compliance_tracking: ""
+
+cross_references: []
+assumptions: []
+open_questions: []

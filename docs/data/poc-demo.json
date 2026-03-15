@@ -1,12 +1,12 @@
 {
   "page_type": "poc-demo",
   "title": "PoC Demonstration",
-  "subtitle": "Hitachi Energy — Agentic EA in Action",
-  "description": "Proof of concept demonstrating agentic Enterprise Architecture with synthetic but realistic Hitachi Energy data.",
+  "subtitle": "Energy Company — Agentic EA in Action",
+  "description": "Proof of concept demonstrating agentic Enterprise Architecture with synthetic but realistic Energy Company data.",
 
   "hero": {
     "headline": "From Theory to Practice",
-    "subline": "A working proof of concept with Hitachi Energy's architecture: Neo4j graph database, 32 MCP tools, and a Business Architect Agent producing real deliverables from a living repository.",
+    "subline": "A working proof of concept with Energy Company's architecture: Neo4j graph database, 32 MCP tools, and a Business Architect Agent producing real deliverables from a living repository.",
     "stats": [
       {"value": "400", "label": "Elements", "detail": "Across 7 layers"},
       {"value": "662", "label": "Relationships", "detail": "11 ArchiMate types"},
@@ -16,7 +16,7 @@
   },
 
   "context": {
-    "title": "Hitachi Energy",
+    "title": "Energy Company",
     "description": "Global power and energy technology company headquartered in Zurich, Switzerland. Major business areas include Grid Automation, Grid Integration, High Voltage Products, Transformers, and Service & Operations.",
     "highlights": [
       "Critical infrastructure — grid operations are life-safety systems",

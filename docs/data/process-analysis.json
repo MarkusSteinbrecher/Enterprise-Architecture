@@ -1,0 +1,534 @@
+{
+  "page_type": "process-analysis",
+  "title": "Business Process AI-Impact Analysis",
+  "subtitle": "How each of the Energy Client's core business processes can benefit from AI agents — grounded in the ArchiMate repository with linked roles, applications, and data objects",
+  "stats": {
+    "total_processes": 20,
+    "high_impact": 10,
+    "medium_impact": 8,
+    "low_impact": 2,
+    "value_streams": 5,
+    "relationships_added": 99,
+    "applications_linked": 33,
+    "roles_linked": 23
+  },
+  "value_streams": [
+    {
+      "id": "e-vs-001",
+      "name": "Order-to-Delivery",
+      "description": "End-to-end value stream from customer order through engineering, manufacturing, testing, and delivery",
+      "overall_rating": "high",
+      "process_count": 6,
+      "mermaid": "graph LR\n  P002[\"Transformer\\nDesign\"]\n  P003[\"Material\\nProcurement\"]\n  P004[\"Transformer\\nAssembly\"]\n  P005[\"Factory Acceptance\\nTesting\"]\n  P006[\"Heavy Transport\\n& Delivery\"]\n  P002 --> P003 --> P004 --> P005 --> P006\n  classDef high fill:#fef2f2,stroke:#dc2626,color:#991b1b\n  classDef medium fill:#fffbeb,stroke:#d97706,color:#92400e\n  class P002,P003,P005 high\n  class P004,P006 medium",
+      "processes": [
+        {
+          "id": "e-proc-001",
+          "name": "Transformer Order-to-Delivery",
+          "owner": "Transformers BU",
+          "is_parent": true,
+          "ai_impact": {
+            "rating": "high",
+            "approach": "hybrid",
+            "summary": "End-to-end orchestration with AI-optimized design, predictive procurement, and autonomous quality gates",
+            "current_state": "Manually coordinated 9-14 month cycle with sequential handoffs between engineering, procurement, manufacturing, and logistics teams",
+            "ai_opportunity": "AI orchestration agent manages the full value chain — generative design reduces cycle by 30%, predictive procurement prevents delays, computer vision automates quality checks, route optimization for heavy transport",
+            "techniques": ["process-orchestration", "generative-design", "predictive-analytics", "computer-vision"],
+            "estimated_value": "40-60% cycle time reduction",
+            "readiness": "medium",
+            "barriers": ["Legacy MES integration", "Cross-BU coordination complexity", "30+ year proprietary design tools"]
+          },
+          "roles": ["Plant Manager"],
+          "applications": [],
+          "data_objects": []
+        },
+        {
+          "id": "e-proc-002",
+          "name": "Transformer Design",
+          "owner": "Transformers BU",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "high",
+            "approach": "agent-augmented",
+            "summary": "Generative design exploration with AI co-pilot for transformer engineering",
+            "current_state": "Expert engineers use proprietary TDS software with 30+ years of accumulated rules — each design takes 2-6 weeks of iterative calculation",
+            "ai_opportunity": "Generative AI explores design space against constraints (IEC standards, thermal limits, material costs), proposes optimized designs for engineer review, auto-generates BOM and 3D models",
+            "techniques": ["generative-design", "constraint-optimization", "digital-twin", "knowledge-graphs"],
+            "estimated_value": "50-70% design time reduction",
+            "readiness": "medium",
+            "barriers": ["Proprietary TDS codebase is hard to integrate", "Engineering IP sensitivity", "Regulatory certification of AI-generated designs"]
+          },
+          "roles": ["Solution Architect", "R&D Engineer"],
+          "applications": ["Transformer Design System", "AutoCAD / Inventor", "Teamcenter PLM"],
+          "data_objects": [
+            {"name": "Design Specification", "access": "write"},
+            {"name": "Bill of Materials", "access": "write"}
+          ]
+        },
+        {
+          "id": "e-proc-003",
+          "name": "Material Procurement",
+          "owner": "Supply Chain",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "high",
+            "approach": "agent-native",
+            "summary": "Autonomous procurement agent handles sourcing, negotiation, and order placement for standard materials",
+            "current_state": "Procurement managers manually source copper, core steel, insulation oil from approved suppliers — 4-8 week lead times, price volatility on commodities",
+            "ai_opportunity": "AI agent monitors commodity markets, predicts price movements, auto-negotiates with pre-qualified suppliers via Ariba, triggers purchase orders when optimal conditions met",
+            "techniques": ["predictive-analytics", "autonomous-negotiation", "supply-chain-optimization", "market-intelligence"],
+            "estimated_value": "15-25% material cost reduction",
+            "readiness": "high",
+            "barriers": ["Supplier willingness for API-based negotiation", "Commodity market unpredictability"]
+          },
+          "roles": ["Procurement Manager"],
+          "applications": ["SAP S/4HANA", "SAP Ariba"],
+          "data_objects": [
+            {"name": "Bill of Materials", "access": "read"},
+            {"name": "Spare Part", "access": "read"}
+          ]
+        },
+        {
+          "id": "e-proc-004",
+          "name": "Transformer Assembly",
+          "owner": "Transformers BU",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "medium",
+            "approach": "agent-augmented",
+            "summary": "AI-guided assembly with real-time quality monitoring and adaptive scheduling",
+            "current_state": "Skilled workers follow work instructions across 8-12 week assembly cycles — manual quality checks at defined gates, production scheduling via MES",
+            "ai_opportunity": "Computer vision monitors assembly quality in real-time, digital twin tracks progress vs plan, AI adjusts production schedule dynamically based on supply chain status and workforce availability",
+            "techniques": ["computer-vision", "digital-twin", "dynamic-scheduling", "anomaly-detection"],
+            "estimated_value": "20-30% defect reduction, 15% throughput improvement",
+            "readiness": "medium",
+            "barriers": ["Factory floor connectivity gaps", "Skilled workforce resistance to AI oversight", "Varying MES maturity across 7 factories"]
+          },
+          "roles": ["Plant Manager", "HSE Manager"],
+          "applications": ["MES — Ludvika Transformers", "SAP PLM"],
+          "data_objects": [
+            {"name": "Transformer", "access": "write"}
+          ]
+        },
+        {
+          "id": "e-proc-005",
+          "name": "Factory Acceptance Testing",
+          "owner": "Quality",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "high",
+            "approach": "agent-augmented",
+            "summary": "AI-powered test analysis with automated anomaly detection and certificate generation",
+            "current_state": "Manual test execution over 1-2 weeks per unit — engineers analyze waveforms, partial discharge patterns, and thermal data against IEC 60076 requirements",
+            "ai_opportunity": "ML models analyze test data in real-time, flag anomalies automatically, compare against fleet-wide historical patterns, auto-generate test certificates and reports",
+            "techniques": ["anomaly-detection", "pattern-recognition", "automated-reporting", "predictive-quality"],
+            "estimated_value": "40% faster test analysis, 90% auto-generated reports",
+            "readiness": "high",
+            "barriers": ["IEC certification requirements for AI-assisted testing", "Customer acceptance of AI-generated certificates"]
+          },
+          "roles": ["Quality Inspector"],
+          "applications": ["SAP QM", "Power Quality Analyzer"],
+          "data_objects": [
+            {"name": "Test Certificate", "access": "write"},
+            {"name": "Transformer", "access": "read"}
+          ]
+        },
+        {
+          "id": "e-proc-006",
+          "name": "Heavy Transport & Delivery",
+          "owner": "Logistics",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "medium",
+            "approach": "agent-native",
+            "summary": "Autonomous route planning and permit orchestration for heavy transformer transport",
+            "current_state": "Logistics specialists manually plan routes for 200-400 ton transformer shipments — bridge clearances, road permits, police escorts, port coordination",
+            "ai_opportunity": "AI agent plans optimal routes considering weight restrictions, bridge ratings, weather, permits in parallel, real-time tracking with automated stakeholder notifications",
+            "techniques": ["route-optimization", "geospatial-analysis", "document-automation", "real-time-tracking"],
+            "estimated_value": "30% faster permit processing, 20% logistics cost reduction",
+            "readiness": "medium",
+            "barriers": ["Varying permit systems across countries", "Physical infrastructure constraints", "Weather dependency"]
+          },
+          "roles": [],
+          "applications": ["SAP TM"],
+          "data_objects": [
+            {"name": "Transformer", "access": "read"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e-vs-002",
+      "name": "Incident-to-Resolution",
+      "description": "Grid incident detection through fault analysis, crew dispatch, and full service restoration",
+      "overall_rating": "high",
+      "process_count": 4,
+      "mermaid": "graph LR\n  P008[\"Fault Detection\\n& Isolation\"]\n  P009[\"Fault Analysis\\n& Root Cause\"]\n  P010[\"Service\\nRestoration\"]\n  P008 --> P009 --> P010\n  classDef high fill:#fef2f2,stroke:#dc2626,color:#991b1b\n  classDef medium fill:#fffbeb,stroke:#d97706,color:#92400e\n  class P008,P009 high\n  class P010 medium",
+      "processes": [
+        {
+          "id": "e-proc-007",
+          "name": "Grid Fault Management",
+          "owner": "Grid Automation BU",
+          "is_parent": true,
+          "ai_impact": {
+            "rating": "high",
+            "approach": "agent-native",
+            "summary": "Near-autonomous fault management from detection through analysis to coordinated restoration",
+            "current_state": "Operators monitor SCADA dashboards, manually analyze alarm cascades, coordinate switching operations with field crews via radio/phone",
+            "ai_opportunity": "AI agent processes SCADA events in real-time, performs instant root cause analysis using graph-based grid model, recommends optimal switching sequence, auto-dispatches crews with mobile work orders",
+            "techniques": ["real-time-analytics", "graph-analysis", "automated-dispatch", "digital-twin"],
+            "estimated_value": "60-80% faster restoration, 50% reduction in customer-minutes-lost",
+            "readiness": "high",
+            "barriers": ["Safety regulations require human approval for switching", "Union requirements for operator staffing", "Varying SCADA system maturity across utilities"]
+          },
+          "roles": ["Grid Operator"],
+          "applications": [],
+          "data_objects": []
+        },
+        {
+          "id": "e-proc-008",
+          "name": "Fault Detection & Isolation",
+          "owner": "Grid Automation BU",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "high",
+            "approach": "agent-native",
+            "summary": "ML-powered fault detection reduces identification time from minutes to seconds",
+            "current_state": "SCADA alarms trigger operator attention — manual correlation of protection relay events, alarm flooding during major faults obscures root cause",
+            "ai_opportunity": "ML model trained on historical fault signatures processes relay data and SCADA events in real-time, identifies fault type and location within seconds, filters alarm noise automatically",
+            "techniques": ["real-time-ml", "signal-processing", "alarm-management", "pattern-recognition"],
+            "estimated_value": "95% faster fault identification, 80% alarm reduction during cascading events",
+            "readiness": "high",
+            "barriers": ["Model training requires labeled historical fault data", "Protection relay firmware compatibility"]
+          },
+          "roles": ["Grid Operator"],
+          "applications": ["MicroSCADA X", "Network Manager SCADA/EMS"],
+          "data_objects": [
+            {"name": "Fault Report", "access": "write"}
+          ]
+        },
+        {
+          "id": "e-proc-009",
+          "name": "Fault Analysis & Root Cause",
+          "owner": "Grid Automation BU",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "high",
+            "approach": "agent-augmented",
+            "summary": "Graph-based causal analysis identifies root causes using grid topology and event correlation",
+            "current_state": "Protection engineers manually review event sequences, disturbance recordings, and fault waveforms — analysis can take hours for complex cascading faults",
+            "ai_opportunity": "AI traverses grid topology graph to trace fault propagation, correlates protection relay sequences with physical grid model, generates root cause report with confidence scores",
+            "techniques": ["graph-analysis", "causal-inference", "waveform-analysis", "knowledge-graphs"],
+            "estimated_value": "70% faster root cause identification",
+            "readiness": "medium",
+            "barriers": ["Incomplete grid topology data", "Legacy relay event format variations"]
+          },
+          "roles": ["Protection Engineer"],
+          "applications": ["Network Manager SCADA/EMS", "Lumada APM"],
+          "data_objects": [
+            {"name": "Fault Report", "access": "readwrite"}
+          ]
+        },
+        {
+          "id": "e-proc-010",
+          "name": "Service Restoration",
+          "owner": "Grid Automation BU",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "medium",
+            "approach": "agent-augmented",
+            "summary": "AI recommends optimal restoration sequence while human operators approve critical switching",
+            "current_state": "Operators plan switching sequence manually, coordinate with field crews and neighboring grid operators, execute step-by-step with safety checks",
+            "ai_opportunity": "AI generates optimal restoration plan considering load priorities, equipment ratings, and crew availability — presents ranked options to operator for approval, auto-dispatches field crews",
+            "techniques": ["optimization", "constraint-satisfaction", "crew-scheduling", "real-time-simulation"],
+            "estimated_value": "40% faster restoration, optimized load shedding decisions",
+            "readiness": "medium",
+            "barriers": ["Safety regulations mandate human approval", "Coordination with external grid operators", "Real-time simulation accuracy"]
+          },
+          "roles": ["Grid Operator", "Field Service Engineer"],
+          "applications": ["MicroSCADA X", "Network Manager ADMS"],
+          "data_objects": [
+            {"name": "Grid Asset", "access": "readwrite"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e-vs-004",
+      "name": "Maintain-to-Optimize",
+      "description": "Maintenance planning through execution to asset performance optimization and lifecycle extension",
+      "overall_rating": "high",
+      "process_count": 4,
+      "mermaid": "graph LR\n  P012[\"Sensor Data\\nCollection\"]\n  P013[\"Condition\\nAssessment\"]\n  P014[\"Work Order\\nGeneration\"]\n  P012 --> P013 --> P014\n  classDef high fill:#fef2f2,stroke:#dc2626,color:#991b1b\n  classDef medium fill:#fffbeb,stroke:#d97706,color:#92400e\n  class P013,P014 high\n  class P012 medium",
+      "processes": [
+        {
+          "id": "e-proc-011",
+          "name": "Predictive Maintenance Cycle",
+          "owner": "Service & Operations BU",
+          "is_parent": true,
+          "ai_impact": {
+            "rating": "high",
+            "approach": "agent-native",
+            "summary": "Fully autonomous maintenance cycle from data collection through analysis to work order generation",
+            "current_state": "Periodic condition assessments with manual data review — maintenance often reactive or calendar-based rather than condition-based",
+            "ai_opportunity": "Autonomous agent continuously monitors asset health, runs predictive models, generates and prioritizes work orders, optimizes maintenance windows across fleet",
+            "techniques": ["predictive-maintenance", "anomaly-detection", "fleet-optimization", "autonomous-scheduling"],
+            "estimated_value": "30-50% reduction in unplanned outages, 25% maintenance cost reduction",
+            "readiness": "high",
+            "barriers": ["Sensor coverage gaps on older assets", "Model accuracy for rare failure modes"]
+          },
+          "roles": ["Asset Manager"],
+          "applications": [],
+          "data_objects": []
+        },
+        {
+          "id": "e-proc-012",
+          "name": "Sensor Data Collection",
+          "owner": "Service & Operations BU",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "medium",
+            "approach": "agent-native",
+            "summary": "Automated data pipeline with AI-driven quality checks and adaptive sampling rates",
+            "current_state": "Fixed-interval sensor polling via RTUs and IoT gateways — data flows through OPC-UA to Lumada data lake, manual data quality checks",
+            "ai_opportunity": "AI adjusts sampling rates based on asset condition (increase frequency when degradation detected), auto-validates data quality, fills gaps with interpolation, flags sensor failures",
+            "techniques": ["edge-ai", "adaptive-sampling", "data-quality-automation", "anomaly-detection"],
+            "estimated_value": "40% reduction in data quality issues, 60% storage optimization",
+            "readiness": "high",
+            "barriers": ["Legacy RTU firmware limitations", "Bandwidth constraints at remote substations"]
+          },
+          "roles": [],
+          "applications": ["Lumada APM", "Databricks"],
+          "data_objects": [
+            {"name": "Energy Reading", "access": "read"}
+          ]
+        },
+        {
+          "id": "e-proc-013",
+          "name": "Condition Assessment",
+          "owner": "Service & Operations BU",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "high",
+            "approach": "agent-native",
+            "summary": "ML models continuously score asset health and predict remaining useful life",
+            "current_state": "Engineers periodically review dissolved gas analysis, vibration, and temperature data — manual health scoring using industry standards (IEEE C57.104)",
+            "ai_opportunity": "ML ensemble combines DGA, vibration, thermal, and electrical data into real-time health score, predicts RUL with confidence intervals, detects incipient faults months before failure",
+            "techniques": ["predictive-ml", "ensemble-models", "remaining-useful-life", "dissolved-gas-analysis"],
+            "estimated_value": "85% failure prediction accuracy, 6-month advance warning for major failures",
+            "readiness": "high",
+            "barriers": ["Model explainability for critical decisions", "Limited failure data for rare transformer types"]
+          },
+          "roles": ["Asset Manager"],
+          "applications": ["Lumada APM", "IdentiQ Digital Twin"],
+          "data_objects": [
+            {"name": "Grid Asset", "access": "read"},
+            {"name": "Maintenance Record", "access": "read"}
+          ]
+        },
+        {
+          "id": "e-proc-014",
+          "name": "Work Order Generation",
+          "owner": "Service & Operations BU",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "high",
+            "approach": "agent-native",
+            "summary": "Autonomous work order creation with intelligent prioritization and resource optimization",
+            "current_state": "Maintenance planners manually create work orders based on condition reports, schedule crews using spreadsheets and EAM system",
+            "ai_opportunity": "AI agent auto-generates work orders from condition assessments, optimizes priority based on risk and business impact, matches required skills to available crews, books optimal maintenance windows",
+            "techniques": ["autonomous-scheduling", "resource-optimization", "risk-based-prioritization", "workforce-planning"],
+            "estimated_value": "80% reduction in manual planning effort, 25% better resource utilization",
+            "readiness": "high",
+            "barriers": ["Union scheduling requirements", "Integration with multiple EAM systems across regions"]
+          },
+          "roles": ["Field Service Engineer"],
+          "applications": ["Lumada EAM", "Field Service Mobile"],
+          "data_objects": [
+            {"name": "Work Order", "access": "write"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e-vs-003",
+      "name": "Design-to-Commission",
+      "description": "Solution design through installation, testing, energization, and substation/plant commissioning",
+      "overall_rating": "medium",
+      "process_count": 4,
+      "mermaid": "graph LR\n  P016[\"Equipment\\nInstallation\"]\n  P017[\"Commissioning\\nTesting\"]\n  P018[\"Customer\\nHandover\"]\n  P016 --> P017 --> P018\n  classDef high fill:#fef2f2,stroke:#dc2626,color:#991b1b\n  classDef medium fill:#fffbeb,stroke:#d97706,color:#92400e\n  classDef low fill:#f0fdf4,stroke:#16a34a,color:#166534\n  class P017,P018 medium\n  class P016 low",
+      "processes": [
+        {
+          "id": "e-proc-015",
+          "name": "Substation Commissioning",
+          "owner": "Grid Integration BU",
+          "is_parent": true,
+          "ai_impact": {
+            "rating": "medium",
+            "approach": "hybrid",
+            "summary": "AI-assisted commissioning with digital twin validation and automated documentation",
+            "current_state": "6-12 month commissioning cycle with sequential installation, testing, and handover phases — heavy documentation requirements per IEC 62271",
+            "ai_opportunity": "Digital twin validates configuration before physical installation, AI assists test plan generation and results analysis, automated document assembly for handover package",
+            "techniques": ["digital-twin", "automated-testing", "document-automation", "configuration-validation"],
+            "estimated_value": "25-35% faster commissioning cycle",
+            "readiness": "medium",
+            "barriers": ["Physical installation still requires skilled crews", "Customer-specific acceptance criteria", "Regulatory inspection requirements"]
+          },
+          "roles": ["Solution Architect"],
+          "applications": [],
+          "data_objects": []
+        },
+        {
+          "id": "e-proc-016",
+          "name": "Equipment Installation",
+          "owner": "Service & Operations BU",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "low",
+            "approach": "agent-augmented",
+            "summary": "AR-guided installation with real-time quality verification",
+            "current_state": "Field engineers follow detailed work instructions for physical equipment installation — experienced crews needed for HV connections and protection wiring",
+            "ai_opportunity": "AR overlay guides less experienced installers through procedures, computer vision verifies connection correctness, real-time comparison against digital twin to catch errors before energization",
+            "techniques": ["augmented-reality", "computer-vision", "digital-twin", "guided-procedures"],
+            "estimated_value": "15% faster installation, 30% reduction in rework",
+            "readiness": "low",
+            "barriers": ["Harsh substation environment limits AR device usage", "HV safety zone restrictions", "Skilled trade workforce resistance"]
+          },
+          "roles": ["Field Service Engineer", "HSE Manager"],
+          "applications": ["Field Service Mobile", "PCM600"],
+          "data_objects": [
+            {"name": "Substation", "access": "readwrite"}
+          ]
+        },
+        {
+          "id": "e-proc-017",
+          "name": "Commissioning Testing",
+          "owner": "Grid Integration BU",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "medium",
+            "approach": "agent-augmented",
+            "summary": "AI automates test sequence execution and results analysis against standards",
+            "current_state": "Protection engineers manually execute test plans — relay injection testing, trip time verification, interlocking checks per IEC standards",
+            "ai_opportunity": "AI generates optimal test sequence from protection scheme, auto-analyzes results against IEC limits, compares with fleet-wide baselines, generates compliance reports",
+            "techniques": ["automated-testing", "standards-compliance", "statistical-analysis", "automated-reporting"],
+            "estimated_value": "40% faster testing phase, automated compliance documentation",
+            "readiness": "medium",
+            "barriers": ["Safety requirements for test isolation", "Customer witness requirements", "Protection scheme complexity varies significantly"]
+          },
+          "roles": ["Protection Engineer", "Quality Inspector"],
+          "applications": ["ETAP Power Systems", "PCM600", "Polarion"],
+          "data_objects": [
+            {"name": "Test Certificate", "access": "write"}
+          ]
+        },
+        {
+          "id": "e-proc-018",
+          "name": "Customer Handover",
+          "owner": "Project Delivery",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "medium",
+            "approach": "agent-augmented",
+            "summary": "Automated handover package assembly with AI-powered completeness verification",
+            "current_state": "Project managers manually compile handover documentation — as-built drawings, test certificates, O&M manuals, warranty terms — often delayed by missing documents",
+            "ai_opportunity": "AI agent assembles handover package from PLM, test systems, and project data, verifies completeness against contract requirements, auto-generates training materials from technical documentation",
+            "techniques": ["document-automation", "completeness-verification", "content-generation", "knowledge-extraction"],
+            "estimated_value": "60% faster document assembly, 90% first-time completeness",
+            "readiness": "medium",
+            "barriers": ["Documents scattered across multiple systems", "Customer-specific format requirements", "Multilingual documentation needs"]
+          },
+          "roles": ["Customer Success Manager"],
+          "applications": ["Salesforce Sales Cloud", "SharePoint Online"],
+          "data_objects": [
+            {"name": "Customer Contract", "access": "readwrite"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e-vs-005",
+      "name": "Quote-to-Cash",
+      "description": "Customer inquiry and quotation through contract negotiation, delivery, invoicing, and revenue recognition",
+      "overall_rating": "high",
+      "process_count": 2,
+      "mermaid": "graph LR\n  P019[\"Quote-to-\\nOrder\"]\n  P020[\"Supplier\\nQualification\"]\n  classDef high fill:#fef2f2,stroke:#dc2626,color:#991b1b\n  classDef medium fill:#fffbeb,stroke:#d97706,color:#92400e\n  class P019 high\n  class P020 medium",
+      "processes": [
+        {
+          "id": "e-proc-019",
+          "name": "Quote-to-Order",
+          "owner": "Sales",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "high",
+            "approach": "agent-native",
+            "summary": "AI-driven configuration, pricing, and proposal generation for complex energy solutions",
+            "current_state": "Sales engineers spend 2-4 weeks configuring technical solutions, manually calculating costs, and assembling proposals for complex transformer and grid projects",
+            "ai_opportunity": "AI agent interprets customer requirements, auto-configures optimal solution from product catalog, generates pricing with margin optimization, produces professional proposal document",
+            "techniques": ["configuration-ai", "pricing-optimization", "document-generation", "requirement-extraction"],
+            "estimated_value": "70% faster quote generation, 15% margin improvement",
+            "readiness": "high",
+            "barriers": ["Complex product configurations need expert validation", "Customer relationship nuances", "Competitive pricing sensitivity"]
+          },
+          "roles": ["Customer Success Manager"],
+          "applications": ["Salesforce Sales Cloud", "Salesforce CPQ"],
+          "data_objects": [
+            {"name": "Customer Order", "access": "write"},
+            {"name": "Customer Contract", "access": "read"}
+          ]
+        },
+        {
+          "id": "e-proc-020",
+          "name": "Supplier Qualification",
+          "owner": "Supply Chain",
+          "is_parent": false,
+          "ai_impact": {
+            "rating": "medium",
+            "approach": "agent-augmented",
+            "summary": "AI-powered supplier risk assessment and automated qualification workflows",
+            "current_state": "Procurement team manually evaluates suppliers through questionnaires, site audits, financial checks, and quality certifications — 3-6 month qualification cycle",
+            "ai_opportunity": "AI agent continuously monitors supplier risk signals (financial health, ESG scores, news sentiment), auto-scores against qualification criteria, recommends approval with risk assessment",
+            "techniques": ["risk-scoring", "nlp-sentiment", "continuous-monitoring", "automated-workflow"],
+            "estimated_value": "50% faster qualification, continuous risk monitoring vs point-in-time",
+            "readiness": "medium",
+            "barriers": ["Supplier data availability varies by region", "Audit requirements still need physical presence", "Cultural factors in supplier relationships"]
+          },
+          "roles": ["Procurement Manager"],
+          "applications": ["SAP Ariba", "SAP QM"],
+          "data_objects": [
+            {"name": "Spare Part", "access": "read"}
+          ]
+        }
+      ]
+    }
+  ],
+  "cross_cutting": {
+    "technique_frequency": [
+      {"technique": "digital-twin", "count": 6, "description": "Virtual representation of physical assets or processes for simulation and validation"},
+      {"technique": "anomaly-detection", "count": 5, "description": "ML-based identification of unusual patterns in sensor, test, or operational data"},
+      {"technique": "computer-vision", "count": 4, "description": "Image and video analysis for quality inspection, defect detection, and AR guidance"},
+      {"technique": "predictive-analytics", "count": 4, "description": "Forecasting outcomes using historical data and ML models"},
+      {"technique": "document-automation", "count": 4, "description": "Automated generation and assembly of reports, certificates, and documentation"},
+      {"technique": "automated-reporting", "count": 3, "description": "Auto-generated reports from test results, compliance data, and operational metrics"},
+      {"technique": "graph-analysis", "count": 3, "description": "Traversal and analysis of connected data in knowledge graphs and grid topology models"},
+      {"technique": "knowledge-graphs", "count": 3, "description": "Structured representation of domain knowledge with typed entities and relationships"},
+      {"technique": "pattern-recognition", "count": 3, "description": "Identifying recurring patterns in signals, events, or data streams"},
+      {"technique": "constraint-optimization", "count": 2, "description": "Solving multi-objective optimization problems subject to engineering and business constraints"},
+      {"technique": "real-time-ml", "count": 2, "description": "ML inference on streaming data with sub-second latency requirements"},
+      {"technique": "generative-design", "count": 2, "description": "AI-driven exploration of design space to generate optimal configurations"},
+      {"technique": "autonomous-scheduling", "count": 2, "description": "AI systems that independently create and manage work schedules and maintenance windows"},
+      {"technique": "resource-optimization", "count": 2, "description": "Optimizing allocation of workforce, equipment, and materials across competing demands"},
+      {"technique": "route-optimization", "count": 1, "description": "Finding optimal transport routes considering physical and regulatory constraints"}
+    ],
+    "approach_distribution": {
+      "agent-native": 8,
+      "agent-augmented": 9,
+      "hybrid": 3
+    },
+    "readiness_summary": {
+      "high": 10,
+      "medium": 8,
+      "low": 2
+    }
+  },
+  "methodology_note": "This analysis maps AI impact to the Energy Client's actual business processes as modeled in the EA Repository. Each process is linked to its performing roles, supporting applications, and accessed data objects through ArchiMate-typed relationships. The AI impact assessment considers both the theoretical potential and the practical readiness given the current application landscape and organizational maturity. For the theoretical framework on how EA processes evolve in agentic organisations, see the <a href='processes.html'>Processes</a> page."
+}

@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Processes — EA for the Agentic Organisation</title>
+  <title>EA Repository Explorer — EA for the Agentic Organisation</title>
+  <meta name="description" content="Interactive exploration of a graph-based EA repository: 400 elements across 7 layers, 662 relationships, and AI extensions — queryable, traversable, agent-accessible.">
   <link rel="stylesheet" href="css/style.css?v=14">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
 <div class="disclaimer-bar"><div class="container"><strong>Work in Progress</strong> &mdash; AI-generated content.</div></div>
@@ -13,11 +15,7 @@
   <div class="main-area">
     <header class="topbar" id="topbar"></header>
     <div class="main-scroll">
-      <div class="page-content">
-        <main class="main-content">
-          <div id="tab-content"></div>
-        </main>
-      </div>
+      <div id="repository-explorer-content"></div>
     </div>
   </div>
 </div>

@@ -1,0 +1,17 @@
+{
+  "active_cycle": "adm-cycle-1",
+  "cycles": {
+    "adm-cycle-1": {
+      "name": "ADM Cycle 1",
+      "client": "",
+      "created": "2026-03-15",
+      "phases": {
+        "preliminary": {
+          "_agent": {
+            "objectives": "# Understanding of Sponsor Objectives\n\n## What I understood\n\nThe sponsor has commissioned this ADM cycle with a clear AI transformation mandate:\n\n| Dimension | Understanding |\n|-----------|--------------|\n| **Driver** | Business strategy has already defined AI ambitions — this is an architecture response to an existing strategic decision, not an exploratory exercise |\n| **Focus** | AI agents specifically (not just ML/analytics) across all business capabilities |\n| **Scope** | Enterprise-wide — all business units, all locations |\n| **Objective 1** | Evaluate the feasibility of AI/agent adoption in business processes |\n| **Objective 2** | Assess the required changes to the Enterprise Architecture across Business, Application, Data, and Technology layers |\n| **Objective 3** | Define and plan the changes on an Architecture Roadmap |\n\n## What I need clarified before proceeding\n\n1. **Timeline and milestones** — Is there a board-level deadline for the Roadmap delivery? This determines whether we work in a 6-month sprint or an 18-month programme.\n2. **Priority areas** — \"All capabilities across all locations\" is the full scope, but where should we start? Which business processes or capabilities are highest priority for AI adoption?\n3. **Existing AI initiatives** — Are there AI/agent pilots or production systems already running? These are architectural facts we need to incorporate, not start from scratch.\n4. **Success criteria** — What does \"feasible\" mean: technically possible, financially viable, organisationally ready, or all three?\n5. **Budget envelope** — What resources (people, funding, tools) are available for this ADM cycle?\n6. **Constraints** — Regulatory (EU AI Act?), data sovereignty, vendor mandates, or union agreements that constrain the architecture options?\n\n## Next steps in this phase\n\nWith these objectives confirmed, the Preliminary Phase will collect:\n\n- **Maturity baseline** across all 47 EA capabilities (6 domains) — *use the self-assessment below*\n- **Scoped organisations** and their current architecture state — *select from the EA Repository*\n- **Architecture principles** relevant to AI transformation\n- **Governance framework** for AI/agent operations\n\nAll of this feeds into the **Request for Architecture Work** — the formal contract between the sponsor and the EA team that defines what this ADM cycle will deliver, within what constraints, and on what timeline.\n"
+          }
+        }
+      }
+    }
+  }
+}

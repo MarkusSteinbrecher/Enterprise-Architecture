@@ -1,0 +1,86 @@
+metadata:
+  deliverable: "Initial Architecture Repository"
+  phase: preliminary
+  author: technology-architect
+  created: ""
+  status: draft
+  version: "1.0"
+  ea_repository:
+    connected: false
+    elements_referenced: 0
+
+repository_architecture:
+  type: ""  # graph | relational | hybrid
+  metamodel: ""  # ArchiMate 3.2 | custom | extended
+  storage:
+    primary: ""
+    rationale: ""
+  api:
+    protocol: ""  # REST | GraphQL | MCP
+    endpoints:
+      - path: ""
+        purpose: ""
+
+content_framework:
+  layers:
+    - name: "Strategy"
+      element_types: ["Capability", "Resource", "CourseOfAction", "ValueStream"]
+      initial_population: ""
+    - name: "Business"
+      element_types: ["BusinessProcess", "BusinessService", "BusinessActor", "BusinessRole"]
+      initial_population: ""
+    - name: "Application"
+      element_types: ["ApplicationComponent", "ApplicationService", "DataObject"]
+      initial_population: ""
+    - name: "Technology"
+      element_types: ["Node", "SystemSoftware", "TechnologyService"]
+      initial_population: ""
+    - name: "Motivation"
+      element_types: ["Stakeholder", "Goal", "Driver", "Principle", "Requirement"]
+      initial_population: ""
+
+tool_strategy:
+  ea_tool:
+    current: ""
+    recommended: ""
+    rationale: ""
+  modelling_tools: []
+  agent_tools:
+    mcp_server: ""
+    agent_registry: ""
+
+population_plan:
+  phase_1:
+    description: "Initial population — minimum viable repository"
+    elements: []
+    source: ""
+    timeline: ""
+  phase_2:
+    description: "Extended population"
+    elements: []
+    source: ""
+    timeline: ""
+
+agent_integration:
+  mcp_server:
+    enabled: false
+    tools_exposed: []
+    access_control: ""
+  agent_patterns:
+    - pattern: "Agent reads repository for impact analysis"
+      access_type: "read"
+      governance: "no approval needed"
+    - pattern: "Agent proposes repository changes"
+      access_type: "write-proposal"
+      governance: "architect review required"
+
+cross_references:
+  - deliverable: "EA Capability Architecture"
+    relationship: "implements"
+    detail: "Repository implements the capability architecture tooling layer"
+  - deliverable: "Governance Framework"
+    relationship: "supports"
+    detail: "Repository provides evidence for governance processes"
+
+assumptions: []
+open_questions: []

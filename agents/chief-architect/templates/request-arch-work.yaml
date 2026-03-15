@@ -1,0 +1,60 @@
+metadata:
+  deliverable: "Request for Architecture Work"
+  phase: preliminary
+  author: chief-architect
+  created: ""
+  status: draft
+  version: "1.0"
+  ea_repository:
+    connected: false
+    elements_referenced: 0
+
+project:
+  name: ""
+  description: ""
+  sponsor: ""
+  objectives:
+    - ""
+
+scope:
+  in_scope:
+    - ""
+  out_of_scope:
+    - ""
+  architecture_domains:
+    - domain: "Business"
+      included: true
+    - domain: "Data"
+      included: true
+    - domain: "Application"
+      included: true
+    - domain: "Technology"
+      included: true
+
+stakeholders:
+  - name: ""
+    role: ""
+    concern: ""
+    engagement_level: ""  # key decision maker | active participant | informed
+
+constraints:
+  - type: ""  # time | budget | technology | organisational | regulatory
+    description: ""
+    impact: ""
+
+assumptions:
+  - ""
+
+acceptance_criteria:
+  - criterion: ""
+    measure: ""
+
+timeline:
+  start_date: ""
+  target_completion: ""
+  milestones:
+    - name: ""
+      target_date: ""
+
+cross_references: []
+open_questions: []

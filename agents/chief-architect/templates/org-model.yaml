@@ -1,0 +1,57 @@
+metadata:
+  deliverable: "Organisational Model for Enterprise Architecture"
+  phase: preliminary
+  author: chief-architect
+  created: ""
+  status: draft
+  version: "1.0"
+  ea_repository:
+    connected: false
+    elements_referenced: 0
+
+scope:
+  core_units:
+    description: "Enterprise units most affected by and achieving most value from EA"
+    units: []
+  soft_units:
+    description: "Units that will see change but are not directly targeted"
+    units: []
+  extended_units:
+    description: "External entities affected by the architecture capability"
+    units: []
+
+ea_function:
+  operating_model: ""  # Centralised | Federated | Hybrid
+  rationale: ""
+  reporting_line: ""
+  team_structure:
+    - role: "Chief Architect"
+      count: 1
+      responsibilities: []
+    - role: "Domain Architect"
+      count: 0
+      responsibilities: []
+    - role: "Solution Architect"
+      count: 0
+      responsibilities: []
+
+budget:
+  people: ""
+  tools: ""
+  training: ""
+  total: ""
+  funding_model: ""  # Central IT | Cost-shared | Business-funded
+
+governance_support:
+  architecture_board: ""
+  review_process: ""
+  escalation: ""
+
+maturity_context:
+  current_people_score: 0
+  target_people_score: 0
+  gap_actions: []
+
+cross_references: []
+assumptions: []
+open_questions: []

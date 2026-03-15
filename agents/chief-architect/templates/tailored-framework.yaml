@@ -1,0 +1,59 @@
+metadata:
+  deliverable: "Tailored Architecture Framework"
+  phase: preliminary
+  author: chief-architect
+  created: ""
+  status: draft
+  version: "1.0"
+  ea_repository:
+    connected: false
+    elements_referenced: 0
+
+framework_base:
+  name: ""
+  version: ""
+  rationale: ""
+
+terminology_tailoring:
+  custom_terms:
+    - standard_term: ""
+      organisation_term: ""
+      rationale: ""
+
+process_tailoring:
+  phases_included:
+    - phase: "Preliminary"
+      included: true
+      adaptations: ""
+  iteration_types:
+    - type: "Architecture Landscape"
+      used: true
+      notes: ""
+    - type: "Architecture Development"
+      used: true
+      notes: ""
+    - type: "Architecture Capability"
+      used: true
+      notes: ""
+  engagement_types: []
+  agent_integration:
+    agent_assisted_phases: []
+    human_review_gates: []
+
+content_tailoring:
+  deliverables_per_phase:
+    preliminary:
+      - name: ""
+        required: true
+        format: ""
+  artifact_depth: ""  # Strategic | Segment | Capability
+  documentation_standards: ""
+
+tool_alignment:
+  modelling_tool: ""
+  repository_tool: ""
+  collaboration_tools: []
+
+cross_references: []
+assumptions: []
+open_questions: []

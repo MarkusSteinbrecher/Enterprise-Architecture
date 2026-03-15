@@ -12,7 +12,12 @@
     { "id": "tools-repository", "label": "Tools & Repository", "href": "tools-repository.html" },
     { "id": "maturity", "label": "Maturity", "href": "maturity.html" },
     { "id": "agentic-ea", "label": "Agentic EA", "href": "agentic-ea.html" },
+    { "id": "ea-process", "label": "EA Process", "href": "ea-process.html" },
     { "id": "poc-demo", "label": "PoC Demo", "href": "poc-demo.html" },
+    { "id": "repository-explorer", "label": "Repository", "href": "repository-explorer.html" },
+    { "id": "process-analysis", "label": "Process Analysis", "href": "process-analysis.html" },
+    { "id": "agent-blueprint", "label": "Agent Blueprint", "href": "agent-blueprint.html" },
+    { "id": "ea-repository", "label": "EA Repository", "href": "http://localhost:3000", "external": true },
     {
       "id": "industries",
       "label": "Industries",

@@ -1,0 +1,94 @@
+metadata:
+  deliverable: "EA Capability Architecture"
+  phase: preliminary
+  author: chief-architect
+  created: ""
+  status: draft
+  version: "1.0"
+  ea_repository:
+    connected: false
+    elements_referenced: 0
+
+current_state:
+  overall_maturity: 0
+  dimensions:
+    - id: governance
+      label: "Governance & Decision Rights"
+      current_score: 0
+      findings: ""
+    - id: processes
+      label: "Architecture Processes"
+      current_score: 0
+      findings: ""
+    - id: people
+      label: "People & Skills"
+      current_score: 0
+      findings: ""
+    - id: repository
+      label: "Repository & Tools"
+      current_score: 0
+      findings: ""
+    - id: value
+      label: "Value & Communication"
+      current_score: 0
+      findings: ""
+    - id: ai_readiness
+      label: "AI & Agent Readiness"
+      current_score: 0
+      findings: ""
+
+target_state:
+  overall_maturity: 0
+  dimensions:
+    - id: governance
+      target_score: 0
+      target_description: ""
+    - id: processes
+      target_score: 0
+      target_description: ""
+    - id: people
+      target_score: 0
+      target_description: ""
+    - id: repository
+      target_score: 0
+      target_description: ""
+    - id: value
+      target_score: 0
+      target_description: ""
+    - id: ai_readiness
+      target_score: 0
+      target_description: ""
+
+gap_analysis:
+  - dimension: ""
+    gap: 0
+    severity: ""  # critical | significant | moderate | minor
+    key_gaps:
+      - ""
+    recommended_actions:
+      - ""
+
+capability_roadmap:
+  quick_wins:
+    - capability: ""
+      action: ""
+      timeline: "0-3 months"
+  medium_term:
+    - capability: ""
+      action: ""
+      timeline: "3-12 months"
+  strategic:
+    - capability: ""
+      action: ""
+      timeline: "12-24 months"
+
+agent_integration:
+  first_wave:
+    - capability: ""
+      agent_role: ""
+      human_oversight: ""
+  future_waves: []
+
+cross_references: []
+assumptions: []
+open_questions: []

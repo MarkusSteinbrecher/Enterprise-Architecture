@@ -1,0 +1,77 @@
+metadata:
+  deliverable: "Architecture Governance Framework"
+  phase: preliminary
+  author: governance-architect
+  created: ""
+  status: draft
+  version: "1.0"
+  ea_repository:
+    connected: false
+    elements_referenced: 0
+
+governance_bodies:
+  - name: "Architecture Board"
+    purpose: ""
+    composition:
+      - role: ""
+        representation: ""
+    meeting_cadence: ""
+    decision_rights:
+      - ""
+    escalation_path: ""
+
+governance_processes:
+  - name: "Architecture Review"
+    trigger: ""
+    participants: []
+    inputs: []
+    outputs: []
+    sla: ""
+  - name: "Architecture Dispensation"
+    trigger: "Non-compliance with architecture standards"
+    participants: []
+    inputs: []
+    outputs: []
+    sla: ""
+  - name: "Agent Deployment Approval"
+    trigger: "New agent or significant agent modification"
+    participants: []
+    inputs: []
+    outputs: []
+    sla: ""
+
+raci_matrix:
+  activities:
+    - activity: ""
+      responsible: ""
+      accountable: ""
+      consulted: []
+      informed: []
+
+compliance_framework:
+  review_gates:
+    - gate: ""
+      criteria: []
+      evidence: []
+  agent_compliance:
+    - requirement: ""
+      verification: ""
+
+maturity_alignment:
+  current_governance_level: 0
+  target_governance_level: 0
+  gap_actions:
+    - action: ""
+      priority: ""  # high | medium | low
+      timeline: ""
+
+cross_references:
+  - deliverable: "Tailored Framework"
+    relationship: "constrains"
+    detail: "Governance processes constrain how the framework is applied"
+  - deliverable: "Org Model for EA"
+    relationship: "informs"
+    detail: "Governance bodies need roles from the Org Model"
+
+assumptions: []
+open_questions: []

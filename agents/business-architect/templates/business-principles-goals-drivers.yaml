@@ -1,0 +1,58 @@
+metadata:
+  deliverable: "Business Principles, Goals & Drivers"
+  phase: preliminary
+  author: business-architect
+  created: ""
+  status: draft
+  version: "1.0"
+  ea_repository:
+    connected: false
+    elements_referenced: 0
+
+business_principles:
+  - id: BP-001
+    name: ""
+    statement: ""
+    rationale: ""
+    implications:
+      - ""
+    source: ""  # sponsor input | existing documentation | EA Repository
+
+business_goals:
+  - id: BG-001
+    name: ""
+    description: ""
+    timeframe: ""  # short-term | medium-term | long-term
+    measures:
+      - ""
+    related_capabilities:
+      - ""  # EA Repository capability ID or name
+    related_drivers:
+      - ""  # BD-xxx reference
+
+business_drivers:
+  - id: BD-001
+    name: ""
+    description: ""
+    type: ""  # internal | external
+    impact: ""  # high | medium | low
+    affected_domains:
+      - ""  # Business | Application | Technology | Data
+
+stakeholder_map:
+  - name: ""
+    role: ""
+    concern: ""
+    influence: ""  # high | medium | low
+    engagement: ""
+
+cross_references:
+  - deliverable: "Principles Catalog"
+    relationship: "informs"
+    detail: "Business principles feed into architecture principles"
+  - deliverable: "Org Model for EA"
+    relationship: "informs"
+    detail: "Stakeholder map defines who is involved in EA"
+
+assumptions: []
+open_questions: []

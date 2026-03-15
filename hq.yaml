@@ -1,0 +1,24 @@
+# HQ Knowledge Asset Configuration
+# Files listed here are indexed into the HQ knowledge graph.
+# Agents can query them via: hq knowledge enterprise-architecture
+
+knowledge:
+  # TOGAF analysis YAML files (source of truth)
+  - path: Documentation/analysis/*.yaml
+    category: framework
+    name_from: filename
+
+  # Website JSON data files
+  - path: docs/data/*.json
+    category: reference
+    name_from: filename
+
+  # TOGAF knowledge index (cross-cutting structured views)
+  - path: local-docs/TOGAF/knowledge/*.yaml
+    category: framework
+    name_from: title
+
+  # Backlog
+  - path: BACKLOG.md
+    category: backlog
+    name_from: filename
