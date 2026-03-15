@@ -3,3 +3,7 @@ local-docs/
 documentation/
 BACKLOG.md
 /CLAUDE.md
+
+# Dolt database files (added by bd init)
+.dolt/
+*.db
