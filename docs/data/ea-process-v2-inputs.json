@@ -3,7 +3,7 @@
   "cycles": {
     "adm-cycle-1": {
       "name": "ADM Cycle 1",
-      "client": "",
+      "client": "energy-company",
       "created": "2026-03-15",
       "phases": {
         "preliminary": {

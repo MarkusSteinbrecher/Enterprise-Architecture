@@ -18,6 +18,15 @@ knowledge:
     category: framework
     name_from: title
 
+  # Agent personas
+  - path: agents/*/CLAUDE.md
+    category: agent-persona
+
+  # Session log
+  - path: session-log.md
+    category: session-log
+    name_from: filename
+
   # Backlog
   - path: BACKLOG.md
     category: backlog
