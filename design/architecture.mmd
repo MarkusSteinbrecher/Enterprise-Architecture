@@ -1,0 +1,96 @@
+---
+title: Enterprise Architecture — Solution Architecture
+---
+graph TB
+    subgraph Sources["Source Material"]
+        TOGAF["TOGAF Reference<br/>local-docs/TOGAF/"]
+        RESEARCH["Research Findings<br/>(from Insight project)"]
+        INSIGHT_SYNC["sync/insight_sync.py<br/>one-way read"]
+    end
+
+    subgraph Pipeline["YAML Analysis Pipeline"]
+        YAML_A["Type A: TOGAF Analysis<br/>24 files × objectives, inputs,<br/>steps, outputs, techniques<br/>verdict: unchanged|modified|<br/>replaced|new"]
+        YAML_B["Type B: New Concepts<br/>12 files × gap, rationale,<br/>elements, new_elements"]
+        ANALYSIS["Documentation/analysis/<br/>36 YAML files<br/>1,062 elements"]
+    end
+
+    subgraph Transform["Data Transformation"]
+        EXPORT_SCRIPT["Export scripts<br/>(YAML → JSON)"]
+        CYPHER_PARSE["parse_cypher_to_json.py<br/>Neo4j data → repo explorer"]
+        JSON_DATA["docs/data/*.json<br/>33 JSON files"]
+        SITE_JSON["site.json<br/>(navigation, manual)"]
+    end
+
+    subgraph Website["Static Website (docs/)"]
+        APP_JS["app.js (5,800 lines)<br/>18 page type renderers<br/>client-side routing"]
+        STYLE["style.css<br/>HQ design tokens<br/>light/dark theme"]
+
+        subgraph Pages["Pages (15 nav items)"]
+            OVERVIEW["Overview<br/>impact matrix, findings"]
+            CONCEPTS["5 Domain Pages<br/>comparison tables<br/>+ assessment tabs"]
+            NEW_CAP["New Capabilities<br/>10 agentic-org capabilities"]
+            POC["PoC Pages (4)<br/>Agentic EA, Process,<br/>Demo, Repository"]
+            INDUSTRY["Industry Pages (3)<br/>Banking, Pharma,<br/>Re/Insurance"]
+        end
+    end
+
+    subgraph AgenticEA["agentic-ea (separate repo)"]
+        NEO4J[("Neo4j<br/>400 elements<br/>662 relationships")]
+        MCP_SERVER["MCP Server<br/>32 tools"]
+        BA_AGENT["Business Architect<br/>Agent"]
+    end
+
+    subgraph Deploy["Deployment"]
+        GHPAGES["GitHub Pages<br/>docs/ directory"]
+        DEV_SERVER["dev-server.py<br/>:8080 (local)"]
+    end
+
+    subgraph Persistence["Client-Side"]
+        LOCALSTORAGE["localStorage<br/>assessment answers"]
+    end
+
+    %% Source → Pipeline
+    TOGAF --> YAML_A
+    RESEARCH --> YAML_B
+    INSIGHT_SYNC --> RESEARCH
+
+    YAML_A --> ANALYSIS
+    YAML_B --> ANALYSIS
+
+    %% Pipeline → Transform
+    ANALYSIS --> EXPORT_SCRIPT
+    EXPORT_SCRIPT --> JSON_DATA
+    NEO4J -->|"Cypher seed data"| CYPHER_PARSE
+    CYPHER_PARSE -->|"repository-explorer.json"| JSON_DATA
+    SITE_JSON --> JSON_DATA
+
+    %% Transform → Website
+    JSON_DATA --> APP_JS
+    STYLE --> Pages
+    APP_JS --> Pages
+
+    %% PoC integration
+    NEO4J --> MCP_SERVER
+    MCP_SERVER --> BA_AGENT
+    BA_AGENT -.->|"architecture deliverables<br/>(use cases 1-5)"| POC
+
+    %% Assessment persistence
+    CONCEPTS -->|"maturity answers"| LOCALSTORAGE
+
+    %% Deploy
+    Website --> GHPAGES
+    Website --> DEV_SERVER
+
+    classDef source fill:#2d2d35,stroke:#71717A,color:#A1A1AA
+    classDef pipeline fill:#2d2d35,stroke:#FBBF24,color:#E4E4E7
+    classDef transform fill:#2d2d35,stroke:#A78BFA,color:#E4E4E7
+    classDef website fill:#2d2d35,stroke:#60A5FA,color:#E4E4E7
+    classDef poc fill:#2d2d35,stroke:#4ADE80,color:#E4E4E7
+    classDef deploy fill:#2d2d35,stroke:#71717A,color:#A1A1AA
+
+    class TOGAF,RESEARCH,INSIGHT_SYNC source
+    class YAML_A,YAML_B,ANALYSIS pipeline
+    class EXPORT_SCRIPT,CYPHER_PARSE,JSON_DATA,SITE_JSON transform
+    class APP_JS,STYLE,OVERVIEW,CONCEPTS,NEW_CAP,INDUSTRY website
+    class POC,NEO4J,MCP_SERVER,BA_AGENT poc
+    class GHPAGES,DEV_SERVER,LOCALSTORAGE deploy
