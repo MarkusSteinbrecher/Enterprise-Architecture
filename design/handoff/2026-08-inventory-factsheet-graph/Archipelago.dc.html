@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>
+:root{--paper:#FAFAFB;--surface:#FFFFFF;--panel:#F3F4F6;--panel2:#EAEDF0;--bd:#E1E4E8;--bd2:#C4CAD1;--ink:#0E1116;--ink2:#59616A;--ink3:#8C939B;--accent:#A85B32;--accent2:#2C6E77;--rowh:38px;
+--biz:#A8891C;--bizbg:#FAF5E4;--app:#3A6EA5;--appbg:#EBF1F8;--tec:#42774E;--tecbg:#EAF2EC;--pas:#66748A;--pasbg:#EEF1F5;--mot:#7B5EA7;--motbg:#F1EDF8;--imp:#95547F;--impbg:#F8EDF4;
+--lc-plan:#8C939B;--lc-in:#3A6EA5;--lc-act:#42774E;--lc-out:#A8891C;--lc-eol:#AC4436;
+--t-tol:#66748A;--t-inv:#2C6E77;--t-mig:#A8891C;--t-eli:#AC4436}
+[data-theme="dark"]{--paper:#0B0E12;--surface:#111519;--panel:#171B21;--panel2:#1E242B;--bd:#232A31;--bd2:#343D46;--ink:#E7EAED;--ink2:#98A1AA;--ink3:#6B747D;--accent:#CE7C4E;--accent2:#5AA3AD;
+--biz:#D5B441;--bizbg:#221E10;--app:#6C9ED6;--appbg:#121A24;--tec:#6FA97C;--tecbg:#111D16;--pas:#93A3B8;--pasbg:#151A20;--mot:#A98BD6;--motbg:#1A1626;--imp:#C57FAC;--impbg:#22161E;
+--lc-plan:#7C858E;--lc-in:#6C9ED6;--lc-act:#6FA97C;--lc-out:#D5B441;--lc-eol:#D96C5C;
+--t-tol:#93A3B8;--t-inv:#5AA3AD;--t-mig:#D5B441;--t-eli:#D96C5C}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--paper);color:var(--ink);font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent);text-decoration:underline}
+input,select,button{font-family:inherit;color:inherit}
+::selection{background:color-mix(in oklab,var(--accent) 26%,transparent)}
+*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-thumb{background:var(--bd2)}*::-webkit-scrollbar-track{background:transparent}
+@keyframes pfade{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+</style></helmet>
+<div style="height:100vh;display:grid;grid-template-rows:46px 1fr;background:var(--paper);overflow:hidden">
+
+  <header style="display:grid;grid-template-columns:208px 1fr auto;align-items:center;border-bottom:1px solid var(--bd);background:var(--surface)">
+    <div style="display:flex;align-items:center;gap:9px;height:100%;padding:0 14px;border-right:1px solid var(--bd)">
+      <span style="width:15px;height:15px;flex:none;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 62%,62% 100%,0 100%)"></span>
+      <span style="font:600 13.5px/1 'Space Grotesk',sans-serif;letter-spacing:-.01em">Archipelago</span>
+      <span style="font:500 8.5px/1 'JetBrains Mono',monospace;color:var(--ink3);border:1px solid var(--bd);padding:2px 3px">0.2</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:0 14px;min-width:0">
+      <button onClick="{{ openPalette }}" style="display:flex;align-items:center;gap:8px;height:26px;padding:0 8px 0 9px;background:var(--panel);border:1px solid var(--bd);color:var(--ink3);font:400 12px/1 'Space Grotesk',sans-serif;cursor:pointer;min-width:280px" style-hover="border-color:var(--bd2);color:var(--ink2)">
+        <span style="width:11px;height:11px;border:1.4px solid currentColor;border-radius:50%;flex:none"></span>
+        <span style="flex:1;text-align:left">Search elements, relations, actions</span>
+        <span style="font:500 9.5px/1 'JetBrains Mono',monospace;border:1px solid var(--bd);padding:3px 4px">⌘K</span>
+      </button>
+      <div style="width:1px;height:18px;background:var(--bd)"></div>
+      <button style="height:26px;padding:0 9px;background:transparent;border:1px solid transparent;font:400 12px/1 'Space Grotesk',sans-serif;color:var(--ink2);cursor:pointer" style-hover="border-color:var(--bd);background:var(--panel)">Import</button>
+      <button style="height:26px;padding:0 9px;background:transparent;border:1px solid transparent;font:400 12px/1 'Space Grotesk',sans-serif;color:var(--ink2);cursor:pointer" style-hover="border-color:var(--bd);background:var(--panel)">Export</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:0 14px">
+      <div title="Model lives in this browser. Export to a file to make it durable." style="display:flex;align-items:center;gap:7px;height:26px;padding:0 9px;border:1px solid var(--bd);background:var(--panel)">
+        <span style="width:6px;height:6px;background:var(--accent);flex:none"></span>
+        <span style="font:500 10px/1 'JetBrains Mono',monospace;color:var(--ink2)">{{ saveLabel }}</span>
+        <button onClick="{{ saveFile }}" style="font:500 10px/1 'JetBrains Mono',monospace;color:var(--accent);background:transparent;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px">SAVE FILE</button>
+      </div>
+      <button onClick="{{ toggleTheme }}" title="Toggle theme" style="width:26px;height:26px;display:grid;place-items:center;background:transparent;border:1px solid var(--bd);cursor:pointer;color:var(--ink2)" style-hover="border-color:var(--bd2);color:var(--ink)">
+        <span style="width:11px;height:11px;border:1.4px solid currentColor;border-radius:50%;background:linear-gradient(90deg,currentColor 50%,transparent 50%)"></span>
+      </button>
+    </div>
+  </header>
+
+  <div style="display:grid;grid-template-columns:208px 1fr;min-height:0">
+    <nav style="border-right:1px solid var(--bd);background:var(--surface);padding:12px 0;display:flex;flex-direction:column;min-height:0">
+      <div style="padding:0 14px 8px;font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3)">WORKSPACE</div>
+      <button style="margin:0 8px 14px;height:32px;padding:0 9px;display:flex;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--bd);cursor:pointer" style-hover="border-color:var(--bd2)">
+        <span style="font:500 12.5px/1 'Space Grotesk',sans-serif">ArchiSurance</span>
+        <span style="font:400 9.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">▾</span>
+      </button>
+      <div style="padding:0 14px 8px;font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3)">MODEL</div>
+      <sc-for list="{{ nav }}" as="i" hint-placeholder-count="7">
+        <button onClick="{{ i.go }}" title="{{ i.hint }}" style="display:flex;align-items:center;gap:9px;width:100%;height:29px;padding:0 14px;background:{{ i.bg }};border:0;border-left:2px solid {{ i.mark }};text-align:left;cursor:{{ i.cursor }};opacity:{{ i.op }}" style-hover="background:var(--panel)">
+          <span style="width:5px;height:5px;flex:none;background:{{ i.ic }}"></span>
+          <span style="flex:1;font:{{ i.font }};color:{{ i.fg }}">{{ i.l }}</span>
+          <span style="font:500 9px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ i.tag }}</span>
+        </button>
+      </sc-for>
+      <div style="margin-top:auto;padding:12px 14px 0;border-top:1px solid var(--bd)">
+        <div style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3);margin-bottom:7px">MODEL HEALTH</div>
+        <div style="display:flex;align-items:baseline;gap:5px"><span style="font:600 19px/1 'Space Grotesk',sans-serif">{{ health }}</span><span style="font:400 11px/1 'Space Grotesk',sans-serif;color:var(--ink3)">% complete</span></div>
+        <div style="height:3px;background:var(--panel2);margin-top:7px"><div style="height:3px;width:{{ health }}%;background:var(--accent2)"></div></div>
+        <div style="margin-top:8px;font:400 11px/1.5 'Space Grotesk',sans-serif;color:var(--ink3)">{{ elCount }} elements · {{ relCount }} relations<br>{{ gapCount }}</div>
+      </div>
+    </nav>
+
+    <main style="min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+
+      <sc-if value="{{ isInv }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:238px 1fr;min-height:0;height:100%">
+        <aside style="border-right:1px solid var(--bd);background:var(--surface);overflow-y:auto;padding:14px 0 24px">
+          <div style="padding:0 14px 10px;display:flex;align-items:center;justify-content:space-between">
+            <span style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3)">SAVED SEARCHES</span>
+          </div>
+          <sc-for list="{{ saved }}" as="s" hint-placeholder-count="3">
+            <button onClick="{{ s.go }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:5px 14px;background:transparent;border:0;cursor:pointer;text-align:left" style-hover="background:var(--panel)">
+              <span style="font:400 12px/1.3 'Space Grotesk',sans-serif;color:var(--ink2)">{{ s.l }}</span>
+              <span style="font:500 9.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ s.n }}</span>
+            </button>
+          </sc-for>
+          <div style="height:1px;background:var(--bd);margin:14px 0"></div>
+          <div style="padding:0 14px 10px;display:flex;align-items:center;justify-content:space-between">
+            <span style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3)">FILTERS</span>
+            <button onClick="{{ clearFacets }}" style="font:400 10.5px/1 'Space Grotesk',sans-serif;color:var(--accent);background:0;border:0;cursor:pointer;padding:0">Clear</button>
+          </div>
+          <div style="display:flex;gap:0;margin:0 14px 14px;border:1px solid var(--bd)">
+            <sc-for list="{{ modes }}" as="m" hint-placeholder-count="3">
+              <button onClick="{{ m.go }}" title="{{ m.hint }}" style="flex:1;height:23px;background:{{ m.bg }};color:{{ m.fg }};border:0;font:500 9.5px/1 'JetBrains Mono',monospace;cursor:pointer">{{ m.l }}</button>
+            </sc-for>
+          </div>
+          <sc-for list="{{ facetGroups }}" as="g" hint-placeholder-count="4">
+            <div style="margin-bottom:16px">
+              <div style="padding:0 14px 6px;font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink3)">{{ g.l }}</div>
+              <sc-for list="{{ g.opts }}" as="o">
+                <button onClick="{{ o.go }}" style="display:flex;align-items:center;gap:8px;width:100%;padding:4px 14px;background:{{ o.bg }};border:0;cursor:pointer;text-align:left" style-hover="background:var(--panel)">
+                  <span style="width:11px;height:11px;flex:none;border:1px solid {{ o.bd }};background:{{ o.fill }};display:grid;place-items:center"></span>
+                  <span style="flex:1;font:{{ o.font }};color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.l }}</span>
+                  <span style="font:400 10px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ o.n }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-for>
+        </aside>
+
+        <section style="min-width:0;display:flex;flex-direction:column;min-height:0">
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 16px;padding:16px 20px 12px;border-bottom:1px solid var(--bd);background:var(--surface)">
+            <div>
+              <h1 style="margin:0;font:600 17px/1.2 'Space Grotesk',sans-serif;letter-spacing:-.01em">Inventory</h1>
+              <div style="margin-top:5px;font:400 11.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ resultLabel }}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input value="{{ q }}" onInput="{{ setQ }}" placeholder="Filter by name…" style="width:190px;height:27px;padding:0 9px;background:var(--paper);border:1px solid var(--bd);font:400 12px/1 'Space Grotesk',sans-serif;outline:none"></input>
+              <div style="display:flex;border:1px solid var(--bd)">
+                <sc-for list="{{ views }}" as="v" hint-placeholder-count="2">
+                  <button onClick="{{ v.go }}" style="height:27px;padding:0 10px;background:{{ v.bg }};color:{{ v.fg }};border:0;font:500 9.5px/1 'JetBrains Mono',monospace;cursor:pointer">{{ v.l }}</button>
+                </sc-for>
+              </div>
+              <button style="height:27px;padding:0 11px;background:var(--accent);color:#fff;border:0;font:500 11.5px/1 'Space Grotesk',sans-serif;cursor:pointer">+ Element</button>
+            </div>
+          </div>
+
+          <sc-if value="{{ hasChips }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;gap:6px;padding:9px 20px;border-bottom:1px solid var(--bd);background:var(--panel)">
+              <sc-for list="{{ chips }}" as="c" hint-placeholder-count="2">
+                <button onClick="{{ c.go }}" style="display:flex;align-items:center;gap:6px;height:22px;padding:0 6px 0 7px;background:var(--surface);border:1px solid var(--bd2);font:400 11px/1 'Space Grotesk',sans-serif;cursor:pointer">
+                  <span style="font:500 9px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ c.k }}</span>{{ c.v }}<span style="color:var(--ink3)">×</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isTable }}" hint-placeholder-val="{{ true }}">
+          <div style="min-height:0;overflow:auto;background:var(--surface)">
+            <div style="display:grid;grid-template-columns:minmax(216px,1.7fr) 148px 112px 100px 78px 88px 72px;min-width:920px;align-items:center;height:29px;padding:0 20px;border-bottom:1px solid var(--bd2);position:sticky;top:0;background:var(--surface);z-index:2">
+              <sc-for list="{{ cols }}" as="c" hint-placeholder-count="7">
+                <span style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.06em;color:var(--ink3);text-align:{{ c.a }}">{{ c.l }}</span>
+              </sc-for>
+            </div>
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="14">
+              <div onClick="{{ r.open }}" style="display:grid;grid-template-columns:minmax(216px,1.7fr) 148px 112px 100px 78px 88px 72px;min-width:920px;align-items:center;height:var(--rowh);padding:0 20px;border-bottom:1px solid var(--bd);cursor:pointer;background:{{ r.bg }}" style-hover="background:var(--panel)">
+                <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                  <span style="flex:none;width:19px;height:19px;display:grid;place-items:center;font:500 8.5px/1 'JetBrains Mono',monospace;color:{{ r.lyC }};background:{{ r.lyBg }};border:1px solid {{ r.lyC }}">{{ r.code }}</span>
+                  <span style="font:500 12.5px/1.2 'Space Grotesk',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.n }}</span>
+                </div>
+                <span style="font:400 11.5px/1.2 'Space Grotesk',sans-serif;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.t }}</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="width:5px;height:5px;flex:none;background:{{ r.lcC }}"></span>
+                  <span style="font:400 11.5px/1 'Space Grotesk',sans-serif;color:var(--ink2)">{{ r.lcL }}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:9px">
+                  <div style="display:flex;gap:1.5px;align-items:flex-end" title="Functional fit">
+                    <sc-for list="{{ r.ff4 }}" as="b"><span style="width:4px;height:{{ b.h }}px;background:{{ b.c }}"></span></sc-for>
+                  </div>
+                  <div style="display:flex;gap:1.5px;align-items:flex-end" title="Technical fit">
+                    <sc-for list="{{ r.tf4 }}" as="b"><span style="width:4px;height:{{ b.h }}px;background:{{ b.c }}"></span></sc-for>
+                  </div>
+                </div>
+                <span style="font:400 11.5px/1 'Space Grotesk',sans-serif;color:var(--ink2)">{{ r.crit }}</span>
+                <span style="justify-self:start;font:500 9.5px/1 'JetBrains Mono',monospace;color:{{ r.timeC }};border:1px solid {{ r.timeC }};padding:3px 4px">{{ r.time }}</span>
+                <div style="justify-self:end;width:52px">
+                  <div style="font:400 10.5px/1 'JetBrains Mono',monospace;color:var(--ink2);text-align:right">{{ r.cmp }}%</div>
+                  <div style="height:2px;background:var(--panel2);margin-top:4px"><div style="height:2px;width:{{ r.cmp }}%;background:{{ r.cmpC }}"></div></div>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ empty }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:64px 20px;text-align:center">
+                <div style="font:400 13px/1.5 'Space Grotesk',sans-serif;color:var(--ink3)">No elements match this filter.<br>Loosen a facet or switch the combinator to OR.</div>
+              </div>
+            </sc-if>
+          </div>
+          </sc-if>
+
+          <sc-if value="{{ isCards }}" hint-placeholder-val="{{ false }}">
+          <div style="min-height:0;overflow:auto;padding:16px 20px 28px;display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:12px;align-content:start">
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="9">
+              <div onClick="{{ r.open }}" style="background:var(--surface);border:1px solid var(--bd);padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:10px" style-hover="border-color:var(--bd2)">
+                <div style="display:flex;align-items:flex-start;gap:9px">
+                  <span style="flex:none;width:22px;height:22px;display:grid;place-items:center;font:500 9px/1 'JetBrains Mono',monospace;color:{{ r.lyC }};background:{{ r.lyBg }};border:1px solid {{ r.lyC }}">{{ r.code }}</span>
+                  <div style="min-width:0;flex:1">
+                    <div style="font:500 13px/1.25 'Space Grotesk',sans-serif">{{ r.n }}</div>
+                    <div style="margin-top:3px;font:400 10.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ r.t }}</div>
+                  </div>
+                  <span style="font:400 10.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ r.cmp }}%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="width:5px;height:5px;background:{{ r.lcC }}"></span>
+                  <span style="flex:1;font:400 11px/1 'Space Grotesk',sans-serif;color:var(--ink2)">{{ r.lcL }}</span>
+                  <span style="font:500 9px/1 'JetBrains Mono',monospace;color:{{ r.timeC }};border:1px solid {{ r.timeC }};padding:3px 4px">{{ r.time }}</span>
+                </div>
+                <div style="height:2px;background:var(--panel2)"><div style="height:2px;width:{{ r.cmp }}%;background:{{ r.cmpC }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+          </sc-if>
+        </section>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isEl }}" hint-placeholder-val="{{ false }}">
+      <div style="min-height:0;overflow:auto;background:var(--paper)">
+        <div style="border-bottom:1px solid var(--bd);background:var(--surface);padding:14px 24px 0">
+          <div style="display:flex;align-items:center;gap:8px;font:400 11px/1 'JetBrains Mono',monospace;color:var(--ink3)">
+            <button onClick="{{ goInv }}" style="background:0;border:0;padding:0;color:var(--accent);font:inherit;cursor:pointer">INVENTORY</button>
+            <span>/</span><span>{{ el.t }}</span><span>/</span><span style="color:var(--ink2)">{{ el.id }}</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:16px;margin-top:14px">
+            <span style="flex:none;width:38px;height:38px;display:grid;place-items:center;font:500 12px/1 'JetBrains Mono',monospace;color:{{ el.lyC }};background:{{ el.lyBg }};border:1px solid {{ el.lyC }}">{{ el.code }}</span>
+            <div style="flex:1;min-width:0">
+              <h1 style="margin:0;font:600 22px/1.15 'Space Grotesk',sans-serif;letter-spacing:-.015em">{{ el.n }}</h1>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:8px">
+                <span style="font:400 11.5px/1 'Space Grotesk',sans-serif;color:var(--ink2)">{{ el.t }}</span>
+                <span style="width:1px;height:11px;background:var(--bd2)"></span>
+                <sc-for list="{{ el.tags }}" as="t" hint-placeholder-count="2">
+                  <span style="display:flex;align-items:center;gap:5px;height:20px;padding:0 7px;border:1px solid var(--bd);background:var(--panel);font:400 11px/1 'Space Grotesk',sans-serif;color:var(--ink2);white-space:nowrap;flex:none">
+                    <span style="width:5px;height:5px;background:{{ t.c }}"></span>{{ t.l }}
+                  </span>
+                </sc-for>
+                <button style="height:20px;padding:0 7px;border:1px dashed var(--bd2);background:transparent;font:400 11px/1 'Space Grotesk',sans-serif;color:var(--ink3);cursor:pointer">+ tag</button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:18px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <svg width="42" height="42" viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="var(--panel2)" stroke-width="4"></circle><circle cx="21" cy="21" r="16" fill="none" stroke="{{ el.cmpC }}" stroke-width="4" stroke-dasharray="{{ el.dash }}" transform="rotate(-90 21 21)"></circle></svg>
+                <div>
+                  <div style="font:600 14px/1 'Space Grotesk',sans-serif">{{ el.cmp }}%</div>
+                  <div style="font:400 9.5px/1 'JetBrains Mono',monospace;color:var(--ink3);margin-top:4px">COMPLETE</div>
+                </div>
+              </div>
+              <button onClick="{{ traceEl }}" style="height:28px;padding:0 11px;background:transparent;border:1px solid var(--bd2);font:400 12px/1 'Space Grotesk',sans-serif;cursor:pointer" style-hover="border-color:var(--accent);color:var(--accent)">Trace in graph</button>
+              <button style="height:28px;padding:0 11px;background:var(--accent);color:#fff;border:0;font:500 12px/1 'Space Grotesk',sans-serif;cursor:pointer">Edit</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:0;margin-top:16px">
+            <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+              <button style="height:33px;padding:0 13px;background:transparent;border:0;border-bottom:2px solid {{ t.mark }};font:{{ t.font }};color:{{ t.fg }};cursor:pointer">{{ t.l }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 296px;gap:0;align-items:start">
+          <div style="padding:22px 24px 40px;display:flex;flex-direction:column;gap:26px;min-width:0">
+            <section>
+              <div style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3);margin-bottom:9px">DOCUMENTATION</div>
+              <p style="margin:0;font:400 13.5px/1.65 'Space Grotesk',sans-serif;color:var(--ink);max-width:66ch;text-wrap:pretty">{{ el.desc }}</p>
+            </section>
+
+            <section>
+              <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px;margin-bottom:11px">
+                <span style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3);white-space:nowrap">LIFECYCLE</span>
+                <span style="font:400 11px/1.4 'JetBrains Mono',monospace;color:var(--ink3)">{{ el.lcNote }}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px">
+                <sc-for list="{{ el.phases }}" as="p" hint-placeholder-count="5">
+                  <div>
+                    <div style="height:6px;background:{{ p.bar }}"></div>
+                    <div style="margin-top:7px;font:{{ p.font }};color:{{ p.fg }}">{{ p.l }}</div>
+                    <div style="margin-top:3px;font:400 10.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ p.d }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+
+            <section>
+              <div style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3);margin-bottom:11px">PORTFOLIO ASSESSMENT</div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--bd);border:1px solid var(--bd)">
+                <sc-for list="{{ el.assess }}" as="a" hint-placeholder-count="4">
+                  <div style="background:var(--surface);padding:12px 13px">
+                    <div style="font:400 10.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ a.k }}</div>
+                    <div style="margin-top:9px;display:flex;align-items:center;gap:9px">
+                      <span style="font:500 14px/1 'Space Grotesk',sans-serif;color:{{ a.c }}">{{ a.v }}</span>
+                      <div style="display:flex;gap:2px;align-items:flex-end;margin-left:auto">
+                        <sc-for list="{{ a.bars }}" as="b"><span style="width:5px;height:{{ b.h }}px;background:{{ b.c }}"></span></sc-for>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+
+            <section>
+              <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px;margin-bottom:11px">
+                <span style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3);white-space:nowrap">RELATIONS</span>
+                <span style="font:400 11px/1.4 'JetBrains Mono',monospace;color:var(--ink3)">{{ el.relNote }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <sc-for list="{{ el.groups }}" as="g" hint-placeholder-count="3">
+                  <div style="border:1px solid var(--bd);background:var(--surface)">
+                    <div style="display:flex;align-items:center;gap:9px;height:31px;padding:0 13px;border-bottom:1px solid var(--bd);background:var(--panel)">
+                      <span style="font:500 10px/1 'JetBrains Mono',monospace;color:var(--ink2);letter-spacing:.04em">{{ g.l }}</span>
+                      <span style="font:400 10px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ g.n }}</span>
+                      <button style="margin-left:auto;font:400 11px/1 'Space Grotesk',sans-serif;color:var(--accent);background:0;border:0;cursor:pointer;padding:0">+ add</button>
+                    </div>
+                    <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="2">
+                      <div onClick="{{ it.open }}" style="display:flex;align-items:center;gap:11px;height:34px;padding:0 13px;border-bottom:1px solid var(--bd);cursor:pointer" style-hover="background:var(--panel)">
+                        <span style="font:400 10px/1 'JetBrains Mono',monospace;color:var(--ink3);width:14px">{{ it.dir }}</span>
+                        <span style="flex:none;width:17px;height:17px;display:grid;place-items:center;font:500 8px/1 'JetBrains Mono',monospace;color:{{ it.lyC }};background:{{ it.lyBg }};border:1px solid {{ it.lyC }}">{{ it.code }}</span>
+                        <span style="font:400 12.5px/1 'Space Grotesk',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ it.n }}</span>
+                        <span style="margin-left:auto;font:400 10.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ it.meta }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+
+            <section>
+              <div style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3);margin-bottom:11px">PROPERTIES</div>
+              <div style="border:1px solid var(--bd);background:var(--surface)">
+                <sc-for list="{{ el.props }}" as="p" hint-placeholder-count="4">
+                  <div style="display:grid;grid-template-columns:172px 1fr;gap:14px;padding:9px 13px;border-bottom:1px solid var(--bd)">
+                    <span style="font:400 11.5px/1.3 'JetBrains Mono',monospace;color:var(--ink3)">{{ p.k }}</span>
+                    <span style="font:400 12.5px/1.3 'Space Grotesk',sans-serif">{{ p.v }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+          </div>
+
+          <aside style="border-left:1px solid var(--bd);background:var(--surface);padding:22px 18px 40px;display:flex;flex-direction:column;gap:24px;min-height:calc(100vh - 46px)">
+            <div>
+              <div style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3);margin-bottom:10px">NEIGHBOURHOOD</div>
+              <div style="border:1px solid var(--bd);background:var(--paper)">
+                {{ miniSvg }}
+              </div>
+              <button onClick="{{ traceEl }}" style="width:100%;height:27px;margin-top:8px;background:transparent;border:1px solid var(--bd);font:400 11.5px/1 'Space Grotesk',sans-serif;color:var(--ink2);cursor:pointer" style-hover="border-color:var(--bd2);color:var(--ink)">Open full graph →</button>
+            </div>
+            <div>
+              <div style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3);margin-bottom:10px">APPEARS IN</div>
+              <div style="display:flex;flex-direction:column;gap:1px;background:var(--bd);border:1px solid var(--bd)">
+                <sc-for list="{{ el.views }}" as="v" hint-placeholder-count="3">
+                  <div style="background:var(--surface);display:flex;align-items:center;gap:9px;padding:8px 10px">
+                    <span style="width:9px;height:9px;border:1.3px solid var(--ink3);flex:none;clip-path:{{ v.clip }}"></span>
+                    <span style="font:400 12px/1.2 'Space Grotesk',sans-serif;color:var(--ink2)">{{ v.l }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div>
+              <div style="font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3);margin-bottom:10px">HISTORY</div>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <sc-for list="{{ el.history }}" as="h" hint-placeholder-count="3">
+                  <div style="display:grid;grid-template-columns:11px 1fr;gap:9px">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:3px">
+                      <span style="width:5px;height:5px;background:{{ h.c }}"></span>
+                      <span style="width:1px;flex:1;background:var(--bd)"></span>
+                    </div>
+                    <div>
+                      <div style="font:400 12px/1.4 'Space Grotesk',sans-serif;color:var(--ink)">{{ h.l }}</div>
+                      <div style="margin-top:3px;font:400 10px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ h.d }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isGraph }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-rows:auto 1fr;min-height:0;height:100%">
+        <div style="border-bottom:1px solid var(--bd);background:var(--surface)">
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 16px;padding:16px 20px 12px">
+            <div>
+              <h1 style="margin:0;font:600 17px/1.2 'Space Grotesk',sans-serif;letter-spacing:-.01em">Dependency graph</h1>
+              <div style="margin-top:5px;font:400 11.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ graphNote }}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <div style="display:flex;align-items:center;gap:7px">
+                <span style="font:500 9.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">COLOUR</span>
+                <div style="display:flex;border:1px solid var(--bd)">
+                  <sc-for list="{{ colorViews }}" as="c" hint-placeholder-count="3">
+                    <button onClick="{{ c.go }}" style="height:26px;padding:0 9px;background:{{ c.bg }};color:{{ c.fg }};border:0;font:500 9.5px/1 'JetBrains Mono',monospace;cursor:pointer">{{ c.l }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <button style="height:26px;padding:0 10px;background:transparent;border:1px solid var(--bd);font:400 11.5px/1 'Space Grotesk',sans-serif;color:var(--ink2);cursor:pointer" style-hover="border-color:var(--bd2);color:var(--ink)">Export SVG</button>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:0 20px 12px">
+            <div style="display:flex;align-items:center;gap:11px;flex:none">
+              <span style="font:500 9.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">TIME POINT</span>
+              <input type="range" min="2016" max="2032" step="1" value="{{ year }}" onInput="{{ setYear }}" style="width:220px;accent-color:var(--accent)"></input>
+              <span style="font:500 12px/1 'JetBrains Mono',monospace;color:var(--ink);width:34px">{{ year }}</span>
+              <button onClick="{{ resetYear }}" style="font:400 10.5px/1 'JetBrains Mono',monospace;color:var(--accent);background:0;border:0;cursor:pointer;padding:0">TODAY</button>
+            </div>
+            <div style="width:1px;height:16px;background:var(--bd)"></div>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;min-width:0">
+              <sc-for list="{{ legend }}" as="l" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="width:9px;height:9px;background:{{ l.bg }};border:1px solid {{ l.c }}"></span>
+                  <span style="font:400 11px/1 'Space Grotesk',sans-serif;color:var(--ink2)">{{ l.l }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) {{ panelW }};min-height:0">
+          <div style="min-width:0;min-height:0;overflow:auto;background:var(--paper);position:relative">
+            <div style="width:100%;height:100%;min-width:1040px">{{ graphSvg }}</div>
+            <div style="position:absolute;left:16px;bottom:14px;display:flex;align-items:center;gap:9px;padding:6px 9px;background:var(--surface);border:1px solid var(--bd)">
+              <span style="font:400 10.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ graphHint }}</span>
+              <sc-if value="{{ hasFocus }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ clearFocus }}" style="font:500 10.5px/1 'JetBrains Mono',monospace;color:var(--accent);background:0;border:0;padding:0;cursor:pointer">CLEAR</button>
+              </sc-if>
+            </div>
+          </div>
+
+          <sc-if value="{{ hasFocus }}" hint-placeholder-val="{{ false }}">
+          <aside style="border-left:1px solid var(--bd);background:var(--surface);overflow-y:auto;padding:18px 16px 28px">
+            <div style="display:flex;align-items:flex-start;gap:11px">
+              <span style="flex:none;width:26px;height:26px;display:grid;place-items:center;font:500 10px/1 'JetBrains Mono',monospace;color:{{ sel.lyC }};background:{{ sel.lyBg }};border:1px solid {{ sel.lyC }}">{{ sel.code }}</span>
+              <div style="min-width:0">
+                <div style="font:600 14.5px/1.25 'Space Grotesk',sans-serif">{{ sel.n }}</div>
+                <div style="margin-top:4px;font:400 10.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ sel.t }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:7px;margin-top:14px">
+              <button onClick="{{ openSel }}" style="flex:1;height:27px;background:var(--accent);color:#fff;border:0;font:500 11.5px/1 'Space Grotesk',sans-serif;cursor:pointer">Fact sheet</button>
+              <button onClick="{{ clearFocus }}" style="height:27px;padding:0 10px;background:transparent;border:1px solid var(--bd);font:400 11.5px/1 'Space Grotesk',sans-serif;color:var(--ink2);cursor:pointer">Close</button>
+            </div>
+            <div style="height:1px;background:var(--bd);margin:16px 0"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bd);border:1px solid var(--bd)">
+              <sc-for list="{{ sel.stats }}" as="s" hint-placeholder-count="4">
+                <div style="background:var(--surface);padding:9px 10px">
+                  <div style="font:400 9.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ s.k }}</div>
+                  <div style="margin-top:6px;font:500 12.5px/1 'Space Grotesk',sans-serif;color:{{ s.c }}">{{ s.v }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin:18px 0 9px;font:500 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink3)">TRACED DEPENDENCIES</div>
+            <div style="display:flex;flex-direction:column;gap:1px;background:var(--bd);border:1px solid var(--bd)">
+              <sc-for list="{{ sel.neighbours }}" as="nb" hint-placeholder-count="5">
+                <div onClick="{{ nb.click }}" style="background:var(--surface);display:flex;align-items:center;gap:9px;padding:8px 10px;cursor:pointer" style-hover="background:var(--panel)">
+                  <span style="font:400 9.5px/1 'JetBrains Mono',monospace;color:var(--ink3);width:12px">{{ nb.dir }}</span>
+                  <span style="width:5px;height:5px;flex:none;background:{{ nb.c }}"></span>
+                  <span style="flex:1;font:400 12px/1.2 'Space Grotesk',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ nb.n }}</span>
+                  <span style="font:400 9.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ nb.ty }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </aside>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+    </main>
+  </div>
+
+  <sc-if value="{{ paletteOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closePalette }}" style="position:fixed;inset:0;background:color-mix(in oklab,var(--ink) 34%,transparent);display:flex;justify-content:center;padding-top:12vh;z-index:50">
+    <div onClick="{{ stop }}" style="width:592px;max-width:92vw;background:var(--surface);border:1px solid var(--bd2);box-shadow:0 24px 60px -20px rgba(0,0,0,.45);animation:pfade .12s ease-out">
+      <div style="display:flex;align-items:center;gap:10px;padding:0 13px;height:44px;border-bottom:1px solid var(--bd)">
+        <span style="font:500 10px/1 'JetBrains Mono',monospace;color:var(--accent)">›</span>
+        <input value="{{ pq }}" onInput="{{ setPq }}" placeholder="Jump to element, run an action…" autoFocus="{{ true }}" style="flex:1;height:100%;background:transparent;border:0;outline:none;font:400 14px/1 'Space Grotesk',sans-serif"></input>
+        <span style="font:500 9.5px/1 'JetBrains Mono',monospace;color:var(--ink3);border:1px solid var(--bd);padding:3px 4px">ESC</span>
+      </div>
+      <div style="max-height:342px;overflow-y:auto">
+        <sc-for list="{{ pResults }}" as="p" hint-placeholder-count="6">
+          <div onClick="{{ p.go }}" style="display:flex;align-items:center;gap:11px;padding:9px 13px;border-bottom:1px solid var(--bd);cursor:pointer" style-hover="background:var(--panel)">
+            <span style="flex:none;width:19px;height:19px;display:grid;place-items:center;font:500 8.5px/1 'JetBrains Mono',monospace;color:{{ p.lyC }};background:{{ p.lyBg }};border:1px solid {{ p.lyC }}">{{ p.code }}</span>
+            <span style="flex:1;font:400 13px/1.2 'Space Grotesk',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.n }}</span>
+            <span style="font:400 10.5px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ p.meta }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ pEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:26px 13px;font:400 12.5px/1 'Space Grotesk',sans-serif;color:var(--ink3);text-align:center">Nothing matches “{{ pq }}”</div>
+        </sc-if>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:8px 13px;background:var(--panel);border-top:1px solid var(--bd)">
+        <span style="font:400 10px/1 'JetBrains Mono',monospace;color:var(--ink3)">↵ open</span>
+        <span style="font:400 10px/1 'JetBrains Mono',monospace;color:var(--ink3)">G graph</span>
+        <span style="font:400 10px/1 'JetBrains Mono',monospace;color:var(--ink3)">I inventory</span>
+        <span style="margin-left:auto;font:400 10px/1 'JetBrains Mono',monospace;color:var(--ink3)">{{ elCount }} elements indexed</span>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#A85B32&quot;,&quot;#2C6E77&quot;,&quot;#3A5AA8&quot;,&quot;#8C3B3B&quot;],&quot;default&quot;:&quot;#A85B32&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;balanced&quot;,&quot;compact&quot;],&quot;default&quot;:&quot;balanced&quot;,&quot;tsType&quot;:&quot;'balanced'|'compact'&quot;},&quot;showLayerBands&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const LY = {
+  biz: {l:'Business', c:'var(--biz)', bg:'var(--bizbg)'},
+  app: {l:'Application', c:'var(--app)', bg:'var(--appbg)'},
+  tec: {l:'Technology', c:'var(--tec)', bg:'var(--tecbg)'},
+  pas: {l:'Data', c:'var(--pas)', bg:'var(--pasbg)'},
+  mot: {l:'Motivation', c:'var(--mot)', bg:'var(--motbg)'},
+  imp: {l:'Migration', c:'var(--imp)', bg:'var(--impbg)'}
+};
+const LC = {
+  plan:{l:'Plan', c:'var(--lc-plan)'}, in:{l:'Phase In', c:'var(--lc-in)'},
+  act:{l:'Active', c:'var(--lc-act)'}, out:{l:'Phase Out', c:'var(--lc-out)'},
+  eol:{l:'End of Life', c:'var(--lc-eol)'}
+};
+const TIME = {Tolerate:'var(--t-tol)', Invest:'var(--t-inv)', Migrate:'var(--t-mig)', Eliminate:'var(--t-eli)'};
+const TAGC = {'Core':'var(--accent2)','Differentiating':'var(--accent)','Supporting':'var(--pas)','Cloud target':'var(--app)','GDPR':'var(--mot)','Vendor risk':'var(--lc-eol)'};
+
+const EL = [
+ {id:'cap-cust',n:'Customer Management',t:'Capability',code:'CP',ly:'biz',cmp:70,gx:110,gy:98,tags:['Core'],owner:'Retail BU',desc:'Everything the insurer does to acquire, serve, and retain policy holders across channels.'},
+ {id:'cap-pol',n:'Policy Administration',t:'Capability',code:'CP',ly:'biz',cmp:82,gx:300,gy:98,tags:['Core'],owner:'Operations',desc:'Issuing, changing, renewing and terminating insurance policies.'},
+ {id:'cap-claim',n:'Claim Handling',t:'Capability',code:'CP',ly:'biz',cmp:88,gx:490,gy:98,tags:['Core','Differentiating'],owner:'Claims',desc:'Intake, assessment, settlement and recovery of claims.'},
+ {id:'cap-fin',n:'Financial Handling',t:'Capability',code:'CP',ly:'biz',cmp:64,gx:680,gy:98,tags:['Supporting'],owner:'Finance',desc:'Premium collection, payments, reserving and reporting.'},
+ {id:'cap-risk',n:'Risk & Underwriting',t:'Capability',code:'CP',ly:'biz',cmp:58,gx:870,gy:98,tags:['Differentiating'],owner:'Risk',desc:'Pricing, risk selection and portfolio steering.'},
+ {id:'proc-claim',n:'Handle Claim',t:'Business Process',code:'BP',ly:'biz',cmp:74,gx:1060,gy:98,tags:['Core'],owner:'Claims',desc:'End-to-end process from claim registration to payment, spanning four applications.'},
+ {id:'act-nl',n:'ArchiSurance Netherlands',t:'Business Actor',code:'BA',ly:'biz',cmp:52,tags:[],owner:'—',desc:'Legal entity operating the Dutch home, away and car portfolios.'},
+ {id:'act-bo',n:'Back Office',t:'Business Actor',code:'BA',ly:'biz',cmp:46,tags:[],owner:'Operations',desc:'Shared administrative unit executing policy and claim handling processes.'},
+
+ {id:'app-portal',n:'Customer Web Portal',t:'Application Component',code:'AC',ly:'app',cmp:92,gx:110,gy:248,ff:4,tf:3,crit:'Critical',time:'Invest',cost:'480k EUR / yr',owner:'Digital Channels',tags:['Core','GDPR','Cloud target'],ph:{plan:2016,in:2017,act:2018,out:2029,eol:2030},desc:'Self-service channel for policy holders: quotes, policy changes, claim submission and document access.'},
+ {id:'app-broker',n:'Broker Extranet',t:'Application Component',code:'AC',ly:'app',cmp:34,gx:275,gy:248,ff:3,tf:3,crit:'Medium',time:'Invest',cost:'—',owner:'Digital Channels',tags:['Cloud target'],ph:{plan:2026,in:2027,act:2028,out:2034,eol:2035},desc:'Planned intermediary portal replacing the broker file exchange. Scope not yet signed off.'},
+ {id:'app-crm',n:'CRM System',t:'Application Component',code:'AC',ly:'app',cmp:74,gx:440,gy:248,ff:2,tf:2,crit:'High',time:'Migrate',cost:'610k EUR / yr',owner:'Retail BU',tags:['GDPR','Vendor risk'],ph:{plan:2012,in:2013,act:2014,out:2027,eol:2028},desc:'Customer master and interaction history. On-premise, heavily customised, upgrade path blocked.'},
+ {id:'app-claims',n:'Claim Handling Engine',t:'Application Component',code:'AC',ly:'app',cmp:61,gx:605,gy:248,ff:4,tf:4,crit:'Critical',time:'Invest',cost:'1.2M EUR / yr',owner:'Claims',tags:['Core','Cloud target'],ph:{plan:2024,in:2025,act:2027,out:2033,eol:2034},desc:'New rules-driven claim assessment platform. Replaces claim logic embedded in the policy systems.'},
+ {id:'app-policy-ha',n:'Home & Away Policy Administration',t:'Application Component',code:'AC',ly:'app',cmp:68,gx:770,gy:248,ff:2,tf:1,crit:'Critical',time:'Migrate',cost:'1.9M EUR / yr',owner:'Operations',tags:['Core','Vendor risk'],ph:{plan:2006,in:2007,act:2008,out:2027,eol:2029},desc:'Mainframe policy administration for the home and travel portfolios. Single largest cost item in the landscape and the main constraint on product change lead time.'},
+ {id:'app-policy-car',n:'Car Insurance Application',t:'Application Component',code:'AC',ly:'app',cmp:55,gx:935,gy:248,ff:1,tf:1,crit:'Medium',time:'Eliminate',cost:'340k EUR / yr',owner:'Operations',tags:['Vendor risk'],ph:{plan:2004,in:2005,act:2006,out:2025,eol:2027},desc:'Legacy car policy system inherited from the PRO-FIT merger. Functionally superseded; data migration outstanding.'},
+ {id:'app-legal',n:'Legal Aid Backoffice',t:'Application Component',code:'AC',ly:'app',cmp:41,gx:1100,gy:248,ff:1,tf:1,crit:'Low',time:'Eliminate',cost:'120k EUR / yr',owner:'Legal',tags:['Vendor risk'],ph:{plan:2002,in:2003,act:2004,out:2024,eol:2026},desc:'Unsupported since 2024. Two users, no vendor contract, holds seven years of case records.'},
+ {id:'app-dms',n:'Document Management System',t:'Application Component',code:'AC',ly:'app',cmp:79,gx:190,gy:352,ff:2,tf:3,crit:'Medium',time:'Tolerate',cost:'260k EUR / yr',owner:'Operations',tags:['GDPR'],ph:{plan:2014,in:2015,act:2016,out:2030,eol:2031},desc:'Stores correspondence, policy documents and claim evidence for all portfolios.'},
+ {id:'app-fin',n:'Financial Application',t:'Application Component',code:'AC',ly:'app',cmp:88,gx:440,gy:352,ff:3,tf:3,crit:'Critical',time:'Tolerate',cost:'870k EUR / yr',owner:'Finance',tags:['Core'],ph:{plan:2010,in:2011,act:2012,out:2030,eol:2032},desc:'General ledger, premium collection and claim payment booking.'},
+ {id:'app-pay',n:'Payment Gateway',t:'Application Component',code:'AC',ly:'app',cmp:83,gx:690,gy:352,ff:3,tf:4,crit:'Critical',time:'Tolerate',cost:'300k EUR / yr',owner:'Finance',tags:['Cloud target'],ph:{plan:2019,in:2020,act:2021,out:2031,eol:2032},desc:'SaaS gateway handling direct debit, card and payout instructions.'},
+ {id:'app-datalake',n:'Analytics Data Platform',t:'Application Component',code:'AC',ly:'app',cmp:47,gx:940,gy:352,ff:3,tf:4,crit:'High',time:'Invest',cost:'540k EUR / yr',owner:'Risk',tags:['Cloud target'],ph:{plan:2025,in:2026,act:2027,out:2034,eol:2035},desc:'Lakehouse feeding pricing models and portfolio reporting. Ingest from claims and finance in place, policy pending.'},
+
+ {id:'obj-policy',n:'Insurance Policy',t:'Data Object',code:'DO',ly:'pas',cmp:66,tags:['Core'],owner:'Operations',desc:'Master record of cover, premium and policy holder for one contract.'},
+ {id:'obj-claim',n:'Claim File',t:'Data Object',code:'DO',ly:'pas',cmp:71,tags:['Core'],owner:'Claims',desc:'Case record with damage assessment, evidence references and settlement decision.'},
+ {id:'obj-cust',n:'Customer File',t:'Data Object',code:'DO',ly:'pas',cmp:58,tags:['GDPR'],owner:'Retail BU',desc:'Personal and contact data, consents, and interaction history. In scope for retention rules.'},
+ {id:'obj-pay',n:'Payment Record',t:'Data Object',code:'DO',ly:'pas',cmp:49,tags:[],owner:'Finance',desc:'Individual premium collection or claim payout booking.'},
+
+ {id:'tec-oracle',n:'Oracle Database 19c',t:'System Software',code:'SS',ly:'tec',cmp:66,gx:190,gy:502,tags:['Vendor risk'],owner:'Platform Ops',ph:{plan:2013,in:2014,act:2015,out:2028,eol:2029},desc:'Shared database estate behind policy, CRM and finance. Extended support ends 2029.'},
+ {id:'tec-k8s',n:'Kubernetes Platform',t:'Node',code:'NO',ly:'tec',cmp:52,gx:440,gy:502,tags:['Cloud target'],owner:'Platform Ops',ph:{plan:2025,in:2026,act:2027,out:2035,eol:2036},desc:'Managed cluster hosting the new claim engine, portal and analytics workloads.'},
+ {id:'tec-win',n:'Windows Server 2019',t:'Node',code:'NO',ly:'tec',cmp:44,gx:690,gy:502,tags:['Vendor risk'],owner:'Platform Ops',ph:{plan:2017,in:2018,act:2019,out:2026,eol:2027},desc:'Remaining VM estate for the legacy car, legal aid and CRM stacks.'},
+ {id:'tec-apigw',n:'API Gateway',t:'Technology Service',code:'TS',ly:'tec',cmp:58,gx:940,gy:502,tags:['Cloud target'],owner:'Platform Ops',ph:{plan:2020,in:2021,act:2022,out:2032,eol:2033},desc:'Edge routing, throttling and token validation for all external channels.'},
+
+ {id:'goal-cost',n:'Reduce claim handling cost by 15%',t:'Goal',code:'GO',ly:'mot',cmp:60,tags:['Differentiating'],owner:'Chief Architect',desc:'Board objective for 2027, driving the claim engine programme and the legacy retirement sequence.'},
+ {id:'wp-cloud',n:'Cloud Migration Programme',t:'Work Package',code:'WP',ly:'imp',cmp:57,tags:['Cloud target'],owner:'Chief Architect',desc:'Three-wave migration: channels, claims, analytics. Policy administration explicitly out of scope until 2028.'}
+];
+
+const R = [
+ ['app-portal','cap-cust','Realization'],['app-broker','cap-cust','Realization'],['app-crm','cap-cust','Realization'],
+ ['app-policy-ha','cap-pol','Realization'],['app-policy-car','cap-pol','Realization'],
+ ['app-claims','cap-claim','Realization'],['app-legal','cap-claim','Realization'],['app-dms','cap-claim','Realization'],
+ ['app-fin','cap-fin','Realization'],['app-pay','cap-fin','Realization'],['app-datalake','cap-risk','Realization'],
+ ['app-claims','proc-claim','Serving'],['app-dms','proc-claim','Serving'],['act-bo','proc-claim','Assignment'],
+ ['act-nl','act-bo','Composition'],
+ ['app-portal','app-crm','Flow'],['app-portal','app-policy-ha','Flow'],['app-broker','app-policy-ha','Flow'],
+ ['app-crm','app-claims','Flow'],['app-claims','app-policy-ha','Flow'],['app-claims','app-dms','Serving'],
+ ['app-claims','app-fin','Flow'],['app-fin','app-pay','Serving'],['app-policy-ha','app-fin','Flow'],
+ ['app-claims','app-datalake','Flow'],['app-fin','app-datalake','Flow'],['app-policy-car','app-policy-ha','Association'],
+ ['tec-oracle','app-policy-ha','Serving'],['tec-oracle','app-fin','Serving'],['tec-oracle','app-crm','Serving'],
+ ['tec-k8s','app-claims','Serving'],['tec-k8s','app-portal','Serving'],['tec-k8s','app-datalake','Serving'],
+ ['tec-win','app-policy-car','Serving'],['tec-win','app-legal','Serving'],['tec-win','app-crm','Serving'],
+ ['tec-apigw','app-portal','Serving'],['tec-apigw','app-broker','Serving'],
+ ['app-policy-ha','obj-policy','Access'],['app-claims','obj-claim','Access'],['app-crm','obj-cust','Access'],
+ ['app-pay','obj-pay','Access'],['app-fin','obj-pay','Access'],['app-portal','obj-cust','Access'],
+ ['wp-cloud','tec-k8s','Realization'],['app-claims','goal-cost','Realization'],['wp-cloud','goal-cost','Influence']
+];
+
+const TODAY = 2026;
+const CRIT_N = {Low:1, Medium:2, High:3, Critical:4};
+
+class Component extends DCLogic {
+  state = {
+    screen:'inventory', sel:'app-policy-ha', view:'table', q:'',
+    facets:{}, mode:'AND', year:TODAY, colorView:'layer',
+    focus:null, palette:false, pq:'', dirty:3
+  };
+
+  componentDidMount() {
+    this.applyChrome();
+    this.onKey = (e) => {
+      const k = e.key.toLowerCase();
+      if ((e.metaKey || e.ctrlKey) && k === 'k') { e.preventDefault(); this.setState({palette:true, pq:''}); return; }
+      if (e.key === 'Escape') { this.setState({palette:false}); return; }
+      if (this.state.palette) return;
+      if (k === 'g') this.setState({screen:'graph'});
+      if (k === 'i') this.setState({screen:'inventory'});
+    };
+    window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  componentDidUpdate() { this.applyChrome(); }
+
+  applyChrome() {
+    const r = document.documentElement;
+    r.dataset.theme = this.state.theme || this.props.theme || 'light';
+    if (this.props.accentColor) r.style.setProperty('--accent', this.props.accentColor);
+    r.style.setProperty('--rowh', (this.props.density === 'compact' ? 31 : 38) + 'px');
+  }
+
+  phase(e, y) {
+    if (!e.ph) return 'act';
+    const p = e.ph;
+    if (y < p.in) return 'plan';
+    if (y < p.act) return 'in';
+    if (y < p.out) return 'act';
+    if (y < p.eol) return 'out';
+    return 'eol';
+  }
+  byId(id) { return EL.find(e => e.id === id); }
+  rels(id) {
+    return R.filter(r => r[0] === id || r[1] === id).map(r => ({
+      other: this.byId(r[0] === id ? r[1] : r[0]),
+      dir: r[0] === id ? 'out' : 'in', ty: r[2]
+    })).filter(r => r.other);
+  }
+  bars(v, max, color) {
+    return [1,2,3,4].slice(0, max).map(i => ({h: 4 + i*2, c: i <= v ? color : 'var(--panel2)'}));
+  }
+  cmpC(v) { return v >= 75 ? 'var(--lc-act)' : v >= 50 ? 'var(--lc-out)' : 'var(--lc-eol)'; }
+
+  // ---- filtering
+  matches(e) {
+    const F = this.state.facets, mode = this.state.mode;
+    const active = Object.keys(F).filter(k => F[k]);
+    const q = this.state.q.trim().toLowerCase();
+    if (q && !(e.n + ' ' + e.t).toLowerCase().includes(q)) return false;
+    if (!active.length) return true;
+    const has = (k) => {
+      const [g, v] = k.split(':');
+      if (g === 'layer') return e.ly === v;
+      if (g === 'lifecycle') return this.phase(e, TODAY) === v;
+      if (g === 'time') return e.time === v;
+      if (g === 'tag') return (e.tags || []).includes(v);
+      return false;
+    };
+    if (mode === 'OR') return active.some(has);
+    if (mode === 'NOT') return !active.some(has);
+    const groups = {};
+    active.forEach(k => { const g = k.split(':')[0]; (groups[g] = groups[g] || []).push(k); });
+    return Object.keys(groups).every(g => groups[g].some(has));
+  }
+  toggle(k) {
+    const F = Object.assign({}, this.state.facets);
+    F[k] = !F[k];
+    this.setState({facets:F});
+  }
+
+  facetDefs() {
+    return [
+      {k:'layer', l:'LAYER', opts:['biz','app','tec','pas','mot','imp'].map(v => ({v, l:LY[v].l}))},
+      {k:'lifecycle', l:'LIFECYCLE', opts:['plan','in','act','out','eol'].map(v => ({v, l:LC[v].l}))},
+      {k:'time', l:'TIME CLASSIFICATION', opts:['Tolerate','Invest','Migrate','Eliminate'].map(v => ({v, l:v}))},
+      {k:'tag', l:'TAGS', opts:Object.keys(TAGC).map(v => ({v, l:v}))}
+    ];
+  }
+
+  // ---- graph
+  graph() {
+    const y = this.state.year, cv = this.state.colorView, focus = this.state.focus;
+    const nodes = EL.filter(e => e.gx != null);
+    const ids = nodes.map(n => n.id);
+    const edges = R.filter(r => ids.includes(r[0]) && ids.includes(r[1]));
+    const near = new Set();
+    if (focus) { near.add(focus); edges.forEach(r => { if (r[0] === focus) near.add(r[1]); if (r[1] === focus) near.add(r[0]); }); }
+    const fillFor = (e) => {
+      const ph = this.phase(e, y);
+      if (cv === 'lifecycle') return {c: LC[ph].c, bg: 'color-mix(in oklab,' + LC[ph].c + ' 13%,var(--surface))'};
+      if (cv === 'time') { const c = e.time ? TIME[e.time] : 'var(--bd2)'; return {c, bg:'color-mix(in oklab,' + c + ' 13%,var(--surface))'}; }
+      return {c: LY[e.ly].c, bg: LY[e.ly].bg};
+    };
+    const gnodes = nodes.map(e => {
+      const f = fillFor(e), ph = this.phase(e, y);
+      const dim = focus && !near.has(e.id);
+      const retired = ph === 'eol';
+      const words = e.n.split(' ');
+      let l1 = '', l2 = '';
+      words.forEach(w => { if ((l1 + ' ' + w).trim().length <= 21 && !l2) l1 = (l1 + ' ' + w).trim(); else l2 = (l2 + ' ' + w).trim(); });
+      if (l2.length > 22) l2 = l2.slice(0, 21) + '…';
+      return {
+        id:e.id, x:e.gx, y:e.gy - 21, tx:e.gx + 11,
+        y1: e.gy + (l2 ? -4 : 2), y2: e.gy + 8, y3: e.gy + (l2 ? 17 : 15),
+        l1, l2, sub: (e.time || LC[ph].l).toUpperCase(),
+        fill: f.bg, stroke: e.id === focus ? 'var(--accent)' : f.c,
+        sw: e.id === focus ? 2 : 1, dash: retired ? '3 2' : '0',
+        op: dim ? 0.16 : (retired ? 0.72 : 1),
+        click: () => this.setState({focus: e.id === focus ? null : e.id})
+      };
+    });
+    const pos = {};
+    nodes.forEach(e => pos[e.id] = e);
+    const gedges = edges.map(r => {
+      const a = pos[r[0]], b = pos[r[1]];
+      const hot = focus && (r[0] === focus || r[1] === focus);
+      const dim = focus && !hot;
+      let d;
+      if (a.gy === b.gy) {
+        const mx = (a.gx + b.gx) / 2, off = a.gy > 300 ? 34 : -34;
+        d = 'M' + a.gx + ' ' + a.gy + ' Q' + mx + ' ' + (a.gy + off) + ' ' + b.gx + ' ' + b.gy;
+      } else {
+        d = 'M' + a.gx + ' ' + a.gy + ' L' + b.gx + ' ' + b.gy;
+      }
+      const soft = r[2] === 'Flow' || r[2] === 'Access' || r[2] === 'Association';
+      return {d, dash: soft ? '4 3' : '0', stroke: hot ? 'var(--accent)' : 'var(--bd2)',
+        w: hot ? 1.6 : 1, op: dim ? 0.1 : (hot ? 1 : 0.62),
+        marker: hot ? 'url(#arh)' : 'url(#ar)'};
+    });
+    return {gnodes, gedges, nodes, edges};
+  }
+
+  mini(e) {
+    const nb = this.rels(e.id).slice(0, 7);
+    const cx = 130, cy = 88;
+    const nodes = [{x:cx, y:cy, r:8, fill:'var(--accent)', stroke:'var(--accent)', sw:1, short:e.code, tx:cx, ty:cy + 3, anchor:'middle', open:() => {}}];
+    const edges = [];
+    nb.forEach((rel, i) => {
+      const a = (-Math.PI / 2) + (i * 2 * Math.PI / Math.max(nb.length, 3));
+      const x = cx + Math.cos(a) * 78, yy = cy + Math.sin(a) * 62;
+      edges.push({x1:cx, y1:cy, x2:x, y2:yy, dash: rel.ty === 'Flow' || rel.ty === 'Access' ? '3 2' : '0'});
+      const right = x >= cx;
+      nodes.push({x, y:yy, r:5.5, fill:LY[rel.other.ly].bg, stroke:LY[rel.other.ly].c, sw:1,
+        short: rel.other.n.length > 13 ? rel.other.n.slice(0, 12) + '…' : rel.other.n,
+        tx: right ? x + 9 : x - 9, ty: yy + 3, anchor: right ? 'start' : 'end',
+        open: () => this.setState({sel: rel.other.id})});
+    });
+    return {nodes, edges};
+  }
+
+  svgGraph(g, bands) {
+    const h = React.createElement;
+    const kids = [
+      h('defs', {key:'d'},
+        h('marker', {id:'ar', viewBox:'0 0 8 8', refX:7, refY:4, markerWidth:7, markerHeight:7, orient:'auto', key:'a'},
+          h('path', {d:'M0 0 L8 4 L0 8 z', fill:'var(--bd2)'})),
+        h('marker', {id:'arh', viewBox:'0 0 8 8', refX:7, refY:4, markerWidth:7, markerHeight:7, orient:'auto', key:'b'},
+          h('path', {d:'M0 0 L8 4 L0 8 z', fill:'var(--accent)'}))
+      ),
+      ...bands.map((b, i) => h('g', {key:'b' + i},
+        h('rect', {x:b.x, y:b.y, width:b.w, height:b.h, fill:b.fill, stroke:'var(--bd)', strokeDasharray:'2 3'}),
+        h('text', {x:26, y:b.ty, fill:'var(--ink3)', style:{font:"500 9.5px 'JetBrains Mono',monospace", letterSpacing:'.12em'}}, b.l)
+      )),
+      ...g.gedges.map((e, i) => h('path', {key:'e' + i, d:e.d, fill:'none', stroke:e.stroke, strokeWidth:e.w, strokeDasharray:e.dash, opacity:e.op, markerEnd:e.marker})),
+      ...g.gnodes.map(n => h('g', {key:n.id, onClick:n.click, opacity:n.op, style:{cursor:'pointer'}},
+        h('rect', {x:n.x, y:n.y, width:150, height:42, fill:n.fill, stroke:n.stroke, strokeWidth:n.sw, strokeDasharray:n.dash}),
+        h('rect', {x:n.x, y:n.y, width:3, height:42, fill:n.stroke}),
+        h('text', {x:n.tx, y:n.y1, fill:'var(--ink)', style:{font:"500 10.5px 'Space Grotesk',sans-serif"}}, n.l1),
+        n.l2 ? h('text', {x:n.tx, y:n.y2, fill:'var(--ink)', style:{font:"500 10.5px 'Space Grotesk',sans-serif"}}, n.l2) : null,
+        h('text', {x:n.tx, y:n.y3, fill:'var(--ink3)', style:{font:"400 8.5px 'JetBrains Mono',monospace"}}, n.sub)
+      ))
+    ];
+    return h('svg', {viewBox:'0 0 1240 600', style:{display:'block', width:'100%', height:'100%'}}, kids);
+  }
+
+  svgMini(m) {
+    const h = React.createElement;
+    return h('svg', {viewBox:'0 0 260 176', style:{display:'block', width:'100%'}},
+      m.edges.map((e, i) => h('line', {key:'e' + i, x1:e.x1, y1:e.y1, x2:e.x2, y2:e.y2, stroke:'var(--bd2)', strokeWidth:1, strokeDasharray:e.dash})),
+      m.nodes.map((n, i) => h('g', {key:'n' + i, onClick:n.open, style:{cursor:'pointer'}},
+        h('circle', {cx:n.x, cy:n.y, r:n.r, fill:n.fill, stroke:n.stroke, strokeWidth:n.sw}),
+        h('text', {x:n.tx, y:n.ty, textAnchor:n.anchor, fill:'var(--ink2)', style:{font:"500 8.5px 'JetBrains Mono',monospace"}}, n.short)
+      ))
+    );
+  }
+
+  renderVals() {
+    const S = this.state;
+    const rows = EL.filter(e => this.matches(e)).map(e => {
+      const ph = this.phase(e, TODAY);
+      return {
+        id:e.id, n:e.n, t:e.t, code:e.code, cmp:e.cmp, crit:e.crit || '—',
+        lyC:LY[e.ly].c, lyBg:LY[e.ly].bg, lcL:LC[ph].l, lcC:LC[ph].c,
+        time:e.time || '—', timeC: e.time ? TIME[e.time] : 'var(--bd2)',
+        cmpC:this.cmpC(e.cmp),
+        ff4:this.bars(e.ff || 0, 4, 'var(--ink2)'), tf4:this.bars(e.tf || 0, 4, 'var(--accent2)'),
+        bg: e.id === S.sel ? 'var(--panel)' : 'transparent',
+        open: () => this.setState({screen:'element', sel:e.id})
+      };
+    });
+
+    const el = this.byId(S.sel) || EL[0];
+    const ph = this.phase(el, TODAY);
+    const rl = this.rels(el.id);
+    const groups = [];
+    ['Realization','Serving','Flow','Access','Assignment','Composition','Association','Influence'].forEach(ty => {
+      const items = rl.filter(r => r.ty === ty);
+      if (!items.length) return;
+      groups.push({l:ty.toUpperCase(), n:items.length + (items.length === 1 ? ' relation' : ' relations'),
+        items: items.map(r => ({
+          n:r.other.n, code:r.other.code, dir: r.dir === 'out' ? '→' : '←',
+          lyC:LY[r.other.ly].c, lyBg:LY[r.other.ly].bg,
+          meta: r.other.t, open: () => this.setState({sel:r.other.id})
+        }))});
+    });
+    const phases = ['plan','in','act','out','eol'].map(k => {
+      const on = k === ph;
+      const dates = el.ph ? {plan:el.ph.plan, in:el.ph.in, act:el.ph.act, out:el.ph.out, eol:el.ph.eol} : null;
+      return {l:LC[k].l, d: dates ? '01 Jan ' + dates[k] : '—',
+        bar: on ? LC[k].c : 'var(--panel2)',
+        font: on ? "500 12px/1 'Space Grotesk',sans-serif" : "400 12px/1 'Space Grotesk',sans-serif",
+        fg: on ? 'var(--ink)' : 'var(--ink3)'};
+    });
+    const assess = [
+      {k:'FUNCTIONAL FIT', v: el.ff ? ['Insufficient','Unreasonable','Appropriate','Perfect'][el.ff - 1] : 'Not assessed', c:'var(--ink)', bars:this.bars(el.ff || 0, 4, 'var(--ink2)')},
+      {k:'TECHNICAL FIT', v: el.tf ? ['Inadequate','Unreasonable','Adequate','Fully adequate'][el.tf - 1] : 'Not assessed', c:'var(--ink)', bars:this.bars(el.tf || 0, 4, 'var(--accent2)')},
+      {k:'BUSINESS CRITICALITY', v: el.crit || 'Not assessed', c:'var(--ink)', bars:this.bars(CRIT_N[el.crit] || 0, 4, 'var(--lc-out)')},
+      {k:'TIME CLASSIFICATION', v: el.time || 'Not assessed', c: el.time ? TIME[el.time] : 'var(--ink3)', bars:this.bars(el.time ? ['Tolerate','Invest','Migrate','Eliminate'].indexOf(el.time) + 1 : 0, 4, el.time ? TIME[el.time] : 'var(--bd2)')}
+    ];
+    const nav = [
+      {k:'inventory', l:'Inventory', tag:String(EL.length), clip:'none'},
+      {k:'graph', l:'Dependency graph', tag:'', clip:'none'},
+      {k:'cap', l:'Capability map', tag:'P2', clip:'polygon(0 0,100% 0,100% 100%,0 100%)'},
+      {k:'land', l:'Landscape', tag:'P2', clip:'none'},
+      {k:'road', l:'Roadmap', tag:'P2', clip:'none'},
+      {k:'matrix', l:'Matrix', tag:'P2', clip:'none'},
+      {k:'port', l:'Portfolio', tag:'P2', clip:'none'}
+    ].map(i => {
+      const live = i.k === 'inventory' || i.k === 'graph';
+      const on = (i.k === 'inventory' && S.screen !== 'graph') || (i.k === 'graph' && S.screen === 'graph');
+      return {l:i.l, tag:i.tag, clip:i.clip, hint: live ? '' : 'Planned for phase 2',
+        go: live ? () => this.setState({screen:i.k === 'graph' ? 'graph' : 'inventory'}) : () => {},
+        bg: on ? 'var(--panel)' : 'transparent', mark: on ? 'var(--accent)' : 'transparent',
+        ic: on ? 'var(--accent)' : 'var(--ink3)', icf: on ? 'var(--accent)' : 'transparent',
+        fg: live ? 'var(--ink)' : 'var(--ink3)', op: live ? 1 : 0.75, cursor: live ? 'pointer' : 'default',
+        font: on ? "500 12.5px/1 'Space Grotesk',sans-serif" : "400 12.5px/1 'Space Grotesk',sans-serif"};
+    });
+
+    const g = this.graph();
+    const focusEl = S.focus ? this.byId(S.focus) : null;
+    const legend = (S.colorView === 'lifecycle' ? ['plan','in','act','out','eol'].map(k => ({l:LC[k].l, c:LC[k].c}))
+      : S.colorView === 'time' ? Object.keys(TIME).map(k => ({l:k, c:TIME[k]}))
+      : ['biz','app','tec'].map(k => ({l:LY[k].l, c:LY[k].c})))
+      .map(x => ({l:x.l, c:x.c, bg:'color-mix(in oklab,' + x.c + ' 16%,var(--surface))'}));
+
+    const pq = S.pq.trim().toLowerCase();
+    const pResults = (pq ? EL.filter(e => (e.n + ' ' + e.t).toLowerCase().includes(pq)) : EL).slice(0, 40).map(e => ({
+      n:e.n, code:e.code, lyC:LY[e.ly].c, lyBg:LY[e.ly].bg, meta:e.t,
+      go: () => this.setState({palette:false, screen:'element', sel:e.id})
+    }));
+
+    const activeKeys = Object.keys(S.facets).filter(k => S.facets[k]);
+    const gapCount = EL.filter(e => !e.owner || e.owner === '—').length;
+
+    return {
+      isInv: S.screen === 'inventory', isEl: S.screen === 'element', isGraph: S.screen === 'graph',
+      isTable: S.view === 'table', isCards: S.view === 'cards',
+      rows, empty: rows.length === 0,
+      q: S.q, setQ: (e) => this.setState({q:e.target.value}),
+      elCount: EL.length, relCount: R.length,
+      gapCount: gapCount + (gapCount === 1 ? ' element' : ' elements') + ' missing an owner',
+      health: Math.round(EL.reduce((a, e) => a + e.cmp, 0) / EL.length),
+      resultLabel: rows.length + ' of ' + EL.length + ' elements' + (activeKeys.length ? ' · ' + activeKeys.length + ' filters (' + S.mode + ')' : ''),
+      saveLabel: S.dirty ? 'LOCAL · ' + S.dirty + ' UNSAVED' : 'LOCAL · SAVED',
+      saveFile: () => this.setState({dirty:0}),
+      toggleTheme: () => this.setState({theme: (this.state.theme || this.props.theme || 'light') === 'dark' ? 'light' : 'dark'}),
+      nav, goInv: () => this.setState({screen:'inventory'}),
+      views: [{k:'table', l:'TABLE'}, {k:'cards', l:'CARDS'}].map(v => ({l:v.l,
+        go: () => this.setState({view:v.k}),
+        bg: S.view === v.k ? 'var(--ink)' : 'transparent', fg: S.view === v.k ? 'var(--surface)' : 'var(--ink2)'})),
+      cols: [{l:'ELEMENT', a:'left'}, {l:'TYPE', a:'left'}, {l:'LIFECYCLE', a:'left'}, {l:'FIT  F / T', a:'left'}, {l:'CRIT.', a:'left'}, {l:'TIME', a:'left'}, {l:'COMPLETE', a:'right'}],
+      modes: ['AND','OR','NOT'].map(m => ({l:m, hint: m === 'AND' ? 'Match every facet group' : m === 'OR' ? 'Match any selected facet' : 'Exclude anything selected',
+        go: () => this.setState({mode:m}),
+        bg: S.mode === m ? 'var(--accent)' : 'transparent', fg: S.mode === m ? '#fff' : 'var(--ink2)'})),
+      facetGroups: this.facetDefs().map(gp => ({l:gp.l, opts: gp.opts.map(o => {
+        const key = gp.k + ':' + o.v;
+        const on = !!S.facets[key];
+        const n = EL.filter(e => gp.k === 'layer' ? e.ly === o.v : gp.k === 'lifecycle' ? this.phase(e, TODAY) === o.v : gp.k === 'time' ? e.time === o.v : (e.tags || []).includes(o.v)).length;
+        return {l:o.l, n, go: () => this.toggle(key),
+          bg: on ? 'var(--panel)' : 'transparent', bd: on ? 'var(--accent)' : 'var(--bd2)',
+          fill: on ? 'var(--accent)' : 'transparent',
+          font: on ? "500 12px/1.3 'Space Grotesk',sans-serif" : "400 12px/1.3 'Space Grotesk',sans-serif"};
+      })})),
+      hasChips: activeKeys.length > 0,
+      chips: activeKeys.map(k => ({k: k.split(':')[0].toUpperCase(), v: k.split(':')[1] === 'in' ? 'Phase In' : (LC[k.split(':')[1]] ? LC[k.split(':')[1]].l : (LY[k.split(':')[1]] ? LY[k.split(':')[1]].l : k.split(':')[1])), go: () => this.toggle(k)})),
+      clearFacets: () => this.setState({facets:{}, q:''}),
+      saved: [
+        {l:'End-of-life applications', n:'4', f:{'layer:app':1, 'lifecycle:out':1, 'lifecycle:eol':1}, m:'OR'},
+        {l:'Invest portfolio', n:'4', f:{'time:Invest':1}, m:'AND'},
+        {l:'Vendor risk exposure', n:'5', f:{'tag:Vendor risk':1}, m:'AND'},
+        {l:'Business capabilities', n:'6', f:{'layer:biz':1}, m:'AND'}
+      ].map(s => ({l:s.l, n:s.n, go: () => this.setState({facets:s.f, mode:s.m, screen:'inventory'})})),
+
+      el: {
+        id:el.id, n:el.n, t:el.t, code:el.code, cmp:el.cmp, desc:el.desc,
+        lyC:LY[el.ly].c, lyBg:LY[el.ly].bg, cmpC:this.cmpC(el.cmp),
+        dash: (2 * Math.PI * 16 * el.cmp / 100).toFixed(1) + ' 999',
+        tags: (el.tags || []).map(t => ({l:t, c:TAGC[t] || 'var(--pas)'})),
+        lcNote: el.ph ? 'Current phase: ' + LC[ph].l + ' · derived from phase dates' : 'No lifecycle dates on this element type',
+        phases, assess, groups,
+        relNote: rl.length + ' relations · ' + groups.length + ' types',
+        props: [
+          {k:'archimate.type', v:el.t}, {k:'owner', v:el.owner || '—'},
+          {k:'annual.cost', v:el.cost || 'not captured'},
+          {k:'element.id', v:el.id}, {k:'last.modified', v:'2026-07-28 by m.steinbrecher'},
+          {k:'source', v:'ArchiSurance exchange XML (imported 2026-07-14)'}
+        ],
+        views: [{l:'Application landscape', clip:'none'}, {l:'Claim handling flow', clip:'polygon(50% 0,100% 100%,0 100%)'}, {l:'2027 target state', clip:'circle(50%)'}],
+        history: [
+          {l:'Technical fit lowered to ' + (el.tf || 1) + ' — vendor support ending', d:'2026-07-28 · m.steinbrecher', c:'var(--lc-out)'},
+          {l:'Relation added: served by ' + (rl[0] ? rl[0].other.n : '—'), d:'2026-06-02 · import', c:'var(--accent2)'},
+          {l:'Imported from ArchiSurance exchange XML', d:'2026-07-14 · import', c:'var(--ink3)'}
+        ],
+        mini: this.mini(el)
+      },
+      miniSvg: this.svgMini(this.mini(el)),
+      tabs: ['Overview','Relations','Assessment','Quality'].map((t, i) => ({l:t,
+        mark: i === 0 ? 'var(--accent)' : 'transparent', fg: i === 0 ? 'var(--ink)' : 'var(--ink3)',
+        font: i === 0 ? "500 12.5px/1 'Space Grotesk',sans-serif" : "400 12.5px/1 'Space Grotesk',sans-serif"})),
+      traceEl: () => this.setState({screen:'graph', focus: el.gx != null ? el.id : null}),
+
+      year: S.year, setYear: (e) => this.setState({year: +e.target.value}),
+      resetYear: () => this.setState({year:TODAY}),
+      colorViews: [{k:'layer', l:'LAYER'}, {k:'lifecycle', l:'LIFECYCLE'}, {k:'time', l:'TIME'}].map(c => ({l:c.l,
+        go: () => this.setState({colorView:c.k}),
+        bg: S.colorView === c.k ? 'var(--ink)' : 'transparent', fg: S.colorView === c.k ? 'var(--surface)' : 'var(--ink2)'})),
+      legend,
+      graphSvg: this.svgGraph(g, [
+        {l:'BUSINESS', x:16, y:44, w:1208, h:108, ty:38, fill:'color-mix(in oklab,var(--biz) 4%,transparent)'},
+        {l:'APPLICATION', x:16, y:196, w:1208, h:208, ty:190, fill:'color-mix(in oklab,var(--app) 4%,transparent)'},
+        {l:'TECHNOLOGY', x:16, y:448, w:1208, h:108, ty:442, fill:'color-mix(in oklab,var(--tec) 4%,transparent)'}
+      ].filter(() => this.props.showLayerBands !== false)),
+      graphNote: g.nodes.length + ' nodes · ' + g.edges.length + ' relations · time point ' + S.year,
+      graphHint: S.focus ? 'Tracing ' + focusEl.n : 'Click a node to trace its dependencies',
+      hasFocus: !!S.focus, panelW: S.focus ? '288px' : '0px',
+      clearFocus: () => this.setState({focus:null}),
+      openSel: () => this.setState({screen:'element', sel:S.focus}),
+      sel: focusEl ? {
+        n:focusEl.n, t:focusEl.t, code:focusEl.code, lyC:LY[focusEl.ly].c, lyBg:LY[focusEl.ly].bg,
+        stats: [
+          {k:'LIFECYCLE', v:LC[this.phase(focusEl, S.year)].l, c:LC[this.phase(focusEl, S.year)].c},
+          {k:'TIME', v:focusEl.time || '—', c: focusEl.time ? TIME[focusEl.time] : 'var(--ink3)'},
+          {k:'ANNUAL COST', v:focusEl.cost || '—', c:'var(--ink)'},
+          {k:'COMPLETENESS', v:focusEl.cmp + '%', c:this.cmpC(focusEl.cmp)}
+        ],
+        neighbours: this.rels(focusEl.id).map(r => ({
+          n:r.other.n, dir: r.dir === 'out' ? '→' : '←', ty:r.ty.slice(0, 4).toUpperCase(),
+          c:LY[r.other.ly].c, click: () => this.setState({focus: r.other.gx != null ? r.other.id : S.focus, sel:r.other.id})
+        }))
+      } : null,
+
+      paletteOpen: S.palette, pq:S.pq, pResults, pEmpty: pResults.length === 0,
+      setPq: (e) => this.setState({pq:e.target.value}),
+      openPalette: () => this.setState({palette:true, pq:''}),
+      closePalette: () => this.setState({palette:false}),
+      stop: (e) => e.stopPropagation()
+    };
+  }
+}
+</script>
+</body>
+</html>

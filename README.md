@@ -1,28 +1,39 @@
-# EA for the Agentic Organisation
+# Archipelago
 
-How Enterprise Architecture must evolve when AI agents become part of the enterprise workforce.
+An **open-source Enterprise Architecture repository that runs entirely in the browser** — a static web app, all data stored locally, no backend, no login. ArchiMate 3.2-native at the core, LeanIX-class portfolio management at the surface.
 
-## What This Is
+> *"LeanIX-class EA portfolio management as a static web app — ArchiMate-native, local-first, git-friendly, agent-ready."*
 
-An element-level analysis of traditional EA frameworks, examining what changes, what breaks, and what survives when organisations deploy AI agents at scale. The analysis covers 1,062 framework elements across 36 topics in five domains:
+**Status: pre-implementation.** Concept, design, and hi-fi prototype are done; implementation is tracked in the [issues](../../issues).
 
-- **EA Development Method** — How architecture development shifts from periodic cycles to continuous, agent-assisted processes
-- **EA Governance** — How governance must operate at deployment speed or become irrelevant
-- **EA Repository** — How architecture content must become machine-readable for both humans and agents
-- **Roles & Skills** — How the EA function, architect roles, and required competencies transform
-- **Risk & Security** — How new failure modes, observability gaps, and regulatory requirements reshape risk management
+## What it does (when built)
 
-## Status
+- **Inventory** applications, capabilities, processes, data, and technology as typed ArchiMate 3.2 elements and relationships.
+- **Assess** them: lifecycle phases, functional/technical fit, business criticality, TIME classification, costs on relationships.
+- **Visualise** the portfolio through auto-generated reports: dependency graph, capability map, landscape, roadmap, matrix, portfolio bubble.
+- **Own your data**: everything lives in your browser (IndexedDB) and in files you export — canonical JSON for git, ArchiMate Model Exchange Format for tool interop (Archi round-trip), Excel for spreadsheets.
 
-**Work in progress.** This is an AI-generated research synthesis. Content may change. Verify claims against original sources.
+## Design & specification
 
-## Website
+| Document | What it is |
+|---|---|
+| [`design/specs/open-ea-repository-concept.md`](design/specs/open-ea-repository-concept.md) | Full concept: vision, prior-art survey, metamodel, architecture, report engine, delivery plan |
+| [`design/specs/open-ea-repository-design-brief.md`](design/specs/open-ea-repository-design-brief.md) | Design brief: personas, screens, look & feel |
+| [`design/specs/open-ea-repository-ui-spec.md`](design/specs/open-ea-repository-ui-spec.md) | UI spec: design position, structural decisions, ADR candidates |
+| [`design/handoff/2026-08-inventory-factsheet-graph/`](design/handoff/2026-08-inventory-factsheet-graph/) | Hi-fi design handoff: tokens, component-level spec, running prototype, reference screens |
 
-The website is a static site (vanilla HTML/CSS/JS, no build step) in the `docs/` directory. All content is data-driven from JSON files in `docs/data/`.
+Open `design/handoff/2026-08-inventory-factsheet-graph/Archipelago.dc.html` directly in a browser to see the prototype.
 
-To run locally:
+## Planned stack
 
-```
-cd docs
-python3 -m http.server 8080
-```
+TypeScript · React · Vite · React Flow + ELKjs (generated views) · IndexedDB (local persistence) · GitHub Pages (hosting). No server.
+
+## Repo history
+
+This repository previously hosted *EA for the Agentic Organisation*, a knowledge base analysing how EA must evolve for organisations deploying AI agents — the research that motivates this tool. That content is preserved at the [`knowledge-base-final`](../../tree/knowledge-base-final) tag.
+
+## License
+
+[MIT](LICENSE).
+
+ArchiMate® is a registered trademark of The Open Group. This project is not affiliated with or endorsed by The Open Group.

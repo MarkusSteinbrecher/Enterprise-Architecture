@@ -1,5 +1,5 @@
 .DS_Store
-local-docs/
-documentation/
-BACKLOG.md
-/CLAUDE.md
+node_modules/
+dist/
+coverage/
+*.local
