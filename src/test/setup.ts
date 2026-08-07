@@ -35,6 +35,23 @@ if (typeof globalThis.localStorage?.getItem !== 'function') {
   })
 }
 
+// React Flow observes its container and reads matrix transforms; jsdom has
+// neither API. These stubs are enough for it to mount and render nodes.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver
+}
+
+if (typeof globalThis.DOMMatrixReadOnly === 'undefined') {
+  globalThis.DOMMatrixReadOnly = class {
+    m22 = 1
+    constructor(_transform?: string) {}
+  } as unknown as typeof DOMMatrixReadOnly
+}
+
 // jsdom has no layout, so it implements no scrolling APIs.
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {}
