@@ -8,7 +8,7 @@ TypeScript (strict) · React · Vite · Vitest · React Flow (@xyflow/react) + E
 
 ## Critical conventions
 
-- **Design tokens are law.** `src/styles/tokens.css` is copied verbatim from the design handoff and is the single source of colour. Zero border-radius, no shadows (one exception: command palette), hairline borders. The semantic ramps (layer / lifecycle / TIME) are the report legend, not decoration.
+- **Design tokens are law.** `src/styles/tokens.css` is copied verbatim from the design handoff and is the single source of colour. Zero border-radius on boxes, controls, and surfaces — drawn circular *glyphs* (theme toggle, search circle, phase dots) are exempt; no shadows (one exception: command palette); hairline borders. The semantic ramps (layer / lifecycle / TIME) are the report legend, not decoration.
 - **Monospace marks machine-readable content** (ids, counts, property keys, type codes, relation types); Space Grotesk for human-authored content. This split is intentional identity — see the UI spec §2.1.
 - **Lifecycle is derived, never stored.** Elements carry phase dates; the phase is computed at a time point (UI spec §3.1). Do not add a stored phase field.
 - **Relationship properties are first-class.** Costs, support type, CRUD usage, validity dates live on edges (ADR 0001). Never demote them to element fields.
