@@ -6,6 +6,7 @@ import './styles/tokens.css'
 import './styles/base.css'
 import { App } from './app/App'
 import { applyTheme, readStoredTheme } from './app/theme'
+import { ModelStoreProvider } from './store'
 
 applyTheme(readStoredTheme())
 
@@ -19,7 +20,9 @@ createRoot(container).render(
       basename={import.meta.env.BASE_URL}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
-      <App />
+      <ModelStoreProvider>
+        <App />
+      </ModelStoreProvider>
     </BrowserRouter>
   </StrictMode>,
 )
