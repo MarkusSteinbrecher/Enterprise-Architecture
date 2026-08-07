@@ -1,0 +1,6 @@
+dist
+node_modules
+coverage
+design
+src/assets/fonts
+public

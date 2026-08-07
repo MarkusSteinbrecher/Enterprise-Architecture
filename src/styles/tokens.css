@@ -1,0 +1,107 @@
+/*
+ * Archipelago design tokens.
+ *
+ * Verbatim from design/handoff/2026-08-inventory-factsheet-graph/README.md →
+ * "Design tokens". The semantic ramps (layer / lifecycle / TIME) are load-bearing:
+ * they ARE the report legend, not decoration. Do not add colours here that are not
+ * in the handoff, and do not use these for chrome decoration.
+ */
+
+:root {
+  /* Chrome — light */
+  --paper: #fafafb;
+  --surface: #ffffff;
+  --panel: #f3f4f6;
+  --panel2: #eaedf0;
+  --bd: #e1e4e8;
+  --bd2: #c4cad1;
+  --ink: #0e1116;
+  --ink2: #59616a;
+  --ink3: #8c939b;
+  --accent: #a85b32; /* copper */
+  --accent2: #2c6e77; /* slate teal */
+
+  /* ArchiMate layer colours — stroke / fill */
+  --biz: #a8891c;
+  --bizbg: #faf5e4;
+  --app: #3a6ea5;
+  --appbg: #ebf1f8;
+  --tec: #42774e;
+  --tecbg: #eaf2ec;
+  --pas: #66748a;
+  --pasbg: #eef1f5;
+  --mot: #7b5ea7;
+  --motbg: #f1edf8;
+  --imp: #95547f;
+  --impbg: #f8edf4;
+
+  /* Lifecycle phases */
+  --lc-plan: #8c939b;
+  --lc-in: #3a6ea5;
+  --lc-act: #42774e;
+  --lc-out: #a8891c;
+  --lc-eol: #ac4436;
+
+  /* TIME classification */
+  --t-tol: #66748a;
+  --t-inv: #2c6e77;
+  --t-mig: #a8891c;
+  --t-eli: #ac4436;
+
+  /* Geometry */
+  --rowh: 38px; /* balanced; 31px in compact mode */
+  --h-header: 46px;
+  --w-nav: 208px;
+  --w-filter-rail: 238px;
+  --w-factsheet-rail: 296px;
+  --w-graph-panel: 288px;
+
+  /* Typography */
+  --font-ui: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* The one shadow in the app (command palette). */
+  --shadow-palette: 0 24px 60px -20px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme='dark'] {
+  --paper: #0b0e12;
+  --surface: #111519;
+  --panel: #171b21;
+  --panel2: #1e242b;
+  --bd: #232a31;
+  --bd2: #343d46;
+  --ink: #e7eaed;
+  --ink2: #98a1aa;
+  --ink3: #6b747d;
+  --accent: #ce7c4e;
+  --accent2: #5aa3ad;
+
+  --biz: #d5b441;
+  --bizbg: #221e10;
+  --app: #6c9ed6;
+  --appbg: #121a24;
+  --tec: #6fa97c;
+  --tecbg: #111d16;
+  --pas: #93a3b8;
+  --pasbg: #151a20;
+  --mot: #a98bd6;
+  --motbg: #1a1626;
+  --imp: #c57fac;
+  --impbg: #22161e;
+
+  --lc-plan: #7c858e;
+  --lc-in: #6c9ed6;
+  --lc-act: #6fa97c;
+  --lc-out: #d5b441;
+  --lc-eol: #d96c5c;
+
+  --t-tol: #93a3b8;
+  --t-inv: #5aa3ad;
+  --t-mig: #d5b441;
+  --t-eli: #d96c5c;
+}
+
+[data-density='compact'] {
+  --rowh: 31px;
+}

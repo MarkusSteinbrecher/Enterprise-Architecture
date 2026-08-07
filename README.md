@@ -4,7 +4,7 @@ An **open-source Enterprise Architecture repository that runs entirely in the br
 
 > *"LeanIX-class EA portfolio management as a static web app — ArchiMate-native, local-first, git-friendly, agent-ready."*
 
-**Status: pre-implementation.** Concept, design, and hi-fi prototype are done; implementation is tracked in the [issues](../../issues).
+**Status: in implementation.** Concept, design, and hi-fi prototype are done; the app is being built out issue by issue — see the [issues](../../issues).
 
 ## What it does (when built)
 
@@ -24,9 +24,30 @@ An **open-source Enterprise Architecture repository that runs entirely in the br
 
 Open `design/handoff/2026-08-inventory-factsheet-graph/Archipelago.dc.html` directly in a browser to see the prototype.
 
-## Planned stack
+## Stack
 
 TypeScript · React · Vite · React Flow + ELKjs (generated views) · IndexedDB (local persistence) · GitHub Pages (hosting). No server.
+
+## Development
+
+```bash
+npm install
+npm run dev          # dev server
+npm test             # unit tests (Vitest)
+npm run lint         # ESLint
+npm run build        # typecheck + production build into dist/
+```
+
+The production build targets a GitHub Pages **project** site, so it is written against
+the base path `/Enterprise-Architecture/`. Build for a root deployment with
+`BASE_PATH=/ npm run build`. `dist/404.html` carries the SPA redirect that keeps deep
+links (`/inventory`, `/element/:id`, `/graph`) working on Pages.
+
+Fonts (Space Grotesk, JetBrains Mono — SIL OFL 1.1) are self-hosted in
+`src/assets/fonts/`; nothing is fetched from a CDN at runtime. Design tokens live in
+`src/styles/tokens.css` and are copied verbatim from the design handoff — that file is
+the single source of colour, and semantic ramps (layer / lifecycle / TIME) are the
+report legend, not decoration.
 
 ## Repo history
 
