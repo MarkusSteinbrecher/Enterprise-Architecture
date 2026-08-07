@@ -378,7 +378,13 @@ export class ModelStore {
     this.#bump()
   }
 
-  /** Replace the entire model — used by import and by "load demo". */
+  /**
+   * Replace the entire model — used by import, "load demo" and workspace switching.
+   *
+   * `markClean` says whether the new model already matches a file on disk. A
+   * restore from IndexedDB does; an import does not, so it counts as one unsaved
+   * change and the header says so.
+   */
   replaceWorkspace(workspace: Workspace, { markClean = true } = {}): void {
     this.#id = workspace.id
     this.#name = workspace.name
@@ -389,7 +395,7 @@ export class ModelStore {
     this.#undo = []
     this.#redo = []
     this.#history = []
-    if (markClean) this.#dirty = 0
+    this.#dirty = markClean ? 0 : this.#dirty + 1
     this.#bump()
   }
 
