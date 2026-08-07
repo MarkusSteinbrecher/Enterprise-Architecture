@@ -1,0 +1,11 @@
+.type-code {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border: 1px solid currentColor;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
