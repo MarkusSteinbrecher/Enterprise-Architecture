@@ -43,6 +43,10 @@ the base path `/Enterprise-Architecture/`. Build for a root deployment with
 `BASE_PATH=/ npm run build`. `dist/404.html` carries the SPA redirect that keeps deep
 links (`/inventory`, `/element/:id`, `/graph`) working on Pages.
 
+The typed ArchiMate 3.2 core lives in [`src/model/`](src/model/README.md) — element
+catalogue, relationship validity, lifecycle derivation and completeness scoring, with
+that README as its documentation.
+
 Fonts (Space Grotesk, JetBrains Mono — SIL OFL 1.1) are self-hosted in
 `src/assets/fonts/`; nothing is fetched from a CDN at runtime. Design tokens live in
 `src/styles/tokens.css` and are copied verbatim from the design handoff — that file is
