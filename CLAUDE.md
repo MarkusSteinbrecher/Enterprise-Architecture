@@ -15,6 +15,7 @@ TypeScript (strict) · React · Vite · Vitest · React Flow (@xyflow/react) + E
 - **Canonical JSON is deterministic:** sorted keys, stable IDs, byte-identical export→import→export (ADR 0004). Anything that breaks this breaks git-friendliness.
 - **All model mutations go through the command stack** (undo/redo + dirty counter). No direct store writes from UI code.
 - Work is issue-driven; every issue carries acceptance criteria — verify them before claiming completion. Branches: `feat/<issue#>-<slug>`.
+- PRs are reviewed with `/review-pr <n>` before merge (stacked PRs bottom-up). Reviews harvest rules: recurring findings become lint/CI checks or a sharpened line here — if this file changed since your last session, re-read it.
 
 ## Constraints
 
