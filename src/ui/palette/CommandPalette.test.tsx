@@ -43,11 +43,11 @@ describe('opening and closing', () => {
     const user = userEvent.setup()
     await openPalette(user)
     await user.keyboard('claim')
-    expect(screen.getByRole('textbox')).toHaveValue('claim')
+    expect(screen.getByLabelText('Jump to element, run an action')).toHaveValue('claim')
 
     await user.keyboard('{Escape}')
     await openPalette(user)
-    expect(screen.getByRole('textbox')).toHaveValue('')
+    expect(screen.getByLabelText('Jump to element, run an action')).toHaveValue('')
   })
 
   it('closes when the backdrop is clicked', async () => {
@@ -63,7 +63,7 @@ describe('opening and closing', () => {
     renderApp(demo())
     const user = userEvent.setup()
     await openPalette(user)
-    expect(screen.getByRole('textbox')).toHaveFocus()
+    expect(screen.getByLabelText('Jump to element, run an action')).toHaveFocus()
   })
 })
 
@@ -189,7 +189,7 @@ describe('single-letter shortcuts', () => {
     await openPalette(user)
     await user.keyboard('g')
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByRole('textbox')).toHaveValue('g')
+    expect(screen.getByLabelText('Jump to element, run an action')).toHaveValue('g')
   })
 
   it('does not navigate while a text input has focus — the prototype gap', async () => {

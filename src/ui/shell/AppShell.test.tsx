@@ -125,7 +125,7 @@ describe('workspace switcher', () => {
   it('shows the workspace name and opens a menu', async () => {
     renderApp(demo())
     const user = userEvent.setup()
-    const button = screen.getByRole('button', { name: /ArchiSurance/ })
+    const button = screen.getByRole('button', { name: 'ArchiSurance' })
     expect(button).toBeInTheDocument()
 
     await user.click(button)
@@ -137,7 +137,7 @@ describe('workspace switcher', () => {
   it('closes on Escape', async () => {
     renderApp(demo())
     const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: /ArchiSurance/ }))
+    await user.click(screen.getByRole('button', { name: 'ArchiSurance' }))
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
