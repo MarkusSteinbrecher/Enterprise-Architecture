@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { emptyWorkspace } from '@/model'
@@ -33,28 +33,26 @@ describe('header', () => {
   })
 
   it('counts unsaved changes and clears them on save', async () => {
-    // jsdom has no Blob URL plumbing; the download itself is not what is under test.
+    // jsdom has no Blob URL plumbing; the download itself is not what is tested.
     const createObjectURL = vi.fn(() => 'blob:test')
     vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
     HTMLAnchorElement.prototype.click = vi.fn()
 
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
-    expect(screen.getByText('LOCAL · SAVED')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Load the demo workspace' }))
+    await user.click(screen.getByRole('button', { name: /Explore the demo/ }))
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
+    await waitFor(() => expect(screen.getByText('LOCAL · SAVED')).toBeInTheDocument())
     expect(createObjectURL).toHaveBeenCalled()
-    expect(screen.getByText('LOCAL · SAVED')).toBeInTheDocument()
 
     vi.unstubAllGlobals()
   })
 
-  it('leaves Import disabled until the import dialog exists', () => {
+  it('offers Import and Export', () => {
     renderApp(demo())
-    expect(screen.getByRole('button', { name: 'Import' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Import' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Export' })).toBeEnabled()
   })
 
@@ -113,9 +111,8 @@ describe('model health footer', () => {
   it('updates live when the model changes', async () => {
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
-    expect(screen.getByText('0 elements · 0 relations')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Load the demo workspace' }))
+    // An empty browser lands on the first-run screen, not on the chrome.
+    await user.click(screen.getByRole('button', { name: /Explore the demo/ }))
     expect(screen.getByText('29 elements · 47 relations')).toBeInTheDocument()
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
   })

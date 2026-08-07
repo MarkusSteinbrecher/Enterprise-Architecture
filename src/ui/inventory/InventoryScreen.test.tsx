@@ -223,7 +223,7 @@ describe('creating an element', () => {
   it('creates through the command stack and opens the fact sheet', async () => {
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Load the demo workspace' }))
+    await user.click(screen.getByRole('button', { name: /Explore the demo/ }))
     await user.click(screen.getByRole('button', { name: '+ Element' }))
 
     await user.type(screen.getByLabelText(/Name/), 'Fraud Detection Service')

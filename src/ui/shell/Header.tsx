@@ -1,5 +1,5 @@
 import { useModelStoreContext } from '@/store'
-import { downloadWorkspace } from '@/io'
+import { useFileWorkspace } from '@/ui/files/context'
 import { SaveStateIndicator } from './SaveStateIndicator'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -14,13 +14,15 @@ export interface HeaderProps {
 }
 
 export function Header({ onOpenSearch }: HeaderProps) {
-  const { store, role } = useModelStoreContext()
+  const { role } = useModelStoreContext()
+  const { save, startImport, fileName, hasHandle, canPickFiles } = useFileWorkspace()
   const readOnly = role === 'reader'
 
-  const saveFile = () => {
-    downloadWorkspace(store.snapshot(), 'json')
-    store.markSaved()
-  }
+  const saveTitle = hasHandle
+    ? `Save to ${fileName}`
+    : canPickFiles
+      ? 'Choose where to save this model'
+      : 'Download this model as a file'
 
   return (
     <header className="header">
@@ -40,15 +42,16 @@ export function Header({ onOpenSearch }: HeaderProps) {
         <button
           type="button"
           className="header__action"
-          disabled
-          title="Importing a file lands with the import dialog and its error surface (#11)"
+          onClick={startImport}
+          disabled={readOnly}
+          title="Import canonical JSON or ArchiMate exchange XML"
         >
           Import
         </button>
         <button
           type="button"
           className="header__action"
-          onClick={() => downloadWorkspace(store.snapshot(), 'xml')}
+          onClick={() => void save('xml', { reuseHandle: false })}
           title="Export as ArchiMate Model Exchange Format XML"
         >
           Export
@@ -56,7 +59,11 @@ export function Header({ onOpenSearch }: HeaderProps) {
       </div>
 
       <div className="header__right">
-        <SaveStateIndicator onSaveFile={saveFile} disabled={readOnly} />
+        <SaveStateIndicator
+          onSaveFile={() => void save('json')}
+          disabled={readOnly}
+          title={saveTitle}
+        />
         <ThemeToggle />
       </div>
     </header>

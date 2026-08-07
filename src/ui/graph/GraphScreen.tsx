@@ -169,9 +169,7 @@ function GraphCanvas() {
       <div className={`graph__body${focused ? ' graph__body--focused' : ''}`}>
         <div className="graph__canvas">
           {model.elements.length === 0 ? (
-            <p className="graph__empty">
-              This workspace is empty. Load a model from the inventory to see its dependencies.
-            </p>
+            <p className="graph__empty">This workspace has no elements to draw.</p>
           ) : (
             <ReactFlow
               nodes={nodes}
