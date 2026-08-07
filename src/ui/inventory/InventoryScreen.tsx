@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import type { ElementType } from '@/model'
 import { loadDemoWorkspace } from '@/io'
 import { newId, useModelSelector, useModelStoreContext } from '@/store'
@@ -24,6 +24,7 @@ import './inventory.css'
 export function InventoryScreen() {
   const { store, role } = useModelStoreContext()
   const navigate = useNavigate()
+  const location = useLocation()
   const state = useInventoryState()
   const [creating, setCreating] = useState(false)
 
@@ -58,11 +59,16 @@ export function InventoryScreen() {
   const total = model.elements.length
   const readOnly = role === 'reader'
 
+  /** Carry the current filters so the fact sheet's breadcrumb can restore them. */
+  const openElement = (id: string) => {
+    navigate(`/element/${id}`, { state: { fromInventory: location.search } })
+  }
+
   const createElement = (type: ElementType, name: string) => {
     const element = { id: newId('el'), type, name, properties: {} }
     store.addElement(element)
     setCreating(false)
-    navigate(`/element/${element.id}`)
+    openElement(element.id)
   }
 
   return (
@@ -147,14 +153,14 @@ export function InventoryScreen() {
             elements={filtered}
             at={at}
             completenessOf={model.completeness}
-            onOpen={(id) => navigate(`/element/${id}`)}
+            onOpen={openElement}
           />
         ) : (
           <InventoryCards
             elements={filtered}
             at={at}
             completenessOf={model.completeness}
-            onOpen={(id) => navigate(`/element/${id}`)}
+            onOpen={openElement}
           />
         )}
       </section>

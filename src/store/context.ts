@@ -1,4 +1,11 @@
-import { createContext, useContext, useMemo, useRef, useSyncExternalStore } from 'react'
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+  type DependencyList,
+} from 'react'
 import type { ModelStore } from './model-store'
 import type { WorkspaceMeta } from './persistence'
 import type { TabRole } from './tab-lock'
@@ -59,16 +66,27 @@ export function useModelVersion(): number {
 
 /**
  * Derive a value from the model, recomputed when the model changes.
+ *
  * The selector may return a fresh array or object — identity is not used for
- * change detection, the version is.
+ * change detection, the model version is. **Anything else the selector reads
+ * must be listed in `deps`**: a selector that closes over a route parameter or a
+ * prop will otherwise keep returning the value it computed for the old one, and
+ * the model version will not have changed to tell it otherwise.
+ *
+ *     const element = useModelSelector((store) => store.element(id), [id])
  */
-export function useModelSelector<T>(select: (store: ModelStore) => T): T {
+export function useModelSelector<T>(
+  select: (store: ModelStore) => T,
+  deps: DependencyList = [],
+): T {
   const store = useModelStore()
   const version = useModelVersion()
   const selectRef = useRef(select)
   selectRef.current = select
-  return useMemo(() => {
-    void version // the model version is the cache key
-    return selectRef.current(store)
-  }, [store, version])
+  return useMemo(
+    () => selectRef.current(store),
+    // The model version and the caller's own inputs are the cache key together.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [store, version, ...deps],
+  )
 }
