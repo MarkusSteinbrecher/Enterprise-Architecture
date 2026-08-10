@@ -37,3 +37,36 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  e2e:
+    name: End-to-end journeys
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      # playwright.config.ts builds the app and serves it with `vite preview` on
+      # the Pages base path — the journeys run against what Pages would serve.
+      - name: Run journeys
+        run: npm run test:e2e
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          # The HTML report embeds the traces; test-results carries the raw
+          # trace.zip, the failure screenshot and the video for each attempt.
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
