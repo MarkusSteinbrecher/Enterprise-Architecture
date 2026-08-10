@@ -21,7 +21,7 @@ import {
 test('the app boots on the Pages base path', async ({ page }) => {
   await openApp(page)
 
-  await expect(page).toHaveTitle('Archipelagooo')
+  await expect(page).toHaveTitle('Archipelago')
   expect(new URL(page.url()).pathname).toMatch(/^\/Enterprise-Architecture\//)
 
   // A cold browser has no workspace, so this is the first-run screen.
