@@ -131,8 +131,12 @@ export function relationshipProfileFromProperties(
   properties: Record<string, PropertyValue>,
 ): RelationshipProfile | undefined {
   const profile: RelationshipProfile = {}
-  const cost = Number(properties[ANNUAL_COST_KEY])
-  if (properties[ANNUAL_COST_KEY] !== undefined && Number.isFinite(cost)) {
+  const rawCost = properties[ANNUAL_COST_KEY]
+  // Number('') is 0 — an empty value must stay "no cost data", not become €0.
+  const hasCost =
+    typeof rawCost === 'number' || (typeof rawCost === 'string' && rawCost.trim() !== '')
+  const cost = Number(rawCost)
+  if (hasCost && Number.isFinite(cost)) {
     profile.annualCost = cost
   }
   const currency = properties[CURRENCY_KEY]
