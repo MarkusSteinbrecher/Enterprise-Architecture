@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { validate, type Workspace } from '@/model'
+import { DEFAULT_TAG_GROUP, validate, type Workspace } from '@/model'
+import { isExchangeSafeId } from '@/store/ids'
 import { smallWorkspace } from '@/test/fixtures'
-import { exportExchangeXml, importExchangeXml } from './exchange-format'
+import { exportExchange, exportExchangeXml, importExchangeXml } from './exchange-format'
 import { DEMO_WORKSPACE_XML, loadDemoWorkspace } from './demo'
+import junctionFlowXml from './fixtures/junction-flow.xml?raw'
 
 function roundTrip(workspace: Workspace): Workspace {
   const result = importExchangeXml(exportExchangeXml(workspace))
@@ -302,5 +304,265 @@ describe('exchange hardening (review findings, PR #17)', () => {
     const result = importExchangeXml(xml)
     expect(result.ok).toBe(true)
     expect(result.workspace?.relationships[0]?.profile?.annualCost).toBeUndefined()
+  })
+})
+
+describe('junctions (issue #36)', () => {
+  const importFixture = () => {
+    const result = importExchangeXml(junctionFlowXml, 'junction-flow.xml')
+    expect(result.problems).toEqual([])
+    return result.workspace!
+  }
+
+  it('reads both concrete junction types and keeps every relationship through them', () => {
+    const workspace = importFixture()
+    expect(workspace.elements).toHaveLength(7)
+    expect(workspace.relationships).toHaveLength(7)
+    expect(
+      workspace.elements
+        .filter((element) => element.type === 'Junction')
+        .map((junction) => [junction.id, junction.junctionKind]),
+    ).toEqual([
+      ['jun-split', 'and'],
+      ['jun-decide', 'or'],
+    ])
+  })
+
+  it('is a valid ArchiMate model once read', () => {
+    expect(validate(importFixture()).errors).toEqual([])
+  })
+
+  it('writes junctions back the way the schema spells them', () => {
+    const xml = exportExchangeXml(importFixture())
+    expect(xml).toContain('xsi:type="AndJunction"')
+    expect(xml).toContain('xsi:type="OrJunction"')
+    expect(xml).not.toContain('xsi:type="Junction"')
+  })
+
+  it('round-trips the whole flow chain byte for byte', () => {
+    const once = exportExchangeXml(importFixture())
+    const twice = exportExchangeXml(importExchangeXml(once).workspace!)
+    expect(twice).toBe(once)
+  })
+
+  it('reads a bare Junction as an and-junction, which is what the specification calls it', () => {
+    const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
+  <name xml:lang="en">Bare</name>
+  <elements><element identifier="j" xsi:type="Junction"><name xml:lang="en">Split</name></element></elements>
+</model>`
+    expect(importExchangeXml(xml).workspace?.elements[0]).toMatchObject({
+      type: 'Junction',
+      junctionKind: 'and',
+    })
+  })
+})
+
+describe('identifiers that are not XML names (issue #36)', () => {
+  function oddIds(): Workspace {
+    return {
+      ...smallWorkspace(),
+      id: '9 workspace',
+      elements: [
+        { id: '9abc', type: 'ApplicationComponent', name: 'Portal', properties: {} },
+        { id: 'a b', type: 'Capability', name: 'Claims', properties: {} },
+      ],
+      relationships: [
+        { id: 'rel:1', type: 'Realization', source: '9abc', target: 'a b', properties: {} },
+      ],
+    }
+  }
+
+  it('rewrites them consistently, references included, and says what it did', () => {
+    const { xml, problems } = exportExchange(oddIds())
+    expect(xml).toContain('<element identifier="id-9abc"')
+    expect(xml).toContain('<element identifier="a-b"')
+    expect(xml).toContain('source="id-9abc" target="a-b"')
+    expect(problems.map((p) => p.code)).toEqual([
+      'exchange.id-rewritten',
+      'exchange.id-rewritten',
+      'exchange.id-rewritten',
+      'exchange.id-rewritten',
+    ])
+    expect(problems.map((p) => p.subject)).toEqual(['9abc', 'a b', 'rel:1', '9 workspace'])
+  })
+
+  it('never writes an identifier or a reference the schema would reject', () => {
+    const { xml } = exportExchange(oddIds())
+    const written = [...xml.matchAll(/(?:identifier|source|target)="([^"]+)"/g)].map((m) => m[1]!)
+    expect(written.length).toBeGreaterThan(0)
+    expect(written.filter((id) => !isExchangeSafeId(id))).toEqual([])
+  })
+
+  it('reads the rewritten file back as a whole model', () => {
+    const back = importExchangeXml(exportExchange(oddIds()).xml)
+    expect(back.problems.filter((p) => p.severity === 'error')).toEqual([])
+    expect(back.workspace?.elements).toHaveLength(2)
+    expect(back.workspace?.relationships).toHaveLength(1)
+  })
+
+  it('leaves ids that are already valid exactly as they were', () => {
+    const { xml, problems } = exportExchange(smallWorkspace())
+    expect(problems).toEqual([])
+    expect(xml).toContain('identifier="app-claims"')
+  })
+
+  it('leaves out a relationship pointing at something that is not in the model', () => {
+    const workspace = smallWorkspace()
+    workspace.relationships.push({
+      id: 'rel-ghost',
+      type: 'Serving',
+      source: 'app-claims',
+      target: 'ghost',
+      properties: {},
+    })
+    const { xml, problems } = exportExchange(workspace)
+    expect(xml).not.toContain('rel-ghost')
+    expect(problems).toEqual([
+      expect.objectContaining({ code: 'exchange.dangling-relationship', subject: 'rel-ghost' }),
+    ])
+  })
+})
+
+describe('what the exchange format has no home for (issue #36)', () => {
+  it('carries saved views and custom tag groups through the round trip', () => {
+    const workspace: Workspace = {
+      ...smallWorkspace(),
+      views: [
+        {
+          id: 'view-eol',
+          name: 'End-of-life applications',
+          kind: 'graph',
+          filter: { facets: ['layer:app', 'lifecycle:endOfLife'], mode: 'AND' },
+          colorView: 'lifecycle',
+        },
+      ],
+      tagGroups: [
+        {
+          id: 'tg-portfolio',
+          name: 'Portfolio',
+          multiSelect: true,
+          tags: [
+            { name: 'Buy, hold', colourToken: 'var(--app)' },
+            { name: 'Core', colourToken: 'var(--accent2)' },
+          ],
+        },
+      ],
+    }
+    const restored = roundTrip(workspace)
+    expect(restored.views).toEqual(workspace.views)
+    expect(restored.tagGroups).toEqual(workspace.tagGroups)
+  })
+
+  it('leaves the default tag groups out of the file and restores them on the way back', () => {
+    const xml = exportExchangeXml(smallWorkspace())
+    expect(xml).not.toContain('archipelago.tagGroups')
+    expect(importExchangeXml(xml).workspace?.tagGroups).toEqual([DEFAULT_TAG_GROUP])
+  })
+
+  it('reports carried views it cannot read instead of pretending there were none', () => {
+    const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
+  <name xml:lang="en">Broken carry</name>
+  <properties><property propertyDefinitionRef="p1"><value xml:lang="en">not json</value></property></properties>
+  <propertyDefinitions>
+    <propertyDefinition identifier="p1" type="string"><name xml:lang="en">archipelago.views</name></propertyDefinition>
+  </propertyDefinitions>
+</model>`
+    const result = importExchangeXml(xml)
+    expect(result.workspace?.views).toEqual([])
+    expect(result.problems.map((p) => p.code)).toContain('exchange.carried-unreadable')
+  })
+
+  it('reports model-level properties that belong to another tool', () => {
+    const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
+  <name xml:lang="en">Foreign</name>
+  <properties><property propertyDefinitionRef="p1"><value xml:lang="en">Archi</value></property></properties>
+  <propertyDefinitions>
+    <propertyDefinition identifier="p1" type="string"><name xml:lang="en">generatedBy</name></propertyDefinition>
+  </propertyDefinitions>
+</model>`
+    expect(importExchangeXml(xml).problems).toEqual([
+      expect.objectContaining({ code: 'exchange.model-properties-skipped', severity: 'info' }),
+    ])
+  })
+
+  it('reports a property whose definition is missing rather than dropping it in silence', () => {
+    const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
+  <name xml:lang="en">Missing definition</name>
+  <elements>
+    <element identifier="e1" xsi:type="Capability">
+      <name xml:lang="en">Claims</name>
+      <properties><property propertyDefinitionRef="p9"><value xml:lang="en">Claims</value></property></properties>
+    </element>
+  </elements>
+</model>`
+    const result = importExchangeXml(xml)
+    expect(result.workspace?.elements[0]?.properties).toEqual({})
+    expect(result.problems).toEqual([
+      expect.objectContaining({ code: 'exchange.property-unresolved', severity: 'warning' }),
+    ])
+  })
+})
+
+describe('property fidelity (issue #36)', () => {
+  function withProperties(properties: Record<string, string | number | boolean>): Workspace {
+    const workspace = smallWorkspace()
+    workspace.elements[0]!.properties = properties
+    return workspace
+  }
+
+  function propertiesOf(workspace: Workspace): Record<string, unknown> {
+    return workspace.elements.find((element) => element.id === 'cap-claim')!.properties
+  }
+
+  it('keeps an archipelago key this build does not know', () => {
+    const restored = roundTrip(
+      withProperties({ owner: 'Claims', 'archipelago.businessValue': 'high' }),
+    )
+    expect(propertiesOf(restored)).toEqual({ owner: 'Claims', 'archipelago.businessValue': 'high' })
+  })
+
+  it('keeps boolean and number properties typed', () => {
+    const workspace = withProperties({ pii: true, capacity: 42, owner: 'Claims' })
+    const xml = exportExchangeXml(workspace)
+    expect(xml).toMatch(
+      /<propertyDefinition identifier="[^"]+" type="boolean">\s*<name xml:lang="en">pii<\/name>/,
+    )
+    expect(xml).toMatch(
+      /<propertyDefinition identifier="[^"]+" type="number">\s*<name xml:lang="en">capacity<\/name>/,
+    )
+    expect(propertiesOf(importExchangeXml(xml).workspace!)).toEqual({
+      pii: true,
+      capacity: 42,
+      owner: 'Claims',
+    })
+  })
+
+  it('writes a key used inconsistently as text, and says so', () => {
+    const workspace = withProperties({ capacity: 42 })
+    workspace.elements[1]!.properties = { capacity: 'unknown' }
+    const { xml, problems } = exportExchange(workspace)
+    expect(xml).toMatch(
+      /<propertyDefinition identifier="[^"]+" type="string">\s*<name xml:lang="en">capacity<\/name>/,
+    )
+    expect(problems).toEqual([
+      expect.objectContaining({ code: 'exchange.property-type-mixed', severity: 'info' }),
+    ])
+  })
+
+  it('keeps a property whose value is the empty string', () => {
+    const once = exportExchangeXml(withProperties({ owner: '' }))
+    const restored = importExchangeXml(once).workspace!
+    expect(propertiesOf(restored)).toEqual({ owner: '' })
+    expect(exportExchangeXml(restored)).toBe(once)
+  })
+
+  it('keeps a tag that contains a comma as one tag', () => {
+    const workspace = smallWorkspace()
+    workspace.elements[0]!.profile = { tags: ['Buy, hold', 'Core'] }
+    const restored = roundTrip(workspace)
+    expect(restored.elements.find((e) => e.id === 'cap-claim')?.profile?.tags).toEqual([
+      'Buy, hold',
+      'Core',
+    ])
   })
 })

@@ -12,7 +12,7 @@ TypeScript (strict) · React · Vite · Vitest · React Flow (@xyflow/react) + E
 - **Monospace marks machine-readable content** (ids, counts, property keys, type codes, relation types); Space Grotesk for human-authored content. This split is intentional identity — see the UI spec §2.1.
 - **Lifecycle is derived, never stored.** Elements carry phase dates; the phase is computed at a time point (UI spec §3.1). Do not add a stored phase field.
 - **Relationship properties are first-class.** Costs, support type, CRUD usage, validity dates live on edges (ADR 0001). Never demote them to element fields.
-- **Canonical JSON is deterministic:** sorted keys, stable IDs, byte-identical export→import→export (ADR 0004). Anything that breaks this breaks git-friendliness. No locale-dependent operations (`localeCompare`) on the serialisation path.
+- **Canonical JSON is deterministic:** sorted keys, stable IDs, byte-identical export→import→export (ADR 0004). Anything that breaks this breaks git-friendliness. Locale-dependent ordering is now banned by lint rather than by memory: `localeCompare` without an explicit locale fails ESLint (ADR 0004).
 - **Import/export never drops data silently.** Anything a read or write cannot carry — unknown types, malformed fields, duplicate ids, views, unrecognised keys — surfaces as an `ImportProblem`. Silent loss is a bug even when the data is "ours". (Harvested from the #17 review: 7 of 15 findings were this pattern.)
 - **All model mutations go through the command stack** (undo/redo + dirty counter). No direct store writes from UI code.
 - Work is issue-driven; every issue carries acceptance criteria — verify them before claiming completion. Branches: `feat/<issue#>-<slug>`.

@@ -1,6 +1,7 @@
 import {
   BUSINESS_CRITICALITY_LABELS,
   ELEMENT_TYPE_NAMES,
+  JUNCTION_KINDS,
   LIFECYCLE_PHASES,
   RELATIONSHIP_TYPE_NAMES,
   SCHEMA_VERSION,
@@ -62,6 +63,11 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           type: { enum: [...ELEMENT_TYPE_NAMES] },
           name: { type: 'string' },
           documentation: { type: 'string' },
+          junctionKind: {
+            enum: [...JUNCTION_KINDS],
+            description:
+              'And/or flavour of a Junction, which the exchange format spells as two concrete types (AndJunction, OrJunction). Absent means "and". Meaningless on any other element type.',
+          },
           properties: { $ref: '#/$defs/properties' },
           profile: { $ref: '#/$defs/portfolioProfile' },
         },

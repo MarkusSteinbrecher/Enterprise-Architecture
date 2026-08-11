@@ -137,6 +137,13 @@
         "documentation": {
           "type": "string"
         },
+        "junctionKind": {
+          "enum": [
+            "and",
+            "or"
+          ],
+          "description": "And/or flavour of a Junction, which the exchange format spells as two concrete types (AndJunction, OrJunction). Absent means \"and\". Meaningless on any other element type."
+        },
         "properties": {
           "$ref": "#/$defs/properties"
         },

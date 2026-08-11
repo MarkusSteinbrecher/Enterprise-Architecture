@@ -59,8 +59,16 @@ export const PROFILE_KEYS: readonly string[] = [
   VALID_TO_KEY,
 ]
 
+const OWNED_KEYS = new Set(PROFILE_KEYS)
+
+/**
+ * Is this one of the keys this module reads back into a typed profile field?
+ *
+ * Membership, not prefix: an `archipelago.*` key this build does not know is
+ * somebody's data, and stripping the whole namespace deleted it (#36).
+ */
 export function isProfileKey(key: string): boolean {
-  return key.startsWith(`${PROFILE_NAMESPACE}.`)
+  return OWNED_KEYS.has(key)
 }
 
 /** Flatten a portfolio profile into exchangeable string properties. */
@@ -75,8 +83,37 @@ export function profileToProperties(profile: PortfolioProfile | undefined): Reco
   if (profile.technicalFit) out[TECHNICAL_FIT_KEY] = String(profile.technicalFit)
   if (profile.businessCriticality) out[CRITICALITY_KEY] = String(profile.businessCriticality)
   if (profile.timeClassification) out[TIME_KEY] = profile.timeClassification
-  if (profile.tags?.length) out[TAGS_KEY] = profile.tags.join(', ')
+  if (profile.tags?.length) out[TAGS_KEY] = encodeTags(profile.tags)
   return out
+}
+
+/**
+ * Tags travel as one property value. The readable form is a comma-separated
+ * list — that is what an architect sees in Archi's property sheet — but a tag
+ * containing a comma (or leading padding) does not survive a naive split, so
+ * such a list is written as a JSON array instead. `decodeTags` accepts both, and
+ * the choice is a pure function of the tags, so the bytes stay deterministic.
+ */
+function encodeTags(tags: readonly string[]): string {
+  const splittable = tags.every((tag) => tag === tag.trim() && tag !== '' && !tag.includes(','))
+  return splittable ? tags.join(', ') : JSON.stringify(tags)
+}
+
+function decodeTags(value: string): string[] {
+  if (value.trim().startsWith('[')) {
+    try {
+      const parsed: unknown = JSON.parse(value)
+      if (Array.isArray(parsed) && parsed.every((tag) => typeof tag === 'string')) {
+        return (parsed as string[]).filter(Boolean)
+      }
+    } catch {
+      // Not JSON after all — a tag that merely starts with "[". Read it as a list.
+    }
+  }
+  return value
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean)
 }
 
 /** Read a portfolio profile back out of properties; `undefined` when there is none. */
@@ -104,10 +141,8 @@ export function profileFromProperties(
 
   const tags = properties[TAGS_KEY]
   if (typeof tags === 'string' && tags.trim()) {
-    profile.tags = tags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean)
+    const decoded = decodeTags(tags)
+    if (decoded.length) profile.tags = decoded
   }
 
   return Object.keys(profile).length ? profile : undefined
@@ -150,7 +185,14 @@ export function relationshipProfileFromProperties(
   return Object.keys(profile).length ? profile : undefined
 }
 
-/** Properties minus everything this module owns — the architect's own keys. */
+/**
+ * Properties minus the keys this module reads back into typed fields.
+ *
+ * Stripping by *key* rather than by namespace prefix is deliberate: a key this
+ * build does not know — one written by a newer version, or by an architect who
+ * borrowed the prefix — has to survive as an ordinary property. Stripping the
+ * whole prefix deleted it (#36).
+ */
 export function stripProfileKeys(
   properties: Record<string, PropertyValue>,
 ): Record<string, PropertyValue> {

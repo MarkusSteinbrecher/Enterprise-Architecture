@@ -1,4 +1,4 @@
-import type { ElementType } from './element-types'
+import type { ElementType, JunctionKind } from './element-types'
 import type { AccessType, RelationshipType } from './relationship-types'
 import type { PortfolioProfile } from './profile'
 
@@ -22,6 +22,11 @@ export interface Element {
   documentation?: string
   properties: Record<string, PropertyValue>
   profile?: PortfolioProfile
+  /**
+   * And/or flavour of a `Junction`; meaningless on every other type. Absent
+   * means `and`, which is what the specification says an unqualified junction is.
+   */
+  junctionKind?: JunctionKind
 }
 
 /**
