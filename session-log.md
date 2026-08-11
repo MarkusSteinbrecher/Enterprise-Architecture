@@ -1,5 +1,32 @@
 # Session Log
 
+## 2026-08-11 (later) — Review session: #30 unblocked, #24/#25/#26 reviewed, four rules harvested
+
+Cleared the session-log conflict and reviewed the bottom three of the phase-1 stack. All three get **request changes**; none for structural reasons, all for a concentrated problem area each.
+
+**PR #30 unblocked.** It had conflicted since 4 August and therefore got no CI at all (a conflicting PR has no merge ref to build). `main` and the branch each held entries the other lacked; resolved as a union, newest first, with the three 7 August entries in chronological order. Green and mergeable.
+
+**#24 app shell** — the handoff transcription is the most faithful in the repo (every dimension sampled matches, `tokens.css` untouched, dark block is colours-only so the no-layout-shift criterion holds structurally). Six blocking findings, four of them the same shape: *a write path claiming a success it cannot observe*. `SAVE FILE` marks the model clean after an anchor click it cannot see the outcome of; switching workspaces zeroes the unsaved-to-file counter; deleting a workspace loses to a pending autosave (`window.confirm` blocks past the 800ms debounce, so the timer fires into the gap between `deleteWorkspace` and `replaceWorkspace`); the demo button adopts a fixed id from a click handler. Filed #39.
+
+**#25 command palette** — genuinely good work, and the prototype-gap fix (`isTypingTarget` as its own tested module) is the right instinct. But the keyboard flow it is named for breaks under three ordinary interactions: all key handling sits on the input's `onKeyDown` while the 54 rows are focusable buttons, so one Tab kills it; a resting mouse pointer overrides the arrow selection; and `aria-modal` is declared with no trap, no restore, no `aria-activedescendant`. Filed #40 (lint) and #41.
+
+**#26 inventory** — `filters.ts` is the best-tested code in the stack and exactly right against the handoff's "implement exactly" block. Two acceptance criteria fail on *evidence*: the 5,000-element test asserts `rows < 150`, which passes at 0, and 0 is what that branch renders; back/forward was never implemented (`setParams(..., {replace:true})` everywhere) while the module docblock claims otherwise. Filed #42.
+
+**Four rules harvested — each earned by a repeat, not a hunch:**
+
+1. **The save-state indicator must not overstate** (CLAUDE.md). The old line said "never weaken or hide it", which neither #24 failure technically breaks — both leave it fully visible and lying.
+2. **Never join user-authored strings without escaping** (CLAUDE.md). #17/#37 fixed comma-joined tags in the exchange writer; #26 reintroduced the identical bug in the URL facet encoder, independently. Different author, different file, same mechanism.
+3. **A declared ARIA widget role is a contract** (skill §2) — check focus entry, trap, restore and announcement, not the attribute. Three instances in three PRs. The static half became #40 (`eslint-plugin-jsx-a11y`); focus traps are not lintable, hence the review bullet.
+4. **A test behind an acceptance criterion must fail when the feature is removed** (skill §2). Second instance: #26's virtualisation test passes at zero rows, #25's "clears the query on reopen" closes the palette first so it never covers ⌘K-while-open.
+
+**The #24 harvest failed within one PR, which is the useful lesson.** The CLAUDE.md line about marking clean was reproduced by copy-paste in #25's palette action, which also dropped the reader-role guard the header applies. Prose does not survive copy-paste. The replacement is mechanical: one `saveWorkspaceToFile()` owning the guard, the download and the clean-marking, so there is one place to get it wrong — and a new review check that treats *a second call site of a data-safety path* as a finding in itself.
+
+**On review cost and trust.** The #24/#25 runs at `xhigh` cost ~2.8M subagent tokens between them and #25 hit the session limit mid-run: 8 agents died including *synthesize*, so findings came back verified but unmerged — 15 entries that were really 9 repeated. That degradation is subtler than the known "gutted run reports zero findings" mode and needs the same suspicion; merge and rank by hand from `journal.jsonl` rather than re-running. Sponsor's call: **`high` for the rest**. #26 at `high` cost 1.7M, ran clean, and lost nothing worth having.
+
+**Also blocking now, not tidying:** #35's `--on-accent` token gates the `#fff` fixes in #24 *and* #26, and the handoff paints on-accent text in four places mapping to #24/#26/#27/#28 — so it is a dependency of the fixes, not a follow-up. The #35 CI check itself should still land only after the stack merges, or five open PRs go red at once.
+
+**State:** open PRs #24–#29 (#24/#25/#26 reviewed, awaiting fixes), #34, #37, #30 (green, mergeable). New issues: #39, #40, #41, #42. Next: `/review-pr 27`, then #28, #29, #34.
+
 ## 2026-08-11 — #36 io hardening shipped (PR #37); the only issue the stack wasn't blocking
 
 Reviewed what was pickable while the seven-PR phase-1 stack (#24 → #29, #34) waits on review, and #36 was the only one genuinely unblocked: it works against merged `main` (`src/io`), and the whole stack touches only `src/io/index.ts` in that area. #33 (store hardening) names `FileWorkspaceProvider`, `takeOver()` and `tab-lock.ts` — all rewritten by the stack — and #35 needs CSS from #24/#26, so both really do wait.
