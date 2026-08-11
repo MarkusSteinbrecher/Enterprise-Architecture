@@ -21,7 +21,7 @@ TypeScript (strict) · React · Vite · Vitest · React Flow (@xyflow/react) + E
 ## Constraints
 
 - Nothing leaves the browser except file downloads the user initiates.
-- Browser storage is a cache; exported files are the source of truth. Never weaken or hide the save-state indicator.
+- Browser storage is a cache; exported files are the source of truth. Never weaken or hide the save-state indicator, and **only mark the model clean on a write you can observe completing** — a fire-and-forget download is not one, and neither is loading a workspace that has only ever lived in IndexedDB. An indicator that overstates safety is worse than none. (Harvested from the #24 review: 4 of 15 findings were a write path claiming a success it cannot see.)
 - The product name must not embed "ArchiMate" (Open Group trademark; ADR 0005). Keep the attribution line in the README.
 - `design/handoff/` is a historical record — reference it, don't edit it.
 - Pages serves from the `/Enterprise-Architecture/` base path; deep links must survive a hard refresh (404 redirect).
