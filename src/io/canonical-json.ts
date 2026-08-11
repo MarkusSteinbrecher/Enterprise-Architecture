@@ -144,7 +144,12 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
     if (isViewDefinition(candidate)) views.push(candidate)
     else {
       problems.push(
-        problem('warning', 'json.invalid-view', `View ${index} is malformed and was skipped.`, where),
+        problem(
+          'warning',
+          'json.invalid-view',
+          `View ${index} is malformed and was skipped.`,
+          where,
+        ),
       )
     }
   }

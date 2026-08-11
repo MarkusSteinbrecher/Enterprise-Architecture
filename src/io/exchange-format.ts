@@ -170,15 +170,17 @@ function modelIdentifier(id: string): string {
 }
 
 function text(value: string): string {
-  return value
-    // Control characters are illegal in XML 1.0 even as numeric references
-    // (only tab, LF and CR survive), so they are stripped rather than written
-    // into a file no parser would accept back.
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  return (
+    value
+      // Control characters are illegal in XML 1.0 even as numeric references
+      // (only tab, LF and CR survive), so they are stripped rather than written
+      // into a file no parser would accept back.
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+  )
 }
 
 function attr(value: string): string {

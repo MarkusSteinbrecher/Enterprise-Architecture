@@ -278,9 +278,7 @@ describe('exchange hardening (review findings, PR #17)', () => {
     expect(xml).not.toMatch(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/)
     const back = importExchangeXml(xml)
     expect(back.ok).toBe(true)
-    expect(back.workspace?.elements.find((e) => e.id === first.id)?.name).toBe(
-      'Claim' + 'Handling',
-    )
+    expect(back.workspace?.elements.find((e) => e.id === first.id)?.name).toBe('Claim' + 'Handling')
   })
 
   it('treats an empty annualCost property as no cost data, not a cost of zero', () => {
