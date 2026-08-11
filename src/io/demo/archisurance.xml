@@ -1,0 +1,954 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Model.xsd" identifier="ws-archisurance-demo">
+  <name xml:lang="en">ArchiSurance</name>
+  <documentation xml:lang="en">Demo workspace for Archipelago: an insurance landscape in the spirit of The Open Group's ArchiSurance case study. The model, its lifecycle dates and its portfolio assessments are illustrative content authored for this project — they are not taken from the case study and describe no real organisation.</documentation>
+  <elements>
+    <element identifier="cap-cust" xsi:type="Capability">
+      <name xml:lang="en">Customer Management</name>
+      <documentation xml:lang="en">Everything the insurer does to acquire, serve, and retain policy holders across channels.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Retail BU</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Core</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="cap-pol" xsi:type="Capability">
+      <name xml:lang="en">Policy Administration</name>
+      <documentation xml:lang="en">Issuing, changing, renewing and terminating insurance policies.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Operations</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Core</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="cap-claim" xsi:type="Capability">
+      <name xml:lang="en">Claim Handling</name>
+      <documentation xml:lang="en">Intake, assessment, settlement and recovery of claims.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Claims</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Core, Differentiating</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="cap-fin" xsi:type="Capability">
+      <name xml:lang="en">Financial Handling</name>
+      <documentation xml:lang="en">Premium collection, payments, reserving and reporting.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Finance</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Supporting</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="cap-risk" xsi:type="Capability">
+      <name xml:lang="en">Risk &amp; Underwriting</name>
+      <documentation xml:lang="en">Pricing, risk selection and portfolio steering.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Risk</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Differentiating</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="proc-claim" xsi:type="BusinessProcess">
+      <name xml:lang="en">Handle Claim</name>
+      <documentation xml:lang="en">End-to-end process from claim registration to payment, spanning four applications.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Claims</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Core</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="act-nl" xsi:type="BusinessActor">
+      <name xml:lang="en">ArchiSurance Netherlands</name>
+      <documentation xml:lang="en">Legal entity operating the Dutch home, away and car portfolios.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="act-bo" xsi:type="BusinessActor">
+      <name xml:lang="en">Back Office</name>
+      <documentation xml:lang="en">Shared administrative unit executing policy and claim handling processes.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Operations</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="app-portal" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Customer Web Portal</name>
+      <documentation xml:lang="en">Self-service channel for policy holders: quotes, policy changes, claim submission and document access.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Digital Channels</value>
+        </property>
+        <property propertyDefinitionRef="propid-4">
+          <value xml:lang="en">480k EUR / yr</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2016-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2017-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2018-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2029-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2030-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-10">
+          <value xml:lang="en">4</value>
+        </property>
+        <property propertyDefinitionRef="propid-11">
+          <value xml:lang="en">3</value>
+        </property>
+        <property propertyDefinitionRef="propid-12">
+          <value xml:lang="en">4</value>
+        </property>
+        <property propertyDefinitionRef="propid-13">
+          <value xml:lang="en">Invest</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Core, GDPR, Cloud target</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="app-broker" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Broker Extranet</name>
+      <documentation xml:lang="en">Planned intermediary portal replacing the broker file exchange. Scope not yet signed off.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Digital Channels</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2026-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2027-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2028-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2034-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2035-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-10">
+          <value xml:lang="en">3</value>
+        </property>
+        <property propertyDefinitionRef="propid-11">
+          <value xml:lang="en">3</value>
+        </property>
+        <property propertyDefinitionRef="propid-12">
+          <value xml:lang="en">2</value>
+        </property>
+        <property propertyDefinitionRef="propid-13">
+          <value xml:lang="en">Invest</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Cloud target</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="app-crm" xsi:type="ApplicationComponent">
+      <name xml:lang="en">CRM System</name>
+      <documentation xml:lang="en">Customer master and interaction history. On-premise, heavily customised, upgrade path blocked.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Retail BU</value>
+        </property>
+        <property propertyDefinitionRef="propid-4">
+          <value xml:lang="en">610k EUR / yr</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2012-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2013-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2014-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2027-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2028-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-10">
+          <value xml:lang="en">2</value>
+        </property>
+        <property propertyDefinitionRef="propid-11">
+          <value xml:lang="en">2</value>
+        </property>
+        <property propertyDefinitionRef="propid-12">
+          <value xml:lang="en">3</value>
+        </property>
+        <property propertyDefinitionRef="propid-13">
+          <value xml:lang="en">Migrate</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">GDPR, Vendor risk</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="app-claims" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Claim Handling Engine</name>
+      <documentation xml:lang="en">New rules-driven claim assessment platform. Replaces claim logic embedded in the policy systems.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Claims</value>
+        </property>
+        <property propertyDefinitionRef="propid-4">
+          <value xml:lang="en">1.2M EUR / yr</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2024-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2025-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2027-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2033-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2034-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-10">
+          <value xml:lang="en">4</value>
+        </property>
+        <property propertyDefinitionRef="propid-11">
+          <value xml:lang="en">4</value>
+        </property>
+        <property propertyDefinitionRef="propid-12">
+          <value xml:lang="en">4</value>
+        </property>
+        <property propertyDefinitionRef="propid-13">
+          <value xml:lang="en">Invest</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Core, Cloud target</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="app-policy-ha" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Home &amp; Away Policy Administration</name>
+      <documentation xml:lang="en">Mainframe policy administration for the home and travel portfolios. Single largest cost item in the landscape and the main constraint on product change lead time.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Operations</value>
+        </property>
+        <property propertyDefinitionRef="propid-4">
+          <value xml:lang="en">1.9M EUR / yr</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2006-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2007-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2008-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2027-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2029-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-10">
+          <value xml:lang="en">2</value>
+        </property>
+        <property propertyDefinitionRef="propid-11">
+          <value xml:lang="en">1</value>
+        </property>
+        <property propertyDefinitionRef="propid-12">
+          <value xml:lang="en">4</value>
+        </property>
+        <property propertyDefinitionRef="propid-13">
+          <value xml:lang="en">Migrate</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Core, Vendor risk</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="app-policy-car" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Car Insurance Application</name>
+      <documentation xml:lang="en">Legacy car policy system inherited from the PRO-FIT merger. Functionally superseded; data migration outstanding.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Operations</value>
+        </property>
+        <property propertyDefinitionRef="propid-4">
+          <value xml:lang="en">340k EUR / yr</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2004-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2005-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2006-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2025-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2027-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-10">
+          <value xml:lang="en">1</value>
+        </property>
+        <property propertyDefinitionRef="propid-11">
+          <value xml:lang="en">1</value>
+        </property>
+        <property propertyDefinitionRef="propid-12">
+          <value xml:lang="en">2</value>
+        </property>
+        <property propertyDefinitionRef="propid-13">
+          <value xml:lang="en">Eliminate</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Vendor risk</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="app-legal" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Legal Aid Backoffice</name>
+      <documentation xml:lang="en">Unsupported since 2024. Two users, no vendor contract, holds seven years of case records.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Legal</value>
+        </property>
+        <property propertyDefinitionRef="propid-4">
+          <value xml:lang="en">120k EUR / yr</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2002-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2003-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2004-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2024-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2026-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-10">
+          <value xml:lang="en">1</value>
+        </property>
+        <property propertyDefinitionRef="propid-11">
+          <value xml:lang="en">1</value>
+        </property>
+        <property propertyDefinitionRef="propid-12">
+          <value xml:lang="en">1</value>
+        </property>
+        <property propertyDefinitionRef="propid-13">
+          <value xml:lang="en">Eliminate</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Vendor risk</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="app-dms" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Document Management System</name>
+      <documentation xml:lang="en">Stores correspondence, policy documents and claim evidence for all portfolios.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Operations</value>
+        </property>
+        <property propertyDefinitionRef="propid-4">
+          <value xml:lang="en">260k EUR / yr</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2014-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2015-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2016-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2030-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2031-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-10">
+          <value xml:lang="en">2</value>
+        </property>
+        <property propertyDefinitionRef="propid-11">
+          <value xml:lang="en">3</value>
+        </property>
+        <property propertyDefinitionRef="propid-12">
+          <value xml:lang="en">2</value>
+        </property>
+        <property propertyDefinitionRef="propid-13">
+          <value xml:lang="en">Tolerate</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">GDPR</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="app-fin" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Financial Application</name>
+      <documentation xml:lang="en">General ledger, premium collection and claim payment booking.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Finance</value>
+        </property>
+        <property propertyDefinitionRef="propid-4">
+          <value xml:lang="en">870k EUR / yr</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2010-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2011-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2012-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2030-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2032-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-10">
+          <value xml:lang="en">3</value>
+        </property>
+        <property propertyDefinitionRef="propid-11">
+          <value xml:lang="en">3</value>
+        </property>
+        <property propertyDefinitionRef="propid-12">
+          <value xml:lang="en">4</value>
+        </property>
+        <property propertyDefinitionRef="propid-13">
+          <value xml:lang="en">Tolerate</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Core</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="app-pay" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Payment Gateway</name>
+      <documentation xml:lang="en">SaaS gateway handling direct debit, card and payout instructions.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Finance</value>
+        </property>
+        <property propertyDefinitionRef="propid-4">
+          <value xml:lang="en">300k EUR / yr</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2019-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2020-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2021-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2031-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2032-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-10">
+          <value xml:lang="en">3</value>
+        </property>
+        <property propertyDefinitionRef="propid-11">
+          <value xml:lang="en">4</value>
+        </property>
+        <property propertyDefinitionRef="propid-12">
+          <value xml:lang="en">4</value>
+        </property>
+        <property propertyDefinitionRef="propid-13">
+          <value xml:lang="en">Tolerate</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Cloud target</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="app-datalake" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Analytics Data Platform</name>
+      <documentation xml:lang="en">Lakehouse feeding pricing models and portfolio reporting. Ingest from claims and finance in place, policy pending.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Risk</value>
+        </property>
+        <property propertyDefinitionRef="propid-4">
+          <value xml:lang="en">540k EUR / yr</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2025-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2026-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2027-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2034-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2035-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-10">
+          <value xml:lang="en">3</value>
+        </property>
+        <property propertyDefinitionRef="propid-11">
+          <value xml:lang="en">4</value>
+        </property>
+        <property propertyDefinitionRef="propid-12">
+          <value xml:lang="en">3</value>
+        </property>
+        <property propertyDefinitionRef="propid-13">
+          <value xml:lang="en">Invest</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Cloud target</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="obj-policy" xsi:type="DataObject">
+      <name xml:lang="en">Insurance Policy</name>
+      <documentation xml:lang="en">Master record of cover, premium and policy holder for one contract.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Operations</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Core</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="obj-claim" xsi:type="DataObject">
+      <name xml:lang="en">Claim File</name>
+      <documentation xml:lang="en">Case record with damage assessment, evidence references and settlement decision.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Claims</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Core</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="obj-cust" xsi:type="DataObject">
+      <name xml:lang="en">Customer File</name>
+      <documentation xml:lang="en">Personal and contact data, consents, and interaction history. In scope for retention rules.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Retail BU</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">GDPR</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="obj-pay" xsi:type="DataObject">
+      <name xml:lang="en">Payment Record</name>
+      <documentation xml:lang="en">Individual premium collection or claim payout booking.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Finance</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="tec-oracle" xsi:type="SystemSoftware">
+      <name xml:lang="en">Oracle Database 19c</name>
+      <documentation xml:lang="en">Shared database estate behind policy, CRM and finance. Extended support ends 2029.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Platform Ops</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2013-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2014-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2015-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2028-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2029-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Vendor risk</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="tec-k8s" xsi:type="Node">
+      <name xml:lang="en">Kubernetes Platform</name>
+      <documentation xml:lang="en">Managed cluster hosting the new claim engine, portal and analytics workloads.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Platform Ops</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2025-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2026-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2027-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2035-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2036-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Cloud target</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="tec-win" xsi:type="Node">
+      <name xml:lang="en">Windows Server 2019</name>
+      <documentation xml:lang="en">Remaining VM estate for the legacy car, legal aid and CRM stacks.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Platform Ops</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2017-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2018-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2019-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2026-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2027-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Vendor risk</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="tec-apigw" xsi:type="TechnologyService">
+      <name xml:lang="en">API Gateway</name>
+      <documentation xml:lang="en">Edge routing, throttling and token validation for all external channels.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Platform Ops</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-5">
+          <value xml:lang="en">2020-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-6">
+          <value xml:lang="en">2021-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-7">
+          <value xml:lang="en">2022-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-8">
+          <value xml:lang="en">2032-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-9">
+          <value xml:lang="en">2033-01-01</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Cloud target</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="goal-cost" xsi:type="Goal">
+      <name xml:lang="en">Reduce claim handling cost by 15%</name>
+      <documentation xml:lang="en">Board objective for 2027, driving the claim engine programme and the legacy retirement sequence.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Chief Architect</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Differentiating</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="wp-cloud" xsi:type="WorkPackage">
+      <name xml:lang="en">Cloud Migration Programme</name>
+      <documentation xml:lang="en">Three-wave migration: channels, claims, analytics. Policy administration explicitly out of scope until 2028.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Chief Architect</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">Demo workspace</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en">Cloud target</value>
+        </property>
+      </properties>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="rel-001" source="app-portal" target="cap-cust" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-002" source="app-broker" target="cap-cust" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-003" source="app-crm" target="cap-cust" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-004" source="app-policy-ha" target="cap-pol" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-005" source="app-policy-car" target="cap-pol" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-006" source="app-claims" target="cap-claim" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-007" source="app-legal" target="cap-claim" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-008" source="app-dms" target="cap-claim" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-009" source="app-fin" target="cap-fin" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-010" source="app-pay" target="cap-fin" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-011" source="app-datalake" target="cap-risk" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-012" source="app-claims" target="proc-claim" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-013" source="app-dms" target="proc-claim" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-014" source="act-bo" target="proc-claim" xsi:type="Assignment">
+    </relationship>
+    <relationship identifier="rel-015" source="act-nl" target="act-bo" xsi:type="Composition">
+    </relationship>
+    <relationship identifier="rel-016" source="app-portal" target="app-crm" xsi:type="Flow">
+    </relationship>
+    <relationship identifier="rel-017" source="app-portal" target="app-policy-ha" xsi:type="Flow">
+    </relationship>
+    <relationship identifier="rel-018" source="app-broker" target="app-policy-ha" xsi:type="Flow">
+    </relationship>
+    <relationship identifier="rel-019" source="app-crm" target="app-claims" xsi:type="Flow">
+    </relationship>
+    <relationship identifier="rel-020" source="app-claims" target="app-policy-ha" xsi:type="Flow">
+    </relationship>
+    <relationship identifier="rel-021" source="app-claims" target="app-dms" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-022" source="app-claims" target="app-fin" xsi:type="Flow">
+    </relationship>
+    <relationship identifier="rel-023" source="app-fin" target="app-pay" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-024" source="app-policy-ha" target="app-fin" xsi:type="Flow">
+    </relationship>
+    <relationship identifier="rel-025" source="app-claims" target="app-datalake" xsi:type="Flow">
+    </relationship>
+    <relationship identifier="rel-026" source="app-fin" target="app-datalake" xsi:type="Flow">
+    </relationship>
+    <relationship identifier="rel-027" source="app-policy-car" target="app-policy-ha" xsi:type="Association">
+    </relationship>
+    <relationship identifier="rel-028" source="tec-oracle" target="app-policy-ha" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-029" source="tec-oracle" target="app-fin" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-030" source="tec-oracle" target="app-crm" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-031" source="tec-k8s" target="app-claims" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-032" source="tec-k8s" target="app-portal" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-033" source="tec-k8s" target="app-datalake" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-034" source="tec-win" target="app-policy-car" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-035" source="tec-win" target="app-legal" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-036" source="tec-win" target="app-crm" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-037" source="tec-apigw" target="app-portal" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-038" source="tec-apigw" target="app-broker" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="rel-039" source="app-policy-ha" target="obj-policy" xsi:type="Access">
+    </relationship>
+    <relationship identifier="rel-040" source="app-claims" target="obj-claim" xsi:type="Access">
+    </relationship>
+    <relationship identifier="rel-041" source="app-crm" target="obj-cust" xsi:type="Access">
+    </relationship>
+    <relationship identifier="rel-042" source="app-pay" target="obj-pay" xsi:type="Access">
+    </relationship>
+    <relationship identifier="rel-043" source="app-fin" target="obj-pay" xsi:type="Access">
+    </relationship>
+    <relationship identifier="rel-044" source="app-portal" target="obj-cust" xsi:type="Access">
+    </relationship>
+    <relationship identifier="rel-045" source="wp-cloud" target="tec-k8s" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-046" source="app-claims" target="goal-cost" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="rel-047" source="wp-cloud" target="goal-cost" xsi:type="Influence">
+    </relationship>
+  </relationships>
+  <propertyDefinitions>
+    <propertyDefinition identifier="propid-1" type="string">
+      <name xml:lang="en">owner</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-2" type="string">
+      <name xml:lang="en">source</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-3" type="string">
+      <name xml:lang="en">archipelago.tags</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-4" type="string">
+      <name xml:lang="en">annual.cost</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-5" type="string">
+      <name xml:lang="en">archipelago.lifecycle.plan</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-6" type="string">
+      <name xml:lang="en">archipelago.lifecycle.phaseIn</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-7" type="string">
+      <name xml:lang="en">archipelago.lifecycle.active</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-8" type="string">
+      <name xml:lang="en">archipelago.lifecycle.phaseOut</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-9" type="string">
+      <name xml:lang="en">archipelago.lifecycle.endOfLife</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-10" type="string">
+      <name xml:lang="en">archipelago.functionalFit</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-11" type="string">
+      <name xml:lang="en">archipelago.technicalFit</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-12" type="string">
+      <name xml:lang="en">archipelago.businessCriticality</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-13" type="string">
+      <name xml:lang="en">archipelago.timeClassification</name>
+    </propertyDefinition>
+  </propertyDefinitions>
+</model>
