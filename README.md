@@ -21,6 +21,7 @@ An **open-source Enterprise Architecture repository that runs entirely in the br
 | [`design/specs/open-ea-repository-design-brief.md`](design/specs/open-ea-repository-design-brief.md) | Design brief: personas, screens, look & feel |
 | [`design/specs/open-ea-repository-ui-spec.md`](design/specs/open-ea-repository-ui-spec.md) | UI spec: design position, structural decisions, ADR candidates |
 | [`design/handoff/2026-08-inventory-factsheet-graph/`](design/handoff/2026-08-inventory-factsheet-graph/) | Hi-fi design handoff: tokens, component-level spec, running prototype, reference screens |
+| [`design/archipelago-workspace.schema.json`](design/archipelago-workspace.schema.json) | JSON Schema for the canonical native format — generated from the metamodel |
 
 Open `design/handoff/2026-08-inventory-factsheet-graph/Archipelago.dc.html` directly in a browser to see the prototype.
 
@@ -43,9 +44,13 @@ the base path `/Enterprise-Architecture/`. Build for a root deployment with
 `BASE_PATH=/ npm run build`. `dist/404.html` carries the SPA redirect that keeps deep
 links (`/inventory`, `/element/:id`, `/graph`) working on Pages.
 
-The typed ArchiMate 3.2 core lives in [`src/model/`](src/model/README.md) — element
-catalogue, relationship validity, lifecycle derivation and completeness scoring, with
-that README as its documentation.
+Module documentation lives next to the code: the typed ArchiMate 3.2 core in
+[`src/model/`](src/model/README.md), the in-memory store and persistence in
+[`src/store/`](src/store/README.md), and import/export in [`src/io/`](src/io/README.md).
+
+Two extra scripts: `npm run schema` regenerates the published JSON Schema from the
+metamodel (a test fails if the checked-in copy is stale), and `npm run validate:xsd`
+validates our exchange-format output against The Open Group's XSD with `xmllint`.
 
 Fonts (Space Grotesk, JetBrains Mono — SIL OFL 1.1) are self-hosted in
 `src/assets/fonts/`; nothing is fetched from a CDN at runtime. Design tokens live in
