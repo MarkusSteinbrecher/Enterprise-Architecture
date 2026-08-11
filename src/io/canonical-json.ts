@@ -1,8 +1,14 @@
 import {
+  ACCESS_TYPES,
+  LIFECYCLE_PHASES,
   SCHEMA_VERSION,
   isElementType,
+  isFitLevel,
   isRelationshipType,
+  isTimeClassification,
+  type AccessType,
   type Element,
+  type LifecycleDates,
   type PortfolioProfile,
   type PropertyValue,
   type Relationship,
@@ -92,16 +98,69 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
   }
 
   const elements: Element[] = []
+  const knownIds = new Set<string>()
   for (const [index, candidate] of asArray(raw.elements).entries()) {
     const element = readElement(candidate, index, problems, where)
-    if (element) elements.push(element)
+    if (!element) continue
+    if (knownIds.has(element.id)) {
+      problems.push(
+        problem(
+          'warning',
+          'json.duplicate-id',
+          `Two elements share the id "${element.id}"; the later one was skipped.`,
+          { ...where, subject: element.id },
+        ),
+      )
+      continue
+    }
+    knownIds.add(element.id)
+    elements.push(element)
   }
 
-  const knownIds = new Set(elements.map((element) => element.id))
   const relationships: Relationship[] = []
+  const seenRelationshipIds = new Set<string>()
   for (const [index, candidate] of asArray(raw.relationships).entries()) {
     const relationship = readRelationship(candidate, index, knownIds, problems, where)
-    if (relationship) relationships.push(relationship)
+    if (!relationship) continue
+    if (seenRelationshipIds.has(relationship.id)) {
+      problems.push(
+        problem(
+          'warning',
+          'json.duplicate-relationship-id',
+          `Two relationships share the id "${relationship.id}"; the later one was skipped.`,
+          { ...where, subject: relationship.id },
+        ),
+      )
+      continue
+    }
+    seenRelationshipIds.add(relationship.id)
+    relationships.push(relationship)
+  }
+
+  // Malformed views and tag groups are dropped like everything else that cannot
+  // be read — but never silently: the next save would delete them for good.
+  const views: ViewDefinition[] = []
+  for (const [index, candidate] of asArray(raw.views).entries()) {
+    if (isViewDefinition(candidate)) views.push(candidate)
+    else {
+      problems.push(
+        problem('warning', 'json.invalid-view', `View ${index} is malformed and was skipped.`, where),
+      )
+    }
+  }
+  const tagGroups: TagGroup[] = []
+  for (const [index, candidate] of asArray(raw.tagGroups).entries()) {
+    if (isTagGroup(candidate)) tagGroups.push(candidate)
+    else {
+      problems.push(
+        problem(
+          'warning',
+          'json.invalid-tag-group',
+          `Tag group ${index} is malformed and was skipped.`,
+          where,
+        ),
+      )
+    }
   }
 
   const workspace: Workspace = {
@@ -110,8 +169,8 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
     schemaVersion: schemaVersion || SCHEMA_VERSION,
     elements,
     relationships,
-    views: asArray(raw.views).filter(isViewDefinition),
-    tagGroups: asArray(raw.tagGroups).filter(isTagGroup),
+    views,
+    tagGroups,
   }
 
   return succeeded(workspace, problems)
@@ -149,7 +208,9 @@ function canonicalView(view: ViewDefinition): Record<string, unknown> {
 function canonicalTagGroup(group: TagGroup): Record<string, unknown> {
   return prune({
     ...group,
-    tags: [...group.tags].sort((a, b) => a.name.localeCompare(b.name)),
+    // Code-unit order, not localeCompare: collation depends on the machine's
+    // locale, and two collaborators must commit identical bytes (ADR 0004).
+    tags: [...group.tags].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)),
   })
 }
 
@@ -217,7 +278,11 @@ function readElement(
     properties: readProperties(candidate.properties),
   }
   if (typeof candidate.documentation === 'string') element.documentation = candidate.documentation
-  if (isRecord(candidate.profile)) element.profile = candidate.profile as PortfolioProfile
+  if (isRecord(candidate.profile)) {
+    const { profile, dropped } = readPortfolioProfile(candidate.profile)
+    if (profile) element.profile = profile
+    reportDroppedProfileFields('Element', id, dropped, problems, where)
+  }
   return element
 }
 
@@ -282,9 +347,113 @@ function readRelationship(
   }
   if (typeof candidate.name === 'string') relationship.name = candidate.name
   if (isRecord(candidate.profile)) {
-    relationship.profile = candidate.profile as RelationshipProfile
+    const { profile, dropped } = readRelationshipProfile(candidate.profile)
+    if (profile) relationship.profile = profile
+    reportDroppedProfileFields('Relationship', id, dropped, problems, where)
   }
   return relationship
+}
+
+/**
+ * Profiles are validated field by field rather than cast: a malformed profile
+ * (a string where an array belongs, a fit of 9) must not enter the workspace,
+ * where it would crash a later export instead of failing here with a problem.
+ */
+function readPortfolioProfile(raw: Record<string, unknown>): {
+  profile: PortfolioProfile | undefined
+  dropped: string[]
+} {
+  const profile: PortfolioProfile = {}
+  const dropped: string[] = []
+  for (const [key, value] of Object.entries(raw)) {
+    switch (key) {
+      case 'lifecycle': {
+        const lifecycle: LifecycleDates = {}
+        if (isRecord(value)) {
+          for (const phase of LIFECYCLE_PHASES) {
+            const date = value[phase]
+            if (typeof date === 'string' && date) lifecycle[phase] = date
+          }
+        }
+        if (Object.keys(lifecycle).length) profile.lifecycle = lifecycle
+        else dropped.push(key)
+        break
+      }
+      case 'functionalFit':
+      case 'technicalFit':
+      case 'businessCriticality': {
+        if (isFitLevel(value)) profile[key] = value
+        else dropped.push(key)
+        break
+      }
+      case 'timeClassification': {
+        if (isTimeClassification(value)) profile.timeClassification = value
+        else dropped.push(key)
+        break
+      }
+      case 'tags': {
+        if (Array.isArray(value) && value.every((tag) => typeof tag === 'string')) {
+          if (value.length) profile.tags = value as string[]
+        } else dropped.push(key)
+        break
+      }
+      default:
+        dropped.push(key)
+    }
+  }
+  return { profile: Object.keys(profile).length ? profile : undefined, dropped }
+}
+
+function readRelationshipProfile(raw: Record<string, unknown>): {
+  profile: RelationshipProfile | undefined
+  dropped: string[]
+} {
+  const profile: RelationshipProfile = {}
+  const dropped: string[] = []
+  for (const [key, value] of Object.entries(raw)) {
+    switch (key) {
+      case 'annualCost': {
+        if (typeof value === 'number' && Number.isFinite(value)) profile.annualCost = value
+        else dropped.push(key)
+        break
+      }
+      case 'currency':
+      case 'supportType':
+      case 'validFrom':
+      case 'validTo': {
+        if (typeof value === 'string' && value) profile[key] = value
+        else dropped.push(key)
+        break
+      }
+      case 'accessType': {
+        if (typeof value === 'string' && (ACCESS_TYPES as readonly string[]).includes(value)) {
+          profile.accessType = value as AccessType
+        } else dropped.push(key)
+        break
+      }
+      default:
+        dropped.push(key)
+    }
+  }
+  return { profile: Object.keys(profile).length ? profile : undefined, dropped }
+}
+
+function reportDroppedProfileFields(
+  kind: 'Element' | 'Relationship',
+  id: string,
+  dropped: string[],
+  problems: ImportProblem[],
+  where: { file?: string },
+): void {
+  if (!dropped.length) return
+  problems.push(
+    problem(
+      'warning',
+      'json.invalid-profile',
+      `${kind} "${id}": profile field${dropped.length === 1 ? '' : 's'} ${dropped.join(', ')} could not be read and ${dropped.length === 1 ? 'was' : 'were'} ignored.`,
+      { ...where, subject: id },
+    ),
+  )
 }
 
 function readProperties(value: unknown): Record<string, PropertyValue> {
@@ -307,7 +476,9 @@ function isTagGroup(value: unknown): value is TagGroup {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
+  // Arrays are excluded: a top-level JSON array must fail the workspace guard
+  // rather than import as an empty workspace.
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 function asArray(value: unknown): unknown[] {
