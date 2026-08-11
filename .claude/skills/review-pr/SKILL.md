@@ -25,6 +25,8 @@ Where the diff touches them, verify the CLAUDE.md invariants:
 - All model mutations via the command stack — no direct store writes from UI code.
 - Tokens are law: no color literals outside `src/styles/tokens.css`, zero border-radius, no shadows (exception: command palette), no runtime CDN/font fetches.
 - Nothing leaves the browser except user-initiated downloads.
+- **A declared ARIA widget role is a contract — check the behaviour, not the attribute.** Any component with `role="dialog"`/`aria-modal`, `role="menu"`, `role="listbox"` or `role="combobox"`: does focus *enter* the widget, is it *trapped* while open, is it *restored* to the trigger on close, and is the active item announced (`aria-activedescendant` with real option `id`s when focus stays in an input)? Lint (#40) catches the static half — a role on the wrong element, a missing required prop — and none of this half. Found in #24 (`role="menu"`, no keyboard) and #25 (`aria-modal` with no trap, `listbox` never announced).
+- **A second call site of a data-safety path is a finding in itself.** When a PR reaches for `markSaved`, `replaceWorkspace`, `saveSnapshot` or a download, check whether an existing call site already does it — and whether this one kept its guards. #25 copied `Header.saveFile` and silently dropped its reader-role check. Prefer "collapse the two into one helper" over "fix the copy".
 
 For architectural changes, check conformance with `design/decisions/` ADRs; a deliberate deviation needs a new/amended ADR in the same PR, not a silent drift.
 
