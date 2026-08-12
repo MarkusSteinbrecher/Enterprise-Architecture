@@ -189,6 +189,22 @@ describe('the bundled demo workspace', () => {
     expect(result.ok).toBe(true)
   })
 
+  it('mints a fresh workspace id per load so it cannot overwrite stored work', () => {
+    const first = loadDemoWorkspace()
+    const second = loadDemoWorkspace()
+
+    // The id in the XML is a fixed `ws-archisurance-demo`, and the workspace id
+    // is the key autosave writes under. Reusing it makes the demo button — which
+    // reappears whenever a workspace is empty — write 29 elements over whatever
+    // is stored at that key, with the undo stack already cleared.
+    expect(first.id).not.toBe(second.id)
+    expect(first.id).not.toBe('ws-archisurance-demo')
+    expect(first.id).toMatch(/^ws-/)
+
+    // Only the id differs; the model itself is the bundled one either way.
+    expect({ ...first, id: '' }).toEqual({ ...second, id: '' })
+  })
+
   it('has the element and relationship counts of the source model', () => {
     const workspace = loadDemoWorkspace()
     expect(workspace.elements).toHaveLength(29)
