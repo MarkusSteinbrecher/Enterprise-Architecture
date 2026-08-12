@@ -170,7 +170,17 @@ function modelIdentifier(id: string): string {
 }
 
 function text(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return (
+    value
+      // Control characters are illegal in XML 1.0 even as numeric references
+      // (only tab, LF and CR survive), so they are stripped rather than written
+      // into a file no parser would accept back.
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+  )
 }
 
 function attr(value: string): string {
@@ -250,9 +260,23 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   }
 
   const relationships: Relationship[] = []
+  const seenRelationshipIds = new Set<string>()
   for (const raw of list((model.relationships as RawNode | undefined)?.relationship)) {
     const relationship = readRelationship(raw, definitions, seenIds, problems, where)
-    if (relationship) relationships.push(relationship)
+    if (!relationship) continue
+    if (seenRelationshipIds.has(relationship.id)) {
+      problems.push(
+        problem(
+          'warning',
+          'exchange.duplicate-relationship-id',
+          `Two relationships share the identifier "${relationship.id}"; the later one was skipped.`,
+          { ...where, subject: relationship.id },
+        ),
+      )
+      continue
+    }
+    seenRelationshipIds.add(relationship.id)
+    relationships.push(relationship)
   }
 
   reportSkipped(model, problems, where)
