@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { SCHEMA_VERSION, emptyWorkspace, type Workspace } from '@/model'
 import { smallWorkspace } from '@/test/fixtures'
 import { fromCanonicalJson, toCanonicalJson } from './canonical-json'
+import { exportExchangeXml } from './exchange-format'
 
 describe('canonical JSON', () => {
   it('round-trips byte-identically', () => {
@@ -132,5 +133,142 @@ describe('canonical JSON import problems', () => {
     expect(result.ok).toBe(true)
     expect(result.workspace?.elements).toEqual([])
     expect(result.workspace?.name).toBe('Empty')
+  })
+})
+
+describe('canonical JSON hardening (review findings, PR #17)', () => {
+  it('rejects a top-level array instead of importing an empty workspace', () => {
+    const result = fromCanonicalJson('[1, 2, 3]')
+    expect(result.ok).toBe(false)
+    expect(result.problems[0]?.code).toBe('json.not-a-workspace')
+  })
+
+  it('skips duplicate element ids and says so', () => {
+    const result = fromCanonicalJson(
+      JSON.stringify({
+        schemaVersion: SCHEMA_VERSION,
+        id: 'ws',
+        name: 'W',
+        elements: [
+          { id: 'a', type: 'ApplicationComponent', name: 'First' },
+          { id: 'a', type: 'BusinessProcess', name: 'Second' },
+        ],
+      }),
+    )
+    expect(result.workspace?.elements).toHaveLength(1)
+    expect(result.workspace?.elements[0]?.name).toBe('First')
+    expect(result.problems[0]).toMatchObject({ code: 'json.duplicate-id', subject: 'a' })
+  })
+
+  it('skips duplicate relationship ids and says so', () => {
+    const result = fromCanonicalJson(
+      JSON.stringify({
+        schemaVersion: SCHEMA_VERSION,
+        id: 'ws',
+        name: 'W',
+        elements: [
+          { id: 'a', type: 'ApplicationComponent', name: 'A' },
+          { id: 'b', type: 'ApplicationComponent', name: 'B' },
+        ],
+        relationships: [
+          { id: 'r', type: 'Serving', source: 'a', target: 'b' },
+          { id: 'r', type: 'Flow', source: 'b', target: 'a' },
+        ],
+      }),
+    )
+    expect(result.workspace?.relationships).toHaveLength(1)
+    expect(result.workspace?.relationships[0]?.type).toBe('Serving')
+    expect(result.problems[0]?.code).toBe('json.duplicate-relationship-id')
+  })
+
+  it('validates profile fields instead of letting malformed ones crash a later export', () => {
+    const result = fromCanonicalJson(
+      JSON.stringify({
+        schemaVersion: SCHEMA_VERSION,
+        id: 'ws',
+        name: 'W',
+        elements: [
+          {
+            id: 'a',
+            type: 'ApplicationComponent',
+            name: 'A',
+            profile: { tags: 'Core', functionalFit: 9, timeClassification: 'Invest' },
+          },
+        ],
+      }),
+    )
+    expect(result.ok).toBe(true)
+    const element = result.workspace?.elements[0]
+    expect(element?.profile).toEqual({ timeClassification: 'Invest' })
+    expect(result.problems[0]).toMatchObject({ code: 'json.invalid-profile', subject: 'a' })
+    expect(result.problems[0]?.message).toContain('tags')
+    expect(result.problems[0]?.message).toContain('functionalFit')
+    // The crash vector: exporting the imported workspace must not throw.
+    expect(() => exportExchangeXml(result.workspace!)).not.toThrow()
+  })
+
+  it('validates relationship profile fields the same way', () => {
+    const result = fromCanonicalJson(
+      JSON.stringify({
+        schemaVersion: SCHEMA_VERSION,
+        id: 'ws',
+        name: 'W',
+        elements: [
+          { id: 'a', type: 'ApplicationComponent', name: 'A' },
+          { id: 'b', type: 'ApplicationComponent', name: 'B' },
+        ],
+        relationships: [
+          {
+            id: 'r',
+            type: 'Serving',
+            source: 'a',
+            target: 'b',
+            profile: { annualCost: 'lots', currency: 'EUR' },
+          },
+        ],
+      }),
+    )
+    expect(result.workspace?.relationships[0]?.profile).toEqual({ currency: 'EUR' })
+    expect(result.problems[0]).toMatchObject({ code: 'json.invalid-profile', subject: 'r' })
+  })
+
+  it('reports malformed views and tag groups instead of dropping them silently', () => {
+    const result = fromCanonicalJson(
+      JSON.stringify({
+        schemaVersion: SCHEMA_VERSION,
+        id: 'ws',
+        name: 'W',
+        views: [{ id: 'v1' }],
+        tagGroups: [{ name: 'no id or tags' }],
+      }),
+    )
+    expect(result.workspace?.views).toEqual([])
+    expect(result.workspace?.tagGroups).toEqual([])
+    expect(result.problems.map((p) => p.code).sort()).toEqual([
+      'json.invalid-tag-group',
+      'json.invalid-view',
+    ])
+  })
+
+  it('sorts tag-group tags in code-unit order, independent of locale', () => {
+    const workspace: Workspace = {
+      ...emptyWorkspace('ws-x', 'X'),
+      tagGroups: [
+        {
+          id: 'tg',
+          name: 'G',
+          multiSelect: true,
+          tags: [
+            { name: 'b', colourToken: 'var(--accent)' },
+            { name: 'ä', colourToken: 'var(--accent)' },
+            { name: 'A', colourToken: 'var(--accent)' },
+          ],
+        },
+      ],
+    }
+    const json = toCanonicalJson(workspace)
+    const order = [json.indexOf('"A"'), json.indexOf('"b"'), json.indexOf('"ä"')]
+    expect(order[0]).toBeGreaterThan(-1)
+    expect(order).toEqual([...order].sort((a, b) => a - b))
   })
 })
