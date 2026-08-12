@@ -82,19 +82,32 @@ describe('React binding', () => {
       return <span data-testid="name">{name}</span>
     }
 
+    // Two things had to change for this to be able to fail.
+    //
+    // The workspace object is built once and reused: `ModelStoreProvider`
+    // memoises the store on `initialWorkspace`, so passing a fresh
+    // `smallWorkspace()` to the rerender built a *new store* — and `store` is
+    // already in the memo's dep array, so it busted the cache on its own.
+    //
+    // And the assertions are anchored. `toHaveTextContent` is a substring match,
+    // and the stale value here is "Claim Handling Engine", which *contains* the
+    // expected "Claim Handling" — so even with the store held still the test
+    // passed while rendering the previous element's name.
+    const workspace = smallWorkspace()
+
     const { rerender } = render(
-      <ModelStoreProvider initialWorkspace={smallWorkspace()} ephemeral>
+      <ModelStoreProvider initialWorkspace={workspace} ephemeral>
         <Name id="app-claims" />
       </ModelStoreProvider>,
     )
-    expect(screen.getByTestId('name')).toHaveTextContent('Claim Handling Engine')
+    expect(screen.getByTestId('name')).toHaveTextContent(/^Claim Handling Engine$/)
 
     rerender(
-      <ModelStoreProvider initialWorkspace={smallWorkspace()} ephemeral>
+      <ModelStoreProvider initialWorkspace={workspace} ephemeral>
         <Name id="cap-claim" />
       </ModelStoreProvider>,
     )
-    expect(screen.getByTestId('name')).toHaveTextContent('Claim Handling')
+    expect(screen.getByTestId('name')).toHaveTextContent(/^Claim Handling$/)
   })
 
   it('throws a useful error when a hook is used outside the provider', () => {

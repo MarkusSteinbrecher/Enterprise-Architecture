@@ -21,6 +21,7 @@ import {
   PropertiesSection,
   RelationsSection,
   SectionHeading,
+  type ProfilePatch,
   type RelationEntry,
 } from './sections'
 import './factsheet.css'
@@ -94,11 +95,22 @@ export function ElementScreen() {
   // The breadcrumb returns to the inventory with the filters the user arrived with.
   const backToInventory = `/inventory${(location.state as { fromInventory?: string } | null)?.fromInventory ?? ''}`
 
-  const patchProfile = (patch: Partial<PortfolioProfile>) => {
-    store.updateElement(element.id, (draft) => ({
-      ...draft,
-      profile: { ...draft.profile, ...patch },
-    }))
+  /**
+   * `undefined` in the patch clears the field, and clearing means removing the
+   * key. Assigning a falsy stand-in instead is what made "Not assessed" store
+   * `functionalFit: 0` — rejected by the app's own published schema, dropped
+   * without a problem report by the exchange writer, and counted as *filled* by
+   * completeness, so clearing a field raised the score.
+   */
+  const patchProfile = (patch: ProfilePatch) => {
+    store.updateElement(element.id, (draft) => {
+      const profile: PortfolioProfile = { ...draft.profile }
+      for (const [key, value] of Object.entries(patch)) {
+        if (value === undefined) delete profile[key as keyof PortfolioProfile]
+        else Object.assign(profile, { [key]: value })
+      }
+      return { ...draft, profile }
+    })
   }
 
   const setLifecycleDate = (target: LifecyclePhase, value: string) => {
@@ -110,9 +122,32 @@ export function ElementScreen() {
     })
   }
 
+  /**
+   * This is the first UI in the app that lets anyone author a tag, which is what
+   * makes two latent problems reachable.
+   *
+   * The comma is the live one. `profileToProperties` writes tags as
+   * `tags.join(', ')` and the reader splits on `,`, so a tag named
+   * `Core, regulated` round-trips through the exchange format as two tags with
+   * `problems: []` — silent loss, and every saved filter naming the original then
+   * matches nothing. The durable fix is an escaped encoding in `src/io`, which is
+   * what #36/#37 is doing to that exact writer; inventing a second encoding here
+   * would leave two to reconcile at merge. So this refuses to author the input
+   * that breaks it, and says why rather than quietly rewriting the name.
+   *
+   * The other is registration: a tag has to reach `workspace.tagGroups` or it is
+   * unfilterable and uncoloured (finding 7).
+   */
   const addTag = () => {
     const tag = window.prompt('Add a tag')?.trim()
     if (!tag) return
+    if (tag.includes(',')) {
+      window.alert(
+        `A tag cannot contain a comma — the exchange format separates tags with one, so “${tag}” would come back as two. Try a name without it.`,
+      )
+      return
+    }
+    store.registerTag(tag)
     store.updateElement(element.id, (draft) => ({
       ...draft,
       profile: {
@@ -225,13 +260,18 @@ export function ElementScreen() {
           </div>
         </div>
 
-        <div className="sheet__tabs" role="tablist">
+        {/*
+          No tab roles until there is something to switch. `role="tablist"` with
+          no `role="tabpanel"` and no `aria-controls` promises a widget that is
+          not there — three of the four tabs are disabled stubs, so the honest
+          markup is the buttons alone (UI spec open question 2).
+        */}
+        <div className="sheet__tabs">
           {TABS.map((tab) => (
             <button
               key={tab}
               type="button"
-              role="tab"
-              aria-selected={tab === 'Overview'}
+              aria-current={tab === 'Overview' ? 'page' : undefined}
               className={`sheet__tab${tab === 'Overview' ? ' sheet__tab--active' : ''}`}
               // Relations and Assessment already live on Overview; these stay
               // stubs until the quality seal exists (UI spec open question 2).
@@ -254,12 +294,18 @@ export function ElementScreen() {
             }
           />
           <LifecycleSection
+            type={element.type}
             profile={element.profile}
             phase={phase}
             editing={editing}
             onChange={setLifecycleDate}
           />
-          <AssessmentSection profile={element.profile} editing={editing} onChange={patchProfile} />
+          <AssessmentSection
+            type={element.type}
+            profile={element.profile}
+            editing={editing}
+            onChange={patchProfile}
+          />
           <RelationsSection
             entries={entries}
             editing={editing}

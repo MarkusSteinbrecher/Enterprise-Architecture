@@ -1,4 +1,5 @@
 import {
+  DEFAULT_TAG_GROUP,
   SCHEMA_VERSION,
   completenessScore,
   modelHealth,
@@ -181,9 +182,24 @@ export class ModelStore {
     return this.#resolve(this.#indexes.byTarget.get(elementId))
   }
 
-  /** Every relationship touching `elementId`, in either direction. */
+  /**
+   * Every relationship touching `elementId`, in either direction — each once.
+   *
+   * A self-relation sits in both indexes, so the plain concatenation returned it
+   * twice. That is not only a duplicated row on the fact sheet and a relation
+   * count one too high: `removeElement` builds its cascade from this list, so
+   * deleting the element recorded the same relationship twice and undo put back
+   * two of it.
+   */
   relationshipsOf(elementId: string): Relationship[] {
-    return [...this.outgoing(elementId), ...this.incoming(elementId)]
+    const seen = new Set<string>()
+    const out: Relationship[] = []
+    for (const relationship of [...this.outgoing(elementId), ...this.incoming(elementId)]) {
+      if (seen.has(relationship.id)) continue
+      seen.add(relationship.id)
+      out.push(relationship)
+    }
+    return out
   }
 
   relationshipsOfType(type: RelationshipType): Relationship[] {
@@ -205,10 +221,13 @@ export class ModelStore {
   }
 
   relationCount(elementId: string): number {
-    return (
-      (this.#indexes.bySource.get(elementId)?.size ?? 0) +
-      (this.#indexes.byTarget.get(elementId)?.size ?? 0)
-    )
+    const source = this.#indexes.bySource.get(elementId)
+    const target = this.#indexes.byTarget.get(elementId)
+    if (!source || !target) return (source?.size ?? 0) + (target?.size ?? 0)
+    // A self-relation is in both sets and is still one relationship.
+    let both = 0
+    for (const id of source) if (target.has(id)) both += 1
+    return source.size + target.size - both
   }
 
   completeness(elementId: string): number {
@@ -406,6 +425,29 @@ export class ModelStore {
     this.#history = []
     this.#dirty = markClean ? 0 : 1
     this.#bump()
+  }
+
+  /**
+   * Make sure a tag name exists in a tag group, adding it to the first one if
+   * not. Returns whether anything was added.
+   *
+   * `workspace.tagGroups` is the sole source of the inventory's tag facets and of
+   * every tag's colour, so a tag written only onto an element is invisible to
+   * both: tag twelve applications from their fact sheets and none of them can be
+   * filtered by it, each chip painted in the neutral fallback.
+   */
+  registerTag(tag: string): boolean {
+    const name = tag.trim()
+    if (!name) return false
+    if (this.#tagGroups.some((group) => group.tags.some((t) => t.name === name))) return false
+
+    const [first, ...rest] = this.#tagGroups
+    const target = first ?? { ...DEFAULT_TAG_GROUP, tags: [] }
+    this.#tagGroups = [
+      { ...target, tags: [...target.tags, { name, colourToken: 'var(--bd2)' }] },
+      ...(first ? rest : this.#tagGroups),
+    ]
+    return true
   }
 
   saveView(view: ViewDefinition): void {
