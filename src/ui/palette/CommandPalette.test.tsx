@@ -1,6 +1,7 @@
-import { screen, within } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { emptyWorkspace } from '@/model'
 import { loadDemoWorkspace } from '@/io'
 import { renderApp } from '@/test/render'
 import { applyTheme } from '@/app/theme'
@@ -13,6 +14,13 @@ function demo() {
 beforeEach(() => {
   applyTheme('light')
 })
+
+/** The palette's own input. Queried by label: the inventory adds more inputs,
+ * and the palette's is a `combobox` rather than a `textbox` since it gained
+ * `aria-activedescendant`, so neither role alone stays unambiguous. */
+function paletteInput() {
+  return screen.getByLabelText('Jump to element, run an action')
+}
 
 async function openPalette(user: ReturnType<typeof userEvent.setup>) {
   await user.keyboard('{Meta>}k{/Meta}')
@@ -43,11 +51,11 @@ describe('opening and closing', () => {
     const user = userEvent.setup()
     await openPalette(user)
     await user.keyboard('claim')
-    expect(screen.getByLabelText('Jump to element, run an action')).toHaveValue('claim')
+    expect(paletteInput()).toHaveValue('claim')
 
     await user.keyboard('{Escape}')
     await openPalette(user)
-    expect(screen.getByLabelText('Jump to element, run an action')).toHaveValue('')
+    expect(paletteInput()).toHaveValue('')
   })
 
   it('closes when the backdrop is clicked', async () => {
@@ -63,7 +71,7 @@ describe('opening and closing', () => {
     renderApp(demo())
     const user = userEvent.setup()
     await openPalette(user)
-    expect(screen.getByLabelText('Jump to element, run an action')).toHaveFocus()
+    expect(paletteInput()).toHaveFocus()
   })
 })
 
@@ -171,6 +179,139 @@ describe('running a result', () => {
     await user.click(screen.getByRole('option', { name: /Toggle theme/ }))
     expect(document.documentElement.dataset.theme).toBe('dark')
   })
+
+  it('runs Save file through the one save owner, which does not clear the counter', async () => {
+    const createObjectURL = vi.fn(() => 'blob:test')
+    vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
+    HTMLAnchorElement.prototype.click = vi.fn()
+
+    renderApp(emptyWorkspace('ws-empty', 'Empty'))
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Load the demo workspace' }))
+    expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
+
+    await openPalette(user)
+    await user.keyboard('save file')
+    await user.click(screen.getByRole('option', { name: /Save file/ }))
+
+    // The action used to inline the download and `markSaved()` — the header's
+    // defect, copy-pasted. Both now call `useSaveWorkspace`, which is where the
+    // reader guard lives too (covered in use-save-workspace.test.tsx).
+    expect(createObjectURL).toHaveBeenCalled()
+    expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
+
+    vi.unstubAllGlobals()
+  })
+})
+
+describe('the keyboard flow the palette is named for', () => {
+  it('goes open → type → arrow → Enter → fact sheet', async () => {
+    renderApp(demo())
+    const user = userEvent.setup()
+    await openPalette(user)
+
+    // The whole chain in one test. The halves each passed on their own, which is
+    // how a flow that breaks the moment focus moves was reported as working.
+    await user.keyboard('policy')
+    await user.keyboard('{ArrowDown}')
+    const selected = screen.getAllByRole('option')[1]!
+    const name = selected.querySelector('.palette__name')?.textContent ?? ''
+    await user.keyboard('{Enter}')
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name })).toBeInTheDocument()
+  })
+
+  it('survives a Tab press: focus stays in the dialog and arrows still work', async () => {
+    renderApp(demo())
+    const user = userEvent.setup()
+    await openPalette(user)
+    await user.keyboard('policy')
+
+    // Tab used to land on row 0 — where arrows did nothing and the highlight and
+    // the focus ring pointed at different rows — or walk out onto the chrome
+    // behind the overlay, where Enter downloaded a file nobody asked for.
+    await user.tab()
+    expect(paletteInput()).toHaveFocus()
+
+    await user.keyboard('{ArrowDown}')
+    expect(screen.getAllByRole('option')[1]).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('keeps the rows out of the tab order', async () => {
+    renderApp(demo())
+    const user = userEvent.setup()
+    await openPalette(user)
+    await user.keyboard('policy')
+
+    // The behavioural half of this is the Tab test above; this is the structural
+    // half. An `option` inside the combobox pattern is pointed at by
+    // `aria-activedescendant`, never focused, so being a tab stop is wrong even
+    // when the trap makes it unreachable.
+    for (const row of screen.getAllByRole('option')) {
+      expect(row).toHaveAttribute('tabindex', '-1')
+    }
+  })
+
+  it('stays operable after a click on the footer', async () => {
+    const { container } = renderApp(demo())
+    const user = userEvent.setup()
+    await openPalette(user)
+    await user.keyboard('policy')
+
+    await user.click(container.ownerDocument.querySelector('.palette__footer') as Element)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    await user.keyboard('{ArrowDown}')
+    expect(screen.getAllByRole('option')[1]).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('gives focus back to whatever opened it', async () => {
+    renderApp(demo())
+    const user = userEvent.setup()
+    const search = screen.getByRole('button', { name: /Search elements, relations, actions/ })
+
+    await user.click(search)
+    await user.keyboard('{Escape}')
+
+    // Escape used to unmount the input and leave focus on <body>.
+    expect(search).toHaveFocus()
+  })
+
+  it('announces the highlighted row through aria-activedescendant', async () => {
+    renderApp(demo())
+    const user = userEvent.setup()
+    await openPalette(user)
+    await user.keyboard('policy')
+
+    const input = paletteInput()
+    const rows = screen.getAllByRole('option')
+    expect(input).toHaveAttribute('aria-activedescendant', rows[0]!.id)
+
+    await user.keyboard('{ArrowDown}')
+    expect(input).toHaveAttribute('aria-activedescendant', rows[1]!.id)
+    expect(rows[1]!.id).not.toBe(rows[0]!.id)
+  })
+
+  it('ignores a mousemove from a pointer that did not move', async () => {
+    renderApp(demo())
+    const user = userEvent.setup()
+    await openPalette(user)
+    await user.keyboard('policy')
+    await user.keyboard('{ArrowDown}')
+
+    const rows = screen.getAllByRole('option')
+    // Arrowing scrolls rows under a stationary cursor; the mousemove that
+    // produces carries the same coordinates as the last one, and used to hand
+    // the selection to whichever row had slid under the pointer.
+    fireEvent.mouseMove(rows[0]!, { clientX: 40, clientY: 40 })
+    fireEvent.mouseMove(rows[2]!, { clientX: 40, clientY: 40 })
+    expect(screen.getAllByRole('option')[1]).toHaveAttribute('aria-selected', 'true')
+
+    // A pointer that really moves still picks a row.
+    fireEvent.mouseMove(rows[2]!, { clientX: 41, clientY: 44 })
+    expect(screen.getAllByRole('option')[2]).toHaveAttribute('aria-selected', 'true')
+  })
 })
 
 describe('single-letter shortcuts', () => {
@@ -189,7 +330,7 @@ describe('single-letter shortcuts', () => {
     await openPalette(user)
     await user.keyboard('g')
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByLabelText('Jump to element, run an action')).toHaveValue('g')
+    expect(paletteInput()).toHaveValue('g')
   })
 
   it('does not navigate while a text input has focus — the prototype gap', async () => {
