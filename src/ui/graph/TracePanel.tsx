@@ -44,7 +44,17 @@ export function TracePanel({
 }: TracePanelProps) {
   const phase = deriveLifecyclePhase(element.profile?.lifecycle, Date.UTC(year, 0, 1))
   const time = element.profile?.timeClassification
-  const cost = element.properties['annual.cost']
+  /**
+   * Cost is on the edge (ADR 0001), so the figure here is what the traced
+   * dependencies carry, not a property on the element.
+   *
+   * This read `element.properties['annual.cost']`, which `PortfolioProfile` has
+   * no field for and `stripProfileKeys` removes on import — so anyone importing
+   * a real `.archimate` file with costs modelled the supported way saw `—`
+   * forever. The demo happens to hard-code that exact key, which is the only
+   * reason the existing assertion passed.
+   */
+  const cost = summariseCost(dependencies)
 
   return (
     <aside className="trace-panel" aria-label={`Traced dependencies of ${element.name}`}>
@@ -80,7 +90,7 @@ export function TracePanel({
           value={time ?? 'Not classified'}
           colour={time ? TIME_TOKENS[time] : 'var(--ink3)'}
         />
-        <Stat label="Annual cost" value={cost ? String(cost) : '—'} />
+        <Stat label="Annual cost" value={cost} />
         <Stat
           label="Completeness"
           value={`${completeness}%`}
@@ -133,4 +143,34 @@ function Stat({ label, value, colour }: { label: string; value: string; colour?:
       </div>
     </div>
   )
+}
+
+/**
+ * Total annual cost across the traced dependencies, with the currency they
+ * agree on. Mixed currencies are not silently added up — the number would be
+ * meaningless and the panel would not say so.
+ */
+function summariseCost(dependencies: readonly TracedDependency[]): string {
+  const currencies = new Set<string>()
+  let total = 0
+  let counted = 0
+
+  for (const { relationship } of dependencies) {
+    const amount = relationship.profile?.annualCost
+    if (typeof amount !== 'number' || !Number.isFinite(amount)) continue
+    total += amount
+    counted += 1
+    if (relationship.profile?.currency) currencies.add(relationship.profile.currency)
+  }
+
+  if (counted === 0) return '—'
+  if (currencies.size > 1) return `${counted} costed relations, mixed currencies`
+  const currency = [...currencies][0]
+  return `${formatAmount(total)}${currency ? ` ${currency}` : ''} / yr`
+}
+
+function formatAmount(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}k`
+  return String(value)
 }

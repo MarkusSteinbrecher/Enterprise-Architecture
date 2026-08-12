@@ -4,6 +4,7 @@ import {
   Background,
   Controls,
   ReactFlow,
+  MarkerType,
   ReactFlowProvider,
   ViewportPortal,
   useReactFlow,
@@ -24,6 +25,7 @@ import { BANDS, BAND_LABELS, BAND_TINTS, type Band } from './bands'
 import { COLOUR_VIEWS, COLOUR_VIEW_LABELS, colourOf, legendFor, subLabelOf } from './colouring'
 import { GraphNode, type GraphNodeData } from './GraphNode'
 import { NODE_HEIGHT, NODE_WIDTH, runLayout, type LayoutResult } from './layout'
+import { shapeKeyOf } from './shape-key'
 import { ReportChrome } from './ReportChrome'
 import { TracePanel } from './TracePanel'
 import {
@@ -66,19 +68,27 @@ function GraphCanvas() {
   }))
 
   const thisYear = new Date().getFullYear()
-  const state = useGraphState(thisYear)
+  const range = useMemo(
+    () => lifecycleYearRange(model.elements.map((element) => element.profile?.lifecycle)),
+    [model.elements],
+  )
+  const min = Math.min(range?.min ?? thisYear - 10, thisYear - 10)
+  const max = Math.max(range?.max ?? thisYear + 10, thisYear + 10)
+  // The slider's range is also the only range a time point may take: a `?year=`
+  // outside it is not a view of anything.
+  const bounds = useMemo(() => ({ min, max }), [min, max])
+
+  const state = useGraphState(thisYear, bounds)
   const [layout, setLayout] = useState<LayoutResult | undefined>(undefined)
   const [laying, setLaying] = useState(false)
+  const [layoutError, setLayoutError] = useState<string | undefined>(undefined)
+  const [retry, setRetry] = useState(0)
   const requestId = useRef(0)
 
   // Re-lay out only when the graph's *shape* changes — not when a colour view or
   // the time slider does. Layout is the expensive half; recolouring is free.
   const shapeKey = useMemo(
-    () =>
-      [
-        model.elements.map((element) => element.id).join(','),
-        model.relationships.map((r) => `${r.source}>${r.target}`).join(','),
-      ].join('|'),
+    () => shapeKeyOf(model.elements, model.relationships),
     [model.elements, model.relationships],
   )
 
@@ -86,32 +96,46 @@ function GraphCanvas() {
     const id = ++requestId.current
     let cancelled = false
     setLaying(true)
-    void runLayout(model.elements, model.relationships).then((result) => {
-      // Layout is slower than a navigation: without both guards a result can
-      // land after the screen has gone, and React Flow then reaches for a
-      // window that no longer exists.
-      if (cancelled || requestId.current !== id) return
-      setLayout(result)
-      setLaying(false)
-    })
+    setLayoutError(undefined)
+    void runLayout(model.elements, model.relationships)
+      .then((result) => {
+        // Layout is slower than a navigation: without both guards a result can
+        // land after the screen has gone, and React Flow then reaches for a
+        // window that no longer exists.
+        if (cancelled || requestId.current !== id) return
+        setLayout(result)
+        setLaying(false)
+      })
+      .catch((error: unknown) => {
+        // Without this the screen sat on "laying out…" forever with no nodes and
+        // no empty state, and the rejection went nowhere. It is reachable: the
+        // main-thread fallback is a dynamic import of the ~1.4MB ELK chunk, and a
+        // tab loaded before a Pages redeploy asks for a hashed chunk that 404s.
+        if (cancelled || requestId.current !== id) return
+        setLaying(false)
+        setLayoutError(error instanceof Error ? error.message : String(error))
+      })
     return () => {
       cancelled = true
     }
     // shapeKey stands in for the element and relationship lists.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shapeKey])
+  }, [shapeKey, retry])
 
   const at = startOfYear(state.year)
-  const range = useMemo(
-    () => lifecycleYearRange(model.elements.map((element) => element.profile?.lifecycle)),
-    [model.elements],
-  )
-  const min = Math.min(range?.min ?? thisYear - 10, thisYear - 10)
-  const max = Math.max(range?.max ?? thisYear + 10, thisYear + 10)
+
+  // One reading of "is anything focused", shared by the trace, the panel, the
+  // CLEAR button and the fit. `traceFrom` used to take the raw `?focus=` while
+  // the panel was gated on the element existing, so an id this workspace does not
+  // contain — a stale bookmark, a re-import with regenerated ids — dimmed all 29
+  // nodes to 0.16 with no panel, no CLEAR, and a hint denying anything was
+  // traced. `fitView` then matched no nodes and divided by a zero-width box.
+  const focused = state.focus ? model.element(state.focus) : undefined
+  const focus = focused?.id
 
   const trace = useMemo(
-    () => (state.focus ? traceFrom(state.focus, model.relationships) : undefined),
-    [state.focus, model.relationships],
+    () => (focus ? traceFrom(focus, model.relationships) : undefined),
+    [focus, model.relationships],
   )
 
   const { nodes, edges, exportNodes, exportEdges } = useMemo(
@@ -132,14 +156,13 @@ function GraphCanvas() {
     })
     // Re-running on `trace` alone would refit whenever the model changed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.focus, layout])
+  }, [focus, layout])
 
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => state.toggleFocus(node.id),
     [state],
   )
 
-  const focused = state.focus ? model.element(state.focus) : undefined
   const stats = `${model.elements.length} nodes · ${model.relationships.length} relations · time point ${state.year}`
 
   return (
@@ -153,6 +176,17 @@ function GraphCanvas() {
         timePoint={{ value: state.year, min, max, today: thisYear }}
         onTimePointChange={state.setYear}
         legend={legendFor(state.colourView)}
+        // `buildView` returns empty arrays until the layout lands, and nothing
+        // stopped the click: on a model big enough for ELK to take a few seconds
+        // you got `dependency-graph.svg`, downloaded successfully, headed "29
+        // nodes · 47 relations", containing none of them.
+        exportDisabledReason={
+          layoutError
+            ? 'Nothing to export — the layout failed'
+            : laying || !layout
+              ? 'Wait for the layout to finish'
+              : undefined
+        }
         onExport={() =>
           downloadGraphSvg({
             title: 'Dependency graph',
@@ -171,6 +205,16 @@ function GraphCanvas() {
           {model.elements.length === 0 ? (
             <p className="graph__empty">
               This workspace is empty. Load a model from the inventory to see its dependencies.
+            </p>
+          ) : layoutError ? (
+            <p className="graph__empty" role="alert">
+              The layout could not be computed, so there is nothing to draw.
+              <br />
+              <span className="graph__empty-detail">{layoutError}</span>
+              <br />
+              <button type="button" className="button" onClick={() => setRetry((n) => n + 1)}>
+                Try again
+              </button>
             </p>
           ) : (
             <ReactFlow
@@ -343,12 +387,22 @@ function buildView(
     const opacity = trace ? (incident ? 1 : DIMMED_EDGE_OPACITY) : 0.62
     const stroke = incident ? 'var(--accent)' : 'var(--bd2)'
     const width = incident ? 1.6 : 1
+    // Same-band edges curve, cross-band edges run straight — the handoff's rule,
+    // and the reason is legibility: two nodes side by side in one band are joined
+    // by a line that would otherwise lie along the row, through whatever sits
+    // between them.
+    const sameBand =
+      layout.nodes.get(relationship.source)?.band === layout.nodes.get(relationship.target)?.band
 
     edges.push({
       id: relationship.id,
       source: relationship.source,
       target: relationship.target,
-      type: 'straight',
+      type: sameBand ? 'default' : 'straight',
+      // In a *dependency* graph the direction is the information: without a head
+      // you cannot tell whether A serves B or B serves A. The handoff specifies
+      // it twice, for the base and the accent state.
+      markerEnd: { type: MarkerType.ArrowClosed, color: stroke, width: 14, height: 14 },
       style: {
         stroke,
         strokeWidth: width,
@@ -365,6 +419,7 @@ function buildView(
       width,
       opacity,
       dashed: meta.notation === 'dashed',
+      curved: sameBand,
     })
   }
 
