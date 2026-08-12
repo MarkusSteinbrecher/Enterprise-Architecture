@@ -1,5 +1,34 @@
 # Session Log
 
+## 2026-08-12 — #27 reviewed; `main` merged through the whole stack; three rules harvested
+
+**PR #27 (element fact sheet) gets request-changes** — nine blocking findings, seven more below the line. The handoff transcription is the most exact in the stack (`factsheet.css` has no `[data-theme]` block at all — every colour is a token, so dark structurally cannot drift), and all four acceptance criteria are met. What blocks is one root cause and two repeat rules.
+
+**The root cause is worth carrying forward.** `/element/:id` re-renders `ElementScreen` without remounting it. That single fact produced three separate defects: the `useModelSelector` staleness the PR itself found and fixed; an `editing` flag plus uncontrolled `defaultValue` inputs that carry one element's name and documentation onto the next and **commit them on blur** (open an application, click Edit, click through to a capability, tab out of the name field — the capability is renamed to the application's name, and its documentation is overwritten); and a test for the fix that passes with the fix removed. The PR treated the symptom in the store. `key={id}` on the route kills all three.
+
+**Two findings are model-integrity bugs with reproductions.** Choosing "Not assessed" stores `functionalFit: 0` / `timeClassification: ""` — Ajv rejects the export against the app's *own* published schema, `profileToProperties` then drops both silently through falsy guards, and completeness *rises* because `filled(0)` is 1. And a self-relation is listed twice (`relationshipsOf` is `outgoing ++ incoming`), giving a duplicate React key and a relation count one too high — `NeighbourhoodGraph` guards this; the `entries` builder one hop away does not.
+
+**On the review machinery: the first run was gutted and lied about it.** It reported `"No findings survived verification"` with `candidates: 0` after 4 of 5 agents died (two on machine sleep, two stalled) — 1.2M tokens for nothing. That is the known failure mode, and the summary text is *indistinguishable from a clean empty result*; only `agents_error: 4` in the usage block gives it away. **Always read the usage counters before believing a zero-finding review.** The re-run went 36/36 clean at 1.7M and was worth every token: it found the navigation data-loss bug, which the manual pass missed entirely, by driving the real app rather than reading the diff.
+
+**`main` merged through the entire stack.** The stack had exactly one break — `feat/7-command-palette` was 14 commits behind its own base — and everything above it inherited the gap. Merging the base down and cascading fixed the chain: #25 197 ✓, #26 236 ✓, #27 257 ✓, #28 290 ✓, #29 313 ✓, #34 313 ✓ + E2E ✓. Every branch is now 0 behind its base and all six PRs are green. Two things this surfaced:
+
+- **The stack had been reviewed against a stale `src/io` all along.** `main` carried the #17 review's fixes (`canonical-json.ts` +194, `exchange-format.ts`, `profile-properties.ts`); the branches predated them.
+- **The mid-stack branches had no `CLAUDE.md`** — cut before it was written — so review agents working them read a repo with no invariants in it. Now fixed everywhere.
+
+Done in a scratch worktree so the primary checkout never moved and the in-flight review's agents saw no file change; `src/ui/factsheet/` came through byte-identical, so no finding shifted.
+
+**Three rules harvested, each earned by a repeat:**
+
+1. **Type guards belong on the write path** (CLAUDE.md). `main` had already fixed `Number('') === 0` for `annualCost` *with a comment naming it*; #27 reintroduced the identical coercion in the UI, different author, different file. The guards (`isFitLevel`, `isTimeClassification`) existed and only `src/io` used them.
+2. **Key a component on the route parameter that identifies its subject** (CLAUDE.md). The root cause above.
+3. **The acceptance-criterion test rule moves from the review skill into CLAUDE.md.** It sat in the skill for three PRs and was broken twice more in #27 — by implementers, who never read the review skill. The skill keeps the reviewer half, sharpened: *do not reason about the test, break it* — delete the feature and run that one test.
+
+The separator rule also takes its third instance: #27's `+ tag` prompt is the first UI that makes the #17 comma-join reachable by a user (`Core, regulated` round-trips into two tags with `problems: []`).
+
+**Two mechanical harvests filed rather than landed, both for the #35 reason.** #44 — fail the unit suite on `console.error`/`console.warn`; both duplicate-key findings are console errors the unit suite ignores today, and the e2e harness's equivalent guard is this repo's own "highest-value fixture". Measured green on all eight branches (163/177/187/197/236/257/290/313), but `src/test/setup.ts` is modified by six open PRs, so it lands after the stack merges. #45 — ESLint ban on casting a form value to a model union, following #37's `localeCompare` rule; lands after #37, which owns that rules array.
+
+**State:** #24–#29 + #34 all green and in sync; #24/#25/#26/#27 reviewed, awaiting fixes. #30 and #37 mergeable. New issues: #43 (fact-sheet follow-ups), #44, #45. Next: `/review-pr 28`, then #29, #34.
+
 ## 2026-08-11 (later) — Review session: #30 unblocked, #24/#25/#26 reviewed, four rules harvested
 
 Cleared the session-log conflict and reviewed the bottom three of the phase-1 stack. All three get **request changes**; none for structural reasons, all for a concentrated problem area each.
