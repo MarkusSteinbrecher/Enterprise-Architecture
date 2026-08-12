@@ -1,5 +1,40 @@
 # Session Log
 
+## 2026-08-12 (Opus, implementation) — the whole reviewed stack fixed: #24–#28, 41 blocking findings
+
+Took the five reviewed PRs bottom-up, fixing each against its own review and cascading the result into the branch above before starting it. All five now green: **#24** (6 blocking), **#25** (6), **#26** (8), **#27** (9), **#28** (10). 349 tests, up from 313.
+
+**The discipline that mattered most: every fix was verified by removing it and watching a test fail.** That found five of my own tests which could not fail, four of them *after* I had written them believing otherwise:
+
+1. An `Autosaver.suspend()` test that asserted the snapshot was on disk afterwards — the assertion's own `await` gave the write all the time it needed, so it passed either way. Now asserts ordering.
+2. A palette break that moved the key handler still passed all 28 tests, because the Tab trap and the mousedown guard were doing the work; the test was measuring something else.
+3. `tabIndex={-1}` on palette rows changes no observable behaviour behind the focus trap — kept for the combobox contract, but with a structural assertion rather than a behavioural one it has not earned.
+4. `useFocusTrap` first filtered candidates on `offsetParent !== null`. **jsdom reports null for every element**, so the trap was empty in exactly the environment its test runs in.
+5. An assertion for #27's type-guard fix that checked a rendering symptom (`0` renders as "Not assessed" too) rather than the defect.
+
+**Two findings turned out worse than the review said, and only instrumentation showed it.**
+
+- **#27's `deps` test was vacuous twice.** The review found that rerendering with a fresh workspace builds a new store, busting the memo on `store` alone. Holding the workspace still was not enough: `toHaveTextContent` is a *substring* match and the stale value `Claim Handling Engine` contains the expected `Claim Handling`. Found by rendering a probe that logged what each pass computed.
+- **#28's cost test could not fail even after the panel was fixed.** The demo carried `annual.cost` on eleven elements with the literal value `1.2M EUR / yr` — the exact string the assertion looked for. The demo data moved onto the edges (ADR 0001) and the element property and its `propertyDefinition` are gone; still validates against the Open Group XSD, as checked in and round-tripped.
+
+**Design decisions worth carrying forward:**
+
+1. **`SAVE FILE` no longer marks the model clean at all, on any path.** The rule is absolute and the only observable write is the File System Access handle, which is #11's — already built on `feat/11-file-workflow`. Building a second copy in #24 would have duplicated a file #29 owns and given #24 a failure path with no surface to report it on. So #24 does the honest half: the file is offered, the count stands, and the indicator's tooltip says why. **A cold boot now shows `LOCAL · 1 UNSAVED`**, because a snapshot that has only ever lived in IndexedDB matches no file — visible, and the sponsor may want to weigh it.
+2. **`replaceWorkspace({ markClean })` has no default.** Exactly one call site broke on compile, which is the evidence the mechanical harvest was right.
+3. **Where a rule's durable fix belongs to another PR, close the path rather than inventing a second encoding.** #27's `+ tag` prompt refuses a comma instead of escaping it, because #37 is rewriting that writer and a second encoding would have to be reconciled at merge.
+4. **Gate the editors, not the display.** #27's findings 5/6 asked for assessment and lifecycle to respect `carriesProfile`; removing the sections would have contradicted UI spec §4, which makes "a capability shows Not assessed" a case the screens must hold up for.
+5. **Fix at the source when the same list has other readers.** #27's duplicate self-relation was fixed in `relationshipsOf`, not in the fact sheet's `entries` builder — `removeElement` builds its delete cascade from the same list, so the duplicate was also a double entry in a command that undo replays.
+6. **A timeout on a job cannot tell a dead worker from a busy one.** #28's worker now acks on receipt; the 2s timer covers the handshake only, and the computation takes as long as it takes.
+
+**Two things a reviewer of the upper stack needs to know**, both consequences of accepted #24 decisions rather than new defects:
+
+- **#29's `FileWorkspaceProvider.save()` calls `store.markSaved()` on `kind: 'downloaded'`** — the same finding as #24's blocking 1, one branch up, with a docblock stating the invariant it breaks.
+- **#34's `file-round-trip` journey breaks twice**: it asserts `dirtyCount === 0` after a save while the harness deliberately puts Chromium on the download path, and it asserts `id: 'ws-archisurance-demo'`, which the fresh demo id changes.
+
+Deliberately **not** done: cascading into #29 and #34. They are unreviewed, and propagating would mean fixing their tests — decisions that belong to their review.
+
+**State:** #24–#28 fixed, green, mergeable, each with a fix summary posted. #29, #34, #37, #47 untouched. Next: `/review-pr 29`, then #34 — and re-review of #24–#28.
+
 ## 2026-08-12 (later) — #28 and #37 reviewed; #30 merged and the rules propagated through the stack
 
 **#30 merged, and the reason matters more than the merge.** Every harvested rule had been living only on `chore/session-log`, so the feature branches whose code produced them still carried the stale 39-line CLAUDE.md — I hit this directly when checking out `feat/10-graph` to review #28 and found none of the separator, type-guard or route-key rules present. The harvest loop was writing rules the fix sessions would never read. Merged #30, re-cascaded `main` through all seven stack branches (177/197/236/257/290/313/313 green), and verified the 44-line file with every rule now lands on each one.
