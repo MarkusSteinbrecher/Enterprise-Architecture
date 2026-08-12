@@ -249,3 +249,58 @@ describe('the bundled demo workspace', () => {
     ])
   })
 })
+
+describe('exchange hardening (review findings, PR #17)', () => {
+  it('skips duplicate relationship identifiers and says so', () => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="m">
+  <elements>
+    <element identifier="a" xsi:type="ApplicationComponent"><name xml:lang="en">A</name></element>
+    <element identifier="b" xsi:type="ApplicationComponent"><name xml:lang="en">B</name></element>
+  </elements>
+  <relationships>
+    <relationship identifier="r" source="a" target="b" xsi:type="Serving"/>
+    <relationship identifier="r" source="b" target="a" xsi:type="Flow"/>
+  </relationships>
+</model>`
+    const result = importExchangeXml(xml)
+    expect(result.workspace?.relationships).toHaveLength(1)
+    expect(result.workspace?.relationships[0]?.type).toBe('Serving')
+    expect(result.problems.map((p) => p.code)).toContain('exchange.duplicate-relationship-id')
+  })
+
+  it('strips XML-illegal control characters on export so the file stays well-formed', () => {
+    const workspace = smallWorkspace()
+    const first = workspace.elements[0]!
+    first.name = 'Claim' + '\u000B' + 'Handling'
+    const xml = exportExchangeXml(workspace)
+    // eslint-disable-next-line no-control-regex
+    expect(xml).not.toMatch(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/)
+    const back = importExchangeXml(xml)
+    expect(back.ok).toBe(true)
+    expect(back.workspace?.elements.find((e) => e.id === first.id)?.name).toBe('Claim' + 'Handling')
+  })
+
+  it('treats an empty annualCost property as no cost data, not a cost of zero', () => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="m">
+  <elements>
+    <element identifier="a" xsi:type="ApplicationComponent"><name xml:lang="en">A</name></element>
+    <element identifier="b" xsi:type="ApplicationComponent"><name xml:lang="en">B</name></element>
+  </elements>
+  <relationships>
+    <relationship identifier="r" source="a" target="b" xsi:type="Serving">
+      <properties>
+        <property propertyDefinitionRef="p1"><value></value></property>
+      </properties>
+    </relationship>
+  </relationships>
+  <propertyDefinitions>
+    <propertyDefinition identifier="p1" type="string"><name xml:lang="en">archipelago.annualCost</name></propertyDefinition>
+  </propertyDefinitions>
+</model>`
+    const result = importExchangeXml(xml)
+    expect(result.ok).toBe(true)
+    expect(result.workspace?.relationships[0]?.profile?.annualCost).toBeUndefined()
+  })
+})
