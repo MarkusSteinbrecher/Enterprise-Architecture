@@ -93,6 +93,53 @@ describe('autosave', () => {
     expect(await loadWorkspace('ws-test')).toBeUndefined()
   })
 
+  it('drops a due write while suspended, and resumes on the next change', async () => {
+    const store = new ModelStore(smallWorkspace())
+    const autosaver = new Autosaver(store)
+    autosaver.start()
+
+    store.addElement({ ...NEW_APP })
+    // The debounce is armed but has not fired — the state the caller is in when
+    // `window.confirm` returns and the workspace is about to be deleted.
+    await autosaver.suspend()
+    expect(autosaver.suspended).toBe(true)
+    await vi.advanceTimersByTimeAsync(2_000)
+    await autosaver.flush()
+    expect(await loadWorkspace('ws-test')).toBeUndefined()
+
+    // Dropped, not deferred: resuming alone must not replay the write.
+    autosaver.resume()
+    await vi.advanceTimersByTimeAsync(2_000)
+    expect(await loadWorkspace('ws-test')).toBeUndefined()
+
+    store.updateElement('app-claims', (element) => ({ ...element, name: 'Claims' }))
+    await settle(autosaver)
+    expect((await loadWorkspace('ws-test'))?.elements.map((e) => e.id)).toContain('app-portal')
+
+    autosaver.stop()
+  })
+
+  it('suspend does not resolve while a write is in flight', async () => {
+    const order: string[] = []
+    const store = new ModelStore(smallWorkspace())
+    const autosaver = new Autosaver(store, { onSaved: () => order.push('saved') })
+    autosaver.start()
+
+    store.addElement({ ...NEW_APP })
+    // Start a write without awaiting it, then suspend on top of it. Asserting
+    // the snapshot is on disk afterwards would prove nothing — the `await` in
+    // the assertion itself gives the write all the time it needs — so this
+    // asserts the ordering, which is the only thing that differs.
+    const inFlight = autosaver.flush()
+    await autosaver.suspend()
+    order.push('suspended')
+
+    expect(order).toEqual(['saved', 'suspended'])
+
+    await inFlight
+    autosaver.stop()
+  })
+
   it('reports save failures instead of throwing into the mutation path', async () => {
     const store = new ModelStore(smallWorkspace())
     const onError = vi.fn()

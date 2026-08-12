@@ -267,11 +267,23 @@ describe('save state and history', () => {
   it('replaces the workspace on import without leaving stale undo history', () => {
     const s = store()
     s.addElement(NEW_APP)
-    s.replaceWorkspace(emptyWorkspace('ws-2', 'Fresh'))
+    s.replaceWorkspace(emptyWorkspace('ws-2', 'Fresh'), { markClean: true })
     expect(s.elementCount).toBe(0)
     expect(s.canUndo).toBe(false)
     expect(s.dirty).toBe(0)
     expect(s.name).toBe('Fresh')
+  })
+
+  it('restarts the unsaved count on replace rather than carrying it over', () => {
+    const s = store()
+    s.addElement(NEW_APP)
+    s.updateElement('app-portal', (element) => ({ ...element, name: 'Portal' }))
+    expect(s.dirty).toBe(2)
+    // Those two changes belonged to a model that is no longer loaded; counting
+    // them against the incoming one would attribute another workspace's unsaved
+    // work to this one.
+    s.replaceWorkspace(emptyWorkspace('ws-2', 'Fresh'), { markClean: false })
+    expect(s.dirty).toBe(1)
   })
 
   it('round-trips through a snapshot', () => {

@@ -1,7 +1,7 @@
 import { useModelStoreContext } from '@/store'
-import { downloadWorkspace } from '@/io'
 import { SaveStateIndicator } from './SaveStateIndicator'
 import { ThemeToggle } from './ThemeToggle'
+import { useSaveWorkspace } from './use-save-workspace'
 
 /**
  * The 46px header (handoff "Global chrome" → Header).
@@ -14,13 +14,9 @@ export interface HeaderProps {
 }
 
 export function Header({ onOpenSearch }: HeaderProps) {
-  const { store, role } = useModelStoreContext()
+  const { role } = useModelStoreContext()
+  const { saveFile, exportXml } = useSaveWorkspace()
   const readOnly = role === 'reader'
-
-  const saveFile = () => {
-    downloadWorkspace(store.snapshot(), 'json')
-    store.markSaved()
-  }
 
   return (
     <header className="header">
@@ -48,7 +44,7 @@ export function Header({ onOpenSearch }: HeaderProps) {
         <button
           type="button"
           className="header__action"
-          onClick={() => downloadWorkspace(store.snapshot(), 'xml')}
+          onClick={exportXml}
           title="Export as ArchiMate Model Exchange Format XML"
         >
           Export

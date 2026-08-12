@@ -32,11 +32,12 @@ describe('header', () => {
     expect(screen.getByRole('button', { name: 'SAVE FILE' })).toBeEnabled()
   })
 
-  it('counts unsaved changes and clears them on save', async () => {
+  it('counts unsaved changes, and a download it cannot see does not clear them', async () => {
     // jsdom has no Blob URL plumbing; the download itself is not what is under test.
     const createObjectURL = vi.fn(() => 'blob:test')
     vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
-    HTMLAnchorElement.prototype.click = vi.fn()
+    const click = vi.fn()
+    HTMLAnchorElement.prototype.click = click
 
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
@@ -47,7 +48,15 @@ describe('header', () => {
 
     await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
     expect(createObjectURL).toHaveBeenCalled()
-    expect(screen.getByText('LOCAL · SAVED')).toBeInTheDocument()
+    expect(click).toHaveBeenCalled()
+
+    // The file was offered, not observed. An anchor click cannot report whether
+    // anything reached disk — a user with "always ask where to save" on who
+    // presses Cancel has no file — and `markSaved()` has no inverse, so a wrong
+    // SAVED here is permanent. The count stands until a write we can watch
+    // finish clears it (#11).
+    expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
+    expect(screen.queryByText('LOCAL · SAVED')).not.toBeInTheDocument()
 
     vi.unstubAllGlobals()
   })
