@@ -34,9 +34,12 @@ describe('header', () => {
 
   it('draws the tab set with only Overview live', () => {
     renderApp(demo(), { route: APP })
-    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
+    // Buttons, not `role="tab"`: a tablist with no tabpanel and no aria-controls
+    // promises a widget that is not there, and three of the four are stubs.
+    expect(screen.getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.queryAllByRole('tab')).toHaveLength(0)
     for (const tab of ['Relations', 'Assessment', 'Quality']) {
-      expect(screen.getByRole('tab', { name: tab })).toBeDisabled()
+      expect(screen.getByRole('button', { name: tab })).toBeDisabled()
     }
   })
 
@@ -95,7 +98,7 @@ describe('an element with no portfolio profile', () => {
   it('renders without breaking, saying what is not assessed', () => {
     renderApp(demo(), { route: CAPABILITY })
     expect(screen.getByRole('heading', { name: 'Claim Handling' })).toBeInTheDocument()
-    expect(screen.getByText('No lifecycle dates on this element type')).toBeInTheDocument()
+    expect(screen.getByText(/No lifecycle on Capability/)).toBeInTheDocument()
     // Every phase date reads as an em dash.
     const dates = [...document.querySelectorAll('.lifecycle__date')].map((n) => n.textContent)
     expect(dates).toEqual(['—', '—', '—', '—', '—'])
@@ -218,7 +221,7 @@ describe('right rail', () => {
   it('draws the neighbourhood mini-graph and navigates from it', async () => {
     renderApp(demo(), { route: APP })
     const user = userEvent.setup()
-    const graph = screen.getByRole('img', { name: 'Neighbourhood' })
+    const graph = screen.getByRole('group', { name: 'Neighbourhood' })
     const nodes = within(graph).getAllByRole('button')
     expect(nodes.length).toBeGreaterThan(0)
     expect(nodes.length).toBeLessThanOrEqual(7)
@@ -228,10 +231,25 @@ describe('right rail', () => {
   })
 
   it('says so when an element has no neighbours', () => {
-    renderApp(demo(), { route: '/element/act-nl' })
-    // ArchiSurance Netherlands composes Back Office, so it does have one; use a
-    // freshly created element instead for the empty case.
-    expect(screen.getByRole('img', { name: 'Neighbourhood' })).toBeInTheDocument()
+    // This asserted `getByRole('img')`, which only renders when neighbours
+    // *exist* — and its own comment admitted the element it used has one. The
+    // empty branch renders a paragraph and no svg at all, so the test passed with
+    // the branch deleted. An element with no relationships is the only way to
+    // reach it.
+    const workspace = demo()
+    workspace.elements.push({
+      id: 'el-lonely',
+      type: 'ApplicationComponent',
+      name: 'Unconnected System',
+      properties: {},
+    })
+
+    renderApp(workspace, { route: '/element/el-lonely' })
+    // The relations section says the same thing, so scope the query to the rail.
+    expect(document.querySelector('.neighbourhood__empty')).toHaveTextContent(
+      /Nothing is connected to this element yet/,
+    )
+    expect(screen.queryByRole('group', { name: 'Neighbourhood' })).not.toBeInTheDocument()
   })
 })
 
@@ -259,3 +277,166 @@ const HANDOFF_ORDER = [
 function byHandoffOrder(a: string | null, b: string | null): number {
   return HANDOFF_ORDER.indexOf(a ?? '') - HANDOFF_ORDER.indexOf(b ?? '')
 }
+
+describe('the fixes from the #27 review', () => {
+  it('does not carry edit mode, or one element’s fields, onto the next', async () => {
+    renderApp(demo(), { route: APP })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(screen.getByLabelText('Name')).toHaveValue('Home & Away Policy Administration')
+
+    // Follow a relation. `/element/:id` re-renders without remounting, so the
+    // `editing` flag and the uncontrolled inputs' `defaultValue` used to survive
+    // — and the stale name was then committed onto the element you landed on the
+    // moment the field lost focus.
+    const relations = document.querySelector('.sheet__main') as HTMLElement
+    await user.click(within(relations).getByRole('button', { name: 'Policy Administration' }))
+    expect(screen.getByRole('heading', { name: 'Policy Administration' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Name')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+
+    // And the element we arrived at still has its own name.
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(screen.getByLabelText('Name')).toHaveValue('Policy Administration')
+  })
+
+  it('clears a fit level instead of storing zero', async () => {
+    renderApp(demo(), { route: APP })
+    const user = userEvent.setup()
+    const score = () =>
+      Number(document.querySelector('.sheet__ring-value')!.textContent!.slice(0, -1))
+
+    const before = score()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.selectOptions(screen.getByLabelText('Functional fit'), '')
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+
+    // `Number('')` is 0, and `filled(0)` is 1 — so clearing this used to *raise*
+    // the completeness score, because the field it removed still counted as
+    // present. One field fewer has to score lower, and only clearing it properly
+    // does that; storing a zero leaves the number where it was.
+    expect(score()).toBeLessThan(before)
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(screen.getByLabelText('Functional fit')).toHaveValue('')
+  })
+
+  it('clears a TIME classification instead of storing an empty string', async () => {
+    renderApp(demo(), { route: APP })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.selectOptions(screen.getByLabelText('Time classification'), '')
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+
+    // `'' as TimeClassification` compiles, and `value ?? 'Not assessed'` keeps an
+    // empty string — so the cell rendered blank instead of saying it is unset,
+    // and the exchange writer dropped it through a falsy guard without a problem
+    // report. Ajv rejects it against the app's own published schema.
+    const cells = [...document.querySelectorAll('.assessment__cell')]
+    const time = cells.find((cell) => cell.textContent?.includes('Time classification'))!
+    expect(time).toHaveTextContent('Not assessed')
+  })
+
+  it('refuses a tag containing the separator, and registers the ones it takes', async () => {
+    const prompt = vi.spyOn(window, 'prompt')
+    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
+
+    renderApp(demo(), { route: APP })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+    // A tag is joined with `, ` on the way out and split on `,` on the way back,
+    // so this one would return as two tags with `problems: []`.
+    prompt.mockReturnValue('Core, regulated')
+    await user.click(screen.getByRole('button', { name: '+ tag' }))
+    expect(alert).toHaveBeenCalledWith(expect.stringMatching(/cannot contain a comma/))
+    expect(screen.queryByText('Core, regulated')).not.toBeInTheDocument()
+
+    prompt.mockReturnValue('Cloud native')
+    await user.click(screen.getByRole('button', { name: '+ tag' }))
+    expect(screen.getByText('Cloud native')).toBeInTheDocument()
+
+    // Registered, not just written onto the element — otherwise the inventory
+    // cannot filter by it and every chip renders in the neutral fallback.
+    await user.click(screen.getByRole('link', { name: /Inventory/ }))
+    expect(screen.getByRole('button', { name: /^Cloud native 1$/ })).toBeInTheDocument()
+
+    prompt.mockRestore()
+    alert.mockRestore()
+  })
+
+  it('lists a self-relation once, and counts it once', async () => {
+    const workspace = demo()
+    workspace.relationships.push({
+      id: 'rel-self',
+      type: 'Association',
+      source: 'app-policy-ha',
+      target: 'app-policy-ha',
+      properties: {},
+    })
+
+    renderApp(workspace, { route: APP })
+    // `relationshipsOf` is outgoing ++ incoming and a self-relation is in both,
+    // so it appeared twice — a duplicate React key, an inflated relation count,
+    // and deleting one of the two identical rows removed both.
+    const rows = [...document.querySelectorAll('.relation-row')].filter((row) =>
+      row.textContent?.includes('Home & Away Policy Administration'),
+    )
+    expect(rows).toHaveLength(1)
+  })
+
+  it('does not offer to assess an element type that is not scored on it', () => {
+    renderApp(demo(), { route: CAPABILITY })
+    // The cells still render — UI spec §4 makes "a capability shows Not
+    // assessed" a case the screen must hold up for — but the pickers are gone,
+    // because a value set here would be stored, exported, and ignored by every
+    // completeness-driven report.
+    expect(screen.getByText(/fit, criticality and TIME are scored on/)).toBeInTheDocument()
+    expect(screen.queryByLabelText('Functional fit')).not.toBeInTheDocument()
+  })
+
+  it('does not tell you a field is missing and inapplicable at once', () => {
+    const workspace = demo()
+    workspace.elements.push({
+      id: 'el-new-app',
+      type: 'ApplicationComponent',
+      name: 'Brand New System',
+      properties: {},
+    })
+
+    renderApp(workspace, { route: '/element/el-new-app' })
+    // `hasLifecycle` answers "are any dates set", which said "No lifecycle dates
+    // on this element type" beside a ring reading 0% whose tooltip named the
+    // lifecycle dates as missing.
+    expect(screen.getByText(/No phase dates yet — expected of this element type/)).toBeVisible()
+    expect(screen.queryByText(/No lifecycle on/)).not.toBeInTheDocument()
+  })
+
+  it('keeps focus inside the add-relation dialog and gives it back on close', async () => {
+    renderApp(demo(), { route: APP })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+    const opener = screen.getByRole('button', { name: '+ Relation' })
+    await user.click(opener)
+    const dialog = screen.getByRole('dialog', { name: 'Add relation' })
+    expect(dialog.contains(document.activeElement)).toBe(true)
+
+    // Tab used to walk out onto the chrome behind the overlay, where Enter
+    // downloads a file nobody asked for.
+    for (let i = 0; i < 12; i += 1) await user.tab()
+    expect(dialog.contains(document.activeElement)).toBe(true)
+
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'Add relation' })).not.toBeInTheDocument()
+    expect(opener).toHaveFocus()
+  })
+
+  it('makes the neighbourhood nodes reachable rather than presentational', () => {
+    renderApp(demo(), { route: APP })
+    const graph = screen.getByRole('group', { name: 'Neighbourhood' })
+    // `role="img"` made the subtree presentational while it held up to seven
+    // focusable nodes — tab stops announced as nothing.
+    expect(within(graph).getAllByRole('button').length).toBeGreaterThan(0)
+  })
+})

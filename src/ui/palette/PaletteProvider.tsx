@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toggleTheme } from '@/app/theme'
-import { downloadWorkspace } from '@/io'
-import { useModelStoreContext } from '@/store'
+import { useSaveWorkspace } from '@/ui/shell/use-save-workspace'
 import { CommandPalette, type PaletteAction } from './CommandPalette'
 import { PaletteContext } from './context'
-import { isTypingTarget } from './typing-target'
+import { isModalOpen, isTypingTarget } from './typing-target'
 
 /**
  * Owns palette visibility and the global keyboard bindings.
@@ -20,7 +19,7 @@ import { isTypingTarget } from './typing-target'
 export function PaletteProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
-  const { store } = useModelStoreContext()
+  const { saveFile } = useSaveWorkspace()
 
   const openPalette = useCallback(() => setOpen(true), [])
   const closePalette = useCallback(() => setOpen(false), [])
@@ -30,17 +29,14 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
       { id: 'inventory', label: 'Go to inventory', glyph: 'IN', run: () => navigate('/inventory') },
       { id: 'graph', label: 'Go to graph', glyph: 'GR', run: () => navigate('/graph') },
       { id: 'theme', label: 'Toggle theme', glyph: 'TH', run: () => void toggleTheme() },
-      {
-        id: 'save',
-        label: 'Save file',
-        glyph: 'SV',
-        run: () => {
-          downloadWorkspace(store.snapshot(), 'json')
-          store.markSaved()
-        },
-      },
+      // Through the one owner, not a second copy of it. This action used to
+      // inline the download and the `markSaved()` — the header's bug, reproduced
+      // by copy-paste — and drop the reader-role guard the header applies, so a
+      // tab demoted to reader (whose edits are memory-only, since its autosaver
+      // is disabled) could still zero the one indicator that would have said so.
+      { id: 'save', label: 'Save file', glyph: 'SV', run: () => void saveFile() },
     ],
-    [navigate, store],
+    [navigate, saveFile],
   )
 
   useEffect(() => {
@@ -58,7 +54,7 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
       }
 
       // Everything below is a bare single-letter binding.
-      if (open) return
+      if (open || isModalOpen()) return
       if (event.metaKey || event.ctrlKey || event.altKey) return
       if (isTypingTarget(event.target)) return
 

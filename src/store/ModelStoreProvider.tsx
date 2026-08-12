@@ -79,11 +79,16 @@ export function ModelStoreProvider({
       setRole(acquired)
       autosaver.setEnabled(acquired === 'writer')
 
-      // A restore must not look like an edit, so the dirty counter stays at zero.
-      const restored = initialWorkspace ?? (await loadMostRecentWorkspace())
-      if (cancelled) return
-      if (restored) store.replaceWorkspace(restored)
-      else if (acquired === 'writer') await saveSnapshot(store.snapshot())
+      // The store already holds `initialWorkspace`; only an IndexedDB restore is
+      // new. A restored snapshot is not a file — browser storage is a cache, so
+      // a workspace that has only ever lived there matches nothing on disk and
+      // must not present as SAVED, however many sessions it has survived.
+      if (!initialWorkspace) {
+        const restored = await loadMostRecentWorkspace()
+        if (cancelled) return
+        if (restored) store.replaceWorkspace(restored, { markClean: false })
+        else if (acquired === 'writer') await saveSnapshot(store.snapshot())
+      }
 
       autosaver.start()
       await refreshWorkspaces()
@@ -99,38 +104,67 @@ export function ModelStoreProvider({
     }
   }, [store, initialWorkspace, ephemeral, refreshWorkspaces])
 
+  // `ephemeral` promises no persistence and `reader` promises no writes; both are
+  // enforced here rather than at the call sites, because the switcher is not the
+  // only thing that will ever want these.
+  const canPersist = !ephemeral
+  const canWrite = canPersist && role === 'writer'
+
   const openWorkspace = useCallback(
     async (id: string) => {
-      if (id === store.id) return
+      if (!canPersist || id === store.id) return
       await autosaverRef.current?.flush()
       const workspace = await loadWorkspace(id)
-      if (workspace) store.replaceWorkspace(workspace)
+      // Snapshot, not file: the counter has to keep saying so. Switching used to
+      // take `markClean`'s old default and zero it, so building 40 changes in A,
+      // switching to B and back reported SAVED for a model in no file anywhere.
+      if (workspace) store.replaceWorkspace(workspace, { markClean: false })
       await refreshWorkspaces()
     },
-    [store, refreshWorkspaces],
+    [store, refreshWorkspaces, canPersist],
   )
 
   const createWorkspace = useCallback(
     async (name: string) => {
+      if (!canWrite) return
       await autosaverRef.current?.flush()
       const workspace = emptyWorkspace(newId('ws'), name)
-      store.replaceWorkspace(workspace)
+      // The one case where "matches no file" and "has nothing to lose" are the
+      // same state: we just made it, so it is provably empty. Marking it clean
+      // overstates nothing, and it keeps "New workspace…" consistent with a
+      // first boot, which shows the same empty workspace as SAVED.
+      store.replaceWorkspace(workspace, { markClean: true })
       await saveSnapshot(workspace)
       await refreshWorkspaces()
     },
-    [store, refreshWorkspaces],
+    [store, refreshWorkspaces, canWrite],
   )
 
   const removeWorkspace = useCallback(
     async (id: string) => {
-      await deleteWorkspace(id)
-      if (id === store.id) {
-        const next = await loadMostRecentWorkspace()
-        store.replaceWorkspace(next ?? emptyWorkspace(newId('ws'), 'Untitled workspace'))
+      if (!canWrite) return
+      const autosaver = autosaverRef.current
+      // Before the first await, not after: a debounce armed by the rename that
+      // usually precedes a delete is already due by the time `window.confirm`
+      // returns, and would fire into the gap between the delete and the replace.
+      await autosaver?.suspend()
+      try {
+        await deleteWorkspace(id)
+        if (id === store.id) {
+          const next = await loadMostRecentWorkspace()
+          if (next) store.replaceWorkspace(next, { markClean: false })
+          else {
+            const fresh = emptyWorkspace(newId('ws'), 'Untitled workspace')
+            store.replaceWorkspace(fresh, { markClean: true })
+            await saveSnapshot(fresh)
+          }
+        }
+      } finally {
+        autosaver?.resume()
       }
       await refreshWorkspaces()
     },
-    [store, refreshWorkspaces],
+    [store, refreshWorkspaces, canWrite],
   )
 
   const value = useMemo<ModelStoreContextValue>(

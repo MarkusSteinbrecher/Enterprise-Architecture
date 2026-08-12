@@ -8,14 +8,18 @@ import {
   TECHNICAL_FIT_LABELS,
   TIME_CLASSIFICATIONS,
   TIME_TOKENS,
+  carriesProfile,
   criticalityLabel,
   formatLifecycleDate,
   functionalFitLabel,
   hasLifecycle,
+  isFitLevel,
+  isTimeClassification,
   technicalFitLabel,
   timeIndex,
   typeLabel,
   type Element,
+  type ElementType,
   type LifecyclePhase,
   type PortfolioProfile,
   type Relationship,
@@ -78,20 +82,30 @@ export function DocumentationSection({
 // ── Lifecycle ────────────────────────────────────────────────────────────────
 
 export function LifecycleSection({
+  type,
   profile,
   phase,
   editing,
   onChange,
 }: {
+  type: ElementType
   profile: PortfolioProfile | undefined
   phase: LifecyclePhase
   editing: boolean
   onChange: (phase: LifecyclePhase, value: string) => void
 }) {
+  // Three states, not two. `hasLifecycle` answers "are any dates set", which is
+  // a different question from "does this type carry a lifecycle at all" —
+  // `carriesProfile` is that one, and it is the one `completeness.ts` scores by.
+  // Conflating them told a brand-new Application Component that lifecycle dates
+  // do not apply to it while the ring beside it read 0% and named them missing.
+  const applies = carriesProfile(type)
   const dated = hasLifecycle(profile?.lifecycle)
-  const note = dated
-    ? `Current phase: ${LIFECYCLE_PHASE_LABELS[phase]} · derived from phase dates`
-    : 'No lifecycle dates on this element type'
+  const note = !applies
+    ? `No lifecycle on ${typeLabel(type)}`
+    : dated
+      ? `Current phase: ${LIFECYCLE_PHASE_LABELS[phase]} · derived from phase dates`
+      : 'No phase dates yet — expected of this element type'
 
   return (
     <section>
@@ -110,7 +124,7 @@ export function LifecycleSection({
               >
                 {LIFECYCLE_PHASE_LABELS[candidate]}
               </div>
-              {editing ? (
+              {editing && applies ? (
                 <input
                   className="lifecycle__input"
                   type="date"
@@ -133,18 +147,47 @@ export function LifecycleSection({
 
 // ── Portfolio assessment ─────────────────────────────────────────────────────
 
+/**
+ * A profile edit, where `undefined` means **clear this field**.
+ *
+ * `Partial<PortfolioProfile>` cannot say that under `exactOptionalPropertyTypes`,
+ * and the distinction is the whole point of finding 2: clearing has to remove the
+ * key, not write a falsy stand-in for it. The receiver deletes rather than
+ * assigns, so the exported JSON never carries `functionalFit: 0`.
+ */
+export type ProfilePatch = {
+  [K in keyof PortfolioProfile]?: PortfolioProfile[K] | undefined
+}
+
 export function AssessmentSection({
+  type,
   profile,
   editing,
   onChange,
 }: {
+  type: ElementType
   profile: PortfolioProfile | undefined
   editing: boolean
-  onChange: (patch: Partial<PortfolioProfile>) => void
+  onChange: (patch: ProfilePatch) => void
 }) {
+  // The cells still *render* for every type — UI spec §4 makes "a capability
+  // shows Not assessed" a case the screen has to hold up for. What they must not
+  // do is offer to *edit* a value that goes nowhere: `completenessDetail` scores
+  // profile fields only for `PROFILED_TYPES`, so an architect could assess a
+  // whole capability portfolio, have it stored and exported, and have none of it
+  // reach model health or any report built on it.
+  const assessable = carriesProfile(type)
+
   return (
     <section>
-      <SectionHeading label="Portfolio assessment" />
+      {assessable ? (
+        <SectionHeading label="Portfolio assessment" />
+      ) : (
+        <SectionHeading
+          label="Portfolio assessment"
+          note={`Not assessed on ${typeLabel(type)} — fit, criticality and TIME are scored on application-portfolio types`}
+        />
+      )}
       <div className="assessment">
         <LevelCell
           label="Functional fit"
@@ -152,7 +195,7 @@ export function AssessmentSection({
           text={functionalFitLabel(profile?.functionalFit)}
           token="var(--ink2)"
           options={FUNCTIONAL_FIT_LABELS}
-          editing={editing}
+          editing={editing && assessable}
           onChange={(level) => onChange({ functionalFit: level })}
         />
         <LevelCell
@@ -161,7 +204,7 @@ export function AssessmentSection({
           text={technicalFitLabel(profile?.technicalFit)}
           token="var(--accent2)"
           options={TECHNICAL_FIT_LABELS}
-          editing={editing}
+          editing={editing && assessable}
           onChange={(level) => onChange({ technicalFit: level })}
         />
         <LevelCell
@@ -170,12 +213,12 @@ export function AssessmentSection({
           text={criticalityLabel(profile?.businessCriticality)}
           token="var(--lc-out)"
           options={BUSINESS_CRITICALITY_LABELS}
-          editing={editing}
+          editing={editing && assessable}
           onChange={(level) => onChange({ businessCriticality: level })}
         />
         <TimeCell
           value={profile?.timeClassification}
-          editing={editing}
+          editing={editing && assessable}
           onChange={(value) => onChange({ timeClassification: value })}
         />
       </div>
@@ -200,7 +243,8 @@ function LevelCell({
   token: string
   options: readonly string[]
   editing: boolean
-  onChange: (level: Level) => void
+  /** `undefined` clears the field — see the guard on the change handler. */
+  onChange: (level: Level | undefined) => void
 }) {
   return (
     <div className="assessment__cell">
@@ -210,7 +254,14 @@ function LevelCell({
           className="assessment__select"
           aria-label={label}
           value={value ?? ''}
-          onChange={(event) => onChange(Number(event.target.value) as Level)}
+          // `Number('')` is 0 and `0 as FitLevel` compiles, so "Not assessed"
+          // used to *store* a level the published schema rejects rather than
+          // clear the field. The model ships the guard for exactly this; the
+          // importer was simply the only caller.
+          onChange={(event) => {
+            const level = Number(event.target.value)
+            onChange(isFitLevel(level) ? (level as Level) : undefined)
+          }}
         >
           <option value="">Not assessed</option>
           {options.map((option, index) => (
@@ -238,7 +289,7 @@ function TimeCell({
 }: {
   value: TimeClassification | undefined
   editing: boolean
-  onChange: (value: TimeClassification) => void
+  onChange: (value: TimeClassification | undefined) => void
 }) {
   return (
     <div className="assessment__cell">
@@ -248,7 +299,10 @@ function TimeCell({
           className="assessment__select"
           aria-label="Time classification"
           value={value ?? ''}
-          onChange={(event) => onChange(event.target.value as TimeClassification)}
+          onChange={(event) => {
+            const next = event.target.value
+            onChange(isTimeClassification(next) ? next : undefined)
+          }}
         >
           <option value="">Not assessed</option>
           {TIME_CLASSIFICATIONS.map((option) => (
