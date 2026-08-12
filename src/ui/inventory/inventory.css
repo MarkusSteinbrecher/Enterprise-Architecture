@@ -83,7 +83,7 @@
 
 .rail__mode--active {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
 }
 
 .rail__group {
@@ -232,12 +232,12 @@
 .button--primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
   font-weight: 500;
 }
 
 .button--primary:hover:not(:disabled) {
-  color: #fff;
+  color: var(--accent-ink);
   opacity: 0.92;
 }
 
@@ -415,6 +415,25 @@
   padding: 16px 20px;
   overflow-y: auto;
   align-content: start;
+}
+
+/* Said in the machine-readable register: this is a count, not prose. */
+.list-window {
+  margin: 0;
+  padding: 9px 20px;
+  border-bottom: 1px solid var(--bd);
+  background: var(--panel);
+  font: 400 10px/1.4 var(--font-mono);
+  color: var(--ink3);
+}
+
+.list-window__action {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .card {

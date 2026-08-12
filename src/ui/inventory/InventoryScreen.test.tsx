@@ -1,11 +1,16 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { emptyWorkspace } from '@/model'
 import { loadDemoWorkspace } from '@/io'
 import { renderApp } from '@/test/render'
 import { syntheticWorkspace } from '@/test/fixtures'
 import { VIRTUALISE_ABOVE } from './InventoryTable'
+
+/** The fake viewport the virtualisation tests give the scroll container. */
+const VIEWPORT = 600
+/** Matches `estimateSize` in InventoryTable, which tracks `--rowh`. */
+const ROW_HEIGHT = 38
 
 function demo() {
   return loadDemoWorkspace()
@@ -158,7 +163,11 @@ describe('filtering', () => {
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /^Application 11$/ }))
     await user.click(screen.getByRole('button', { name: /^Invest 4$/ }))
-    expect(screen.getByRole('button', { name: 'Remove filter Layer app' })).toBeInTheDocument()
+    // The rail's own label, not the enum behind it: this chip used to read
+    // "LAYER app" and announce as "Remove filter Layer app".
+    expect(screen.getByRole('button', { name: 'Remove filter Layer Application' })).toBeVisible()
+    expect(screen.getByText('Application', { selector: '.chip__value' })).toBeInTheDocument()
+    expect(screen.queryByText('app', { selector: '.chip__value' })).not.toBeInTheDocument()
 
     await user.click(
       screen.getByRole('button', { name: 'Remove filter Time classification Invest' }),
@@ -202,15 +211,126 @@ describe('filter state in the URL', () => {
     renderApp(demo(), { route: '/inventory?mode=XOR' })
     expect(screen.getByRole('button', { name: 'AND' })).toHaveAttribute('aria-pressed', 'true')
   })
+
+  it('round-trips a facet value containing the separator', async () => {
+    // A tag is whatever the architect typed, so the comma that separates facets
+    // is a character the values are entitled to contain. `Risk, high` used to
+    // come back as `tag:Risk` plus `high`.
+    const workspace = demo()
+    workspace.tagGroups = [
+      {
+        id: 'tg-risk',
+        name: 'Risk',
+        multiSelect: true,
+        tags: [{ name: 'Risk, high', colourToken: '--tag-1' }],
+      },
+    ]
+    workspace.elements[0]!.profile = { ...workspace.elements[0]?.profile, tags: ['Risk, high'] }
+
+    renderApp(workspace)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /^Risk, high 1$/ }))
+
+    expect(screen.getByText('1 of 29 elements · 1 filter (AND)')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove filter Tags Risk, high' })).toBeVisible()
+    expect(rows()).toHaveLength(1)
+  })
+
+  it('round-trips a facet value that looks like its own escaped form', async () => {
+    // The decoder has to be unambiguous too: a tag literally named `a%2Cb` must
+    // not come back as `a,b`.
+    const workspace = demo()
+    workspace.tagGroups = [
+      {
+        id: 'tg-odd',
+        name: 'Odd',
+        multiSelect: true,
+        tags: [{ name: 'a%2Cb', colourToken: '--tag-2' }],
+      },
+    ]
+    workspace.elements[0]!.profile = { ...workspace.elements[0]?.profile, tags: ['a%2Cb'] }
+
+    renderApp(workspace)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /^a%2Cb 1$/ }))
+
+    expect(screen.getByText('1 of 29 elements · 1 filter (AND)')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove filter Tags a%2Cb' })).toBeVisible()
+  })
+
+  it('drops a facet it cannot parse rather than counting one it cannot show', () => {
+    renderApp(demo(), { route: '/inventory?facets=bogus&mode=OR' })
+
+    // Three readings used to disagree: the result line counted it, the chip bar
+    // rendered nothing to remove it with, and the filter skipped it — so OR mode
+    // showed "0 of 29 elements · 1 filter (OR)" and an empty state pointing at a
+    // facet that is not on screen.
+    expect(screen.getByText('29 of 29 elements')).toBeInTheDocument()
+    expect(screen.queryByText(/filter \(OR\)/)).not.toBeInTheDocument()
+    expect(rows()).toHaveLength(29)
+  })
+
+  it('counts a repeated facet once', () => {
+    renderApp(demo(), { route: '/inventory?facets=layer%3Aapp,layer%3Aapp' })
+    expect(screen.getByText('11 of 29 elements · 1 filter (AND)')).toBeInTheDocument()
+  })
 })
 
 describe('at 5,000 elements', () => {
-  it('does not put the whole workspace in the DOM', () => {
+  /**
+   * jsdom gives every element a zero-height box, so the virtualiser concluded
+   * there was no viewport to fill and rendered **nothing** — and
+   * `toBeLessThan(150)` is satisfied by zero, so the sole evidence for the
+   * 5,000-element criterion was a green test over an empty table. Giving the
+   * scroll container a height is what makes the virtualised branch run at all;
+   * the assertions below then bound the row count on both sides.
+   */
+  let offsetHeight: PropertyDescriptor | undefined
+
+  beforeEach(() => {
+    // `@tanstack/virtual-core` measures with `offsetWidth`/`offsetHeight`, which
+    // jsdom pins at 0 — hence the empty table. It calls back synchronously on
+    // mount, so no ResizeObserver stub is needed.
+    offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+      configurable: true,
+      get(this: HTMLElement) {
+        return this.classList.contains('table__scroll') ? VIEWPORT : ROW_HEIGHT
+      },
+    })
+  })
+
+  afterEach(() => {
+    if (offsetHeight) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', offsetHeight)
+  })
+
+  it('renders the visible rows and only those', () => {
     renderApp(syntheticWorkspace(5_000))
     expect(screen.getByText('5000 of 5000 elements')).toBeInTheDocument()
-    // Virtualised above VIRTUALISE_ABOVE: the row count in the DOM is bounded by
-    // the viewport, not by the model.
-    expect(rows().length).toBeLessThan(VIRTUALISE_ABOVE)
+
+    // Bounded above by the viewport rather than the model — and below by the
+    // viewport too, which is the half that was missing: a virtualised branch
+    // that regressed to rendering nothing would leave an empty table under a
+    // header reading "5000 of 5000 elements" and the suite would stay green.
+    const rendered = rows().length
+    expect(rendered).toBeGreaterThanOrEqual(Math.floor(VIEWPORT / ROW_HEIGHT))
+    expect(rendered).toBeLessThan(VIRTUALISE_ABOVE)
+
+    // And they are real rows carrying real data, not placeholders.
+    expect(within(rows()[0]!).getByText(/^Capability 0$/)).toBeInTheDocument()
+  })
+
+  it('keeps the cards view off the same cliff', async () => {
+    renderApp(syntheticWorkspace(5_000), { route: '/inventory?view=cards' })
+    const user = userEvent.setup()
+
+    // The table's virtualiser never covered this view, so `?view=cards` mounted
+    // 5,000 card buttons. It now windows and says so.
+    expect(cards().length).toBeLessThanOrEqual(VIRTUALISE_ABOVE)
+    expect(screen.getByText(/Showing 150 of 5000 matches/)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Switch to the table' }))
+    expect(screen.getByRole('button', { name: 'TABLE' })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('renders small workspaces without the virtualiser', () => {
@@ -232,6 +352,23 @@ describe('creating an element', () => {
     expect(screen.getByRole('heading', { name: 'Fraud Detection Service' })).toBeInTheDocument()
     // One change for loading the demo, one for the new element.
     expect(screen.getByText('LOCAL · 2 UNSAVED')).toBeInTheDocument()
+  })
+
+  it('does not let a bare g throw away what was typed into the dialog', async () => {
+    renderApp(demo())
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: '+ Element' }))
+    await user.type(screen.getByLabelText(/Name/), 'Fraud Detection')
+
+    // Tab moves focus to a button, which is not a typing target — so the guard
+    // that watches for text fields stopped applying and the next `g` navigated
+    // to the graph, unmounting the dialog and discarding the name.
+    await user.tab()
+    await user.keyboard('g')
+
+    expect(screen.getByRole('dialog', { name: 'New element' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/Name/)).toHaveValue('Fraud Detection')
+    expect(screen.queryByRole('heading', { name: 'Dependency graph' })).not.toBeInTheDocument()
   })
 
   it('will not create an unnamed element', async () => {

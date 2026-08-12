@@ -124,6 +124,7 @@ export function InventoryScreen() {
 
         <ActiveFilterChips
           facets={state.facets}
+          groups={groups}
           onRemove={(facet) => state.setFacets(state.facets.filter((f) => f !== facet))}
         />
 
@@ -155,6 +156,7 @@ export function InventoryScreen() {
             at={at}
             completenessOf={model.completeness}
             onOpen={(id) => navigate(`/element/${id}`)}
+            onShowTable={() => state.setView('table')}
           />
         )}
       </section>

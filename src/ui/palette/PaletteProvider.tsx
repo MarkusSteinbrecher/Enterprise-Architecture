@@ -4,7 +4,7 @@ import { toggleTheme } from '@/app/theme'
 import { useSaveWorkspace } from '@/ui/shell/use-save-workspace'
 import { CommandPalette, type PaletteAction } from './CommandPalette'
 import { PaletteContext } from './context'
-import { isTypingTarget } from './typing-target'
+import { isModalOpen, isTypingTarget } from './typing-target'
 
 /**
  * Owns palette visibility and the global keyboard bindings.
@@ -54,7 +54,7 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
       }
 
       // Everything below is a bare single-letter binding.
-      if (open) return
+      if (open || isModalOpen()) return
       if (event.metaKey || event.ctrlKey || event.altKey) return
       if (isTypingTarget(event.target)) return
 
