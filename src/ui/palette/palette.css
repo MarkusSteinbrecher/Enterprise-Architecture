@@ -77,9 +77,11 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 7px 12px;
+  padding: 7px 12px 7px 10px;
   background: transparent;
   border: 0;
+  /* Reserved so the accent bar on the selected row shifts nothing. */
+  border-left: 2px solid transparent;
   border-bottom: 1px solid var(--bd);
   text-align: left;
 }
@@ -88,9 +90,24 @@
   border-bottom: 0;
 }
 
-.palette__row:hover,
-.palette__row--active {
+.palette__row:hover {
   background: var(--panel);
+}
+
+/*
+ * Where the keyboard is, which is not the same question as where the mouse is.
+ * Both used to paint `--panel`, so a highlight that had jumped to the row under
+ * a resting cursor looked exactly like the one the user had arrowed to. The
+ * accent bar is the same "you are here" idiom the nav uses for the active route.
+ */
+.palette__row--active {
+  background: var(--panel2);
+  border-left-color: var(--accent);
+}
+
+.palette__badge {
+  display: flex;
+  flex: none;
 }
 
 .palette__name {

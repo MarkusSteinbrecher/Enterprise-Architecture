@@ -4,6 +4,7 @@ import { criticalityLabel, typeLabel, type Element } from '@/model'
 import { TypeCodeBadge } from '@/ui/common/TypeCodeBadge'
 import { CompletenessBar, FitMeter, LifecycleCell, TimeChip } from '@/ui/common/meters'
 import { lifecycleOf } from './facets'
+import { LIST_WINDOW } from './list-window'
 
 /**
  * The inventory table (handoff "Screen 1 — Table").
@@ -13,11 +14,11 @@ import { lifecycleOf } from './facets'
  * (UI spec §2, "density is earned").
  *
  * Rows are virtualised: the brief cites 500–5,000 elements, and 5,000 rows × ~40
- * DOM nodes is not something to hand to the browser. Below `VIRTUALISE_ABOVE` the
+ * DOM nodes is not something to hand to the browser. Below `LIST_WINDOW` the
  * list renders plainly, which keeps the simple case simple and testable.
  */
 
-export const VIRTUALISE_ABOVE = 150
+export const VIRTUALISE_ABOVE = LIST_WINDOW
 
 /** `grid-template-columns` from the handoff, applied to header and rows alike. */
 const COLUMNS = 'minmax(0,1.7fr) 152px 112px 104px 82px 92px 74px'
