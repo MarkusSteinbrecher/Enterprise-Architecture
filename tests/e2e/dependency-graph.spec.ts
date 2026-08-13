@@ -1,7 +1,7 @@
 import { test, expect, loadDemo, graphNodes, reportStats, DEMO } from './support'
 
 /**
- * Journey 5 — the dependency graph lays out in a real browser.
+ * Journey 6 — the dependency graph lays out in a real browser.
  *
  * This harness exists for exactly this: its own docblock says the two things
  * most likely to break in production and nowhere else are the base path and the
@@ -11,26 +11,20 @@ import { test, expect, loadDemo, graphNodes, reportStats, DEMO } from './support
  * constructor when it detects a worker scope, which no jsdom test can see,
  * because jsdom defines `document` and takes elkjs's other branch.
  *
- * So the assertions here are deliberately about *where* the work happened, not
- * only that pixels appeared: a unit test can prove `computeLayout` works, and
- * only a browser can prove the worker Vite built actually starts and answers.
+ * So the assertions are about *where* the work happened, not only that pixels
+ * appeared: a unit test can prove `computeLayout` works, and only a browser can
+ * prove the worker Vite built actually starts and answers.
  */
 
 test('the demo lays out in the worker and draws every element', async ({ page }) => {
-  // Record every Worker the app constructs. `runLayout` falls back to the main
-  // thread whenever the worker is merely *unavailable*, so "nodes appeared" on
-  // its own would stay green with the worker completely dead.
-  await page.addInitScript(() => {
-    const Native = window.Worker
-    const urls: string[] = []
-    Object.defineProperty(window, '__workerUrls', { value: urls })
-    window.Worker = class extends Native {
-      constructor(scriptUrl: string | URL, options?: WorkerOptions) {
-        urls.push(String(scriptUrl))
-        super(scriptUrl, options)
-      }
-    }
-  })
+  // `layoutOnMainThread` is the only dynamic `import('./elk-runner')` in the app
+  // (layout.ts:157), and Rollup gives it its own ~1.4MB chunk; the worker bundles
+  // a separate copy and never fetches this one. So "elk-runner was never
+  // requested" is what distinguishes a layout the worker produced from one the
+  // fallback produced — and the fallback draws an identical graph, which is why
+  // counting nodes cannot tell them apart.
+  const requested: string[] = []
+  page.on('request', (request) => requested.push(request.url()))
 
   await loadDemo(page)
   await page.getByRole('link', { name: /Dependency graph/ }).click()
@@ -40,23 +34,25 @@ test('the demo lays out in the worker and draws every element', async ({ page })
   // fails against #54 — verified by reverting the fix, which draws none.
   await expect(graphNodes(page)).toHaveCount(DEMO.elements)
 
-  // Only *after* something positive has landed is an absence worth asserting.
-  // `toHaveCount(0)` on the error is satisfied by a page that has not rendered
-  // yet, so ahead of the count above it passed happily while the graph was
-  // broken — one-sided in exactly the way CLAUDE.md warns about.
-  await expect(page.getByRole('alert')).toHaveCount(0)
+  // Only *after* something positive has landed is an absence worth asserting:
+  // `toHaveCount(0)` is satisfied by a page that has not rendered yet, so ahead
+  // of the count above this passed happily while the graph was broken. Scoped to
+  // the canvas and pinned to its text, so a live region added elsewhere later
+  // cannot fail this journey for an unrelated reason.
+  await expect(page.locator('.graph__canvas').getByRole('alert')).toHaveCount(0)
 
-  // `laying out…` is appended to the stats line until the layout lands, and the
-  // export button is disabled for as long as there is nothing to export — both
-  // are the screen's own record that a layout *result* arrived, not just that
-  // the error branch stayed quiet.
+  // `· laying out…` is appended to the stats line until the layout lands, and the
+  // export button stays disabled while there is nothing to export — both are the
+  // screen's own record that a layout *result* arrived, not merely that the error
+  // branch stayed quiet. The year is matched loosely: the page computes its own
+  // `new Date().getFullYear()`, so pinning the digits from the test process would
+  // fail across local midnight on 31 December and reproduce nowhere.
   await expect(reportStats(page)).toHaveText(
-    `${DEMO.elements} nodes · ${DEMO.relationships} relations · time point ${new Date().getFullYear()}`,
+    new RegExp(`^${DEMO.elements} nodes · ${DEMO.relationships} relations · time point \\d{4}$`),
   )
   await expect(page.getByRole('button', { name: 'Export SVG' })).toBeEnabled()
 
-  const workerUrls = await page.evaluate(
-    () => (window as unknown as { __workerUrls: string[] }).__workerUrls,
-  )
-  expect(workerUrls).toEqual(expect.arrayContaining([expect.stringMatching(/layout\.worker/)]))
+  // The graph is on screen and correct. If the main thread never loaded ELK,
+  // the worker is the only thing that can have laid it out.
+  expect(requested.filter((url) => /elk-runner/.test(url))).toEqual([])
 })

@@ -29,7 +29,12 @@ it('lays out inside a worker scope, and leaves that scope as it found it', async
   const originalHandler = scope.onmessage
   const handler = () => {}
   scope.onmessage = handler
-  Reflect.deleteProperty(globalThis, 'document')
+  // `Reflect.deleteProperty` returns false rather than throwing, and jsdom's own
+  // `document` is a non-configurable accessor — this only works because vitest
+  // re-defines it on the Node global. Assert the delete so that, if that ever
+  // changes, the failure names its cause instead of surfacing as a puzzling
+  // assertion two lines down.
+  expect(Reflect.deleteProperty(globalThis, 'document')).toBe(true)
 
   try {
     // Without these two the test asserts nothing: it is the *combination* that
@@ -40,6 +45,13 @@ it('lays out inside a worker scope, and leaves that scope as it found it', async
     const result = await computeLayout(REQUEST)
 
     expect(result.nodes.map((node) => node.id).sort()).toEqual(['a', 'b'])
+    // ELK really placed them, rather than handing back children with no
+    // geometry: `computeLayout` defaults missing coordinates to 0, so the ids
+    // above would still line up with every node stacked at the origin. `b` is in
+    // the higher partition and `elk.direction` is UP, so it must sit above `a`.
+    const yOf = (id: string) => result.nodes.find((node) => node.id === id)?.y ?? Number.NaN
+    expect(yOf('b')).toBeLessThan(yOf('a'))
+    expect(result.height).toBeGreaterThan(0)
     // ELK's own dispatcher takes this over on the way in, which would have left
     // the worker deaf to every later layout request.
     expect(scope.onmessage).toBe(handler)

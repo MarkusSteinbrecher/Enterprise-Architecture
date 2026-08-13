@@ -32,6 +32,17 @@ import {
  * and it is removed again immediately, so nothing else in the worker can
  * feature-detect a DOM that isn't there. Later constructions reuse the module
  * the bundle cached on this one.
+ *
+ * **Do not memoise this at module scope.** The obvious tidy-up — construct once,
+ * reuse — is what makes `elk-worker-scope.test.ts` stop working, silently.
+ * elkjs decides the branch exactly once, when the first `new ELK()` requires its
+ * inner module, and that test only catches a regression because construction is
+ * deferred to call time: it deletes `document` in the test *body*, which is
+ * after imports have run. Build the ELK at import time and jsdom's `document` is
+ * still there, the good branch is cached before the test can fake the worker
+ * scope, and the file whose whole purpose is to catch this passes with the
+ * workaround removed. The per-call set/delete is a synchronous global write that
+ * is reverted before the next line; that is the cheaper thing to pay.
  */
 function createElk(): InstanceType<typeof ELK> {
   if (typeof document !== 'undefined') return new ELK()
