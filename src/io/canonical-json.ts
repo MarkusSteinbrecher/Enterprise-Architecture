@@ -21,6 +21,7 @@ import {
 } from '@/model'
 import { isExchangeSafeId } from '@/store/ids'
 import { failed, problem, succeeded, type ImportProblem, type ImportResult } from './problems'
+import { setKey } from './records'
 
 /**
  * Canonical JSON — the native format (concept §5.3 item 1).
@@ -276,7 +277,7 @@ function canonicalTagGroup(group: TagGroup): Record<string, unknown> {
 function sortKeys(_key: string, value: unknown): unknown {
   if (!isRecord(value) || Array.isArray(value)) return value
   const sorted: Record<string, unknown> = {}
-  for (const key of Object.keys(value).sort()) sorted[key] = value[key]
+  for (const key of Object.keys(value).sort()) setKey(sorted, key, value[key])
   return sorted
 }
 
@@ -291,7 +292,7 @@ function prune(object: Record<string, unknown>): Record<string, unknown> {
     if (value === undefined) continue
     if (Array.isArray(value) && value.length === 0) continue
     if (isRecord(value) && !Array.isArray(value) && Object.keys(value).length === 0) continue
-    out[key] = value
+    setKey(out, key, value)
   }
   return out
 }
@@ -542,7 +543,7 @@ function readProperties(value: unknown): Record<string, PropertyValue> {
   const out: Record<string, PropertyValue> = {}
   for (const [key, raw] of Object.entries(value)) {
     if (typeof raw === 'string' || typeof raw === 'number' || typeof raw === 'boolean') {
-      out[key] = raw
+      setKey(out, key, raw)
     }
   }
   return out
@@ -585,7 +586,7 @@ function readPropertyTypes(
   const out: Record<string, string> = {}
   const rejected: string[] = []
   for (const [key, value] of Object.entries(candidate)) {
-    if (typeof value === 'string' && CARRIED_PROPERTY_TYPES.has(value)) out[key] = value
+    if (typeof value === 'string' && CARRIED_PROPERTY_TYPES.has(value)) setKey(out, key, value)
     else rejected.push(key)
   }
   if (rejected.length) {

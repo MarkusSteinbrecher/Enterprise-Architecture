@@ -22,6 +22,7 @@ import {
   isViewDefinition,
 } from './canonical-json'
 import { failed, problem, succeeded, type ImportProblem, type ImportResult } from './problems'
+import { setKey } from './records'
 import {
   PROFILE_NAMESPACE,
   profileToProperties,
@@ -629,7 +630,7 @@ function declaredPropertyTypes(
   const out: Record<string, string> = {}
   for (const { key, type } of definitions.values()) {
     if (type === 'string' || !isExchangePropertyType(type)) continue
-    if (!Object.hasOwn(out, key)) out[key] = type
+    if (!Object.hasOwn(out, key)) setKey(out, key, type)
   }
   return Object.keys(out).length ? out : undefined
 }
@@ -801,7 +802,7 @@ function readProperties(raw: RawNode, reader: Reader): Record<string, PropertyVa
       continue
     }
     const value = langString(property.value)
-    if (value !== undefined) out[definition.key] = typedValue(value, definition.type)
+    if (value !== undefined) setKey(out, definition.key, typedValue(value, definition.type))
   }
   return out
 }

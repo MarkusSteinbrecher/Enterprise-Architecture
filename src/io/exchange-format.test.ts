@@ -870,3 +870,57 @@ describe('hardening (review findings, PR #37)', () => {
     })
   })
 })
+
+describe('a property key the writer did not choose (found while fixing #37 finding 2)', () => {
+  const withKey = (key: string) =>
+    `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
+  <name xml:lang="en">Proto</name>
+  <elements>
+    <element identifier="e1" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Portal</name>
+      <properties>
+        <property propertyDefinitionRef="p1"><value xml:lang="en">mine</value></property>
+        <property propertyDefinitionRef="p2"><value xml:lang="en">kept</value></property>
+      </properties>
+    </element>
+  </elements>
+  <propertyDefinitions>
+    <propertyDefinition identifier="p1" type="string"><name xml:lang="en">${key}</name></propertyDefinition>
+    <propertyDefinition identifier="p2" type="string"><name xml:lang="en">owner</name></propertyDefinition>
+  </propertyDefinitions>
+</model>`
+
+  // `out['__proto__'] = 'mine'` calls the prototype setter, which does nothing
+  // for a string — so the property was read, assigned and gone, problems: [].
+  // The write-side twin of the prototype *lookup* in finding 2.
+  it.each(['__proto__', 'constructor', 'toString', 'hasOwnProperty'])(
+    'keeps a property called %s',
+    (key) => {
+      const result = importExchangeXml(withKey(key))
+      expect(result.problems).toEqual([])
+      expect(result.workspace?.elements[0]?.properties).toEqual({ [key]: 'mine', owner: 'kept' })
+      expect(exportExchangeXml(result.workspace!)).toContain(`<name xml:lang="en">${key}</name>`)
+    },
+  )
+
+  it('keeps it through canonical JSON as well', () => {
+    const workspace = importExchangeXml(withKey('__proto__')).workspace!
+    const back = fromCanonicalJson(toCanonicalJson(workspace))
+    expect(back.problems).toEqual([])
+    // A *computed* key: `{ __proto__: 'mine' }` written out longhand is the very
+    // trap this describes — the literal sets the prototype and the expectation
+    // silently becomes `{ owner: 'kept' }`, which is how this test first passed
+    // the wrong way round.
+    expect(back.workspace?.elements[0]?.properties).toEqual({
+      ['__proto__']: 'mine',
+      owner: 'kept',
+    })
+    expect(toCanonicalJson(back.workspace!)).toBe(toCanonicalJson(workspace))
+  })
+
+  it('does not let one poison the prototype on the way in', () => {
+    const workspace = importExchangeXml(withKey('__proto__')).workspace!
+    expect(Object.getPrototypeOf(workspace.elements[0]!.properties)).toBe(Object.prototype)
+    expect(({} as Record<string, unknown>).mine).toBeUndefined()
+  })
+})

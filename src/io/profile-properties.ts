@@ -8,6 +8,7 @@ import {
   type PropertyValue,
   type RelationshipProfile,
 } from '@/model'
+import { setKey } from './records'
 
 /**
  * The portfolio profile as ArchiMate properties.
@@ -283,7 +284,7 @@ export function stripProfileKeys(
   const kept = new Set(unread)
   const out: Record<string, PropertyValue> = {}
   for (const [key, value] of Object.entries(properties)) {
-    if (!isProfileKey(key) || kept.has(key)) out[key] = value
+    if (!isProfileKey(key) || kept.has(key)) setKey(out, key, value)
   }
   return out
 }
