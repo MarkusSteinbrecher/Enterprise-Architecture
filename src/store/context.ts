@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useRef, useSyncExternalStore } from 'react'
 import type { ModelStore } from './model-store'
+import type { WorkspaceMeta } from './persistence'
 import type { TabRole } from './tab-lock'
 
 /**
@@ -24,6 +25,14 @@ export interface ModelStoreContextValue {
   takeOver: () => Promise<void>
   /** Force an immediate autosave (used before unload and after a file save). */
   flush: () => Promise<void>
+  /** Every workspace in this browser, newest first — the switcher's list. */
+  workspaces: WorkspaceMeta[]
+  /** Load another workspace, flushing the current one first. */
+  openWorkspace: (id: string) => Promise<void>
+  /** Create an empty workspace and switch to it. */
+  createWorkspace: (name: string) => Promise<void>
+  /** Delete a stored workspace. Deleting the open one leaves an empty workspace. */
+  removeWorkspace: (id: string) => Promise<void>
 }
 
 export const ModelStoreContext = createContext<ModelStoreContextValue | null>(null)

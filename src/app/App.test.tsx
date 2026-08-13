@@ -1,37 +1,37 @@
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { App } from './App'
-
-function renderAt(path: string) {
-  return render(
-    <MemoryRouter
-      initialEntries={[path]}
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
-      <App />
-    </MemoryRouter>,
-  )
-}
+import { loadDemoWorkspace } from '@/io'
+import { renderApp } from '@/test/render'
 
 describe('App routing', () => {
   it('redirects / to the inventory', () => {
-    renderAt('/')
+    renderApp(loadDemoWorkspace(), { route: '/' })
     expect(screen.getByRole('heading', { name: 'Inventory' })).toBeInTheDocument()
   })
 
   it('renders the graph route', () => {
-    renderAt('/graph')
+    renderApp(loadDemoWorkspace(), { route: '/graph' })
     expect(screen.getByRole('heading', { name: 'Dependency graph' })).toBeInTheDocument()
   })
 
-  it('renders an element route with its id', () => {
-    renderAt('/element/app-crm')
-    expect(screen.getByText(/app-crm/)).toBeInTheDocument()
+  it('renders an element route from the model', () => {
+    renderApp(loadDemoWorkspace(), { route: '/element/app-crm' })
+    expect(screen.getByRole('heading', { name: 'CRM System' })).toBeInTheDocument()
+    expect(screen.getByText(/Application Component · app-crm/)).toBeInTheDocument()
+  })
+
+  it('falls back gracefully for an element that is not in the model', () => {
+    renderApp(loadDemoWorkspace(), { route: '/element/nope' })
+    expect(screen.getByRole('heading', { name: 'Element not found' })).toBeInTheDocument()
+  })
+
+  it('sends an unknown route back to the inventory', () => {
+    renderApp(loadDemoWorkspace(), { route: '/nowhere' })
+    expect(screen.getByRole('heading', { name: 'Inventory' })).toBeInTheDocument()
   })
 
   it('renders the brand chrome on every screen', () => {
-    renderAt('/inventory')
+    renderApp(loadDemoWorkspace(), { route: '/graph' })
     expect(screen.getByText('Archipelago')).toBeInTheDocument()
   })
 })

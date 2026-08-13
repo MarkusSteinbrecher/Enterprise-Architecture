@@ -111,10 +111,10 @@ describe('tab lock', () => {
     const first = new TabLock()
     await first.acquire()
     first.stop()
-    // Releasing a Web Lock is asynchronous in the browser too, which is why
-    // takeOver() retries rather than assuming the lock is free immediately.
-    await new Promise((resolve) => setTimeout(resolve, 0))
 
+    // No delay here on purpose: releasing a Web Lock is asynchronous, and
+    // acquire() has to retry through that window. React's double-invoked effects
+    // in development hit exactly this path.
     const second = new TabLock()
     expect(await second.acquire()).toBe('writer')
     second.stop()

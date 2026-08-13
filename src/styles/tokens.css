@@ -5,6 +5,15 @@
  * "Design tokens". The semantic ramps (layer / lifecycle / TIME) are load-bearing:
  * they ARE the report legend, not decoration. Do not add colours here that are not
  * in the handoff, and do not use these for chrome decoration.
+ *
+ * One name is ours rather than the handoff's: `--accent-ink`. The handoff paints
+ * text on `--accent` as a bare `#fff` in four places (the + Element, Edit and
+ * Fact sheet buttons, and the active graph mode chip), so the *colour* is
+ * verbatim — only the name is new. It exists because a literal outside this file
+ * is unreachable from here: retune `--accent` in the dark block and every control
+ * follows except the one painted `#fff`. Its contrast against the dark theme's
+ * lighter copper is the weakest pairing in the set, and this is the one place a
+ * fix for that can land (#35).
  */
 
 :root {
@@ -20,6 +29,7 @@
   --ink3: #8c939b;
   --accent: #a85b32; /* copper */
   --accent2: #2c6e77; /* slate teal */
+  --accent-ink: #ffffff; /* text on --accent; see the note below */
 
   /* ArchiMate layer colours — stroke / fill */
   --biz: #a8891c;
@@ -76,6 +86,7 @@
   --ink3: #6b747d;
   --accent: #ce7c4e;
   --accent2: #5aa3ad;
+  --accent-ink: #ffffff;
 
   --biz: #d5b441;
   --bizbg: #221e10;

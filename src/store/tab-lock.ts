@@ -65,8 +65,27 @@ export class TabLock {
     return this.#role === 'writer'
   }
 
-  /** Try to become the writer. Resolves with the role this tab ended up with. */
-  async acquire(): Promise<TabRole> {
+  /**
+   * Try to become the writer. Resolves with the role this tab ended up with.
+   *
+   * Releasing a Web Lock is asynchronous, so a lock that has just been given up
+   * can still read as held for a tick. That is not a theoretical race: React
+   * double-invokes effects in development, which releases and re-acquires within
+   * the same task, and a single attempt would leave the only open tab as a
+   * reader. Hence a couple of quick retries before settling for `reader`.
+   */
+  async acquire(attempts = 3, retryMs = 60): Promise<TabRole> {
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const role = await this.#tryAcquire()
+      if (role === 'writer' || this.#stopped) return role
+      if (attempt + 1 < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, retryMs))
+      }
+    }
+    return this.#role
+  }
+
+  async #tryAcquire(): Promise<TabRole> {
     if (this.#stopped) return this.#role
     if (this.#role === 'writer') return 'writer'
     if (!supportsWebLocks()) {
@@ -94,9 +113,18 @@ export class TabLock {
             settle('reader')
             return
           }
+          // The grant can arrive after stop(): React double-invokes effects, so
+          // a request started on the first mount is often abandoned before it is
+          // granted. Holding the lock then would deadlock the surviving instance
+          // out of ever becoming the writer, so release it immediately.
+          if (this.#stopped) {
+            settle('reader')
+            return
+          }
           settle('writer')
           return new Promise<void>((release) => {
             this.#release = release
+            if (this.#stopped) this.#stepDown()
           })
         })
         .catch(() => settle('reader'))
@@ -112,12 +140,7 @@ export class TabLock {
       type: 'request-takeover',
       from: this.#id,
     } satisfies TakeoverMessage)
-    for (let i = 0; i < attempts; i += 1) {
-      const role = await this.acquire()
-      if (role === 'writer') return role
-      await new Promise((resolve) => setTimeout(resolve, intervalMs))
-    }
-    return this.#role
+    return this.acquire(attempts, intervalMs)
   }
 
   /** Give up the lock and stop listening. Call on unload. */

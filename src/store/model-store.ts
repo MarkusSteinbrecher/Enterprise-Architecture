@@ -378,8 +378,23 @@ export class ModelStore {
     this.#bump()
   }
 
-  /** Replace the entire model — used by import and by "load demo". */
-  replaceWorkspace(workspace: Workspace, { markClean = true } = {}): void {
+  /**
+   * Replace the entire model — used by import, "load demo" and workspace switching.
+   *
+   * `markClean` says whether the new model already matches a file **on disk**, and
+   * it has no default on purpose: of the three call sites this had when the
+   * default existed, two took it and both were wrong, and the one that got it
+   * right had to say so explicitly. A silent wrong default is now a compile error.
+   *
+   * Only a file we watched being written earns `true`. A snapshot out of
+   * IndexedDB does not — browser storage is a cache, so a workspace that has only
+   * ever lived there matches no file anywhere and the header must not say SAVED.
+   *
+   * The count restarts rather than accumulating: the old number counted edits to
+   * a model that is no longer loaded, so carrying it forward would attribute
+   * another workspace's unsaved work to this one.
+   */
+  replaceWorkspace(workspace: Workspace, { markClean }: { markClean: boolean }): void {
     this.#id = workspace.id
     this.#name = workspace.name
     this.#schemaVersion = workspace.schemaVersion || SCHEMA_VERSION
@@ -389,7 +404,7 @@ export class ModelStore {
     this.#undo = []
     this.#redo = []
     this.#history = []
-    if (markClean) this.#dirty = 0
+    this.#dirty = markClean ? 0 : 1
     this.#bump()
   }
 
