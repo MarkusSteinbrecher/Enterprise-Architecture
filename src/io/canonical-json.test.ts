@@ -272,3 +272,136 @@ describe('canonical JSON hardening (review findings, PR #17)', () => {
     expect(order).toEqual([...order].sort((a, b) => a - b))
   })
 })
+
+describe('junctions and exchange-safe ids (issue #36)', () => {
+  function withJunction(): Workspace {
+    const workspace = smallWorkspace()
+    workspace.elements.push({
+      id: 'jun-split',
+      type: 'Junction',
+      name: 'Split',
+      junctionKind: 'or',
+      properties: {},
+    })
+    return workspace
+  }
+
+  it('writes the junction kind and reads it back', () => {
+    const json = toCanonicalJson(withJunction())
+    expect(json).toContain('"junctionKind": "or"')
+    const restored = fromCanonicalJson(json).workspace!
+    expect(restored.elements.find((e) => e.id === 'jun-split')?.junctionKind).toBe('or')
+  })
+
+  it('omits the kind of a plain and-junction rather than writing the default', () => {
+    const workspace = withJunction()
+    delete workspace.elements.at(-1)!.junctionKind
+    expect(toCanonicalJson(workspace)).not.toContain('junctionKind')
+  })
+
+  it('ignores a junction kind on something that is not a junction, and says so', () => {
+    const result = fromCanonicalJson(
+      JSON.stringify({
+        schemaVersion: 1,
+        id: 'ws',
+        name: 'W',
+        elements: [{ id: 'a', type: 'Capability', name: 'A', junctionKind: 'or' }],
+        relationships: [],
+      }),
+    )
+    expect(result.workspace?.elements[0]?.junctionKind).toBeUndefined()
+    expect(result.problems).toEqual([
+      expect.objectContaining({ code: 'json.junction-kind-ignored', subject: 'a' }),
+    ])
+  })
+
+  it('reports a junction kind that is neither and nor or', () => {
+    const result = fromCanonicalJson(
+      JSON.stringify({
+        schemaVersion: 1,
+        id: 'ws',
+        name: 'W',
+        elements: [{ id: 'j', type: 'Junction', name: 'J', junctionKind: 'xor' }],
+        relationships: [],
+      }),
+    )
+    expect(result.workspace?.elements[0]?.junctionKind).toBeUndefined()
+    expect(result.problems.map((p) => p.code)).toEqual(['json.junction-kind-ignored'])
+  })
+
+  it('warns once about ids the exchange format would have to rewrite', () => {
+    const result = fromCanonicalJson(
+      JSON.stringify({
+        schemaVersion: 1,
+        id: 'ws',
+        name: 'W',
+        elements: [
+          { id: '9abc', type: 'Capability', name: 'A' },
+          { id: 'a b', type: 'Capability', name: 'B' },
+        ],
+        relationships: [{ id: 'ok-1', type: 'Association', source: '9abc', target: 'a b' }],
+      }),
+    )
+    expect(result.workspace?.elements).toHaveLength(2)
+    const unsafe = result.problems.filter((p) => p.code === 'json.id-not-exchange-safe')
+    expect(unsafe).toHaveLength(1)
+    expect(unsafe[0]?.message).toContain('"9abc", "a b"')
+  })
+})
+
+describe('canonical JSON hardening (review findings, PR #37)', () => {
+  it('writes a tag group with no tags in a shape it can read back', () => {
+    const workspace: Workspace = {
+      ...smallWorkspace(),
+      tagGroups: [{ id: 'tg-risk', name: 'Risk', multiSelect: false, tags: [] }],
+    }
+    const json = toCanonicalJson(workspace)
+    // `prune` dropped the zero-length array and `isTagGroup` requires it, so the
+    // writer produced exactly what the reader refuses (#37).
+    expect(json).toContain('"tags": []')
+    const back = fromCanonicalJson(json)
+    expect(back.problems).toEqual([])
+    expect(back.workspace?.tagGroups).toEqual(workspace.tagGroups)
+    expect(toCanonicalJson(back.workspace!)).toBe(json)
+  })
+
+  it('spells an and-junction one way, whichever way it was handed one', () => {
+    const explicit: Workspace = {
+      ...emptyWorkspace('ws-j', 'Junctions'),
+      elements: [
+        { id: 'j1', type: 'Junction', name: 'Split', junctionKind: 'and', properties: {} },
+      ],
+    }
+    const absent: Workspace = {
+      ...emptyWorkspace('ws-j', 'Junctions'),
+      elements: [{ id: 'j1', type: 'Junction', name: 'Split', properties: {} }],
+    }
+    expect(toCanonicalJson(explicit)).toBe(toCanonicalJson(absent))
+    expect(toCanonicalJson(explicit)).not.toContain('junctionKind')
+    // An or-junction still says so — this is a default, not a deletion.
+    const or: Workspace = {
+      ...emptyWorkspace('ws-j', 'Junctions'),
+      elements: [{ id: 'j1', type: 'Junction', name: 'Split', junctionKind: 'or', properties: {} }],
+    }
+    expect(toCanonicalJson(or)).toContain('"junctionKind": "or"')
+  })
+
+  it('carries declared property types, and reports one it cannot read', () => {
+    const workspace: Workspace = {
+      ...smallWorkspace(),
+      // `string` is what an unlisted key already means, so it is not one of the
+      // values this carries — a file that lists it is telling us nothing.
+      propertyTypes: { validUntil: 'date', owner: 'string' },
+    }
+    const back = fromCanonicalJson(toCanonicalJson(workspace))
+    expect(back.workspace?.propertyTypes).toEqual({ validUntil: 'date' })
+    expect(back.problems.map((p) => p.code)).toEqual(['json.invalid-property-types'])
+  })
+
+  it('leaves propertyTypes out of a workspace that has none', () => {
+    expect(toCanonicalJson(smallWorkspace())).not.toContain('propertyTypes')
+    expect(toCanonicalJson({ ...smallWorkspace(), propertyTypes: {} })).not.toContain(
+      'propertyTypes',
+    )
+  })
+})
