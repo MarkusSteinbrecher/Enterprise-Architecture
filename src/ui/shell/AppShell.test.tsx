@@ -10,6 +10,18 @@ function demo() {
   return loadDemoWorkspace()
 }
 
+/** The percentage the health footer is actually showing. */
+function healthPercent(): string {
+  return screen.getByText(/^\d+$/, { selector: '.health__number' }).textContent ?? ''
+}
+
+/** The bar next to it — the number can be right while the bar is not. */
+function healthBar(): HTMLElement {
+  const fill = document.querySelector<HTMLElement>('.health__fill')
+  if (!fill) throw new Error('no .health__fill in the document')
+  return fill
+}
+
 beforeEach(() => {
   applyTheme('light')
 })
@@ -32,11 +44,12 @@ describe('header', () => {
     expect(screen.getByRole('button', { name: 'SAVE FILE' })).toBeEnabled()
   })
 
-  it('counts unsaved changes and clears them on save', async () => {
-    // jsdom has no Blob URL plumbing; the download itself is not what is tested.
+  it('counts unsaved changes, and a download it cannot see does not clear them', async () => {
+    // jsdom has no Blob URL plumbing; the download itself is not what is under test.
     const createObjectURL = vi.fn(() => 'blob:test')
     vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
-    HTMLAnchorElement.prototype.click = vi.fn()
+    const click = vi.fn()
+    HTMLAnchorElement.prototype.click = click
 
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
@@ -44,8 +57,17 @@ describe('header', () => {
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
-    await waitFor(() => expect(screen.getByText('LOCAL · SAVED')).toBeInTheDocument())
-    expect(createObjectURL).toHaveBeenCalled()
+    await waitFor(() => expect(createObjectURL).toHaveBeenCalled())
+    expect(click).toHaveBeenCalled()
+
+    // jsdom has no File System Access API, so `save()` takes the download path.
+    // The file was offered, not observed. An anchor click cannot report whether
+    // anything reached disk — a user with "always ask where to save" on who
+    // presses Cancel has no file — and `markSaved()` has no inverse, so a wrong
+    // SAVED here is permanent. Only the `saved` outcome, which resolves after
+    // `writable.close()`, has earned the right to clear the counter.
+    expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
+    expect(screen.queryByText('LOCAL · SAVED')).not.toBeInTheDocument()
 
     vi.unstubAllGlobals()
   })
@@ -103,17 +125,26 @@ describe('model health footer', () => {
     expect(screen.getByText('29 elements · 47 relations')).toBeInTheDocument()
     // ArchiSurance Netherlands is the one element the demo leaves without an owner.
     expect(screen.getByText('1 element missing an owner')).toBeInTheDocument()
-    const health = Number(screen.getByText(/^\d+$/, { selector: '.health__number' }).textContent)
-    expect(health).toBeGreaterThan(0)
-    expect(health).toBeLessThanOrEqual(100)
+    // The demo's own score under the rule in `src/model/README.md`, asserted as a
+    // value rather than a range: `>0` with `<=100` brackets every percentage there
+    // is, so it holds for a hardcoded one too — `health: 1` in LeftNav passed it.
+    expect(healthPercent()).toBe('93')
+    expect(healthBar()).toHaveStyle({ width: '93%' })
   })
 
   it('updates live when the model changes', async () => {
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
-    // An empty browser lands on the first-run screen, not on the chrome.
+    // An empty browser lands on the first-run screen, not on the chrome, so the
+    // empty "before" state is no longer observable through the nav — #29 replaced
+    // the inventory's interim demo button with FirstRun. The assertions below
+    // still fail against a hardcoded health, which is what they are for.
     await user.click(screen.getByRole('button', { name: /Explore the demo/ }))
     expect(screen.getByText('29 elements · 47 relations')).toBeInTheDocument()
+    // Health has to move with the model, not just the counts beside it: both are
+    // rendered by LeftNav, and asserting only the counts left completeness free.
+    expect(healthPercent()).toBe('93')
+    expect(healthBar()).toHaveStyle({ width: '93%' })
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
   })
 })

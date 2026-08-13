@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { startOfYear, type Element } from '@/model'
 import { loadDemoWorkspace } from '@/io'
 import { BANDS, bandOf, partitionOf } from './bands'
@@ -6,6 +6,7 @@ import { colourOf, legendFor, subLabelOf } from './colouring'
 import { runLayout } from './layout'
 import { traceFrom, tracedDependencies } from './trace'
 import { buildSvg, wrap } from './export-svg'
+import { shapeKeyOf } from './shape-key'
 
 const AT = startOfYear(2026)
 
@@ -230,5 +231,146 @@ describe('SVG export', () => {
       edges: [],
     })
     expect(svg).toContain('Risk &amp; &lt;Underwriting&gt;')
+  })
+})
+
+/**
+ * The export's whole point is a file that opens outside this app.
+ *
+ * Both existing `buildSvg` tests pass literal hex, and the screen-level test
+ * asserts only that `createObjectURL` was called — so `resolveColour` could be
+ * deleted entirely and the suite stayed green, for the acceptance criterion that
+ * is *entirely about it*. These drive the real token strings the screen passes.
+ */
+describe('the exported SVG stands alone', () => {
+  const originalGetComputedStyle = window.getComputedStyle
+
+  afterEach(() => {
+    window.getComputedStyle = originalGetComputedStyle
+  })
+
+  /** jsdom cannot compute `var()`; a browser can, so this is what one would return. */
+  function browserLikeColours(map: Record<string, string>) {
+    // `Element` in this file is the model's, not the DOM's — the import at the
+    // top shadows it.
+    window.getComputedStyle = ((element: HTMLElement) => {
+      const declared = element.style.color
+      return { color: map[declared] ?? 'rgb(0, 0, 0)' } as CSSStyleDeclaration
+    }) as unknown as typeof window.getComputedStyle
+  }
+
+  const GRAPH = {
+    title: 'Dependency graph',
+    stats: '2 nodes · 1 relations',
+    nodes: [
+      {
+        id: 'a',
+        x: 0,
+        y: 0,
+        name: 'CRM System',
+        subLabel: 'Migrate',
+        stroke: 'var(--app)',
+        fill: 'var(--appbg)',
+        opacity: 1,
+        pastEol: false,
+      },
+      {
+        id: 'b',
+        x: 200,
+        y: 0,
+        name: 'Claims',
+        subLabel: 'Invest',
+        stroke: 'var(--app)',
+        fill: 'var(--appbg)',
+        opacity: 1,
+        pastEol: false,
+      },
+    ],
+    edges: [
+      {
+        id: 'e',
+        from: { x: 75, y: 21 },
+        to: { x: 275, y: 21 },
+        stroke: 'var(--bd2)',
+        width: 1,
+        opacity: 0.62,
+        dashed: false,
+        curved: true,
+      },
+    ],
+    bands: { application: { y: 0, height: 80 } },
+    width: 350,
+    height: 80,
+  }
+
+  it('carries no var() or color-mix() through to the file', () => {
+    browserLikeColours({
+      'var(--app)': 'rgb(58, 110, 165)',
+      'var(--appbg)': 'rgb(235, 241, 248)',
+      'var(--bd2)': 'rgb(196, 202, 209)',
+      'var(--paper)': 'rgb(250, 250, 251)',
+      'var(--ink)': 'rgb(14, 17, 22)',
+      'var(--ink3)': 'rgb(140, 147, 155)',
+      'var(--bd)': 'rgb(225, 228, 232)',
+    })
+
+    const svg = buildSvg(GRAPH)
+    // The failure this guards is silent: `resolveColour` falls back to the value
+    // it was given, so a miss re-emits the app-only string it exists to remove
+    // and the file renders black-on-black in Inkscape with nothing to explain it.
+    expect(svg).not.toContain('var(')
+    expect(svg).not.toContain('color-mix(')
+    expect(svg).toContain('rgb(58, 110, 165)')
+  })
+
+  it('draws same-band edges as curves and gives every edge an arrowhead', () => {
+    browserLikeColours({ 'var(--bd2)': 'rgb(196, 202, 209)' })
+    const svg = buildSvg(GRAPH)
+
+    // The marker has to be defined *in the file*: an SVG marker cannot inherit
+    // the stroke of the line that uses it.
+    expect(svg).toMatch(/<marker id="arrow-0"[^>]*>/)
+    expect(svg).toMatch(/marker-end="url\(#arrow-0\)"/)
+    // Same band: a quadratic bowed off the straight run, so two edges over the
+    // same stretch of row do not lie on top of each other.
+    expect(svg).toMatch(/<path d="M 75 21 Q [-\d.]+ [-\d.]+ 275 21"/)
+  })
+
+  it('draws a cross-band edge straight', () => {
+    browserLikeColours({ 'var(--bd2)': 'rgb(196, 202, 209)' })
+    const svg = buildSvg({ ...GRAPH, edges: [{ ...GRAPH.edges[0]!, curved: false }] })
+    expect(svg).toContain('<line x1="75"')
+    expect(svg).not.toContain('<path d="M 75 21 Q')
+  })
+})
+
+describe('the re-layout key', () => {
+  const el = (id: string) => ({
+    id,
+    type: 'ApplicationComponent' as const,
+    name: id,
+    properties: {},
+  })
+
+  it('tells apart shapes a raw join would collide', () => {
+    // `['a,b']` and `['a','b']` both join to `"a,b"`. The key decides whether
+    // layout re-runs, so a collision leaves the canvas drawing a model that is
+    // no longer loaded — or nothing at all, since `buildView` skips every node
+    // the stale layout has never placed.
+    const one = shapeKeyOf([el('a,b')], [])
+    const two = shapeKeyOf([el('a'), el('b')], [])
+    expect(one).not.toBe(two)
+  })
+
+  it('tells apart relationship shapes a raw join would collide', () => {
+    const one = shapeKeyOf([el('a>b'), el('c')], [])
+    const two = shapeKeyOf([el('a'), el('b>c')], [])
+    expect(one).not.toBe(two)
+  })
+
+  it('is stable for the same shape', () => {
+    const elements = [el('a'), el('b')]
+    const rels = [{ id: 'r', type: 'Serving' as const, source: 'a', target: 'b', properties: {} }]
+    expect(shapeKeyOf(elements, rels)).toBe(shapeKeyOf([...elements], [...rels]))
   })
 })

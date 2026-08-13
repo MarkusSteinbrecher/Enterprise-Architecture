@@ -146,7 +146,7 @@ describe('import dialog', () => {
 })
 
 describe('saving', () => {
-  it('saves from the header and clears the unsaved count', async () => {
+  it('downloads from the header, and leaves the unsaved count standing', async () => {
     renderApp(demo())
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: '+ Element' }))
@@ -155,8 +155,50 @@ describe('saving', () => {
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
+    await waitFor(() => expect(createObjectURL).toHaveBeenCalled())
+
+    // jsdom has no File System Access API, so this is the `downloaded` outcome:
+    // a Blob URL and an anchor click, which report that a download was *offered*.
+    // A user with "always ask where to save" on who presses Cancel has no file,
+    // and `markSaved()` has no inverse, so a wrong SAVED here is permanent.
+    // Only `saved` — which resolves after `writable.close()` — clears the count.
+    expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
+    expect(screen.queryByText('LOCAL · SAVED')).not.toBeInTheDocument()
+  })
+
+  it('clears the unsaved count on a write it can watch finish', async () => {
+    const written: string[] = []
+    const close = vi.fn()
+    const handle = {
+      kind: 'file' as const,
+      name: 'archisurance.json',
+      createWritable: vi.fn(async () => ({
+        write: async (data: string) => void written.push(data),
+        close,
+      })),
+    }
+    // `supportsFileSystemAccess()` requires both pickers, so stubbing one is
+    // not enough to take the handle path.
+    vi.stubGlobal(
+      'showSaveFilePicker',
+      vi.fn(async () => handle),
+    )
+    vi.stubGlobal('showOpenFilePicker', vi.fn())
+
+    renderApp(demo())
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: '+ Element' }))
+    await user.type(screen.getByLabelText(/Name/), 'New thing')
+    await user.click(screen.getByRole('button', { name: 'Create' }))
+    expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
+
+    // This is the distinction the whole indicator rests on: the handle path
+    // resolves only after the stream is closed, so the bytes are on disk.
     await waitFor(() => expect(screen.getByText('LOCAL · SAVED')).toBeInTheDocument())
-    expect(createObjectURL).toHaveBeenCalled()
+    expect(close).toHaveBeenCalled()
+    expect(written.join('')).toContain('New thing')
   })
 
   it('saves with ⌘S and with Ctrl+S', async () => {
