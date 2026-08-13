@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   RELATIONSHIP_TYPE_NAMES,
   typeLabel,
@@ -6,6 +6,7 @@ import {
   type Element,
   type RelationshipType,
 } from '@/model'
+import { useFocusTrap } from '@/ui/common/use-focus-trap'
 
 /**
  * The relation picker (handoff: `+ add` on a relations block).
@@ -35,6 +36,11 @@ export function AddRelationDialog({
   const [type, setType] = useState<RelationshipType>(initialType)
   const [direction, setDirection] = useState<'outgoing' | 'incoming'>('outgoing')
   const [targetId, setTargetId] = useState('')
+  const dialogRef = useRef<HTMLDivElement>(null)
+  // The dialog says `aria-modal`; this is what makes that true. Without it Tab
+  // walked into the fact sheet behind the overlay and closing dropped focus on
+  // `<body>` rather than back on the `+ add` that opened it.
+  useFocusTrap(dialogRef)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -68,7 +74,13 @@ export function AddRelationDialog({
         if (event.target === event.currentTarget) onCancel()
       }}
     >
-      <div className="dialog" role="dialog" aria-modal="true" aria-label="Add relation">
+      <div
+        className="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Add relation"
+        ref={dialogRef}
+      >
         <div className="dialog__title section-label">Add relation</div>
 
         <label className="dialog__field">

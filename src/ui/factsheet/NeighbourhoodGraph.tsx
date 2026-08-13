@@ -80,7 +80,10 @@ export function NeighbourhoodGraph({
       <svg
         width="100%"
         viewBox={`${-LABEL_MARGIN} 0 ${WIDTH + LABEL_MARGIN * 2} ${HEIGHT}`}
-        role="img"
+        // Not `role="img"`: that makes the subtree presentational, and this one
+        // contains up to seven focusable buttons — seven tab stops announced as
+        // nothing. A group keeps the label and keeps its children reachable.
+        role="group"
         aria-label="Neighbourhood"
       >
         {placed.map((neighbour) => {
@@ -111,7 +114,11 @@ export function NeighbourhoodGraph({
               tabIndex={0}
               aria-label={neighbour.element.name}
               onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') onSelect(neighbour.element.id)
+                if (event.key !== 'Enter' && event.key !== ' ') return
+                // Space scrolls the page unless it is claimed here, so it used
+                // to navigate *and* scroll.
+                event.preventDefault()
+                onSelect(neighbour.element.id)
               }}
             >
               <circle

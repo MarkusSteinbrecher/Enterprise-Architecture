@@ -320,3 +320,17 @@ export async function clearBrowserState(page: Page): Promise<void> {
 function exactly(text: string): RegExp {
   return new RegExp(`^${text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`)
 }
+
+/**
+ * The facets a URL is carrying, decoded.
+ *
+ * Each facet is percent-encoded before the join, so a label containing the
+ * separator cannot split into two on the way back (#26). Tests assert the
+ * facets, not the escaped spelling — the encoding is an implementation detail
+ * and pinning it makes every future escaping fix look like a regression.
+ */
+export function facetsIn(url: string): string[] {
+  const raw = new URL(url).searchParams.get('facets')
+  if (!raw) return []
+  return raw.split(',').map(decodeURIComponent)
+}

@@ -37,14 +37,21 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
         reuseHandle ? handleRef.current : undefined,
       )
       if (outcome.kind === 'saved') {
+        // The one write this app can watch finish: `saveWorkspaceToFile`
+        // resolves `saved` only after `writable.close()`, so the file is on
+        // disk and the counter has earned the right to go to zero.
         handleRef.current = outcome.handle
         setFileName(outcome.fileName)
         store.markSaved()
         setNotice(`Saved to ${outcome.fileName}`)
       } else if (outcome.kind === 'downloaded') {
+        // Deliberately does **not** mark clean. This is the Blob-and-anchor
+        // fallback, which reports that a download was *offered* — a user with
+        // "always ask where to save" on who presses Cancel has no file, and
+        // `markSaved()` has no inverse, so a wrong SAVED here is permanent.
+        // The notice says what actually happened instead.
         setFileName(outcome.fileName)
-        store.markSaved()
-        setNotice(`Downloaded ${outcome.fileName}`)
+        setNotice(`Downloaded ${outcome.fileName} — still unsaved to a file you chose`)
       } else if (outcome.kind === 'failed') {
         setNotice(`Could not save: ${outcome.message}`)
       }

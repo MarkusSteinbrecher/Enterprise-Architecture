@@ -25,6 +25,12 @@ export interface ReportChromeProps {
   onTimePointChange: (year: number) => void
   legend: LegendEntry[]
   onExport: () => void
+  /**
+   * Why Export is unavailable, if it is. A blank SVG headed with the model's own
+   * counts is a worse outcome than no file, so the reason is shown rather than
+   * the button silently doing nothing.
+   */
+  exportDisabledReason?: string | undefined
   /** Extra controls between the segmented control and the export button. */
   children?: ReactNode
 }
@@ -39,6 +45,7 @@ export function ReportChrome({
   onTimePointChange,
   legend,
   onExport,
+  exportDisabledReason,
   children,
 }: ReportChromeProps) {
   return (
@@ -65,7 +72,13 @@ export function ReportChrome({
             ))}
           </div>
           {children}
-          <button type="button" className="button" onClick={onExport}>
+          <button
+            type="button"
+            className="button"
+            onClick={onExport}
+            disabled={Boolean(exportDisabledReason)}
+            title={exportDisabledReason}
+          >
             Export SVG
           </button>
         </div>

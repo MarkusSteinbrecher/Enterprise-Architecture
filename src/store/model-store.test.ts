@@ -1,7 +1,29 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { emptyWorkspace, type Element, type Relationship } from '@/model'
+import { emptyWorkspace, type Element, type Relationship, type Workspace } from '@/model'
+import { exportExchange, importExchangeXml, toCanonicalJson } from '@/io'
 import { smallWorkspace } from '@/test/fixtures'
 import { ModelStore } from './model-store'
+
+/** One property declared `date` — a type `PropertyValue` cannot carry itself. */
+const TYPED_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="m1">
+  <name xml:lang="en">Typed</name>
+  <elements>
+    <element identifier="e1" xsi:type="ApplicationComponent">
+      <name xml:lang="en">CRM</name>
+      <properties>
+        <property propertyDefinitionRef="propid-1"><value xml:lang="en">2026-01-01</value></property>
+      </properties>
+    </element>
+  </elements>
+  <propertyDefinitions>
+    <propertyDefinition identifier="propid-1" type="date">
+      <name xml:lang="en">goLive</name>
+    </propertyDefinition>
+  </propertyDefinitions>
+</model>
+`
 
 function store() {
   return new ModelStore(smallWorkspace())
@@ -267,11 +289,23 @@ describe('save state and history', () => {
   it('replaces the workspace on import without leaving stale undo history', () => {
     const s = store()
     s.addElement(NEW_APP)
-    s.replaceWorkspace(emptyWorkspace('ws-2', 'Fresh'))
+    s.replaceWorkspace(emptyWorkspace('ws-2', 'Fresh'), { markClean: true })
     expect(s.elementCount).toBe(0)
     expect(s.canUndo).toBe(false)
     expect(s.dirty).toBe(0)
     expect(s.name).toBe('Fresh')
+  })
+
+  it('restarts the unsaved count on replace rather than carrying it over', () => {
+    const s = store()
+    s.addElement(NEW_APP)
+    s.updateElement('app-portal', (element) => ({ ...element, name: 'Portal' }))
+    expect(s.dirty).toBe(2)
+    // Those two changes belonged to a model that is no longer loaded; counting
+    // them against the incoming one would attribute another workspace's unsaved
+    // work to this one.
+    s.replaceWorkspace(emptyWorkspace('ws-2', 'Fresh'), { markClean: false })
+    expect(s.dirty).toBe(1)
   })
 
   it('round-trips through a snapshot', () => {
@@ -282,5 +316,84 @@ describe('save state and history', () => {
     expect(restored.elementCount).toBe(6)
     expect(restored.relationCount('app-claims')).toBe(3)
     expect(restored.dirty).toBe(0)
+  })
+})
+
+/**
+ * `snapshot()` is the model's only exit — SAVE FILE, Export and autosave all
+ * read it — so a `Workspace` field it forgets is gone from every file the
+ * product writes. `propertyTypes` was forgotten for exactly that long (#48):
+ * #37 taught the schema, the canonical JSON and the XSD about it and left the
+ * store listing fields by hand in three places.
+ *
+ * These assert the whole object rather than the field, so the *next* field
+ * added to `Workspace` cannot be dropped the same way and pass.
+ */
+describe('a workspace survives the store intact', () => {
+  /** Every optional field populated, so nothing can be dropped unnoticed. */
+  function fullWorkspace(): Workspace {
+    return {
+      ...smallWorkspace(),
+      views: [
+        {
+          id: 'view-1',
+          name: 'Overview',
+          kind: 'graph',
+          colorView: 'lifecycle',
+          timePoint: 2026,
+          filter: { facets: ['layer:application'], mode: 'AND' },
+        },
+      ],
+      propertyTypes: { goLive: 'date', licence: 'currency' },
+    }
+  }
+
+  it('carries every field through the constructor', () => {
+    const workspace = fullWorkspace()
+    expect(new ModelStore(workspace).snapshot()).toEqual(workspace)
+  })
+
+  it('carries every field through replaceWorkspace', () => {
+    const workspace = fullWorkspace()
+    const s = new ModelStore(emptyWorkspace('ws-other', 'Other'))
+    s.replaceWorkspace(workspace, { markClean: false })
+    expect(s.snapshot()).toEqual(workspace)
+  })
+
+  it('does not invent a propertyTypes key for a workspace that has none', () => {
+    // ADR 0004: a workspace with nothing to declare has to serialise to the
+    // bytes it did before the field existed, so absent must stay absent rather
+    // than becoming `{}`.
+    const snapshot = new ModelStore(emptyWorkspace('ws-1', 'Plain')).snapshot()
+    expect('propertyTypes' in snapshot).toBe(false)
+  })
+
+  it('hands back a copy, so a caller cannot mutate the store through it', () => {
+    const s = new ModelStore(fullWorkspace())
+    const snapshot = s.snapshot()
+    snapshot.propertyTypes!.goLive = 'string'
+    expect(s.snapshot().propertyTypes).toEqual({ goLive: 'date', licence: 'currency' })
+  })
+
+  /**
+   * The consequence, end to end, because the field assertions above would all
+   * still pass if the two sides disagreed about the shape. This is the path a
+   * user takes once the import dialog lands (#11/#29): open a file, click
+   * Export, reopen it in Archi. Before the fix it came back declared `string`.
+   */
+  it('keeps a declared exchange property type across import -> store -> export', () => {
+    const imported = importExchangeXml(TYPED_XML)
+    expect(imported.ok).toBe(true)
+    // `ok` is a plain boolean rather than a discriminant, so it does not narrow
+    // `workspace` — narrow on the field the test actually needs.
+    const { workspace } = imported
+    if (!workspace) throw new Error('the typed fixture failed to import')
+    expect(workspace.propertyTypes).toEqual({ goLive: 'date' })
+
+    const s = new ModelStore(emptyWorkspace('ws-blank', 'Blank'))
+    s.replaceWorkspace(workspace, { markClean: false })
+
+    expect(exportExchange(s.snapshot()).xml).toContain('type="date"')
+    expect(toCanonicalJson(s.snapshot())).toContain('"goLive": "date"')
   })
 })

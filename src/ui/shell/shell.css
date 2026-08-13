@@ -439,7 +439,7 @@
   padding: 0 11px;
   background: var(--accent);
   border: 1px solid var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
   font: 500 11.5px/1 var(--font-ui);
 }
 

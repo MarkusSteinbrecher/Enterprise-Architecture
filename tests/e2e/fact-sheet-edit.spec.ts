@@ -78,8 +78,12 @@ test('two edits are two steps, and both survive a reload', async ({ page }) => {
   await expect(page.getByRole('heading', { name: ELEMENT, exact: true })).toBeVisible()
   await expect(assessmentCell(page, 'Functional fit')).toContainText('Perfect')
   await expect(assessmentCell(page, 'Technical fit')).toContainText('Fully adequate')
-  // A restore is not an edit: the counter starts from what was persisted.
-  expect(await dirtyCount(page)).toBe(0)
+  // A restored snapshot is not a file. Browser storage is a cache — Safari
+  // evicts it after seven days — so a workspace that has only ever lived there
+  // matches nothing on disk and must not present as SAVED, however many sessions
+  // it has survived (#24). The edit above survives; the counter says it is still
+  // unwritten, which is the honest reading of both facts.
+  expect(await dirtyCount(page)).toBe(1)
 })
 
 test('the fact sheet returns to the inventory with its filters intact', async ({ page }) => {

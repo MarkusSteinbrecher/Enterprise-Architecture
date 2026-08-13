@@ -138,6 +138,28 @@ describe('import dialog', () => {
     expect(screen.getByText('29 of 29 elements')).toBeInTheDocument()
   })
 
+  it('keeps focus inside the import dialog and gives it back on close', async () => {
+    // `aria-modal="true"` is a promise: focus enters, focus stays, focus goes
+    // back. None of it is statically detectable, which is why it keeps being
+    // declared and not implemented — #24's menu and #25's palette both shipped
+    // the attribute without the behaviour.
+    renderApp(demo())
+    const user = userEvent.setup()
+
+    const opener = screen.getByRole('button', { name: 'Import' })
+    await user.click(opener)
+    const dialog = screen.getByRole('dialog', { name: 'Import' })
+    expect(dialog.contains(document.activeElement)).toBe(true)
+
+    // Behind this overlay sit SAVE FILE and Export. Tab must not reach them.
+    for (let i = 0; i < 12; i += 1) await user.tab()
+    expect(dialog.contains(document.activeElement)).toBe(true)
+
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'Import' })).not.toBeInTheDocument()
+    expect(opener).toHaveFocus()
+  })
+
   it('closes on Escape', async () => {
     const { user } = await openDialog()
     await user.keyboard('{Escape}')
@@ -146,7 +168,7 @@ describe('import dialog', () => {
 })
 
 describe('saving', () => {
-  it('saves from the header and clears the unsaved count', async () => {
+  it('downloads from the header, and leaves the unsaved count standing', async () => {
     renderApp(demo())
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: '+ Element' }))
@@ -155,8 +177,88 @@ describe('saving', () => {
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
+    await waitFor(() => expect(createObjectURL).toHaveBeenCalled())
+
+    // jsdom has no File System Access API, so this is the `downloaded` outcome:
+    // a Blob URL and an anchor click, which report that a download was *offered*.
+    // A user with "always ask where to save" on who presses Cancel has no file,
+    // and `markSaved()` has no inverse, so a wrong SAVED here is permanent.
+    // Only `saved` — which resolves after `writable.close()` — clears the count.
+    expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
+    expect(screen.queryByText('LOCAL · SAVED')).not.toBeInTheDocument()
+  })
+
+  it('clears the unsaved count on a write it can watch finish', async () => {
+    const written: string[] = []
+    const close = vi.fn()
+    const handle = {
+      kind: 'file' as const,
+      name: 'archisurance.json',
+      createWritable: vi.fn(async () => ({
+        write: async (data: string) => void written.push(data),
+        close,
+      })),
+    }
+    // `supportsFileSystemAccess()` requires both pickers, so stubbing one is
+    // not enough to take the handle path.
+    vi.stubGlobal(
+      'showSaveFilePicker',
+      vi.fn(async () => handle),
+    )
+    vi.stubGlobal('showOpenFilePicker', vi.fn())
+
+    renderApp(demo())
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: '+ Element' }))
+    await user.type(screen.getByLabelText(/Name/), 'New thing')
+    await user.click(screen.getByRole('button', { name: 'Create' }))
+    expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
+
+    // This is the distinction the whole indicator rests on: the handle path
+    // resolves only after the stream is closed, so the bytes are on disk.
     await waitFor(() => expect(screen.getByText('LOCAL · SAVED')).toBeInTheDocument())
-    expect(createObjectURL).toHaveBeenCalled()
+    expect(close).toHaveBeenCalled()
+    expect(written.join('')).toContain('New thing')
+  })
+
+  it('writes back to the same file on the second save, with no second picker', async () => {
+    // Issue #11's first acceptance criterion, and the whole reason the handle is
+    // held: "save → edit → save writes to the same file without a picker". That
+    // is what makes committing the JSON to git a workflow rather than a chore.
+    const written: string[] = []
+    const createWritable = vi.fn(async () => ({
+      write: async (data: string) => void written.push(data),
+      close: vi.fn(),
+    }))
+    const picker = vi.fn(async () => ({
+      kind: 'file' as const,
+      name: 'archisurance.json',
+      createWritable,
+    }))
+    vi.stubGlobal('showSaveFilePicker', picker)
+    vi.stubGlobal('showOpenFilePicker', vi.fn())
+
+    renderApp(demo())
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
+    await waitFor(() => expect(screen.getByText('LOCAL · SAVED')).toBeInTheDocument())
+    expect(picker).toHaveBeenCalledTimes(1)
+
+    await user.click(screen.getByRole('button', { name: '+ Element' }))
+    await user.type(screen.getByLabelText(/Name/), 'Second thing')
+    await user.click(screen.getByRole('button', { name: 'Create' }))
+    expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
+    await waitFor(() => expect(screen.getByText('LOCAL · SAVED')).toBeInTheDocument())
+
+    // Still one picker, two writes — the second went straight to the same file.
+    expect(picker).toHaveBeenCalledTimes(1)
+    expect(createWritable).toHaveBeenCalledTimes(2)
+    expect(written.at(-1)).toContain('Second thing')
   })
 
   it('saves with ⌘S and with Ctrl+S', async () => {

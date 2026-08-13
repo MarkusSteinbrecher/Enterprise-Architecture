@@ -11,6 +11,7 @@ import {
   inventoryCounts,
   shownCount,
   waitForPersistedWorkspace,
+  facetsIn,
   DEMO,
 } from './support'
 
@@ -45,7 +46,10 @@ test('a single facet filters to the count on its own chip', async ({ page }) => 
     total: DEMO.elements,
   })
   // Filter state lives in the URL, which is what makes a filtered view a link.
-  expect(new URL(page.url()).searchParams.get('facets')).toBe('layer:app')
+  // Each facet is percent-encoded before the join, so a value containing the
+  // separator cannot split into two (#26) — decode rather than assert the
+  // escaped spelling, which is an encoding detail and not the contract.
+  expect(facetsIn(page.url())).toEqual(['layer:app'])
 })
 
 test('AND, OR and NOT compose the same two facets differently', async ({ page }) => {
@@ -105,9 +109,7 @@ test('a saved search applies facets and combinator, and its URL reopens it', asy
 
   expect((await countsAfter(page, '3 filters (AND)')).shown).toBe(expected)
   const applied = new URL(page.url())
-  expect(applied.searchParams.get('facets')).toBe(
-    'layer:app,lifecycle:phaseOut,lifecycle:endOfLife',
-  )
+  expect(facetsIn(page.url())).toEqual(['layer:app', 'lifecycle:phaseOut', 'lifecycle:endOfLife'])
   // AND is the default, so a saved search carrying AND leaves no mode in the URL.
   expect(applied.searchParams.get('mode')).toBeNull()
 

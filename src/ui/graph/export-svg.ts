@@ -23,6 +23,9 @@ export interface ExportNode {
   pastEol: boolean
 }
 
+/** Perpendicular offset of a same-band edge's control point (handoff). */
+const SAME_BAND_BOW = 34
+
 export interface ExportEdge {
   id: string
   from: { x: number; y: number }
@@ -31,6 +34,8 @@ export interface ExportEdge {
   width: number
   opacity: number
   dashed: boolean
+  /** Same-band edges curve; cross-band edges run straight. */
+  curved?: boolean
 }
 
 export interface ExportGraph {
@@ -96,10 +101,43 @@ export function buildSvg(graph: ExportGraph): string {
   }
 
   // Edges first: they belong behind the opaque node bodies.
+  // One marker per distinct stroke: an SVG marker cannot inherit the stroke of
+  // the line that uses it, and the exported file has to stand alone.
+  const markers = new Map<string, string>()
   for (const edge of graph.edges) {
+    const colour = resolveColour(edge.stroke)
+    if (!markers.has(colour)) markers.set(colour, `arrow-${markers.size}`)
+  }
+  parts.push('<defs>')
+  for (const [colour, id] of markers) {
     parts.push(
-      `<line x1="${edge.from.x}" y1="${edge.from.y}" x2="${edge.to.x}" y2="${edge.to.y}" stroke="${resolveColour(edge.stroke)}" stroke-width="${edge.width}" opacity="${edge.opacity}"${edge.dashed ? ' stroke-dasharray="4 3"' : ''}/>`,
+      `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${colour}"/></marker>`,
     )
+  }
+  parts.push('</defs>')
+
+  for (const edge of graph.edges) {
+    const colour = resolveColour(edge.stroke)
+    const marker = ` marker-end="url(#${markers.get(colour)!})"`
+    const shared = `stroke="${colour}" stroke-width="${edge.width}" opacity="${edge.opacity}"${edge.dashed ? ' stroke-dasharray="4 3"' : ''} fill="none"${marker}`
+    if (edge.curved) {
+      // A quadratic bowed perpendicular to the run, so two same-band edges over
+      // the same stretch of row do not lie on top of each other.
+      const midX = (edge.from.x + edge.to.x) / 2
+      const midY = (edge.from.y + edge.to.y) / 2
+      const dx = edge.to.x - edge.from.x
+      const dy = edge.to.y - edge.from.y
+      const length = Math.hypot(dx, dy) || 1
+      const cx = midX + (-dy / length) * SAME_BAND_BOW
+      const cy = midY + (dx / length) * SAME_BAND_BOW
+      parts.push(
+        `<path d="M ${edge.from.x} ${edge.from.y} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${edge.to.x} ${edge.to.y}" ${shared}/>`,
+      )
+    } else {
+      parts.push(
+        `<line x1="${edge.from.x}" y1="${edge.from.y}" x2="${edge.to.x}" y2="${edge.to.y}" ${shared}/>`,
+      )
+    }
   }
 
   for (const node of graph.nodes) {

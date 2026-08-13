@@ -25,21 +25,25 @@ import {
 
 test('export, reimport and export again produces the same bytes', async ({ page }, testInfo) => {
   await loadDemo(page)
-  expect(await dirtyCount(page)).toBeGreaterThan(0)
+  const beforeSave = await dirtyCount(page)
+  expect(beforeSave).toBeGreaterThan(0)
 
   const exported = await saveWorkspaceFile(page, testInfo.outputPath('first-export.json'))
 
-  // Saving is the only thing that clears the counter — it means "differs from
-  // the file", and now it does not.
-  expect(await dirtyCount(page)).toBe(0)
+  // The counter deliberately does **not** move here. This harness puts Chromium
+  // on the download path, and a Blob URL plus an anchor click reports that a
+  // file was *offered*, not that it landed — a user who cancels the OS dialog
+  // has nothing on disk, and `markSaved()` has no inverse. Only the File System
+  // Access handle, which resolves after `writable.close()`, clears it (#29).
+  expect(await dirtyCount(page)).toBe(beforeSave)
   await expect(page.getByRole('status')).toContainText('Downloaded archisurance.json')
 
   const parsed: unknown = JSON.parse(exported)
-  expect(parsed).toMatchObject({
-    schemaVersion: 1,
-    id: 'ws-archisurance-demo',
-    name: 'ArchiSurance',
-  })
+  expect(parsed).toMatchObject({ schemaVersion: 1, name: 'ArchiSurance' })
+  // The demo mints a fresh workspace id on every load (#24), so the value is not
+  // fixed — but it must be present and well-formed, because the round trip below
+  // depends on the file carrying it.
+  expect((parsed as { id: string }).id).toMatch(/^ws-/)
   expect(exported.endsWith('\n')).toBe(true)
 
   await importWorkspaceFile(page, testInfo.outputPath('first-export.json'))

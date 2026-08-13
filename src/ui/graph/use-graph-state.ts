@@ -22,18 +22,32 @@ export interface GraphStateApi extends GraphState {
   toggleFocus: (id: string) => void
 }
 
-export function useGraphState(defaultYear: number): GraphStateApi {
+/** The slider's own range, and the only years a time point may take. */
+export interface YearBounds {
+  min: number
+  max: number
+}
+
+export function useGraphState(defaultYear: number, bounds?: YearBounds): GraphStateApi {
   const [params, setParams] = useSearchParams()
 
   const state = useMemo<GraphState>(() => {
     const raw = params.get('colorView')
     const year = Number(params.get('year'))
+    // `Number.isFinite(year) && year > 0` waves through anything inside the
+    // number range but outside the *date* range: `Date.UTC(999999999, 0, 1)` is
+    // NaN, and with `at` NaN every `ms <= at` comparison in
+    // `deriveLifecyclePhase` is false — so every element renders as Plan and no
+    // node is past end-of-life. A fully drawn landscape, entirely wrong, with
+    // the stats line reading a year the slider beside it does not.
+    const withinDates = Number.isFinite(year) && year > 0 && year <= 275_760
+    const clamped = bounds ? Math.min(Math.max(year, bounds.min), bounds.max) : year
     return {
       colourView: COLOUR_VIEWS.includes(raw as ColourView) ? (raw as ColourView) : 'layer',
-      year: Number.isFinite(year) && year > 0 ? year : defaultYear,
+      year: withinDates ? clamped : defaultYear,
       focus: params.get('focus') ?? undefined,
     }
-  }, [params, defaultYear])
+  }, [params, defaultYear, bounds])
 
   const update = useCallback(
     (next: Partial<GraphState>) => {

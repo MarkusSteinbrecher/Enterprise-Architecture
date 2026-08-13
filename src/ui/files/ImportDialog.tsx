@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { summariseProblems, type ImportProblem } from '@/io'
+import { useFocusTrap } from '@/ui/common/use-focus-trap'
 import { useFileWorkspace } from './context'
 
 /**
@@ -12,21 +13,31 @@ import { useFileWorkspace } from './context'
  */
 
 export function ImportDialog() {
-  const { importing, lastImport, importFile, openFile, cancelImport, canPickFiles } =
-    useFileWorkspace()
+  const { importing } = useFileWorkspace()
+  // Mounted only while open, so `useFocusTrap` runs its entry on open and its
+  // restore on close. A component that renders `null` never unmounts, so a trap
+  // installed here would take focus once at boot and give it back never.
+  return importing ? <ImportDialogBody /> : null
+}
+
+function ImportDialogBody() {
+  const { lastImport, importFile, openFile, cancelImport, canPickFiles } = useFileWorkspace()
   const inputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
 
+  // The dialog says `aria-modal`; this is what makes that true. Without it Tab
+  // walked into the chrome behind the overlay — where Enter reaches SAVE FILE —
+  // and closing dropped focus on `<body>` rather than back on Import.
+  useFocusTrap(dialogRef)
+
   useEffect(() => {
-    if (!importing) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') cancelImport()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [importing, cancelImport])
-
-  if (!importing) return null
+  }, [cancelImport])
 
   const problems = lastImport?.problems ?? []
   const errors = problems.filter((p) => p.severity === 'error')
@@ -40,7 +51,13 @@ export function ImportDialog() {
         if (event.target === event.currentTarget) cancelImport()
       }}
     >
-      <div className="dialog dialog--wide" role="dialog" aria-modal="true" aria-label="Import">
+      <div
+        ref={dialogRef}
+        className="dialog dialog--wide"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Import"
+      >
         <div className="dialog__title section-label">Import a model</div>
 
         <p className="dialog__help">

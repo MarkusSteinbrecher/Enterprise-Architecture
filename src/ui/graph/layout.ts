@@ -59,8 +59,21 @@ export const ELK_OPTIONS: Record<string, string> = {
 let worker: Worker | undefined
 let nextRequestId = 1
 
-/** How long to wait for the worker before laying out on the main thread. */
-const WORKER_TIMEOUT_MS = 10_000
+/**
+ * How long to wait for the worker to *acknowledge* a request.
+ *
+ * Deliberately not a budget for the layout itself. A job timeout cannot tell a
+ * dead worker from a busy one, and this file's own docblock says ELK on 5,000
+ * nodes is seconds of arithmetic — so a 10s job timeout terminated exactly the
+ * workers that were earning their keep, threw away the seconds they had already
+ * spent, and re-ran the same multi-second computation *on the UI thread*, which
+ * is the freeze the worker exists to prevent. Worse, discarding the worker meant
+ * every later re-layout repeated the cycle.
+ *
+ * A worker that has posted `ack` is alive and working; it gets as long as it
+ * needs. One that has not answered in two seconds never started.
+ */
+const WORKER_ACK_TIMEOUT_MS = 2_000
 
 function getWorker(): Worker | undefined {
   if (typeof Worker === 'undefined') return undefined
@@ -75,19 +88,28 @@ function getWorker(): Worker | undefined {
 }
 
 /**
- * A worker that fails to start — a blocked module worker, a bundler quirk, an
- * out-of-memory kill — must not leave the graph waiting forever. Every failure
- * path resolves `undefined` so the caller falls back to the main thread, and the
- * worker is discarded so the next attempt does not queue behind a dead one.
+ * The three things that can come back from the worker, kept apart because they
+ * want opposite responses.
+ *
+ * `unavailable` means the worker could not be *used* — never started, blocked,
+ * crashed — so the main thread should try instead. `failed` means ELK itself
+ * rejected the graph, which the main thread would do identically: re-running it
+ * there wastes seconds and throws again, silently, which is what happened when
+ * the error string was destructured at the message handler and never read.
  */
-async function layoutInWorker(request: LayoutRequest): Promise<LayoutResponse | undefined> {
+type WorkerOutcome =
+  | { kind: 'result'; response: LayoutResponse }
+  | { kind: 'failed'; message: string }
+  | { kind: 'unavailable' }
+
+async function layoutInWorker(request: LayoutRequest): Promise<WorkerOutcome> {
   const instance = getWorker()
-  if (!instance) return undefined
+  if (!instance) return { kind: 'unavailable' }
   const id = nextRequestId++
 
-  return new Promise<LayoutResponse | undefined>((resolve) => {
+  return new Promise<WorkerOutcome>((resolve) => {
     let settled = false
-    const finish = (result: LayoutResponse | undefined, discard = false) => {
+    const finish = (outcome: WorkerOutcome, discard = false) => {
       if (settled) return
       settled = true
       instance.removeEventListener('message', onMessage)
@@ -98,23 +120,34 @@ async function layoutInWorker(request: LayoutRequest): Promise<LayoutResponse | 
         instance.terminate()
         if (worker === instance) worker = undefined
       }
-      resolve(result)
+      resolve(outcome)
     }
 
     const onMessage = (event: MessageEvent) => {
-      const data = event.data as { id: number; result?: LayoutResponse; error?: string }
+      const data = event.data as {
+        id: number
+        ack?: boolean
+        result?: LayoutResponse
+        error?: string
+      }
       if (data.id !== id) return
-      finish(data.result)
+      if (data.ack) {
+        // Alive and working. From here it takes as long as it takes.
+        clearTimeout(timer)
+        return
+      }
+      if (data.error !== undefined) return finish({ kind: 'failed', message: data.error })
+      if (data.result) return finish({ kind: 'result', response: data.result })
+      finish({ kind: 'unavailable' }, true)
     }
-    const onError = () => finish(undefined, true)
+    const onError = () => finish({ kind: 'unavailable' }, true)
 
     instance.addEventListener('message', onMessage)
     instance.addEventListener('error', onError)
     instance.addEventListener('messageerror', onError)
 
-    // A worker that never answers is indistinguishable from one that never
-    // started, and both mean: lay out here instead.
-    const timer = setTimeout(() => finish(undefined, true), WORKER_TIMEOUT_MS)
+    // Bounds the handshake only — see WORKER_ACK_TIMEOUT_MS.
+    const timer = setTimeout(() => finish({ kind: 'unavailable' }, true), WORKER_ACK_TIMEOUT_MS)
 
     instance.postMessage({ id, request })
   })
@@ -148,7 +181,12 @@ export async function runLayout(
       .map((r) => ({ id: r.id, source: r.source, target: r.target })),
   }
 
-  const response = (await layoutInWorker(request)) ?? (await layoutOnMainThread(request))
+  const outcome = await layoutInWorker(request)
+  if (outcome.kind === 'failed') {
+    // Surfaced rather than retried: the caller shows it instead of hanging.
+    throw new Error(`The graph layout failed: ${outcome.message}`)
+  }
+  const response = outcome.kind === 'result' ? outcome.response : await layoutOnMainThread(request)
   return toResult(response, bandById)
 }
 
