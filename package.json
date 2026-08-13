@@ -19,6 +19,7 @@
     "validate:xsd": "vite-node scripts/validate-exchange-xsd.ts"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.14.9",
     "fast-xml-parser": "^5.10.1",
     "idb": "^8.0.3",
     "react": "^18.3.1",

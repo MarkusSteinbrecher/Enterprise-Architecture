@@ -1,0 +1,51 @@
+.meter {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 12px;
+}
+
+.meter__bar {
+  display: block;
+  flex: none;
+}
+
+.lifecycle-dot {
+  display: inline-block;
+  flex: none;
+}
+
+.lifecycle-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 11.5px/1 var(--font-ui);
+  color: var(--ink2);
+}
+
+.time-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 17px;
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  font: 500 9.5px/1 var(--font-mono);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.time-chip--empty {
+  border-color: transparent;
+  color: var(--ink3);
+  padding: 0;
+}
+
+.completeness-bar {
+  display: block;
+  width: 100%;
+  background: var(--panel2);
+}
+
+.completeness-bar__fill {
+  display: block;
+}

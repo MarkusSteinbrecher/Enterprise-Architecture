@@ -15,6 +15,13 @@ beforeEach(() => {
   applyTheme('light')
 })
 
+/** The palette's own input. Queried by label: the inventory adds more inputs,
+ * and the palette's is a `combobox` rather than a `textbox` since it gained
+ * `aria-activedescendant`, so neither role alone stays unambiguous. */
+function paletteInput() {
+  return screen.getByLabelText('Jump to element, run an action')
+}
+
 async function openPalette(user: ReturnType<typeof userEvent.setup>) {
   await user.keyboard('{Meta>}k{/Meta}')
   return screen.getByRole('dialog', { name: 'Command palette' })
@@ -44,11 +51,11 @@ describe('opening and closing', () => {
     const user = userEvent.setup()
     await openPalette(user)
     await user.keyboard('claim')
-    expect(screen.getByRole('combobox')).toHaveValue('claim')
+    expect(paletteInput()).toHaveValue('claim')
 
     await user.keyboard('{Escape}')
     await openPalette(user)
-    expect(screen.getByRole('combobox')).toHaveValue('')
+    expect(paletteInput()).toHaveValue('')
   })
 
   it('closes when the backdrop is clicked', async () => {
@@ -64,7 +71,7 @@ describe('opening and closing', () => {
     renderApp(demo())
     const user = userEvent.setup()
     await openPalette(user)
-    expect(screen.getByRole('combobox')).toHaveFocus()
+    expect(paletteInput()).toHaveFocus()
   })
 })
 
@@ -225,7 +232,7 @@ describe('the keyboard flow the palette is named for', () => {
     // the focus ring pointed at different rows — or walk out onto the chrome
     // behind the overlay, where Enter downloaded a file nobody asked for.
     await user.tab()
-    expect(screen.getByRole('combobox')).toHaveFocus()
+    expect(paletteInput()).toHaveFocus()
 
     await user.keyboard('{ArrowDown}')
     expect(screen.getAllByRole('option')[1]).toHaveAttribute('aria-selected', 'true')
@@ -277,7 +284,7 @@ describe('the keyboard flow the palette is named for', () => {
     await openPalette(user)
     await user.keyboard('policy')
 
-    const input = screen.getByRole('combobox')
+    const input = paletteInput()
     const rows = screen.getAllByRole('option')
     expect(input).toHaveAttribute('aria-activedescendant', rows[0]!.id)
 
@@ -323,7 +330,7 @@ describe('single-letter shortcuts', () => {
     await openPalette(user)
     await user.keyboard('g')
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByRole('combobox')).toHaveValue('g')
+    expect(paletteInput()).toHaveValue('g')
   })
 
   it('does not navigate while a text input has focus — the prototype gap', async () => {
