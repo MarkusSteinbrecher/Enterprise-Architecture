@@ -14,6 +14,18 @@ Verified beyond the test: the production `layout.worker` chunk was driven direct
 
 **Candidate rule for the next harvest:** *a fake at the boundary tests the protocol, not the environment.* Faking `Worker` proves our messages are right; it cannot prove the code inside the worker runs, because the fake still executes in the caller's scope. Anything whose behaviour depends on which globals exist — `document`, `window`, `self` — needs a test that builds that scope.
 
+**Reviewed in the same session (PR #55), which is worth flagging as a weakness: author and reviewer were one session.** Posted as a comment, not an approval — GitHub refuses a self-approval and it should. Three things the review changed, all pushed to the branch:
+
+1. **The real finding was not the elkjs sniff — it was that the graph has no e2e journey.** `playwright.config.ts` says in its own docblock that the harness exists because *"workers, code-split chunks, the 404 redirect"* break in production and nowhere else. Fifteen journeys, and `grep -rn graph tests/e2e/` returned nothing. The harness was built for this exact risk and never pointed at the screen. `tests/e2e/dependency-graph.spec.ts` closes it, verified red against the reverted fix (0 nodes drawn).
+2. **Both of that journey's assertions were then falsified separately**, because a journey with one real assertion and one decorative one is worse than honest. Re-run with `window.Worker` deleted: the node count still **passed** (the main-thread fallback genuinely draws the graph) while the worker-URL assertion failed with `WORKERS RECORDED: []`. So "29 nodes appeared" alone would not have caught a dead worker — the two cover different failures.
+3. **Writing the journey produced the second rule.** Its first draft asserted "no layout-failure alert" *before* the node count, and that assertion passed against the fully broken graph: `toHaveCount(0)` is satisfied by a page that has not rendered yet. An absence asserted first is a one-sided bound wearing different clothes.
+
+Also caught: the PR made its own docblock false — `computeLayout` still said *"Nothing here touches the DOM"* three lines above code that writes `globalThis.document`.
+
+Left as a nit and deliberately **not** applied, so the diff a human reads stays the author's: `createElk` shims whenever `document` is absent, but elkjs only misbehaves when `document` is absent **and** `self` is present, so in plain Node it mutates a global for nothing. And one open judgement call for a second reader — keep the shim, or restructure onto `elk-api.js` with an elkjs-owned worker? The review argues keep, *because* the workaround is now guarded on both sides and can no longer break silently; but an author should not be ratifying that alone.
+
+Harvested: two CLAUDE.md lines (fake-at-the-boundary; presence-before-absence) and one review-skill bullet (grep `tests/e2e/` for the screen the PR touches).
+
 ## 2026-08-13 (review) — the phase-1 stack is merged: #24–#29 and #34, seven issues closed
 
 Same session as the entry below, continued. **Every open PR is merged and `main` is green on all six checks** — 467 unit tests, 15 e2e journeys, `tsc`, `eslint`, `format:check`, `build`, `validate:xsd`. Issues #6, #7, #8, #9, #10, #11 and #19 are closed. Phase 1 is done.
