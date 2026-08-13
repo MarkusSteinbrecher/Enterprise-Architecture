@@ -1,6 +1,7 @@
 import {
   BUSINESS_CRITICALITY_LABELS,
   ELEMENT_TYPE_NAMES,
+  JUNCTION_KINDS,
   LIFECYCLE_PHASES,
   RELATIONSHIP_TYPE_NAMES,
   SCHEMA_VERSION,
@@ -45,6 +46,12 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
       relationships: { type: 'array', items: { $ref: '#/$defs/relationship' } },
       views: { type: 'array', items: { $ref: '#/$defs/view' } },
       tagGroups: { type: 'array', items: { $ref: '#/$defs/tagGroup' } },
+      propertyTypes: {
+        type: 'object',
+        description:
+          'Exchange-format types declared for property keys held here as text (currency, date, time), so a model that arrives typed leaves typed. Keys whose type the value itself carries (boolean, number) are not listed.',
+        additionalProperties: { enum: ['boolean', 'currency', 'date', 'number', 'time'] },
+      },
     },
     $defs: {
       element: {
@@ -62,6 +69,11 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           type: { enum: [...ELEMENT_TYPE_NAMES] },
           name: { type: 'string' },
           documentation: { type: 'string' },
+          junctionKind: {
+            enum: [...JUNCTION_KINDS],
+            description:
+              'And/or flavour of a Junction, which the exchange format spells as two concrete types (AndJunction, OrJunction). Absent means "and". Meaningless on any other element type.',
+          },
           properties: { $ref: '#/$defs/properties' },
           profile: { $ref: '#/$defs/portfolioProfile' },
         },
