@@ -11,6 +11,7 @@ Review the PR given in `$ARGUMENTS` (PR number; optional effort level, default `
 
 - `gh pr view <n> --json title,body,baseRefName,headRefName` — read the description and note the base branch. **Stacked PRs: review only this PR's increment** (diff against its own base), never the whole stack at once.
 - `gh issue view <linked-issue>` — extract the acceptance-criteria checklist. The PR body names the issue; if not, infer from the branch name (`feat/<issue#>-…`).
+- **If the PR has been reviewed before, read that round's disposition first** — `gh pr view <n> --json comments` plus the follow-up issues it filed. On the #24 re-review, 10 of 15 candidates from the generic pass were already scoped into #33, #35, #38 and #39, several with the author's reasoning recorded on the PR. Re-reporting them would have re-litigated settled decisions and buried the two findings that mattered. List them as "already tracked" and move on; a deferral you disagree with is an argument to make once, explicitly, not a finding to re-raise.
 - UI-touching PRs: read the relevant sections of `design/handoff/2026-08-inventory-factsheet-graph/README.md` (tokens, the screen being built) and compare against the reference screens in `screens/`. Fidelity is **high** — spacing, colors, and interaction states are normative.
 
 ## 2. Spec conformance (the project layer — this is what generic review can't do)
@@ -30,6 +31,10 @@ Where the diff touches them, verify the CLAUDE.md invariants:
 
 - **The test behind an acceptance criterion must fail when the feature is removed** (now also a CLAUDE.md convention — it kept being broken by implementers, who do not read this file). A green test is not evidence. **Do not reason about it — break it:** delete the feature, or invert the condition, and run that one test. If it still passes, it is not covering the criterion. Recorded tells: one-sided bounds (`expect(n).toBeLessThan(150)` passes at 0); a setup that rebuilds the very thing whose caching it means to test (#27's `deps` test rerenders with a fresh workspace, so a whole new store busts the memo and `...deps` is never exercised); a test named for a case its setup skips, where **the giveaway is often a comment admitting it** (#27: "ArchiSurance Netherlands composes Back Office, so it does have one"); and assertions on the *opposite* branch (that same test asserts `getByRole('img')`, which only renders when the empty state does **not**). Found in #25, #26, and twice in #27.
 
+  **When a criterion says "X updates live", check that a test asserts X's own value — not a sibling value rendered by the same component.** #24's health footer renders counts and completeness side by side; the live test asserted `29 elements · 47 relations` before and after a model change and left `health` to `>0` / `<=100`, so replacing `store.health()` with the constant `1` kept all 270 tests green. One component, two facts, one of them uncovered. Read the criterion's *noun* and grep the test file for it.
+
+  **A criterion that is satisfiable by inspection is the one most likely to have no test.** If you can settle it by reading a file, you can assert it — and if nobody did, it regresses the first time someone edits that file. #24's "no layout shift when switching themes" was **met**: the dark block redefined only colours. Nothing proved it, and the theme test asserted `dataset.theme`, which passes just as happily with `--rowh: 30px` in the dark block. Where a criterion reduces to a property of a file, write the file test.
+
   **Asserting that a pure function returns a token is not asserting the token is rendered.** For any visual encoding behind a criterion — colour views, dimming, dashing, focus rings — check that a test reads it off the DOM. #28 asserted `colourOf`/`legendFor` as pure functions and legend *text*, so replacing `GraphNode`'s entire style object with `{width, height}` left all 33 graph tests green: the colour views and click-to-trace could ship with no visible effect at all.
 
   **A fixture that hard-codes the expected answer is not a test.** #28's trace panel reads cost from the wrong place entirely (an element property, against ADR 0001), and its assertion passes only because the bundled demo XML happens to carry that exact string. When an assertion's expected value also appears in the fixture, check which one is the source of truth.
@@ -41,6 +46,10 @@ For architectural changes, check conformance with `design/decisions/` ADRs; a de
 ## 3. Code review (the generic layer)
 
 Run the built-in `code-review` skill on the PR at the requested effort level. Verify findings against the actual code before reporting — no speculative findings.
+
+**A finding can name a real code smell and still have an unreachable failure scenario, so check the call sites before you check the logic.** Two from the #24 re-review, both true about the code and wrong about the consequence: *"`removeWorkspace` discards the open workspace's unsaved edits when you delete a different one"* — the only caller passes `store.id`, so it is a latent API hazard, not data loss; *"the leaked `URL` stub breaks every remaining test in the file"* — forcing an early failure left 11/11 passing, because nothing later constructs a `URL`. `git grep` for the callers of the function in the finding, and where the claim is about test fallout, **break it and run the file**. Demote what survives only in principle, and say so in the review — "we checked and it isn't real" is worth as much to the author as a finding, and it stops the next reviewer re-deriving it.
+
+**Check whether the finding is this PR's.** `git diff <base>...<head> -- <file>` on the specific function decides it. #24's proven `propertyTypes` loss lived in `snapshot()`, which the PR never touched — it belonged to `main` and became a new issue, not a change request. A pre-existing bug the PR *makes reachable* is still worth reporting; just report it as what it is.
 
 ## 4. Report on the PR
 
