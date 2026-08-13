@@ -551,3 +551,11 @@
   justify-content: flex-end;
   gap: 8px;
 }
+
+.dialog__problem {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--lc-eol);
+  color: var(--lc-eol);
+  font: 400 11.5px/1.5 var(--font-ui);
+}

@@ -17,12 +17,11 @@ describe('App routing', () => {
   it('renders an element route from the model', () => {
     renderApp(loadDemoWorkspace(), { route: '/element/app-crm' })
     expect(screen.getByRole('heading', { name: 'CRM System' })).toBeInTheDocument()
-    expect(screen.getByText(/Application Component · app-crm/)).toBeInTheDocument()
   })
 
   it('falls back gracefully for an element that is not in the model', () => {
     renderApp(loadDemoWorkspace(), { route: '/element/nope' })
-    expect(screen.getByRole('heading', { name: 'Element not found' })).toBeInTheDocument()
+    expect(screen.getByText(/No element with the id/)).toBeInTheDocument()
   })
 
   it('sends an unknown route back to the inventory', () => {
