@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Model.xsd" identifier="ws-junction-fixture">
+  <name xml:lang="en">Claim intake</name>
+  <documentation xml:lang="en">Test fixture: a flow that routes through both junction kinds, written the way a certified tool writes them — the schema has no bare Junction, only the concrete AndJunction and OrJunction. Importing this file must keep the junctions and every relationship touching them, and re-exporting it must still validate against the XSD.</documentation>
+  <elements>
+    <element identifier="proc-register" xsi:type="BusinessProcess">
+      <name xml:lang="en">Register claim</name>
+    </element>
+    <element identifier="jun-split" xsi:type="AndJunction">
+      <name xml:lang="en">Split</name>
+    </element>
+    <element identifier="proc-assess" xsi:type="BusinessProcess">
+      <name xml:lang="en">Assess damage</name>
+    </element>
+    <element identifier="proc-check" xsi:type="BusinessProcess">
+      <name xml:lang="en">Check policy cover</name>
+    </element>
+    <element identifier="jun-decide" xsi:type="OrJunction">
+      <name xml:lang="en">Decide</name>
+    </element>
+    <element identifier="proc-pay" xsi:type="BusinessProcess">
+      <name xml:lang="en">Pay claim</name>
+    </element>
+    <element identifier="proc-reject" xsi:type="BusinessProcess">
+      <name xml:lang="en">Reject claim</name>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="rel-register-split" source="proc-register" target="jun-split" xsi:type="Triggering" />
+    <relationship identifier="rel-split-assess" source="jun-split" target="proc-assess" xsi:type="Triggering" />
+    <relationship identifier="rel-split-check" source="jun-split" target="proc-check" xsi:type="Triggering" />
+    <relationship identifier="rel-assess-decide" source="proc-assess" target="jun-decide" xsi:type="Triggering" />
+    <relationship identifier="rel-check-decide" source="proc-check" target="jun-decide" xsi:type="Triggering" />
+    <relationship identifier="rel-decide-pay" source="jun-decide" target="proc-pay" xsi:type="Triggering" />
+    <relationship identifier="rel-decide-reject" source="jun-decide" target="proc-reject" xsi:type="Triggering" />
+  </relationships>
+</model>

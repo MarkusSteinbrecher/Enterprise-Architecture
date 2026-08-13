@@ -85,6 +85,19 @@ describe('published JSON Schema', () => {
     ).toBe(false)
   })
 
+  it('accepts a junction with an and/or kind, and rejects any other kind', () => {
+    const validate = validator()
+    const workspace = (junctionKind: string) => ({
+      schemaVersion: 1,
+      id: 'ws',
+      name: 'W',
+      elements: [{ id: 'j', type: 'Junction', name: 'Split', junctionKind }],
+      relationships: [],
+    })
+    expect(validate(workspace('or')), JSON.stringify(validate.errors)).toBe(true)
+    expect(validate(workspace('xor'))).toBe(false)
+  })
+
   it('requires the fields an agent would need to write a valid file', () => {
     const validate = validator()
     expect(validate({ id: 'ws', name: 'W' })).toBe(false)
