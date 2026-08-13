@@ -1,5 +1,30 @@
 # Session Log
 
+## 2026-08-13 (Opus, implementation) — #37 fixed: eight readers and writers that breached the invariant the PR exists to enforce
+
+The stack was done and the implementation lane was blocked on review — except for **#37**, reviewed on the 12th with eight blocking findings and never picked up. It sits on `main`, independent of the stack, so it was the one thing genuinely available. Fixed all eight plus 9, 10 and 11; **242 tests** (was 189), all six checks green, pushed as `c58648d` + `d474eaf`.
+
+**Finding 8 first, because it was the only one that made the *repo* less safe rather than one file.** The `localeCompare` rule keyed on `arguments.length<2`, so `localeCompare(a, b, undefined)` passed lint and still collated by machine locale — while the CLAUDE.md line the same PR wrote announced the guarantee. The selector now requires a **string-literal locale at the call site**: `undefined`, `void 0` and a variable all reach the same default, and only the literal is something a selector can follow. Extended to a computed member and to `Intl.Collator`, which had the identical hole one constructor over. `src/test/eslint-rules.test.ts` runs the **real ESLint over the real `eslint.config.js`** — so the thing under test is what `npm run lint` does, not a restatement of the selectors that could drift from them. 12 snippets, 320ms.
+
+**Decisions worth carrying forward:**
+
+1. **Where the writer and the reader have to agree, one function decides and both call it.** The tag encoding was a writer that emitted a comma list or a JSON array, and a reader that guessed from a leading `[`. Now `asTagArray` is the single predicate: the writer refuses the comma form for anything the reader would take as JSON. That makes `decodeTags(encodeTags(t)) === t` structural rather than a claim, and it is why a tag named `["a"]` or `[]` round-trips.
+2. **Same shape for finding 4.** `stripProfileKeys` removed every owned key while the reader kept only guard-passing values, and nothing reconciled them. `readPortfolioProfile` now returns `{ profile, unread }` and `stripProfileKeys(properties, unread)` keeps exactly what did *not* become a field — what leaves is what was read, by construction. The relationship reader had the same hole (`archipelago.annualCost: "about a lot"`); the review only named the element one.
+3. **Carried, not reported, for finding 6** — per this PR's own decision that carrying beats reporting where it is possible. Cost: one optional `Workspace.propertyTypes`, its schema entry, and canonical-JSON read/write. **The Open Group's real XSD accepts `currency`, `date`, `time` and `number` on a `propertyDefinition`**, so `validate:xsd` now validates a re-exported file carrying all four — proved rather than assumed.
+4. **Findings 5 and 6 only round-trip together.** Keeping the text (`0912345678` survives `Number`'s spelling) is half; carrying the `type="number"` declaration is the other. Either alone still loses.
+5. **Finding 9 needed fixing on both sides.** Omitting `junctionKind` on read is what the review asked for, but a JSON file with an explicit `"and"` would still have differed after an XML trip — so `canonicalElement` omits the default kind too. Absent is now the only spelling of `and` that gets written, in either format.
+6. **Finding 11: cached, not vendored.** The reviewer asked for the XSD to be vendored; the docblock's reason not to still holds — it is The Open Group's and this repo is MIT, the same argument that kept their ArchiSurance model out. Fetched once into `node_modules/.cache/`, `--refresh` to re-fetch, `ARCHIMATE_XSD=<path>` to override. Offline after the first run without redistributing their file. Flagged on the PR as overrulable.
+
+**The finding the review did not have: `record[key] = value` is not total.** Checking whether finding 2's shape — an untrusted key on a plain object — appeared anywhere else turned up its twin on the *write* side. Assigning `__proto__` invokes the prototype setter rather than creating a property, and for a string value the setter does nothing, so a property literally named `__proto__` was read, assigned and gone with `problems: []`. `setKey` (new `src/io/records.ts`) uses `Object.defineProperty` at every site whose key comes from a file.
+
+**And the test for it was the trap first time round**, which is the part worth keeping. Written longhand, `expect(properties).toEqual({ __proto__: 'mine', owner: 'kept' })` sets the prototype of the *expectation*, which quietly becomes `{ owner: 'kept' }` — so it passed against the broken code and failed against the fixed code. That is how the bug got noticed at all. A computed key fixes it. **The `__proto__` trap is symmetric: it eats the assertion as readily as the code**, so a test written to catch it can agree with it instead.
+
+**Every fix was verified by removing it and watching a named test fail** — scripted, one defect restored at a time, the failing test names recorded. All ten caught.
+
+**Not done, deliberately.** #45 (ESLint ban on casting a form value to a model union) is now unblocked in the sense that #37 has settled the rules array, but landing it would add a tenth PR to a queue the review lane is already behind on — and, like #35 and #44, a new lint rule on `main` can turn open PRs red all at once. It waits for the stack to merge.
+
+**State:** #24–#28 fixed and green, awaiting re-review. **#37 fixed and green, awaiting re-review.** #29 and #34 still unreviewed; #29 conflicts on `Header.tsx`/`SaveStateIndicator.tsx`, which is #29's review to decide, not the implementation lane's. #47 mergeable. Next: `/review-pr 29`, then #34, then re-review of #24–#28 and #37.
+
 ## 2026-08-12 (Opus, implementation) — the whole reviewed stack fixed: #24–#28, 41 blocking findings
 
 Took the five reviewed PRs bottom-up, fixing each against its own review and cascading the result into the branch above before starting it. All five now green: **#24** (6 blocking), **#25** (6), **#26** (8), **#27** (9), **#28** (10). 349 tests, up from 313.
