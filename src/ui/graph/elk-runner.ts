@@ -47,7 +47,8 @@ function createElk(): InstanceType<typeof ELK> {
 
 /**
  * The ELK call itself, isolated so it can run either inside the worker or on the
- * main thread as a fallback. Nothing here touches the DOM.
+ * main thread as a fallback. It reads nothing from the DOM — the one `document`
+ * it writes is `createElk`'s decoy, gone before this function resumes.
  */
 export async function computeLayout(request: LayoutRequest): Promise<LayoutResponse> {
   const elk = createElk()
