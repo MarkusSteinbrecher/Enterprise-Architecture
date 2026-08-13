@@ -26,6 +26,16 @@ Left as a nit and deliberately **not** applied, so the diff a human reads stays 
 
 Harvested: two CLAUDE.md lines (fake-at-the-boundary; presence-before-absence) and one review-skill bullet (grep `tests/e2e/` for the screen the PR touches).
 
+**Round 2 — the automated pass broke the review, which is the point of running it.** It returned ten findings, and the first falsified a claim I had already posted. I had "verified" the journey's *laid out by the worker, not the fallback* assertion by deleting `window.Worker` — the one failure mode where the Worker is never constructed. Every realistic one constructs it and fails after: `getWorker()` builds it before any outcome is known, and the recording subclass pushed the URL before `super()`. Confirmed by putting a `throw` at `layout.worker.ts` module scope and rebuilding: **the journey passed green with the worker completely dead.** That is the one-sided bound this very branch added a CLAUDE.md rule against, committed in the test written to demonstrate the rule.
+
+Fixed by asserting what actually separates the two paths: `layoutOnMainThread`'s `import('./elk-runner')` is the only fetch of that ~1.4MB chunk and the worker bundles its own copy, so *never requested* means the main thread never laid anything out. Red against the dead worker, green against a live one.
+
+Five more accepted: the unit test asserted only that two ids came back (`computeLayout` defaults missing geometry to `0`, so an all-zero layout passed — now asserts `b` above `a` and `height > 0`, verified red by forcing `y: 0`); `Reflect.deleteProperty`'s return was never checked; the journey number collided with file-round-trip's 5; the stats assertion compared a year from the Node process against one the browser computed; `getByRole('alert')` was page-wide. Two declined with reasons — memoising `createElk` (it would cache elkjs's good branch at import time and silently defeat the regression test; documented in the docblock where someone would try it) and `ELK` as a type (the default export is a value; `tsc` rejects it).
+
+**No new rule harvested from round 2, deliberately.** The failure was an existing rule applied too shallowly, not a missing one: *when a test asserts that work happened in a particular place, break that place the way it actually breaks* — deleting the constructor is not the failure mode, failing after construction is. That now lives in the journey's own comments.
+
+Standing conclusion for the working model: the strongest finding across both rounds came from the reviewer with no stake in the PR, and it caught an error in the *review*, not only in the code. Author-reviews are worth running and are not worth trusting alone.
+
 ## 2026-08-13 (review) — the phase-1 stack is merged: #24–#29 and #34, seven issues closed
 
 Same session as the entry below, continued. **Every open PR is merged and `main` is green on all six checks** — 467 unit tests, 15 e2e journeys, `tsc`, `eslint`, `format:check`, `build`, `validate:xsd`. Issues #6, #7, #8, #9, #10, #11 and #19 are closed. Phase 1 is done.
