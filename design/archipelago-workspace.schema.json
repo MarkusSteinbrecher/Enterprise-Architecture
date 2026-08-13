@@ -48,6 +48,19 @@
       "items": {
         "$ref": "#/$defs/tagGroup"
       }
+    },
+    "propertyTypes": {
+      "type": "object",
+      "description": "Exchange-format types declared for property keys held here as text (currency, date, time), so a model that arrives typed leaves typed. Keys whose type the value itself carries (boolean, number) are not listed.",
+      "additionalProperties": {
+        "enum": [
+          "boolean",
+          "currency",
+          "date",
+          "number",
+          "time"
+        ]
+      }
     }
   },
   "$defs": {
@@ -136,6 +149,13 @@
         },
         "documentation": {
           "type": "string"
+        },
+        "junctionKind": {
+          "enum": [
+            "and",
+            "or"
+          ],
+          "description": "And/or flavour of a Junction, which the exchange format spells as two concrete types (AndJunction, OrJunction). Absent means \"and\". Meaningless on any other element type."
         },
         "properties": {
           "$ref": "#/$defs/properties"
