@@ -5,7 +5,17 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', 'design', 'node_modules', 'coverage'] },
+  {
+    ignores: [
+      'dist',
+      'design',
+      'node_modules',
+      'coverage',
+      'test-results',
+      'playwright-report',
+      'blob-report',
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -60,5 +70,11 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    // Playwright fixtures take a `use` callback, which the React plugin reads as
+    // the `use` hook. Nothing in tests/ is a React component.
+    files: ['tests/**/*.ts'],
+    rules: { 'react-hooks/rules-of-hooks': 'off' },
   },
 )

@@ -35,6 +35,7 @@ TypeScript · React · Vite · React Flow + ELKjs (generated views) · IndexedDB
 npm install
 npm run dev          # dev server
 npm test             # unit tests (Vitest)
+npm run test:e2e     # end-to-end journeys (Playwright)
 npm run lint         # ESLint
 npm run build        # typecheck + production build into dist/
 ```
@@ -43,6 +44,33 @@ The production build targets a GitHub Pages **project** site, so it is written a
 the base path `/Enterprise-Architecture/`. Build for a root deployment with
 `BASE_PATH=/ npm run build`. `dist/404.html` carries the SPA redirect that keeps deep
 links (`/inventory`, `/element/:id`, `/graph`) working on Pages.
+
+## Tests
+
+Unit tests sit next to the code as `*.test.ts` and run with `npm test`. Everything that
+simulates a *user* lives in `tests/`:
+
+```bash
+npm run test:e2e         # build, serve on the Pages base path, run the journeys headless
+npm run test:e2e -- --ui # the same, in Playwright's interactive runner
+npm run test:e2e:report  # open the HTML report from the last run
+npx playwright install chromium   # once, to fetch the browser
+```
+
+`npm run test:e2e` builds the app and serves it with `vite preview` on
+`/Enterprise-Architecture/`, so the journeys exercise the production bundle and the base
+path rather than the dev server. Each test gets its own browser context, so IndexedDB and
+the theme preference start empty; the demo workspace is seeded by clicking through the
+first-run screen, which is the app's own import path. Any test the app writes a console
+error during fails, whatever else it asserted.
+
+CI runs the same command on every pull request and uploads traces, failure screenshots and
+video as the `playwright-artifacts` bundle — open a trace with
+`npx playwright show-trace <path>`.
+
+[`tests/manual/`](tests/manual/README.md) holds the matching UAT scripts: one markdown
+checklist per journey for the parts a machine cannot judge, and the cycle-tracking
+convention that goes with them.
 
 Module documentation lives next to the code: the typed ArchiMate 3.2 core in
 [`src/model/`](src/model/README.md), the in-memory store and persistence in

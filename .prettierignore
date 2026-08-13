@@ -4,3 +4,6 @@ coverage
 design
 src/assets/fonts
 public
+test-results
+playwright-report
+blob-report

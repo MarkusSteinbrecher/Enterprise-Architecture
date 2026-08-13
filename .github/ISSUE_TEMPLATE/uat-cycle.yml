@@ -1,0 +1,75 @@
+name: UAT cycle
+description: Open one per manual test cycle — one tester, one build, dated.
+title: 'UAT cycle: <build-label> (<YYYY-MM-DD>)'
+labels: [test, uat-cycle]
+body:
+  - type: input
+    id: build
+    attributes:
+      label: Build under test
+      description: Commit SHA, tag, or the Pages deployment the tester is looking at.
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: >-
+        `local` is the dev server, `preview` is the production bundle served locally,
+        `github-pages` is the deployed site. Prefer the latter two — the dev server does not
+        exercise the production build or the deep-link redirect.
+      options:
+        - local
+        - preview
+        - github-pages
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      description: >-
+        File handling differs by engine: Chromium keeps a handle on the saved file, Firefox
+        and Safari download a copy. Both are correct; the cycle should say which was tested.
+      options:
+        - Chrome / Edge (Chromium)
+        - Firefox
+        - Safari
+        - Other (say so in the notes)
+    validations:
+      required: true
+  - type: input
+    id: tester
+    attributes:
+      label: Tester
+      description: GitHub @-handle, or "self".
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: The flows in this cycle. Scripts live in `tests/manual/`.
+      value: |
+        - [ ] tests/manual/smoke.md
+        - [ ] tests/manual/first-run.md
+        - [ ] tests/manual/inventory-filter.md
+        - [ ] tests/manual/fact-sheet-edit.md
+        - [ ] tests/manual/file-round-trip.md
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / known issues
+      description: Anything the tester should ignore or be aware of before starting.
+      value: |
+        Known, do not file:
+        - #32 — cold boot flashes the read-only screen and lands the URL on /inventory
+        - #31 — undo/redo is not reachable from the UI
+  - type: textarea
+    id: result
+    attributes:
+      label: Result (filled at close)
+      description: Pass or fail per flow, with a link to any bug issue this cycle opened.
+      value: '_To be filled at cycle close._'
