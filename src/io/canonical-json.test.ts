@@ -348,3 +348,60 @@ describe('junctions and exchange-safe ids (issue #36)', () => {
     expect(unsafe[0]?.message).toContain('"9abc", "a b"')
   })
 })
+
+describe('canonical JSON hardening (review findings, PR #37)', () => {
+  it('writes a tag group with no tags in a shape it can read back', () => {
+    const workspace: Workspace = {
+      ...smallWorkspace(),
+      tagGroups: [{ id: 'tg-risk', name: 'Risk', multiSelect: false, tags: [] }],
+    }
+    const json = toCanonicalJson(workspace)
+    // `prune` dropped the zero-length array and `isTagGroup` requires it, so the
+    // writer produced exactly what the reader refuses (#37).
+    expect(json).toContain('"tags": []')
+    const back = fromCanonicalJson(json)
+    expect(back.problems).toEqual([])
+    expect(back.workspace?.tagGroups).toEqual(workspace.tagGroups)
+    expect(toCanonicalJson(back.workspace!)).toBe(json)
+  })
+
+  it('spells an and-junction one way, whichever way it was handed one', () => {
+    const explicit: Workspace = {
+      ...emptyWorkspace('ws-j', 'Junctions'),
+      elements: [
+        { id: 'j1', type: 'Junction', name: 'Split', junctionKind: 'and', properties: {} },
+      ],
+    }
+    const absent: Workspace = {
+      ...emptyWorkspace('ws-j', 'Junctions'),
+      elements: [{ id: 'j1', type: 'Junction', name: 'Split', properties: {} }],
+    }
+    expect(toCanonicalJson(explicit)).toBe(toCanonicalJson(absent))
+    expect(toCanonicalJson(explicit)).not.toContain('junctionKind')
+    // An or-junction still says so — this is a default, not a deletion.
+    const or: Workspace = {
+      ...emptyWorkspace('ws-j', 'Junctions'),
+      elements: [{ id: 'j1', type: 'Junction', name: 'Split', junctionKind: 'or', properties: {} }],
+    }
+    expect(toCanonicalJson(or)).toContain('"junctionKind": "or"')
+  })
+
+  it('carries declared property types, and reports one it cannot read', () => {
+    const workspace: Workspace = {
+      ...smallWorkspace(),
+      // `string` is what an unlisted key already means, so it is not one of the
+      // values this carries — a file that lists it is telling us nothing.
+      propertyTypes: { validUntil: 'date', owner: 'string' },
+    }
+    const back = fromCanonicalJson(toCanonicalJson(workspace))
+    expect(back.workspace?.propertyTypes).toEqual({ validUntil: 'date' })
+    expect(back.problems.map((p) => p.code)).toEqual(['json.invalid-property-types'])
+  })
+
+  it('leaves propertyTypes out of a workspace that has none', () => {
+    expect(toCanonicalJson(smallWorkspace())).not.toContain('propertyTypes')
+    expect(toCanonicalJson({ ...smallWorkspace(), propertyTypes: {} })).not.toContain(
+      'propertyTypes',
+    )
+  })
+})

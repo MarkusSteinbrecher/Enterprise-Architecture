@@ -50,6 +50,7 @@ export function toCanonicalJson(workspace: Workspace): string {
     relationships: [...workspace.relationships].sort(byId).map(canonicalRelationship),
     views: [...workspace.views].sort(byId).map(canonicalView),
     tagGroups: [...workspace.tagGroups].sort(byId).map(canonicalTagGroup),
+    propertyTypes: workspace.propertyTypes && emptyToUndefined(workspace.propertyTypes),
   }
   return `${JSON.stringify(canonical, sortKeys, CANONICAL_JSON_INDENT)}\n`
 }
@@ -202,6 +203,8 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
     views,
     tagGroups,
   }
+  const propertyTypes = readPropertyTypes(raw.propertyTypes, problems, where)
+  if (propertyTypes) workspace.propertyTypes = propertyTypes
 
   return succeeded(workspace, problems)
 }
@@ -214,7 +217,10 @@ function canonicalElement(element: Element): Record<string, unknown> {
     type: element.type,
     name: element.name,
     documentation: element.documentation,
-    junctionKind: element.junctionKind,
+    // Absent *means* `and`, so the two spellings are one model and have to
+    // produce one file: an XML round trip reads `AndJunction` back as absent,
+    // and keeping an explicit `and` here made the same model differ (ADR 0004).
+    junctionKind: element.junctionKind === DEFAULT_JUNCTION_KIND ? undefined : element.junctionKind,
     properties: emptyToUndefined(element.properties),
     profile: element.profile ? prune({ ...element.profile }) : undefined,
   })
@@ -253,12 +259,17 @@ export function canonicalTagGroupsJson(groups: readonly TagGroup[]): string {
 }
 
 function canonicalTagGroup(group: TagGroup): Record<string, unknown> {
-  return prune({
-    ...group,
+  return {
+    ...prune({ ...group }),
+    // `tags` is written even when empty. It is the one field `isTagGroup`
+    // requires, so pruning it made the writer produce exactly what the reader
+    // refuses: a group created but not yet filled came back as a warning
+    // blaming the file for what this function had done to it (#37).
+    //
     // Code-unit order, not localeCompare: collation depends on the machine's
     // locale, and two collaborators must commit identical bytes (ADR 0004).
     tags: [...group.tags].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)),
-  })
+  }
 }
 
 /** JSON.stringify replacer: emit object keys in sorted order at every depth. */
@@ -545,6 +556,49 @@ export function isViewDefinition(value: unknown): value is ViewDefinition {
 
 export function isTagGroup(value: unknown): value is TagGroup {
   return isRecord(value) && typeof value.id === 'string' && Array.isArray(value.tags)
+}
+
+/**
+ * Exchange-format property types the workspace carries so a typed file leaves
+ * typed (see `Workspace.propertyTypes`). The set is the schema's, minus
+ * `string`, which is what an unlisted key already means.
+ */
+const CARRIED_PROPERTY_TYPES = new Set(['boolean', 'currency', 'date', 'number', 'time'])
+
+function readPropertyTypes(
+  candidate: unknown,
+  problems: ImportProblem[],
+  where: { file?: string },
+): Record<string, string> | undefined {
+  if (candidate === undefined) return undefined
+  if (!isRecord(candidate)) {
+    problems.push(
+      problem(
+        'warning',
+        'json.invalid-property-types',
+        'propertyTypes is not an object, so the property types this file declared were dropped. Their values are unaffected; an export will declare them as text.',
+        where,
+      ),
+    )
+    return undefined
+  }
+  const out: Record<string, string> = {}
+  const rejected: string[] = []
+  for (const [key, value] of Object.entries(candidate)) {
+    if (typeof value === 'string' && CARRIED_PROPERTY_TYPES.has(value)) out[key] = value
+    else rejected.push(key)
+  }
+  if (rejected.length) {
+    problems.push(
+      problem(
+        'warning',
+        'json.invalid-property-types',
+        `${rejected.length} propert${rejected.length === 1 ? 'y' : 'ies'} (${rejected.slice(0, 3).join(', ')}${rejected.length > 3 ? ', …' : ''}) declare a type this build does not know, so ${rejected.length === 1 ? 'it was' : 'they were'} dropped. Their values are unaffected; an export will declare them as text.`,
+        where,
+      ),
+    )
+  }
+  return Object.keys(out).length ? out : undefined
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -33,11 +33,16 @@ element order (`name`, `documentation`, `properties`) and identifier types
 neither. Reading uses `fast-xml-parser` with `removeNSPrefix`, so a file works
 whichever namespace prefix its author happened to use.
 
-`npm run validate:xsd` fetches the Open Group XSD and validates, with `xmllint`,
-every bundled file both as checked in and as it comes back out of a round trip,
-plus a workspace whose ids had to be rewritten. It is a script rather than a CI
-step because it needs network access and libxml2; the offline structural rules
-are covered by `exchange-format.test.ts`.
+`npm run validate:xsd` validates, with `xmllint`, every bundled file both as
+checked in and as it comes back out of a round trip, plus a workspace whose ids
+had to be rewritten and one carrying declared `currency`/`date`/`time` types. It
+is a script rather than a CI step because it needs libxml2; the offline
+structural rules are covered by `exchange-format.test.ts`.
+
+The XSD is The Open Group's and is **not vendored** — the same licensing reason
+their ArchiSurance model is not bundled either. It is fetched once and cached
+under `node_modules/.cache/`, so only the first run of a fresh checkout needs the
+network; `--refresh` re-fetches and `ARCHIMATE_XSD=<path>` uses your own copy.
 
 **Not read yet:** the format's `views` (diagrams) and `organizations` (folders).
 Both are reported as skipped rather than dropped silently — Archipelago generates
@@ -56,7 +61,9 @@ travels beside the type as `Element.junctionKind` (absent means `and`, which is
 what an unqualified junction is) and the reader and writer map between the two.
 Before this, importing a file with a junction dropped the junction **and every
 relationship touching it**, so whole flow chains vanished, and exporting one
-produced XML that failed validation.
+produced XML that failed validation. Absent is the *only* spelling of `and` that
+gets written: reading `AndJunction` back as an explicit `and` made two files
+holding one model differ byte for byte, which is what ADR 0004 exists to stop.
 
 **Identifiers.** `xs:ID` values are XML names: no leading digit, no punctuation
 beyond `_.-`. Ids we generate always qualify (`el-<uuid>`), but the native reader
@@ -73,6 +80,16 @@ enough to break a filter and to make the next canonical-JSON export differ from
 the last. Definitions are now typed from the values the model actually holds. A
 key used inconsistently (a number here, a word there) falls back to `string` and
 says so, because the format allows one type per key.
+
+Two halves of that were still lossy until the #37 review. A `number` value is
+only read as one when its *text* survives the trip: `Number` is not reversible,
+so `0912345678`, `1.50` and a twenty-digit account number all came back spelled
+differently and the next export wrote the new spelling. And the schema's
+`currency`, `date` and `time` have no counterpart in `PropertyValue` — their
+values are text here — so `typeof value` could only ever say `string` and a
+re-export declared them as `string`. The declaration is now kept on
+`Workspace.propertyTypes` and written back; the value decides whenever it can say
+more than "string".
 
 **Empty strings.** `<value xml:lang="en"></value>` parses to its attributes
 alone. That is the empty string, not "no value"; reading it as absent dropped the
@@ -104,10 +121,20 @@ Access relationship, so it is written as one.
 Two details that are easy to get wrong. Keys are stripped on import from an
 **allowlist** of the keys this module reads, not by namespace prefix: a key a
 newer build wrote (or an architect borrowed the prefix for) has to survive as an
-ordinary property rather than being deleted. And tags travel as a comma-separated
-list — readable in any tool's property sheet — unless a tag contains a comma, in
-which case the whole list is written as a JSON array. The reader accepts both, and
-the choice is a pure function of the tags, so the bytes stay deterministic.
+ordinary property rather than being deleted. That allowlist was only half the
+job — a key this build *does* know but whose value it cannot read
+(`archipelago.timeClassification: "Banana"`) was stripped by one function and
+rejected by the other, and nothing reconciled them, so it vanished with
+`problems: []`. `readPortfolioProfile` now hands back what it could not read and
+`stripProfileKeys` keeps exactly those: what became a field is what leaves.
+
+And tags travel as a comma-separated list — readable in any tool's property sheet
+— unless a tag contains a comma or padding, in which case the whole list is
+written as a JSON array. The two forms have to be told apart *exactly*: testing
+the first character for `[` is a guess, and it was wrong for a tag spelled like
+the escaped form (`["a"]` came back as the single tag `a`; `[]` took
+`profile.tags` with it). One function, `asTagArray`, decides — and the writer
+refuses the comma form for anything the reader would take as JSON.
 
 ## Import problems are data, not exceptions
 

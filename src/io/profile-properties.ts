@@ -93,59 +93,122 @@ export function profileToProperties(profile: PortfolioProfile | undefined): Reco
  * containing a comma (or leading padding) does not survive a naive split, so
  * such a list is written as a JSON array instead. `decodeTags` accepts both, and
  * the choice is a pure function of the tags, so the bytes stay deterministic.
+ *
+ * The two forms have to be told apart *exactly*, not guessed at. Testing the
+ * first character for `[` is a guess, and it was wrong for a tag that is itself
+ * spelled like the escaped form: `["a"]` written as a comma list read back as
+ * the single tag `a`, and a tag named `[]` took `profile.tags` with it (#37).
+ * So one function decides — `asTagArray` — and both directions call it: the
+ * writer refuses the comma form for anything the reader would take as JSON.
  */
 function encodeTags(tags: readonly string[]): string {
-  const splittable = tags.every((tag) => tag === tag.trim() && tag !== '' && !tag.includes(','))
-  return splittable ? tags.join(', ') : JSON.stringify(tags)
+  const joined = tags.join(', ')
+  const splittable =
+    tags.every((tag) => tag === tag.trim() && tag !== '' && !tag.includes(',')) &&
+    asTagArray(joined) === undefined
+  return splittable ? joined : JSON.stringify(tags)
 }
 
 function decodeTags(value: string): string[] {
-  if (value.trim().startsWith('[')) {
-    try {
-      const parsed: unknown = JSON.parse(value)
-      if (Array.isArray(parsed) && parsed.every((tag) => typeof tag === 'string')) {
-        return (parsed as string[]).filter(Boolean)
-      }
-    } catch {
-      // Not JSON after all — a tag that merely starts with "[". Read it as a list.
-    }
-  }
+  const array = asTagArray(value)
+  if (array) return array.filter(Boolean)
   return value
     .split(',')
     .map((tag) => tag.trim())
     .filter(Boolean)
 }
 
+/** The value read as the JSON-array form, or `undefined` when it is not one. */
+function asTagArray(value: string): string[] | undefined {
+  if (!value.trim().startsWith('[')) return undefined
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (Array.isArray(parsed) && parsed.every((tag) => typeof tag === 'string')) {
+      return parsed as string[]
+    }
+  } catch {
+    // Not JSON after all — a tag that merely starts with "[". Read it as a list.
+  }
+  return undefined
+}
+
+/**
+ * A profile read back out of properties, and what could not be read.
+ *
+ * The two halves have to be handed back together. `stripProfileKeys` used to
+ * remove every key this module owns while the reader kept only the values its
+ * guards accepted, and nothing reconciled the two — so
+ * `archipelago.timeClassification: "Banana"` was stripped from the properties,
+ * rejected by the guard, and gone, with `problems: []` (#37). A key this build
+ * cannot read is somebody's data: it stays an ordinary property, and the caller
+ * says so.
+ */
+export interface ProfileRead<T> {
+  profile: T | undefined
+  /** Owned keys present in the input whose value produced no field. */
+  unread: readonly string[]
+}
+
 /** Read a portfolio profile back out of properties; `undefined` when there is none. */
-export function profileFromProperties(
+export function readPortfolioProfile(
   properties: Record<string, PropertyValue>,
-): PortfolioProfile | undefined {
+): ProfileRead<PortfolioProfile> {
   const profile: PortfolioProfile = {}
   const lifecycle: LifecycleDates = {}
+  /** Every key that became a field. What is left over is exactly what did not. */
+  const consumed = new Set<string>()
 
   for (const phase of LIFECYCLE_PHASES) {
-    const value = properties[LIFECYCLE_KEYS[phase]]
-    if (typeof value === 'string' && value.trim()) lifecycle[phase] = value.trim()
+    const key = LIFECYCLE_KEYS[phase]
+    const value = properties[key]
+    if (typeof value === 'string' && value.trim() !== '') {
+      lifecycle[phase] = value.trim()
+      consumed.add(key)
+    }
   }
   if (Object.keys(lifecycle).length) profile.lifecycle = lifecycle
 
   const functionalFit = toLevel(properties[FUNCTIONAL_FIT_KEY])
-  if (functionalFit) profile.functionalFit = functionalFit
+  if (functionalFit !== undefined) {
+    profile.functionalFit = functionalFit
+    consumed.add(FUNCTIONAL_FIT_KEY)
+  }
   const technicalFit = toLevel(properties[TECHNICAL_FIT_KEY])
-  if (technicalFit) profile.technicalFit = technicalFit
+  if (technicalFit !== undefined) {
+    profile.technicalFit = technicalFit
+    consumed.add(TECHNICAL_FIT_KEY)
+  }
   const criticality = toLevel(properties[CRITICALITY_KEY])
-  if (criticality) profile.businessCriticality = criticality
-
-  const time = properties[TIME_KEY]
-  if (isTimeClassification(time)) profile.timeClassification = time
-
-  const tags = properties[TAGS_KEY]
-  if (typeof tags === 'string' && tags.trim()) {
-    const decoded = decodeTags(tags)
-    if (decoded.length) profile.tags = decoded
+  if (criticality !== undefined) {
+    profile.businessCriticality = criticality
+    consumed.add(CRITICALITY_KEY)
   }
 
-  return Object.keys(profile).length ? profile : undefined
+  const time = properties[TIME_KEY]
+  if (isTimeClassification(time)) {
+    profile.timeClassification = time
+    consumed.add(TIME_KEY)
+  }
+
+  const tags = properties[TAGS_KEY]
+  const decoded = typeof tags === 'string' ? decodeTags(tags) : []
+  if (decoded.length) {
+    profile.tags = decoded
+    consumed.add(TAGS_KEY)
+  }
+
+  return {
+    profile: Object.keys(profile).length ? profile : undefined,
+    unread: unreadKeys(properties, consumed),
+  }
+}
+
+/** Owned keys the reader was handed and did not consume. */
+function unreadKeys(
+  properties: Record<string, PropertyValue>,
+  consumed: ReadonlySet<string>,
+): string[] {
+  return Object.keys(properties).filter((key) => isProfileKey(key) && !consumed.has(key))
 }
 
 export function relationshipProfileToProperties(
@@ -162,10 +225,12 @@ export function relationshipProfileToProperties(
   return out
 }
 
-export function relationshipProfileFromProperties(
+export function readRelationshipProfile(
   properties: Record<string, PropertyValue>,
-): RelationshipProfile | undefined {
+): ProfileRead<RelationshipProfile> {
   const profile: RelationshipProfile = {}
+  const consumed = new Set<string>()
+
   const rawCost = properties[ANNUAL_COST_KEY]
   // Number('') is 0 — an empty value must stay "no cost data", not become €0.
   const hasCost =
@@ -173,32 +238,52 @@ export function relationshipProfileFromProperties(
   const cost = Number(rawCost)
   if (hasCost && Number.isFinite(cost)) {
     profile.annualCost = cost
+    consumed.add(ANNUAL_COST_KEY)
   }
-  const currency = properties[CURRENCY_KEY]
-  if (typeof currency === 'string' && currency) profile.currency = currency
-  const supportType = properties[SUPPORT_TYPE_KEY]
-  if (typeof supportType === 'string' && supportType) profile.supportType = supportType
-  const validFrom = properties[VALID_FROM_KEY]
-  if (typeof validFrom === 'string' && validFrom) profile.validFrom = validFrom
-  const validTo = properties[VALID_TO_KEY]
-  if (typeof validTo === 'string' && validTo) profile.validTo = validTo
-  return Object.keys(profile).length ? profile : undefined
+
+  /** The value at `key` when it is text this build can use, else `undefined`. */
+  const text = (key: string): string | undefined => {
+    const value = properties[key]
+    if (typeof value !== 'string' || value === '') return undefined
+    consumed.add(key)
+    return value
+  }
+  const currency = text(CURRENCY_KEY)
+  if (currency !== undefined) profile.currency = currency
+  const supportType = text(SUPPORT_TYPE_KEY)
+  if (supportType !== undefined) profile.supportType = supportType
+  const validFrom = text(VALID_FROM_KEY)
+  if (validFrom !== undefined) profile.validFrom = validFrom
+  const validTo = text(VALID_TO_KEY)
+  if (validTo !== undefined) profile.validTo = validTo
+
+  return {
+    profile: Object.keys(profile).length ? profile : undefined,
+    unread: unreadKeys(properties, consumed),
+  }
 }
 
 /**
- * Properties minus the keys this module reads back into typed fields.
+ * Properties minus the keys that were actually read into typed fields.
  *
  * Stripping by *key* rather than by namespace prefix is deliberate: a key this
  * build does not know — one written by a newer version, or by an architect who
  * borrowed the prefix — has to survive as an ordinary property. Stripping the
  * whole prefix deleted it (#36).
+ *
+ * `unread` closes the same hole one step in: a key this build *does* know but
+ * whose value it could not read is data too, and stripping it deleted that
+ * (#37). Pass what `readPortfolioProfile` or `readRelationshipProfile` handed
+ * back, so exactly the keys that became fields are the keys that leave.
  */
 export function stripProfileKeys(
   properties: Record<string, PropertyValue>,
+  unread: readonly string[] = [],
 ): Record<string, PropertyValue> {
+  const kept = new Set(unread)
   const out: Record<string, PropertyValue> = {}
   for (const [key, value] of Object.entries(properties)) {
-    if (!isProfileKey(key)) out[key] = value
+    if (!isProfileKey(key) || kept.has(key)) out[key] = value
   }
   return out
 }

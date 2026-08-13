@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_TAG_GROUP, validate, type Workspace } from '@/model'
+import { DEFAULT_TAG_GROUP, SCHEMA_VERSION, validate, type Element, type Workspace } from '@/model'
 import { isExchangeSafeId } from '@/store/ids'
 import { smallWorkspace } from '@/test/fixtures'
+import { fromCanonicalJson, toCanonicalJson } from './canonical-json'
 import { exportExchange, exportExchangeXml, importExchangeXml } from './exchange-format'
 import { DEMO_WORKSPACE_XML, loadDemoWorkspace } from './demo'
 import junctionFlowXml from './fixtures/junction-flow.xml?raw'
@@ -323,7 +324,10 @@ describe('junctions (issue #36)', () => {
         .filter((element) => element.type === 'Junction')
         .map((junction) => [junction.id, junction.junctionKind]),
     ).toEqual([
-      ['jun-split', 'and'],
+      // Absent, not 'and'. The canonical writer spells the default kind by
+      // leaving it out, so reading `AndJunction` back as an explicit 'and' made
+      // the same model produce two different files (ADR 0004, #37).
+      ['jun-split', undefined],
       ['jun-decide', 'or'],
     ])
   })
@@ -350,10 +354,51 @@ describe('junctions (issue #36)', () => {
   <name xml:lang="en">Bare</name>
   <elements><element identifier="j" xsi:type="Junction"><name xml:lang="en">Split</name></element></elements>
 </model>`
-    expect(importExchangeXml(xml).workspace?.elements[0]).toMatchObject({
-      type: 'Junction',
-      junctionKind: 'and',
-    })
+    const element = importExchangeXml(xml).workspace?.elements[0]
+    expect(element).toMatchObject({ type: 'Junction' })
+    // An and-junction *is* one with no kind — the specification's default, and
+    // the only spelling the canonical writer emits.
+    expect(element?.junctionKind).toBeUndefined()
+    expect(exportExchangeXml(importExchangeXml(xml).workspace!)).toContain('xsi:type="AndJunction"')
+  })
+
+  // Finding 9 of the #37 review: the field the canonical writer omits was being
+  // invented by the reader, so two files holding one model were not one file.
+  it('gives an and-junction the same canonical JSON however the file spelled it', () => {
+    const spell = (type: string) =>
+      toCanonicalJson(
+        importExchangeXml(
+          `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
+  <name xml:lang="en">Bare</name>
+  <elements><element identifier="j" xsi:type="${type}"><name xml:lang="en">Split</name></element></elements>
+</model>`,
+        ).workspace!,
+      )
+    expect(spell('AndJunction')).toBe(spell('Junction'))
+    expect(spell('AndJunction')).not.toContain('junctionKind')
+  })
+
+  it('imports an xsi:type naming an Object.prototype member as nothing at all', () => {
+    // `JUNCTION_TYPES['toString']` on an object literal resolves to a *function*,
+    // so the type check passed, the element became a Junction that was never in
+    // the file, and junctionKind held something JSON.stringify drops (#37).
+    const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
+  <name xml:lang="en">Odd</name>
+  <elements><element identifier="e1" xsi:type="toString"><name xml:lang="en">Odd</name></element></elements>
+</model>`
+    const result = importExchangeXml(xml)
+    expect(result.workspace?.elements).toEqual([])
+    expect(result.problems.map((p) => p.code)).toEqual(['exchange.unknown-element-type'])
+  })
+
+  it('rejects the other prototype members the same lookup used to accept', () => {
+    for (const type of ['constructor', 'valueOf', 'hasOwnProperty', '__proto__']) {
+      const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
+  <name xml:lang="en">Odd</name>
+  <elements><element identifier="e1" xsi:type="${type}"><name xml:lang="en">Odd</name></element></elements>
+</model>`
+      expect(importExchangeXml(xml).workspace?.elements, type).toEqual([])
+    }
   })
 })
 
@@ -564,5 +609,264 @@ describe('property fidelity (issue #36)', () => {
       'Buy, hold',
       'Core',
     ])
+  })
+})
+
+describe('hardening (review findings, PR #37)', () => {
+  function element(id: string, properties: Record<string, string | number | boolean>): Element {
+    return { id, type: 'ApplicationComponent', name: 'Portal', properties }
+  }
+
+  function workspaceOf(elements: Element[]): Workspace {
+    return {
+      id: 'ws-hardening',
+      name: 'Hardening',
+      schemaVersion: SCHEMA_VERSION,
+      elements,
+      relationships: [],
+      views: [],
+      tagGroups: [DEFAULT_TAG_GROUP],
+    }
+  }
+
+  /** Every xs:ID the file declares — `identifier`, never a reference. */
+  function declaredIds(xml: string): string[] {
+    return [...xml.matchAll(/\sidentifier="([^"]*)"/g)].map((match) => match[1]!)
+  }
+
+  /** A file declaring one property of `type`, holding `value` verbatim. */
+  function fileWithProperty(type: string, value: string, key = 'assetNo'): string {
+    return `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
+  <name xml:lang="en">Typed</name>
+  <elements>
+    <element identifier="e1" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Portal</name>
+      <properties><property propertyDefinitionRef="p1"><value xml:lang="en">${value}</value></property></properties>
+    </element>
+  </elements>
+  <propertyDefinitions>
+    <propertyDefinition identifier="p1" type="${type}"><name xml:lang="en">${key}</name></propertyDefinition>
+  </propertyDefinitions>
+</model>`
+  }
+
+  describe('finding 1 — one xs:ID namespace, property definitions included', () => {
+    it('does not collide a minted propid with an element that is called propid-1', () => {
+      const { xml, problems } = exportExchange(workspaceOf([element('propid-1', { owner: 'x' })]))
+      const ids = declaredIds(xml)
+      expect(ids).toContain('propid-1')
+      expect(new Set(ids).size, `duplicate xs:ID in ${ids.join(', ')}`).toBe(ids.length)
+      expect(problems).toEqual([])
+    })
+
+    it('does not collide with an id that only becomes propid-1 once sanitised', () => {
+      const { xml } = exportExchange(workspaceOf([element('propid/1', { owner: 'x' })]))
+      const ids = declaredIds(xml)
+      expect(ids).toContain('propid-1')
+      expect(new Set(ids).size, `duplicate xs:ID in ${ids.join(', ')}`).toBe(ids.length)
+    })
+
+    it('still reads the file it wrote around the collision', () => {
+      const { xml } = exportExchange(workspaceOf([element('propid-1', { owner: 'x' })]))
+      const result = importExchangeXml(xml)
+      expect(result.problems.filter((p) => p.severity === 'error')).toEqual([])
+      expect(result.workspace?.elements[0]?.properties).toEqual({ owner: 'x' })
+    })
+  })
+
+  describe('finding 3 — a tag spelled like the tag encoding', () => {
+    // The comma form and the JSON-array form have to be told apart exactly. The
+    // separator rule's read side: a value that *looks like* the escaped form.
+    const awkward = [
+      ['a tag that is the encoding', '["a"]'],
+      ['an empty array', '[]'],
+      ['a bare bracket', '['],
+      ['something that parses as JSON but is one tag', '[a, b]'],
+      ['a comma, which is the separator', 'Buy, hold'],
+      ['leading padding', '  padded'],
+      ['a quote and a backslash', 'say "hi" \\ bye'],
+    ] as const
+
+    it.each(awkward)('round-trips %s', (_what, tag) => {
+      const workspace = workspaceOf([element('e1', {})])
+      workspace.elements[0]!.profile = { tags: [tag, 'Core'] }
+      const restored = roundTrip(workspace)
+      expect(restored.elements[0]?.profile?.tags).toEqual([tag, 'Core'])
+    })
+
+    it('does not let a tag named ["a"] come back as the tag a', () => {
+      const workspace = workspaceOf([element('e1', {})])
+      workspace.elements[0]!.profile = { tags: ['["a"]'] }
+      expect(roundTrip(workspace).elements[0]?.profile?.tags).toEqual(['["a"]'])
+    })
+
+    it('does not let a tag named [] take profile.tags with it', () => {
+      const workspace = workspaceOf([element('e1', {})])
+      workspace.elements[0]!.profile = { tags: ['[]'] }
+      expect(roundTrip(workspace).elements[0]?.profile?.tags).toEqual(['[]'])
+    })
+  })
+
+  describe('finding 4 — a known archipelago key with a value this build cannot read', () => {
+    it('keeps the value as an ordinary property instead of deleting it', () => {
+      const xml = exportExchangeXml(
+        workspaceOf([
+          element('e1', { owner: 'keep me', 'archipelago.timeClassification': 'Banana' }),
+        ]),
+      )
+      const result = importExchangeXml(xml)
+      expect(result.workspace?.elements[0]?.properties).toEqual({
+        owner: 'keep me',
+        'archipelago.timeClassification': 'Banana',
+      })
+      expect(result.workspace?.elements[0]?.profile).toBeUndefined()
+    })
+
+    it('says the assessment did not arrive rather than saying nothing', () => {
+      const xml = exportExchangeXml(
+        workspaceOf([element('e1', { 'archipelago.functionalFit': 'quite good' })]),
+      )
+      expect(importExchangeXml(xml).problems.map((p) => p.code)).toContain(
+        'exchange.profile-value-unreadable',
+      )
+    })
+
+    it('keeps it through a second trip, byte for byte', () => {
+      const once = exportExchangeXml(
+        workspaceOf([element('e1', { 'archipelago.timeClassification': 'Banana' })]),
+      )
+      expect(exportExchangeXml(importExchangeXml(once).workspace!)).toBe(once)
+    })
+
+    it('does the same for a relationship profile key', () => {
+      const workspace = workspaceOf([
+        element('e1', {}),
+        { id: 'e2', type: 'Node', name: 'Host', properties: {} },
+      ])
+      workspace.relationships = [
+        {
+          id: 'r1',
+          type: 'Association',
+          source: 'e1',
+          target: 'e2',
+          properties: { 'archipelago.annualCost': 'about a lot' },
+        },
+      ]
+      const result = importExchangeXml(exportExchangeXml(workspace))
+      expect(result.workspace?.relationships[0]?.properties).toEqual({
+        'archipelago.annualCost': 'about a lot',
+      })
+      expect(result.problems.map((p) => p.code)).toContain('exchange.profile-value-unreadable')
+    })
+  })
+
+  describe('finding 5 — a number the text of which does not survive Number()', () => {
+    it.each([
+      ['a leading zero', '0912345678'],
+      ['trailing cents', '1.50'],
+      ['more digits than a double holds', '12345678901234567890'],
+      ['exponent notation', '1e3'],
+      ['not a number at all', 'n/a'],
+      ['nothing', ''],
+    ])('keeps %s as the text the file held', (_what, value) => {
+      const result = importExchangeXml(fileWithProperty('number', value))
+      expect(result.workspace?.elements[0]?.properties.assetNo).toBe(value)
+    })
+
+    it('still reads a number whose text does survive', () => {
+      const result = importExchangeXml(fileWithProperty('number', '42'))
+      expect(result.workspace?.elements[0]?.properties.assetNo).toBe(42)
+    })
+
+    it('keeps a boolean definition holding something that is not a boolean', () => {
+      const result = importExchangeXml(fileWithProperty('boolean', 'maybe', 'pii'))
+      expect(result.workspace?.elements[0]?.properties.pii).toBe('maybe')
+    })
+
+    it('writes the untouched text back out, so the file round-trips', () => {
+      const once = fileWithProperty('number', '0912345678')
+      const twice = exportExchangeXml(importExchangeXml(once).workspace!)
+      expect(twice).toContain('<value xml:lang="en">0912345678</value>')
+      expect(twice).toContain('type="number"')
+    })
+  })
+
+  describe('finding 6 — a declared type that has no counterpart in the model', () => {
+    it.each(['currency', 'date', 'time'])(
+      'keeps a %s declaration through the round trip',
+      (type) => {
+        const once = fileWithProperty(type, '2024-01-01', 'validUntil')
+        const workspace = importExchangeXml(once).workspace!
+        expect(workspace.propertyTypes).toEqual({ validUntil: type })
+        const twice = exportExchangeXml(workspace)
+        expect(twice).toMatch(
+          new RegExp(
+            `<propertyDefinition identifier="[^"]+" type="${type}">\\s*<name xml:lang="en">validUntil</name>`,
+          ),
+        )
+        // And the value itself is untouched.
+        expect(twice).toContain('<value xml:lang="en">2024-01-01</value>')
+      },
+    )
+
+    it('carries the declaration through canonical JSON too', () => {
+      const workspace = importExchangeXml(
+        fileWithProperty('date', '2024-01-01', 'validUntil'),
+      ).workspace!
+      const back = fromCanonicalJson(toCanonicalJson(workspace))
+      expect(back.problems).toEqual([])
+      expect(back.workspace?.propertyTypes).toEqual({ validUntil: 'date' })
+      expect(exportExchangeXml(back.workspace!)).toBe(exportExchangeXml(workspace))
+    })
+
+    it('lets the value decide when the value knows better', () => {
+      // A key declared `date` but holding a boolean is a boolean: the carried
+      // declaration only fills in where `typeof value` can say nothing but "string".
+      const workspace = importExchangeXml(
+        fileWithProperty('date', '2024-01-01', 'validUntil'),
+      ).workspace!
+      workspace.elements[0]!.properties.validUntil = true
+      expect(exportExchangeXml(workspace)).toMatch(
+        /<propertyDefinition identifier="[^"]+" type="boolean">\s*<name xml:lang="en">validUntil<\/name>/,
+      )
+    })
+
+    it('reports a declared type the exchange format has no such thing as', () => {
+      const result = importExchangeXml(fileWithProperty('banana', 'yellow', 'fruit'))
+      expect(result.problems.map((p) => p.code)).toContain('exchange.property-type-unknown')
+      expect(result.workspace?.elements[0]?.properties.fruit).toBe('yellow')
+      expect(result.workspace?.propertyTypes).toBeUndefined()
+    })
+  })
+
+  describe('finding 7 — a tag group with no tags in it yet', () => {
+    const empty = { id: 'tg-risk', name: 'Risk', multiSelect: false, tags: [] }
+
+    it('survives the exchange round trip instead of being blamed on the file', () => {
+      const workspace = { ...smallWorkspace(), tagGroups: [DEFAULT_TAG_GROUP, empty] }
+      const result = importExchangeXml(exportExchangeXml(workspace))
+      // The writer pruned `tags: []` and `isTagGroup` then rejected what it had
+      // just written, so the group vanished *and* the file was blamed for it.
+      expect(result.problems).toEqual([])
+      expect(result.workspace?.tagGroups.find((group) => group.id === 'tg-risk')).toEqual(empty)
+      expect(result.workspace?.tagGroups).toHaveLength(2)
+    })
+  })
+
+  describe('finding 10 — the fallback branches nothing was driving', () => {
+    it('counts the carried views it had to drop', () => {
+      const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
+  <name xml:lang="en">Half broken carry</name>
+  <properties><property propertyDefinitionRef="p1"><value xml:lang="en">[{"id":"v1","name":"Kept","kind":"graph"},{"nope":true},7]</value></property></properties>
+  <propertyDefinitions>
+    <propertyDefinition identifier="p1" type="string"><name xml:lang="en">archipelago.views</name></propertyDefinition>
+  </propertyDefinitions>
+</model>`
+      const result = importExchangeXml(xml)
+      expect(result.workspace?.views.map((view) => view.id)).toEqual(['v1'])
+      expect(
+        result.problems.find((p) => p.code === 'exchange.carried-unreadable')?.message,
+      ).toContain('2 of the 3 saved views')
+    })
   })
 })

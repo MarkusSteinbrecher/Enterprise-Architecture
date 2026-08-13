@@ -46,6 +46,12 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
       relationships: { type: 'array', items: { $ref: '#/$defs/relationship' } },
       views: { type: 'array', items: { $ref: '#/$defs/view' } },
       tagGroups: { type: 'array', items: { $ref: '#/$defs/tagGroup' } },
+      propertyTypes: {
+        type: 'object',
+        description:
+          'Exchange-format types declared for property keys held here as text (currency, date, time), so a model that arrives typed leaves typed. Keys whose type the value itself carries (boolean, number) are not listed.',
+        additionalProperties: { enum: ['boolean', 'currency', 'date', 'number', 'time'] },
+      },
     },
     $defs: {
       element: {

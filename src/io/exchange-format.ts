@@ -24,9 +24,9 @@ import {
 import { failed, problem, succeeded, type ImportProblem, type ImportResult } from './problems'
 import {
   PROFILE_NAMESPACE,
-  profileFromProperties,
   profileToProperties,
-  relationshipProfileFromProperties,
+  readPortfolioProfile,
+  readRelationshipProfile,
   relationshipProfileToProperties,
   stripProfileKeys,
 } from './profile-properties'
@@ -71,8 +71,34 @@ const TAG_GROUPS_KEY = `${PROFILE_NAMESPACE}.tagGroups`
 /** Tag groups identical to the shipped default are left out — import restores them. */
 const DEFAULT_TAG_GROUPS_JSON = canonicalTagGroupsJson([DEFAULT_TAG_GROUP])
 
-/** `Junction` is one element type here and two concrete types in the schema. */
-const JUNCTION_TYPES: Record<string, JunctionKind> = { AndJunction: 'and', OrJunction: 'or' }
+/**
+ * `Junction` is one element type here and two concrete types in the schema.
+ *
+ * A `Map` rather than an object literal because the key comes from the file:
+ * `JUNCTION_TYPES['toString']` on a literal resolves to `Object.prototype`'s
+ * method, so `xsi:type="toString"` imported as a Junction that was never in the
+ * file, carrying a *function* as its `junctionKind` (#37).
+ */
+const JUNCTION_TYPES = new Map<string, JunctionKind>([
+  ['AndJunction', 'and'],
+  ['OrJunction', 'or'],
+])
+
+/**
+ * The data types the schema allows on a `propertyDefinition`.
+ *
+ * `currency`, `date` and `time` have no counterpart in `PropertyValue` — their
+ * values are text to us — so the declaration is remembered on the workspace and
+ * written back out. Deriving the type from `typeof value` alone re-declared them
+ * as `string`, and a colleague reopening the file in Archi had lost the typing
+ * and its formatting (#37).
+ */
+const EXCHANGE_PROPERTY_TYPES = ['string', 'boolean', 'currency', 'date', 'time', 'number'] as const
+type ExchangePropertyType = (typeof EXCHANGE_PROPERTY_TYPES)[number]
+
+function isExchangePropertyType(value: string): value is ExchangePropertyType {
+  return (EXCHANGE_PROPERTY_TYPES as readonly string[]).includes(value)
+}
 
 export interface ExchangeExportOptions {
   /** Overrides the model documentation written into the file. */
@@ -106,7 +132,7 @@ export function exportExchange(
   const problems: ImportProblem[] = []
   const ids = exchangeIdentifiers(workspace, problems)
   const modelProperties = modelLevelProperties(workspace)
-  const definitions = collectPropertyDefinitions(workspace, modelProperties, problems)
+  const definitions = collectPropertyDefinitions(workspace, modelProperties, ids, problems)
   const lines: string[] = []
 
   lines.push('<?xml version="1.0" encoding="UTF-8"?>')
@@ -217,6 +243,14 @@ interface ExchangeIdentifiers {
   of: (id: string) => string
   /** Is this id in the file at all? An IDREF to anything else is unwritable. */
   knows: (id: string) => boolean
+  /**
+   * An xs:ID nothing else in this file has taken, spelled as close to `base` as
+   * possible. Everything written into the document's one `xs:ID` namespace has
+   * to come through here — property definitions minted their own `propid-N`
+   * beside it, and a model holding an element *called* `propid-1` produced a
+   * file with two identical `xs:ID`s that no certified tool will open (#37).
+   */
+  claim: (base: string) => string
 }
 
 /**
@@ -275,6 +309,7 @@ function exchangeIdentifiers(workspace: Workspace, problems: ImportProblem[]): E
     model,
     of: (id) => byId.get(id) ?? id,
     knows: (id) => byId.has(id),
+    claim: (base) => claimIdentifier(base, used),
   }
 }
 
@@ -304,8 +339,8 @@ function modelLevelProperties(workspace: Workspace): Record<string, PropertyValu
 interface PropertyDefinition {
   /** xs:ID of the definition, referenced by every instance of the key. */
   id: string
-  /** One of the schema's data types — we write the three we can read back. */
-  type: 'string' | 'boolean' | 'number'
+  /** One of the schema's data types. */
+  type: ExchangePropertyType
 }
 
 function propertyLines(
@@ -340,6 +375,7 @@ function propertyLines(
 function collectPropertyDefinitions(
   workspace: Workspace,
   modelProperties: Record<string, PropertyValue>,
+  ids: ExchangeIdentifiers,
   problems: ImportProblem[],
 ): Map<string, PropertyDefinition> {
   const kinds = new Map<string, Set<string>>()
@@ -361,9 +397,21 @@ function collectPropertyDefinitions(
     remember(relationshipProfileToProperties(relationship.profile))
   }
 
+  // A Map, not the record itself: the keys are the file's, and `declared['toString']`
+  // on a plain object hands back a function (#37, finding 2's shape one file over).
+  const declared = new Map(Object.entries(workspace.propertyTypes ?? {}))
+
   const definitions = new Map<string, PropertyDefinition>()
   for (const [key, seen] of kinds) {
-    const type = definitionType(seen)
+    const derived = definitionType(seen)
+    // `currency`, `date` and `time` values are text to us, so `typeof value` can
+    // only ever say `string` for them. Where it says exactly that, the file's own
+    // declaration is the better information and is written back unchanged (#37).
+    const carried = declared.get(key)
+    const type =
+      derived === 'string' && carried !== undefined && isExchangePropertyType(carried)
+        ? carried
+        : derived
     if (seen.size > 1) {
       problems.push(
         problem(
@@ -373,12 +421,12 @@ function collectPropertyDefinitions(
         ),
       )
     }
-    definitions.set(key, { id: `propid-${definitions.size + 1}`, type })
+    definitions.set(key, { id: ids.claim(`propid-${definitions.size + 1}`), type })
   }
   return definitions
 }
 
-function definitionType(seen: Set<string>): PropertyDefinition['type'] {
+function definitionType(seen: Set<string>): ExchangePropertyType {
   if (seen.size !== 1) return 'string'
   const [only] = [...seen]
   return only === 'boolean' || only === 'number' ? only : 'string'
@@ -465,7 +513,7 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   }
 
   const reader: Reader = {
-    definitions: readPropertyDefinitions(model),
+    definitions: readPropertyDefinitions(model, problems, where),
     unresolved: new Set<string>(),
     problems,
     where,
@@ -532,19 +580,58 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     views: views ?? [],
     tagGroups: tagGroups ?? [DEFAULT_TAG_GROUP],
   }
+  const propertyTypes = declaredPropertyTypes(reader.definitions)
+  if (propertyTypes) workspace.propertyTypes = propertyTypes
 
   return succeeded(workspace, problems)
 }
 
-function readPropertyDefinitions(model: RawNode): Map<string, DeclaredProperty> {
+function readPropertyDefinitions(
+  model: RawNode,
+  problems: ImportProblem[],
+  where: { file?: string },
+): Map<string, DeclaredProperty> {
   const definitions = new Map<string, DeclaredProperty>()
+  const unknown = new Set<string>()
   const container = model.propertyDefinitions as RawNode | undefined
   for (const raw of list(container?.propertyDefinition)) {
     const id = asString(raw['@identifier'])
     const key = langString(raw.name)
-    if (id && key) definitions.set(id, { key, type: asString(raw['@type']) ?? 'string' })
+    if (!id || !key) continue
+    const type = asString(raw['@type']) ?? 'string'
+    if (!isExchangePropertyType(type)) unknown.add(type)
+    definitions.set(id, { key, type })
+  }
+  if (unknown.size) {
+    problems.push(
+      problem(
+        'warning',
+        'exchange.property-type-unknown',
+        `${unknown.size} property definition${unknown.size === 1 ? '' : 's'} in this file declare${unknown.size === 1 ? 's' : ''} a type the exchange format has no such thing as (${listed([...unknown])}). Those values were read as text, and a re-export declares them as text.`,
+        where,
+      ),
+    )
   }
   return definitions
+}
+
+/**
+ * The declared types worth remembering on the workspace.
+ *
+ * `boolean` and `number` are re-derived from the value on the way out, but
+ * `currency`, `date` and `time` have no counterpart in `PropertyValue`, so
+ * without this the declaration was gone and the re-export said `string` (#37).
+ * `string` itself is the default and is not worth a line in the file.
+ */
+function declaredPropertyTypes(
+  definitions: Map<string, DeclaredProperty>,
+): Record<string, string> | undefined {
+  const out: Record<string, string> = {}
+  for (const { key, type } of definitions.values()) {
+    if (type === 'string' || !isExchangePropertyType(type)) continue
+    if (!Object.hasOwn(out, key)) out[key] = type
+  }
+  return Object.keys(out).length ? out : undefined
 }
 
 /**
@@ -556,9 +643,15 @@ function readPropertyDefinitions(model: RawNode): Map<string, DeclaredProperty> 
  * And-junction — so it is read rather than refused.
  */
 function readType(raw: string): { type: ElementType; junctionKind?: JunctionKind } | undefined {
-  const kind = JUNCTION_TYPES[raw]
-  if (kind) return { type: 'Junction', junctionKind: kind }
-  if (raw === 'Junction') return { type: 'Junction', junctionKind: DEFAULT_JUNCTION_KIND }
+  const kind = JUNCTION_TYPES.get(raw)
+  if (kind !== undefined || raw === 'Junction') {
+    // Absent means `and`, and the canonical writer omits it on that account, so
+    // materialising it here made two files holding the same model differ byte
+    // for byte on the field the reader had just invented (ADR 0004, #37).
+    return kind === undefined || kind === DEFAULT_JUNCTION_KIND
+      ? { type: 'Junction' }
+      : { type: 'Junction', junctionKind: kind }
+  }
   return isElementType(raw) ? { type: raw } : undefined
 }
 
@@ -586,18 +679,38 @@ function readElement(raw: RawNode, reader: Reader): Element | undefined {
   }
 
   const properties = readProperties(raw, reader)
+  const { profile, unread } = readPortfolioProfile(properties)
+  reportUnreadProfileKeys(id, unread, reader)
   const element: Element = {
     id,
     type: mapped.type,
     name: langString(raw.name) ?? '',
-    properties: stripProfileKeys(properties),
+    properties: stripProfileKeys(properties, unread),
   }
   if (mapped.junctionKind) element.junctionKind = mapped.junctionKind
   const documentation = langString(raw.documentation)
   if (documentation) element.documentation = documentation
-  const profile = profileFromProperties(properties)
   if (profile) element.profile = profile
   return element
+}
+
+/**
+ * An `archipelago.*` key this build knows but could not read.
+ *
+ * The value is kept as an ordinary property by `stripProfileKeys`, so nothing is
+ * lost — but the assessment the file was trying to express did not arrive, and
+ * saying so is the difference between this and the silent drop it replaced (#37).
+ */
+function reportUnreadProfileKeys(subject: string, unread: readonly string[], reader: Reader): void {
+  if (!unread.length) return
+  reader.problems.push(
+    problem(
+      'warning',
+      'exchange.profile-value-unreadable',
+      `"${subject}" carries ${unread.length} Archipelago propert${unread.length === 1 ? 'y' : 'ies'} (${listed(unread)}) whose value this build cannot read, so ${unread.length === 1 ? 'it was' : 'they were'} kept as ordinary properties rather than as portfolio fields.`,
+      { ...reader.where, subject },
+    ),
+  )
 }
 
 function readRelationship(
@@ -655,17 +768,19 @@ function readRelationship(
   }
 
   const properties = readProperties(raw, reader)
+  const read = readRelationshipProfile(properties)
+  reportUnreadProfileKeys(id, read.unread, reader)
   const relationship: Relationship = {
     id,
     type,
     source,
     target,
-    properties: stripProfileKeys(properties),
+    properties: stripProfileKeys(properties, read.unread),
   }
   const name = langString(raw.name)
   if (name) relationship.name = name
 
-  const profile = relationshipProfileFromProperties(properties) ?? {}
+  const profile = read.profile ?? {}
   const accessType = asString(raw['@accessType'])
   if (type === 'Access' && accessType && (ACCESS_TYPES as readonly string[]).includes(accessType)) {
     profile.accessType = accessType as AccessType
@@ -697,6 +812,12 @@ function readProperties(raw: RawNode, reader: Reader): Record<string, PropertyVa
  * A value that does not match its declared type stays a string rather than
  * becoming `NaN` or `false`: the file said one thing and holds another, and
  * guessing would lose what it actually holds.
+ *
+ * "Matches" means the *text* survives, not just the parse. `Number` is not
+ * reversible — `0912345678`, `1.50` and a twenty-digit account number all come
+ * back spelled differently, and it is the new spelling that the next export
+ * writes into the file (#37). A number we cannot spell back stays the text it
+ * was; `currency`, `date` and `time` are text to begin with.
  */
 function typedValue(value: string, type: string): PropertyValue {
   if (type === 'boolean') {
@@ -706,7 +827,8 @@ function typedValue(value: string, type: string): PropertyValue {
   }
   if (type === 'number') {
     const parsed = Number(value)
-    return value.trim() !== '' && Number.isFinite(parsed) ? parsed : value
+    if (value.trim() === '' || !Number.isFinite(parsed)) return value
+    return String(parsed) === value ? parsed : value
   }
   return value
 }
