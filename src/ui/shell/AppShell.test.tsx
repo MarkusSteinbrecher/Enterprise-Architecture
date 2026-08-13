@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { emptyWorkspace } from '@/model'
@@ -53,29 +53,28 @@ describe('header', () => {
 
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
-    expect(screen.getByText('LOCAL · SAVED')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Load the demo workspace' }))
+    await user.click(screen.getByRole('button', { name: /Explore the demo/ }))
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
-    expect(createObjectURL).toHaveBeenCalled()
+    await waitFor(() => expect(createObjectURL).toHaveBeenCalled())
     expect(click).toHaveBeenCalled()
 
+    // jsdom has no File System Access API, so `save()` takes the download path.
     // The file was offered, not observed. An anchor click cannot report whether
     // anything reached disk — a user with "always ask where to save" on who
     // presses Cancel has no file — and `markSaved()` has no inverse, so a wrong
-    // SAVED here is permanent. The count stands until a write we can watch
-    // finish clears it (#11).
+    // SAVED here is permanent. Only the `saved` outcome, which resolves after
+    // `writable.close()`, has earned the right to clear the counter.
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
     expect(screen.queryByText('LOCAL · SAVED')).not.toBeInTheDocument()
 
     vi.unstubAllGlobals()
   })
 
-  it('leaves Import disabled until the import dialog exists', () => {
+  it('offers Import and Export', () => {
     renderApp(demo())
-    expect(screen.getByRole('button', { name: 'Import' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Import' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Export' })).toBeEnabled()
   })
 
@@ -136,11 +135,11 @@ describe('model health footer', () => {
   it('updates live when the model changes', async () => {
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
-    expect(screen.getByText('0 elements · 0 relations')).toBeInTheDocument()
-    expect(healthPercent()).toBe('0')
-    expect(healthBar()).toHaveStyle({ width: '0%' })
-
-    await user.click(screen.getByRole('button', { name: 'Load the demo workspace' }))
+    // An empty browser lands on the first-run screen, not on the chrome, so the
+    // empty "before" state is no longer observable through the nav — #29 replaced
+    // the inventory's interim demo button with FirstRun. The assertions below
+    // still fail against a hardcoded health, which is what they are for.
+    await user.click(screen.getByRole('button', { name: /Explore the demo/ }))
     expect(screen.getByText('29 elements · 47 relations')).toBeInTheDocument()
     // Health has to move with the model, not just the counts beside it: both are
     // rendered by LeftNav, and asserting only the counts left completeness free.

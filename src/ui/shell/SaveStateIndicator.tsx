@@ -10,12 +10,17 @@ import { useModelSelector, useModelStoreContext } from '@/store'
  */
 
 export interface SaveStateIndicatorProps {
-  /** Save the model to a file. The real File System Access flow lands in #11. */
   onSaveFile: () => void
   disabled?: boolean
+  /** Tooltip for the SAVE FILE action — says where the save will go. */
+  title?: string
 }
 
-export function SaveStateIndicator({ onSaveFile, disabled = false }: SaveStateIndicatorProps) {
+export function SaveStateIndicator({
+  onSaveFile,
+  disabled = false,
+  title = 'Save the model to a file',
+}: SaveStateIndicatorProps) {
   const dirty = useModelSelector((store) => store.dirty)
   const { role } = useModelStoreContext()
 
@@ -39,7 +44,7 @@ export function SaveStateIndicator({ onSaveFile, disabled = false }: SaveStateIn
         className="save-state__action"
         onClick={onSaveFile}
         disabled={disabled}
-        title="Download the model as a file"
+        title={title}
       >
         SAVE FILE
       </button>

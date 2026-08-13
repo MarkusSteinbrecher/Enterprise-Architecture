@@ -187,7 +187,7 @@ describe('running a result', () => {
 
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Load the demo workspace' }))
+    await user.click(screen.getByRole('button', { name: /Explore the demo/ }))
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
 
     await openPalette(user)

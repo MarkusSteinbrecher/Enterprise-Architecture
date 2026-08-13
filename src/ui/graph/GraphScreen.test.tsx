@@ -86,10 +86,10 @@ describe('canvas', () => {
     }
   })
 
-  it('says so when the workspace is empty', () => {
+  it('sends an empty browser to the first-run screen rather than an empty canvas', () => {
     renderApp(emptyWorkspace('ws-empty', 'Empty'), { route: '/graph' })
-    expect(screen.getByText(/This workspace is empty/)).toBeInTheDocument()
-    expect(screen.getByText(/0 nodes · 0 relations/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Archipelago' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Explore the demo/ })).toBeInTheDocument()
   })
 
   it('invites the user to trace', async () => {

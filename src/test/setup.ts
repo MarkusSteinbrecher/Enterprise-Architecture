@@ -52,6 +52,18 @@ if (typeof globalThis.DOMMatrixReadOnly === 'undefined') {
   } as unknown as typeof DOMMatrixReadOnly
 }
 
+// jsdom's Blob has no text(); the file readers use it.
+if (typeof Blob !== 'undefined' && typeof Blob.prototype.text !== 'function') {
+  Blob.prototype.text = function text(this: Blob) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result))
+      reader.onerror = () => reject(reader.error)
+      reader.readAsText(this)
+    })
+  }
+}
+
 // jsdom has no layout, so it implements no scrolling APIs.
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {}

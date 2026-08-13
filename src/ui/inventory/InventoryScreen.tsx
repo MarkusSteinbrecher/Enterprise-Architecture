@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { ElementType } from '@/model'
-import { loadDemoWorkspace } from '@/io'
 import { newId, useModelSelector, useModelStoreContext } from '@/store'
 import { ActiveFilterChips } from './ActiveFilterChips'
 import { CreateElementDialog } from './CreateElementDialog'
@@ -134,22 +133,7 @@ export function InventoryScreen() {
           onRemove={(facet) => state.setFacets(state.facets.filter((f) => f !== facet))}
         />
 
-        {total === 0 ? (
-          <div className="inventory__first-run">
-            <p className="inventory__first-run-text">
-              This workspace is empty. Load the demo to see what a landscape looks like — the
-              three-action first-run screen lands with #11.
-            </p>
-            <button
-              type="button"
-              className="button button--primary"
-              disabled={readOnly}
-              onClick={() => store.replaceWorkspace(loadDemoWorkspace(), { markClean: false })}
-            >
-              Load the demo workspace
-            </button>
-          </div>
-        ) : state.view === 'table' ? (
+        {state.view === 'table' ? (
           <InventoryTable
             elements={filtered}
             at={at}
