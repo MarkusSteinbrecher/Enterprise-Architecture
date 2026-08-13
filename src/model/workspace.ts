@@ -1,4 +1,4 @@
-import type { ElementType } from './element-types'
+import type { ElementType, JunctionKind } from './element-types'
 import type { AccessType, RelationshipType } from './relationship-types'
 import type { PortfolioProfile } from './profile'
 
@@ -22,6 +22,11 @@ export interface Element {
   documentation?: string
   properties: Record<string, PropertyValue>
   profile?: PortfolioProfile
+  /**
+   * And/or flavour of a `Junction`; meaningless on every other type. Absent
+   * means `and`, which is what the specification says an unqualified junction is.
+   */
+  junctionKind?: JunctionKind
 }
 
 /**
@@ -88,6 +93,15 @@ export interface Workspace {
   relationships: Relationship[]
   views: ViewDefinition[]
   tagGroups: TagGroup[]
+  /**
+   * Exchange-format types declared for property keys whose values we hold as
+   * text: `currency`, `date` and `time` have no counterpart in `PropertyValue`,
+   * so `typeof value` can only say `string` for them and a re-export declared
+   * them as `string` — a colleague reopening the file in Archi had lost the
+   * typing and its formatting (#37). Keyed by property key. Absent for the keys
+   * whose type the value itself carries (`boolean`, `number`).
+   */
+  propertyTypes?: Record<string, string>
 }
 
 /** The default tag group and colours from the design handoff. */

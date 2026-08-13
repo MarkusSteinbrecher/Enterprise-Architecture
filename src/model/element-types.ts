@@ -115,6 +115,24 @@ export const ELEMENT_TYPES = [
 export type ElementType = (typeof ELEMENT_TYPES)[number]['type']
 
 /**
+ * Junctions come in two flavours. The specification models this as one Junction
+ * element with an and/or type; the exchange format has a concrete XSD type for
+ * each (`AndJunction`, `OrJunction`). The catalogue follows the specification,
+ * so the flavour travels beside the type as `Element.junctionKind` and the
+ * exchange reader/writer maps between the two shapes.
+ */
+export const JUNCTION_KINDS = ['and', 'or'] as const
+
+export type JunctionKind = (typeof JUNCTION_KINDS)[number]
+
+/** An unqualified junction is an And-junction (ArchiMate 3.2 §5.4). */
+export const DEFAULT_JUNCTION_KIND: JunctionKind = 'and'
+
+export function isJunctionKind(value: unknown): value is JunctionKind {
+  return typeof value === 'string' && (JUNCTION_KINDS as readonly string[]).includes(value)
+}
+
+/**
  * The catalogue as uniformly-typed metadata. `ELEMENT_TYPES` keeps its literal
  * types so `ElementType` can be derived from it, which means entries that omit
  * an optional field do not carry it at all — use this view when reading one.

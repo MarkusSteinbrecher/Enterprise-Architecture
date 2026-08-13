@@ -1,5 +1,87 @@
 # Session Log
 
+## 2026-08-13 (Opus, implementation) — #37 fixed: eight readers and writers that breached the invariant the PR exists to enforce
+
+The stack was done and the implementation lane was blocked on review — except for **#37**, reviewed on the 12th with eight blocking findings and never picked up. It sits on `main`, independent of the stack, so it was the one thing genuinely available. Fixed all eight plus 9, 10 and 11; **242 tests** (was 189), all six checks green, pushed as `c58648d` + `d474eaf`.
+
+**Finding 8 first, because it was the only one that made the *repo* less safe rather than one file.** The `localeCompare` rule keyed on `arguments.length<2`, so `localeCompare(a, b, undefined)` passed lint and still collated by machine locale — while the CLAUDE.md line the same PR wrote announced the guarantee. The selector now requires a **string-literal locale at the call site**: `undefined`, `void 0` and a variable all reach the same default, and only the literal is something a selector can follow. Extended to a computed member and to `Intl.Collator`, which had the identical hole one constructor over. `src/test/eslint-rules.test.ts` runs the **real ESLint over the real `eslint.config.js`** — so the thing under test is what `npm run lint` does, not a restatement of the selectors that could drift from them. 12 snippets, 320ms.
+
+**Decisions worth carrying forward:**
+
+1. **Where the writer and the reader have to agree, one function decides and both call it.** The tag encoding was a writer that emitted a comma list or a JSON array, and a reader that guessed from a leading `[`. Now `asTagArray` is the single predicate: the writer refuses the comma form for anything the reader would take as JSON. That makes `decodeTags(encodeTags(t)) === t` structural rather than a claim, and it is why a tag named `["a"]` or `[]` round-trips.
+2. **Same shape for finding 4.** `stripProfileKeys` removed every owned key while the reader kept only guard-passing values, and nothing reconciled them. `readPortfolioProfile` now returns `{ profile, unread }` and `stripProfileKeys(properties, unread)` keeps exactly what did *not* become a field — what leaves is what was read, by construction. The relationship reader had the same hole (`archipelago.annualCost: "about a lot"`); the review only named the element one.
+3. **Carried, not reported, for finding 6** — per this PR's own decision that carrying beats reporting where it is possible. Cost: one optional `Workspace.propertyTypes`, its schema entry, and canonical-JSON read/write. **The Open Group's real XSD accepts `currency`, `date`, `time` and `number` on a `propertyDefinition`**, so `validate:xsd` now validates a re-exported file carrying all four — proved rather than assumed.
+4. **Findings 5 and 6 only round-trip together.** Keeping the text (`0912345678` survives `Number`'s spelling) is half; carrying the `type="number"` declaration is the other. Either alone still loses.
+5. **Finding 9 needed fixing on both sides.** Omitting `junctionKind` on read is what the review asked for, but a JSON file with an explicit `"and"` would still have differed after an XML trip — so `canonicalElement` omits the default kind too. Absent is now the only spelling of `and` that gets written, in either format.
+6. **Finding 11: cached, not vendored.** The reviewer asked for the XSD to be vendored; the docblock's reason not to still holds — it is The Open Group's and this repo is MIT, the same argument that kept their ArchiSurance model out. Fetched once into `node_modules/.cache/`, `--refresh` to re-fetch, `ARCHIMATE_XSD=<path>` to override. Offline after the first run without redistributing their file. Flagged on the PR as overrulable.
+
+**The finding the review did not have: `record[key] = value` is not total.** Checking whether finding 2's shape — an untrusted key on a plain object — appeared anywhere else turned up its twin on the *write* side. Assigning `__proto__` invokes the prototype setter rather than creating a property, and for a string value the setter does nothing, so a property literally named `__proto__` was read, assigned and gone with `problems: []`. `setKey` (new `src/io/records.ts`) uses `Object.defineProperty` at every site whose key comes from a file.
+
+**And the test for it was the trap first time round**, which is the part worth keeping. Written longhand, `expect(properties).toEqual({ __proto__: 'mine', owner: 'kept' })` sets the prototype of the *expectation*, which quietly becomes `{ owner: 'kept' }` — so it passed against the broken code and failed against the fixed code. That is how the bug got noticed at all. A computed key fixes it. **The `__proto__` trap is symmetric: it eats the assertion as readily as the code**, so a test written to catch it can agree with it instead.
+
+**Every fix was verified by removing it and watching a named test fail** — scripted, one defect restored at a time, the failing test names recorded. All ten caught.
+
+**Not done, deliberately.** #45 (ESLint ban on casting a form value to a model union) is now unblocked in the sense that #37 has settled the rules array, but landing it would add a tenth PR to a queue the review lane is already behind on — and, like #35 and #44, a new lint rule on `main` can turn open PRs red all at once. It waits for the stack to merge.
+
+**State:** #24–#28 fixed and green, awaiting re-review. **#37 fixed and green, awaiting re-review.** #29 and #34 still unreviewed; #29 conflicts on `Header.tsx`/`SaveStateIndicator.tsx`, which is #29's review to decide, not the implementation lane's. #47 mergeable. Next: `/review-pr 29`, then #34, then re-review of #24–#28 and #37.
+
+## 2026-08-12 (Opus, implementation) — the whole reviewed stack fixed: #24–#28, 41 blocking findings
+
+Took the five reviewed PRs bottom-up, fixing each against its own review and cascading the result into the branch above before starting it. All five now green: **#24** (6 blocking), **#25** (6), **#26** (8), **#27** (9), **#28** (10). 349 tests, up from 313.
+
+**The discipline that mattered most: every fix was verified by removing it and watching a test fail.** That found five of my own tests which could not fail, four of them *after* I had written them believing otherwise:
+
+1. An `Autosaver.suspend()` test that asserted the snapshot was on disk afterwards — the assertion's own `await` gave the write all the time it needed, so it passed either way. Now asserts ordering.
+2. A palette break that moved the key handler still passed all 28 tests, because the Tab trap and the mousedown guard were doing the work; the test was measuring something else.
+3. `tabIndex={-1}` on palette rows changes no observable behaviour behind the focus trap — kept for the combobox contract, but with a structural assertion rather than a behavioural one it has not earned.
+4. `useFocusTrap` first filtered candidates on `offsetParent !== null`. **jsdom reports null for every element**, so the trap was empty in exactly the environment its test runs in.
+5. An assertion for #27's type-guard fix that checked a rendering symptom (`0` renders as "Not assessed" too) rather than the defect.
+
+**Two findings turned out worse than the review said, and only instrumentation showed it.**
+
+- **#27's `deps` test was vacuous twice.** The review found that rerendering with a fresh workspace builds a new store, busting the memo on `store` alone. Holding the workspace still was not enough: `toHaveTextContent` is a *substring* match and the stale value `Claim Handling Engine` contains the expected `Claim Handling`. Found by rendering a probe that logged what each pass computed.
+- **#28's cost test could not fail even after the panel was fixed.** The demo carried `annual.cost` on eleven elements with the literal value `1.2M EUR / yr` — the exact string the assertion looked for. The demo data moved onto the edges (ADR 0001) and the element property and its `propertyDefinition` are gone; still validates against the Open Group XSD, as checked in and round-tripped.
+
+**Design decisions worth carrying forward:**
+
+1. **`SAVE FILE` no longer marks the model clean at all, on any path.** The rule is absolute and the only observable write is the File System Access handle, which is #11's — already built on `feat/11-file-workflow`. Building a second copy in #24 would have duplicated a file #29 owns and given #24 a failure path with no surface to report it on. So #24 does the honest half: the file is offered, the count stands, and the indicator's tooltip says why. **A cold boot now shows `LOCAL · 1 UNSAVED`**, because a snapshot that has only ever lived in IndexedDB matches no file — visible, and the sponsor may want to weigh it.
+2. **`replaceWorkspace({ markClean })` has no default.** Exactly one call site broke on compile, which is the evidence the mechanical harvest was right.
+3. **Where a rule's durable fix belongs to another PR, close the path rather than inventing a second encoding.** #27's `+ tag` prompt refuses a comma instead of escaping it, because #37 is rewriting that writer and a second encoding would have to be reconciled at merge.
+4. **Gate the editors, not the display.** #27's findings 5/6 asked for assessment and lifecycle to respect `carriesProfile`; removing the sections would have contradicted UI spec §4, which makes "a capability shows Not assessed" a case the screens must hold up for.
+5. **Fix at the source when the same list has other readers.** #27's duplicate self-relation was fixed in `relationshipsOf`, not in the fact sheet's `entries` builder — `removeElement` builds its delete cascade from the same list, so the duplicate was also a double entry in a command that undo replays.
+6. **A timeout on a job cannot tell a dead worker from a busy one.** #28's worker now acks on receipt; the 2s timer covers the handshake only, and the computation takes as long as it takes.
+
+**Two things a reviewer of the upper stack needs to know**, both consequences of accepted #24 decisions rather than new defects:
+
+- **#29's `FileWorkspaceProvider.save()` calls `store.markSaved()` on `kind: 'downloaded'`** — the same finding as #24's blocking 1, one branch up, with a docblock stating the invariant it breaks.
+- **#34's `file-round-trip` journey breaks twice**: it asserts `dirtyCount === 0` after a save while the harness deliberately puts Chromium on the download path, and it asserts `id: 'ws-archisurance-demo'`, which the fresh demo id changes.
+
+Deliberately **not** done: cascading into #29 and #34. They are unreviewed, and propagating would mean fixing their tests — decisions that belong to their review.
+
+**State:** #24–#28 fixed, green, mergeable, each with a fix summary posted. #29, #34, #37, #47 untouched. Next: `/review-pr 29`, then #34 — and re-review of #24–#28.
+
+## 2026-08-12 (later) — #28 and #37 reviewed; #30 merged and the rules propagated through the stack
+
+**#30 merged, and the reason matters more than the merge.** Every harvested rule had been living only on `chore/session-log`, so the feature branches whose code produced them still carried the stale 39-line CLAUDE.md — I hit this directly when checking out `feat/10-graph` to review #28 and found none of the separator, type-guard or route-key rules present. The harvest loop was writing rules the fix sessions would never read. Merged #30, re-cascaded `main` through all seven stack branches (177/197/236/257/290/313/313 green), and verified the 44-line file with every rule now lands on each one.
+
+**#28 dependency graph — request changes, 10 blocking.** One theme: the PR adds a worker timeout, a worker-error channel, a main-thread fallback and a `?year=` guard, tests none of them, and **all four are broken.** `runLayout(...).then()` has no `.catch`, so any layout failure hangs the canvas on "laying out…" forever — reachable in production because the fallback is a dynamic import of the 1.4MB ELK chunk, which 404s for a tab loaded before a Pages redeploy. The 10s worker timeout cannot tell a dead worker from a slow one, so it kills a working one and re-runs the layout *on the UI thread*, permanently, for exactly the models that need the worker. `?year=999999999` makes `startOfYear` NaN and renders every element as Plan — a confident, entirely wrong landscape. `?focus=<unknown>` dims all 29 nodes with no panel and no CLEAR. Also: **no arrowheads anywhere** (the handoff specifies them twice; in a dependency graph direction is the information), the trace panel reads cost from an element property against ADR 0001, and the whole node visual encoding can be deleted with all 33 tests green.
+
+**#37 io hardening — request changes, 8 blocking.** Good work that fixes eight real interop defects, but the new readers and writers breach the very invariant the PR exists to enforce. Six paths drop, rename or rewrite data and report `problems: []`, every one verified by running the code: a `propid-N` element id collides with a minted propertyDefinition id and emits a **duplicate `xs:ID`** no certified tool will open; `xsi:type="toString"` imports as a phantom Junction because a plain-object lookup hits `Object.prototype`; a tag literally named `["a"]` decodes to `a`; a known profile key with an unreadable value is deleted; `type="number"` values are rewritten lexically (`0912345678` → `912345678`); and declared `currency`/`date` definitions downgrade to `string`.
+
+**The most valuable finding of the day audits the harvest loop itself.** #37's `localeCompare` ESLint rule — harvested from the #17 review specifically to make ADR 0004 mechanical — keys on `arguments.length<2`, so `localeCompare(a, b, undefined)` passes lint and still collates by machine locale. The PR also rewrote the CLAUDE.md line to announce that the rule is now enforced by lint rather than by memory. Merging it would have put a **false guarantee** on `main`. Verified all four call forms by linting them.
+
+**Rules harvested (three, plus two deliberate non-harvests):**
+
+1. **A fallback, a timeout or an error branch needs a test that fires it** (from #28). Useful discovery while writing it: Vitest already exits non-zero on an unhandled rejection (verified, exit code 1), so CI would have caught #28's hang the moment any test drove layout to fail. The guard existed; only the test was missing.
+2. **A mechanical guard needs a test that fires it, and one for the nearest bypass** (from #37). A rule that silently fails is worse than no rule, because the next author trusts the line advertising it.
+3. **The separator rule takes its fifth instance and its first on the *read* side** — a decoder has to be unambiguous too, so the round-trip test needs a value that looks like the escaped form, not just one containing the separator.
+
+Not harvested, deliberately: #28's ADR 0001 violation (the rule already says exactly the right thing and was simply not followed) and #37's untested fallbacks (the #28 rule covers them, one PR early).
+
+**On review cost and trust.** #27's first run was **gutted and lied about it** — `"No findings survived verification"`, `candidates: 0`, after 4 of 5 agents died to machine sleep and stalls. That text is indistinguishable from a genuine clean result; only `agents_error: 4` in the usage block gives it away. **Read the usage counters before believing any zero-finding review.** The re-run went 36/36 and found the worst bug in #27 — an edit form that overwrites the element you navigate *to* — which the manual pass had missed entirely, because finding it needed the running app rather than the diff. Three clean runs at `high` cost 1.7M / 2.0M / 1.9M subagent tokens and each earned it.
+
+**State:** `main` has #14–#17 and #30. Open: #24–#29 + #34 (stack, all in sync with their bases, all green; #24–#28 reviewed and awaiting fixes), #37 (reviewed, awaiting fixes). New issues: #43, #44, #45, #46. Next: `/review-pr 29`, then #34 — or hand #24–#28 to an Opus session for fixes, which is now unblocked since every branch carries the current rules.
+
 ## 2026-08-12 — #27 reviewed; `main` merged through the whole stack; three rules harvested
 
 **PR #27 (element fact sheet) gets request-changes** — nine blocking findings, seven more below the line. The handoff transcription is the most exact in the stack (`factsheet.css` has no `[data-theme]` block at all — every colour is a token, so dark structurally cannot drift), and all four acceptance criteria are met. What blocks is one root cause and two repeat rules.

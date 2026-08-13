@@ -1,9 +1,11 @@
 import {
   ACCESS_TYPES,
+  DEFAULT_JUNCTION_KIND,
   LIFECYCLE_PHASES,
   SCHEMA_VERSION,
   isElementType,
   isFitLevel,
+  isJunctionKind,
   isRelationshipType,
   isTimeClassification,
   type AccessType,
@@ -17,7 +19,9 @@ import {
   type ViewDefinition,
   type Workspace,
 } from '@/model'
+import { isExchangeSafeId } from '@/store/ids'
 import { failed, problem, succeeded, type ImportProblem, type ImportResult } from './problems'
+import { setKey } from './records'
 
 /**
  * Canonical JSON — the native format (concept §5.3 item 1).
@@ -47,6 +51,7 @@ export function toCanonicalJson(workspace: Workspace): string {
     relationships: [...workspace.relationships].sort(byId).map(canonicalRelationship),
     views: [...workspace.views].sort(byId).map(canonicalView),
     tagGroups: [...workspace.tagGroups].sort(byId).map(canonicalTagGroup),
+    propertyTypes: workspace.propertyTypes && emptyToUndefined(workspace.propertyTypes),
   }
   return `${JSON.stringify(canonical, sortKeys, CANONICAL_JSON_INDENT)}\n`
 }
@@ -137,6 +142,28 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
     relationships.push(relationship)
   }
 
+  // The published schema requires ids that are usable as an xs:ID, but nothing
+  // in this reader enforces the pattern — a file that ignores it imports fine
+  // and then has to be rewritten on the way out to XML. Say so once, here,
+  // rather than letting the surprise happen at export time.
+  const unsafeIds = [...elements, ...relationships]
+    .map((concept) => concept.id)
+    .filter((id) => !isExchangeSafeId(id))
+  if (unsafeIds.length) {
+    const examples = unsafeIds
+      .slice(0, 3)
+      .map((id) => `"${id}"`)
+      .join(', ')
+    problems.push(
+      problem(
+        'warning',
+        'json.id-not-exchange-safe',
+        `${unsafeIds.length} id${unsafeIds.length === 1 ? '' : 's'} (${examples}${unsafeIds.length > 3 ? ', …' : ''}) cannot be used as an XML id, which the published schema requires. They work here, but an exchange-format export has to rewrite them.`,
+        where,
+      ),
+    )
+  }
+
   // Malformed views and tag groups are dropped like everything else that cannot
   // be read — but never silently: the next save would delete them for good.
   const views: ViewDefinition[] = []
@@ -177,6 +204,8 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
     views,
     tagGroups,
   }
+  const propertyTypes = readPropertyTypes(raw.propertyTypes, problems, where)
+  if (propertyTypes) workspace.propertyTypes = propertyTypes
 
   return succeeded(workspace, problems)
 }
@@ -189,6 +218,10 @@ function canonicalElement(element: Element): Record<string, unknown> {
     type: element.type,
     name: element.name,
     documentation: element.documentation,
+    // Absent *means* `and`, so the two spellings are one model and have to
+    // produce one file: an XML round trip reads `AndJunction` back as absent,
+    // and keeping an explicit `and` here made the same model differ (ADR 0004).
+    junctionKind: element.junctionKind === DEFAULT_JUNCTION_KIND ? undefined : element.junctionKind,
     properties: emptyToUndefined(element.properties),
     profile: element.profile ? prune({ ...element.profile }) : undefined,
   })
@@ -210,20 +243,41 @@ function canonicalView(view: ViewDefinition): Record<string, unknown> {
   return prune({ ...view })
 }
 
+/**
+ * Views and tag groups as a canonical JSON string.
+ *
+ * The exchange format has no element for either, so rather than dropping them
+ * the XML writer carries them as namespaced model properties (#36). Canonical
+ * for the usual reason: the same model has to produce the same bytes, whichever
+ * format it is written in.
+ */
+export function canonicalViewsJson(views: readonly ViewDefinition[]): string {
+  return JSON.stringify([...views].sort(byId).map(canonicalView), sortKeys)
+}
+
+export function canonicalTagGroupsJson(groups: readonly TagGroup[]): string {
+  return JSON.stringify([...groups].sort(byId).map(canonicalTagGroup), sortKeys)
+}
+
 function canonicalTagGroup(group: TagGroup): Record<string, unknown> {
-  return prune({
-    ...group,
+  return {
+    ...prune({ ...group }),
+    // `tags` is written even when empty. It is the one field `isTagGroup`
+    // requires, so pruning it made the writer produce exactly what the reader
+    // refuses: a group created but not yet filled came back as a warning
+    // blaming the file for what this function had done to it (#37).
+    //
     // Code-unit order, not localeCompare: collation depends on the machine's
     // locale, and two collaborators must commit identical bytes (ADR 0004).
     tags: [...group.tags].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)),
-  })
+  }
 }
 
 /** JSON.stringify replacer: emit object keys in sorted order at every depth. */
 function sortKeys(_key: string, value: unknown): unknown {
   if (!isRecord(value) || Array.isArray(value)) return value
   const sorted: Record<string, unknown> = {}
-  for (const key of Object.keys(value).sort()) sorted[key] = value[key]
+  for (const key of Object.keys(value).sort()) setKey(sorted, key, value[key])
   return sorted
 }
 
@@ -238,7 +292,7 @@ function prune(object: Record<string, unknown>): Record<string, unknown> {
     if (value === undefined) continue
     if (Array.isArray(value) && value.length === 0) continue
     if (isRecord(value) && !Array.isArray(value) && Object.keys(value).length === 0) continue
-    out[key] = value
+    setKey(out, key, value)
   }
   return out
 }
@@ -283,6 +337,29 @@ function readElement(
     properties: readProperties(candidate.properties),
   }
   if (typeof candidate.documentation === 'string') element.documentation = candidate.documentation
+  if (candidate.junctionKind !== undefined) {
+    if (type !== 'Junction') {
+      problems.push(
+        problem(
+          'warning',
+          'json.junction-kind-ignored',
+          `Element "${id}" is a ${type}, not a Junction, so its junctionKind was ignored.`,
+          { ...where, subject: id },
+        ),
+      )
+    } else if (!isJunctionKind(candidate.junctionKind)) {
+      problems.push(
+        problem(
+          'warning',
+          'json.junction-kind-ignored',
+          `Junction "${id}" has junctionKind "${String(candidate.junctionKind)}", which is neither "and" nor "or"; it was read as "${DEFAULT_JUNCTION_KIND}".`,
+          { ...where, subject: id },
+        ),
+      )
+    } else {
+      element.junctionKind = candidate.junctionKind
+    }
+  }
   if (isRecord(candidate.profile)) {
     const { profile, dropped } = readPortfolioProfile(candidate.profile)
     if (profile) element.profile = profile
@@ -466,18 +543,63 @@ function readProperties(value: unknown): Record<string, PropertyValue> {
   const out: Record<string, PropertyValue> = {}
   for (const [key, raw] of Object.entries(value)) {
     if (typeof raw === 'string' || typeof raw === 'number' || typeof raw === 'boolean') {
-      out[key] = raw
+      setKey(out, key, raw)
     }
   }
   return out
 }
 
-function isViewDefinition(value: unknown): value is ViewDefinition {
+// Exported because the exchange reader validates the views and tag groups it
+// carries the same way this one does — one definition of "readable" per concept.
+export function isViewDefinition(value: unknown): value is ViewDefinition {
   return isRecord(value) && typeof value.id === 'string' && typeof value.name === 'string'
 }
 
-function isTagGroup(value: unknown): value is TagGroup {
+export function isTagGroup(value: unknown): value is TagGroup {
   return isRecord(value) && typeof value.id === 'string' && Array.isArray(value.tags)
+}
+
+/**
+ * Exchange-format property types the workspace carries so a typed file leaves
+ * typed (see `Workspace.propertyTypes`). The set is the schema's, minus
+ * `string`, which is what an unlisted key already means.
+ */
+const CARRIED_PROPERTY_TYPES = new Set(['boolean', 'currency', 'date', 'number', 'time'])
+
+function readPropertyTypes(
+  candidate: unknown,
+  problems: ImportProblem[],
+  where: { file?: string },
+): Record<string, string> | undefined {
+  if (candidate === undefined) return undefined
+  if (!isRecord(candidate)) {
+    problems.push(
+      problem(
+        'warning',
+        'json.invalid-property-types',
+        'propertyTypes is not an object, so the property types this file declared were dropped. Their values are unaffected; an export will declare them as text.',
+        where,
+      ),
+    )
+    return undefined
+  }
+  const out: Record<string, string> = {}
+  const rejected: string[] = []
+  for (const [key, value] of Object.entries(candidate)) {
+    if (typeof value === 'string' && CARRIED_PROPERTY_TYPES.has(value)) setKey(out, key, value)
+    else rejected.push(key)
+  }
+  if (rejected.length) {
+    problems.push(
+      problem(
+        'warning',
+        'json.invalid-property-types',
+        `${rejected.length} propert${rejected.length === 1 ? 'y' : 'ies'} (${rejected.slice(0, 3).join(', ')}${rejected.length > 3 ? ', …' : ''}) declare a type this build does not know, so ${rejected.length === 1 ? 'it was' : 'they were'} dropped. Their values are unaffected; an export will declare them as text.`,
+        where,
+      ),
+    )
+  }
+  return Object.keys(out).length ? out : undefined
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
