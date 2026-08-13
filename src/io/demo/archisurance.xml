@@ -121,9 +121,6 @@
         <property propertyDefinitionRef="propid-1">
           <value xml:lang="en">Digital Channels</value>
         </property>
-        <property propertyDefinitionRef="propid-4">
-          <value xml:lang="en">480k EUR / yr</value>
-        </property>
         <property propertyDefinitionRef="propid-2">
           <value xml:lang="en">Demo workspace</value>
         </property>
@@ -208,9 +205,6 @@
         <property propertyDefinitionRef="propid-1">
           <value xml:lang="en">Retail BU</value>
         </property>
-        <property propertyDefinitionRef="propid-4">
-          <value xml:lang="en">610k EUR / yr</value>
-        </property>
         <property propertyDefinitionRef="propid-2">
           <value xml:lang="en">Demo workspace</value>
         </property>
@@ -252,9 +246,6 @@
       <properties>
         <property propertyDefinitionRef="propid-1">
           <value xml:lang="en">Claims</value>
-        </property>
-        <property propertyDefinitionRef="propid-4">
-          <value xml:lang="en">1.2M EUR / yr</value>
         </property>
         <property propertyDefinitionRef="propid-2">
           <value xml:lang="en">Demo workspace</value>
@@ -298,9 +289,6 @@
         <property propertyDefinitionRef="propid-1">
           <value xml:lang="en">Operations</value>
         </property>
-        <property propertyDefinitionRef="propid-4">
-          <value xml:lang="en">1.9M EUR / yr</value>
-        </property>
         <property propertyDefinitionRef="propid-2">
           <value xml:lang="en">Demo workspace</value>
         </property>
@@ -342,9 +330,6 @@
       <properties>
         <property propertyDefinitionRef="propid-1">
           <value xml:lang="en">Operations</value>
-        </property>
-        <property propertyDefinitionRef="propid-4">
-          <value xml:lang="en">340k EUR / yr</value>
         </property>
         <property propertyDefinitionRef="propid-2">
           <value xml:lang="en">Demo workspace</value>
@@ -388,9 +373,6 @@
         <property propertyDefinitionRef="propid-1">
           <value xml:lang="en">Legal</value>
         </property>
-        <property propertyDefinitionRef="propid-4">
-          <value xml:lang="en">120k EUR / yr</value>
-        </property>
         <property propertyDefinitionRef="propid-2">
           <value xml:lang="en">Demo workspace</value>
         </property>
@@ -432,9 +414,6 @@
       <properties>
         <property propertyDefinitionRef="propid-1">
           <value xml:lang="en">Operations</value>
-        </property>
-        <property propertyDefinitionRef="propid-4">
-          <value xml:lang="en">260k EUR / yr</value>
         </property>
         <property propertyDefinitionRef="propid-2">
           <value xml:lang="en">Demo workspace</value>
@@ -478,9 +457,6 @@
         <property propertyDefinitionRef="propid-1">
           <value xml:lang="en">Finance</value>
         </property>
-        <property propertyDefinitionRef="propid-4">
-          <value xml:lang="en">870k EUR / yr</value>
-        </property>
         <property propertyDefinitionRef="propid-2">
           <value xml:lang="en">Demo workspace</value>
         </property>
@@ -523,9 +499,6 @@
         <property propertyDefinitionRef="propid-1">
           <value xml:lang="en">Finance</value>
         </property>
-        <property propertyDefinitionRef="propid-4">
-          <value xml:lang="en">300k EUR / yr</value>
-        </property>
         <property propertyDefinitionRef="propid-2">
           <value xml:lang="en">Demo workspace</value>
         </property>
@@ -567,9 +540,6 @@
       <properties>
         <property propertyDefinitionRef="propid-1">
           <value xml:lang="en">Risk</value>
-        </property>
-        <property propertyDefinitionRef="propid-4">
-          <value xml:lang="en">540k EUR / yr</value>
         </property>
         <property propertyDefinitionRef="propid-2">
           <value xml:lang="en">Demo workspace</value>
@@ -852,12 +822,36 @@
     <relationship identifier="rel-018" source="app-broker" target="app-policy-ha" xsi:type="Flow">
     </relationship>
     <relationship identifier="rel-019" source="app-crm" target="app-claims" xsi:type="Flow">
+      <properties>
+        <property propertyDefinitionRef="propid-14">
+          <value xml:lang="en">240000</value>
+        </property>
+        <property propertyDefinitionRef="propid-15">
+          <value xml:lang="en">EUR</value>
+        </property>
+      </properties>
     </relationship>
     <relationship identifier="rel-020" source="app-claims" target="app-policy-ha" xsi:type="Flow">
     </relationship>
     <relationship identifier="rel-021" source="app-claims" target="app-dms" xsi:type="Serving">
+      <properties>
+        <property propertyDefinitionRef="propid-14">
+          <value xml:lang="en">180000</value>
+        </property>
+        <property propertyDefinitionRef="propid-15">
+          <value xml:lang="en">EUR</value>
+        </property>
+      </properties>
     </relationship>
     <relationship identifier="rel-022" source="app-claims" target="app-fin" xsi:type="Flow">
+      <properties>
+        <property propertyDefinitionRef="propid-14">
+          <value xml:lang="en">90000</value>
+        </property>
+        <property propertyDefinitionRef="propid-15">
+          <value xml:lang="en">EUR</value>
+        </property>
+      </properties>
     </relationship>
     <relationship identifier="rel-023" source="app-fin" target="app-pay" xsi:type="Serving">
     </relationship>
@@ -876,6 +870,14 @@
     <relationship identifier="rel-030" source="tec-oracle" target="app-crm" xsi:type="Serving">
     </relationship>
     <relationship identifier="rel-031" source="tec-k8s" target="app-claims" xsi:type="Serving">
+      <properties>
+        <property propertyDefinitionRef="propid-14">
+          <value xml:lang="en">690000</value>
+        </property>
+        <property propertyDefinitionRef="propid-15">
+          <value xml:lang="en">EUR</value>
+        </property>
+      </properties>
     </relationship>
     <relationship identifier="rel-032" source="tec-k8s" target="app-portal" xsi:type="Serving">
     </relationship>
@@ -920,9 +922,6 @@
     <propertyDefinition identifier="propid-3" type="string">
       <name xml:lang="en">archipelago.tags</name>
     </propertyDefinition>
-    <propertyDefinition identifier="propid-4" type="string">
-      <name xml:lang="en">annual.cost</name>
-    </propertyDefinition>
     <propertyDefinition identifier="propid-5" type="string">
       <name xml:lang="en">archipelago.lifecycle.plan</name>
     </propertyDefinition>
@@ -949,6 +948,12 @@
     </propertyDefinition>
     <propertyDefinition identifier="propid-13" type="string">
       <name xml:lang="en">archipelago.timeClassification</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-14" type="string">
+      <name xml:lang="en">archipelago.annualCost</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-15" type="string">
+      <name xml:lang="en">archipelago.currency</name>
     </propertyDefinition>
   </propertyDefinitions>
 </model>
