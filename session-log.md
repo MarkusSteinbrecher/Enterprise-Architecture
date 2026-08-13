@@ -1,5 +1,19 @@
 # Session Log
 
+## 2026-08-13 (fix) — the dependency graph was broken in every browser: "U8 is not a constructor" (#54)
+
+The graph screen reported `The graph layout failed: U8 is not a constructor` on a green 467-test suite. Root cause: **`elk.bundled.js` cannot be used inside a Web Worker.** The first time an ELK is constructed the bundle requires its own `elk-worker.min.js`, and that file branches on `typeof document === 'undefined' && typeof self !== 'undefined'` — its test for "I am running inside a Web Worker". In that branch it installs itself as the worker (`self.onmessage = …`) and exports **no constructor at all**, so the `Worker` the bundle reads back off its own exports is `undefined` and `new ELK()` throws. Minified, that `undefined` is called `U8`.
+
+Two defects for the price of one: had the constructor not thrown, the handler `layout.worker.ts` installs would already have been replaced by ELK's dispatcher, and every later layout request would have gone unanswered until the 2s ack timeout.
+
+Fix in `elk-runner.ts`: present a `document` for the length of the constructor call, then remove it. That takes the export branch — the in-process layout worker, which is what we want, since our own worker is already the thing keeping ELK off the main thread. elkjs reads nothing off the object (its only other mention of `document` sits behind an `msie` user-agent test), and the browserify module it caches on that first construction serves every later one.
+
+**Why the suite was green.** The gap is the exact sibling of the one #50 harvested from #28. That review noted jsdom defines no `Worker`, so every test took the main-thread fallback, and answered it with a fake `Worker` driving the *protocol*. But the fake worker never runs the worker's *module scope* — and jsdom defines `document`, so every existing test, including the main-thread fallback, took elkjs's other branch. The thing the worker exists to do had no test that ran it under the conditions the worker actually has. `elk-worker-scope.test.ts` deletes `document`, leaves `self`, and drives the real ELK; with the shim removed it fails with `_Worker is not a constructor`, the unminified form of the reported error. It also asserts that `self.onmessage` survives and that the borrowed `document` is gone afterwards.
+
+Verified beyond the test: the production `layout.worker` chunk was driven directly in a faked worker scope, before and after — `{"error":"U8 is not a constructor"}` then a real layout. Suite 468 green, lint/tsc/build clean.
+
+**Candidate rule for the next harvest:** *a fake at the boundary tests the protocol, not the environment.* Faking `Worker` proves our messages are right; it cannot prove the code inside the worker runs, because the fake still executes in the caller's scope. Anything whose behaviour depends on which globals exist — `document`, `window`, `self` — needs a test that builds that scope.
+
 ## 2026-08-13 (review) — the phase-1 stack is merged: #24–#29 and #34, seven issues closed
 
 Same session as the entry below, continued. **Every open PR is merged and `main` is green on all six checks** — 467 unit tests, 15 e2e journeys, `tsc`, `eslint`, `format:check`, `build`, `validate:xsd`. Issues #6, #7, #8, #9, #10, #11 and #19 are closed. Phase 1 is done.
