@@ -10,6 +10,18 @@ function demo() {
   return loadDemoWorkspace()
 }
 
+/** The percentage the health footer is actually showing. */
+function healthPercent(): string {
+  return screen.getByText(/^\d+$/, { selector: '.health__number' }).textContent ?? ''
+}
+
+/** The bar next to it — the number can be right while the bar is not. */
+function healthBar(): HTMLElement {
+  const fill = document.querySelector<HTMLElement>('.health__fill')
+  if (!fill) throw new Error('no .health__fill in the document')
+  return fill
+}
+
 beforeEach(() => {
   applyTheme('light')
 })
@@ -114,18 +126,26 @@ describe('model health footer', () => {
     expect(screen.getByText('29 elements · 47 relations')).toBeInTheDocument()
     // ArchiSurance Netherlands is the one element the demo leaves without an owner.
     expect(screen.getByText('1 element missing an owner')).toBeInTheDocument()
-    const health = Number(screen.getByText(/^\d+$/, { selector: '.health__number' }).textContent)
-    expect(health).toBeGreaterThan(0)
-    expect(health).toBeLessThanOrEqual(100)
+    // The demo's own score under the rule in `src/model/README.md`, asserted as a
+    // value rather than a range: `>0` with `<=100` brackets every percentage there
+    // is, so it holds for a hardcoded one too — `health: 1` in LeftNav passed it.
+    expect(healthPercent()).toBe('93')
+    expect(healthBar()).toHaveStyle({ width: '93%' })
   })
 
   it('updates live when the model changes', async () => {
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
     expect(screen.getByText('0 elements · 0 relations')).toBeInTheDocument()
+    expect(healthPercent()).toBe('0')
+    expect(healthBar()).toHaveStyle({ width: '0%' })
 
     await user.click(screen.getByRole('button', { name: 'Load the demo workspace' }))
     expect(screen.getByText('29 elements · 47 relations')).toBeInTheDocument()
+    // Health has to move with the model, not just the counts beside it: both are
+    // rendered by LeftNav, and asserting only the counts left completeness free.
+    expect(healthPercent()).toBe('93')
+    expect(healthBar()).toHaveStyle({ width: '93%' })
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
   })
 })
