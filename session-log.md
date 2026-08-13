@@ -1,5 +1,26 @@
 # Session Log
 
+## 2026-08-13 (review) — the phase-1 stack is merged: #24–#29 and #34, seven issues closed
+
+Same session as the entry below, continued. **Every open PR is merged and `main` is green on all six checks** — 467 unit tests, 15 e2e journeys, `tsc`, `eslint`, `format:check`, `build`, `validate:xsd`. Issues #6, #7, #8, #9, #10, #11 and #19 are closed. Phase 1 is done.
+
+Order: **#50** (the harvest) first, deliberately — it carries the sharpened CLAUDE.md line and four new review-skill bullets, so #25–#28 were reviewed under rules this session had just paid for. Then **#51** (#48's fix), then the stack bottom-up, retargeting each child to `main` **before** deleting its base branch. Nothing was auto-closed; the #15 accident did not repeat.
+
+**What re-reviewing four already-fixed PRs was actually worth.** Ten of the fifteen candidates on #24 were already scoped into #33/#35/#38/#39, so the new §1 bullet paid for itself immediately. The findings that were real all came from the same place — *what `main` guarantees underneath a branch had changed while the branch sat*:
+
+1. **#28's worker protocol had no test that could run it.** jsdom defines no `Worker`, so `getWorker()` returns undefined in every existing test and all of them took the `unavailable` branch onto the main thread. The handshake, the 2s ack timeout, the `failed` channel and the request-id guard ran only in a browser — which is where the round-1 review found all four broken. A fake `Worker` plus `vi.resetModules()` drives all six branches now, each verified by breaking it. **The code was already right**; six passed first time. That is the good outcome and worth saying plainly, because "we believe it works" and "it fails when we break it" are different states and only the second is worth having.
+2. **#27's tag prompt had started telling users something untrue.** It refuses commas because "the exchange format separates tags with one" — accurate when written, obsolete the moment #37 landed `encodeTags`/`asTagArray`. Verified a comma-bearing tag round-trips. Filed to #43.
+3. **#29 carried #24's `markSaved()` defect one branch up**, exactly as #24's own notes predicted. The `saved` outcome keeps it and has earned it — `saveWorkspaceToFile` resolves `saved` only after `writable.close()`. The `downloaded` outcome does not. Two tests now stand either side of that line, and **the second matters as much as the first**: removing `markSaved()` from `saved` must also fail, or the fix is "delete the feature" rather than "tell the two outcomes apart".
+4. **#29's `ImportDialog` declared `aria-modal` and implemented none of it** — third occurrence after #24's menu and #25's palette. `useFocusTrap` had existed since #27 and was used by one dialog of three. The non-obvious part, now a review-skill line: **a component that renders `null` never unmounts, so a trap installed in it takes focus once at boot and gives it back never.** The body had to become its own component.
+5. **#11's first acceptance criterion had no test at all.** "Save → edit → save writes the same file without a picker" is the entire reason the handle is held, and the only picker stub in the suite did a single save.
+6. **#34's journeys were right and five of its expected values were stale**, each traceable to the review that changed it. The dirty-count fix is asserted against the count *before* the save rather than flipped to `> 0`, which passes at any value — the anti-pattern #49 will lint. The facet assertions decode rather than pin `layer%3Aapp`, because pinning an encoding makes the next escaping fix look like a regression.
+
+**The pattern across all six: a branch that waits on a stack goes stale in what it *asserts*, not in what it *does*.** Every one of these was the suite or the code correctly reporting that the product had moved.
+
+Filed this session: **#48** (`propertyTypes`, fixed and merged as #51), **#49** (the one-sided-bounds lint rule, 5th recurrence), **#52** (`importFile` has no error path). Harvested into #50: the range-bracketing tell in CLAUDE.md, and review-skill bullets for reading the prior round's disposition, asserting the criterion's own noun, asserting file-settleable criteria, and checking call sites before believing a finding.
+
+**Open for next session.** Three review-skill lines are owed a harvest branch: the `null`-render focus-trap trap, *when a branch cannot run in the test environment that is the finding — fake the environment*, and *re-run a waiting harness against the merged base before reading a single assertion*. Then the follow-up queue, roughly in dependency order: **#38** (now unblocked — #29 built the surface it needs), **#32** (ships today, most alarming false message in the app), **#33** (the store data-loss cluster), **#49/#40/#35/#44/#45** (the harness tier), then **#39/#41/#42/#43/#46** (the per-screen follow-ups) and **#31**. Phase 2 (#12, #21–#23) is untouched.
+
 ## 2026-08-13 (review) — `/review-pr 24` re-review: two vacuous acceptance tests block, and #37's `propertyTypes` never reached the store
 
 Re-reviewed **#24** (app shell, closes #6) after `a6d5247` fixed all six blocking findings from the first round. Posted the review on the PR; filed **#48** (bug) and **#49** (harness). Verdict: request changes on a narrow, cheap set — two tests, no behaviour change.
