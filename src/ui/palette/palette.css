@@ -1,0 +1,175 @@
+/*
+ * Command palette (handoff "Global chrome" → Command palette).
+ * The one shadow and the one animation in the application; both are here
+ * deliberately, and nowhere else.
+ */
+
+.palette-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: color-mix(in oklab, var(--ink) 34%, transparent);
+  display: flex;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.palette {
+  width: 592px;
+  max-width: 92vw;
+  align-self: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--bd2);
+  box-shadow: var(--shadow-palette);
+  animation: pfade 0.12s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .palette {
+    animation: none;
+  }
+}
+
+.palette__input-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 44px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--bd);
+}
+
+.palette__chevron {
+  color: var(--accent);
+  font: 500 14px/1 var(--font-mono);
+  flex: none;
+}
+
+.palette__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: 400 14px/1 var(--font-ui);
+  color: var(--ink);
+}
+
+.palette__input::placeholder {
+  color: var(--ink3);
+}
+
+.palette__esc {
+  font: 500 9.5px/1 var(--font-mono);
+  color: var(--ink3);
+  border: 1px solid var(--bd);
+  padding: 3px 4px;
+  flex: none;
+}
+
+.palette__results {
+  max-height: 342px;
+  overflow-y: auto;
+}
+
+.palette__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 12px 7px 10px;
+  background: transparent;
+  border: 0;
+  /* Reserved so the accent bar on the selected row shifts nothing. */
+  border-left: 2px solid transparent;
+  border-bottom: 1px solid var(--bd);
+  text-align: left;
+}
+
+.palette__row:last-child {
+  border-bottom: 0;
+}
+
+.palette__row:hover {
+  background: var(--panel);
+}
+
+/*
+ * Where the keyboard is, which is not the same question as where the mouse is.
+ * Both used to paint `--panel`, so a highlight that had jumped to the row under
+ * a resting cursor looked exactly like the one the user had arrowed to. The
+ * accent bar is the same "you are here" idiom the nav uses for the active route.
+ */
+.palette__row--active {
+  background: var(--panel2);
+  border-left-color: var(--accent);
+}
+
+.palette__badge {
+  display: flex;
+  flex: none;
+}
+
+.palette__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 12.5px/1.2 var(--font-ui);
+  color: var(--ink);
+}
+
+.palette__type {
+  font: 400 10px/1 var(--font-mono);
+  color: var(--ink3);
+  flex: none;
+}
+
+.palette__action-glyph {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--bd2);
+  color: var(--ink3);
+  font: 500 8.5px/1 var(--font-mono);
+}
+
+.palette__action-name {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.palette__group {
+  padding: 7px 12px 5px;
+  border-bottom: 1px solid var(--bd);
+  background: var(--panel);
+}
+
+.palette__empty {
+  padding: 34px 12px;
+  text-align: center;
+  color: var(--ink3);
+  font: 400 12.5px/1.4 var(--font-ui);
+}
+
+.palette__footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 12px;
+  background: var(--panel);
+  border-top: 1px solid var(--bd);
+  font: 400 9.5px/1 var(--font-mono);
+  color: var(--ink3);
+}
+
+.palette__hint-key {
+  color: var(--ink2);
+}
+
+.palette__indexed {
+  margin-left: auto;
+}

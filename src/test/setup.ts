@@ -35,6 +35,11 @@ if (typeof globalThis.localStorage?.getItem !== 'function') {
   })
 }
 
+// jsdom has no layout, so it implements no scrolling APIs.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {}
+}
+
 // jsdom implements neither of these; several modules feature-detect them.
 if (!window.matchMedia) {
   window.matchMedia = ((query: string) => ({

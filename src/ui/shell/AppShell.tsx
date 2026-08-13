@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom'
+import { usePalette } from '@/ui/palette/context'
 import { Header } from './Header'
 import { LeftNav } from './LeftNav'
 import './shell.css'
@@ -8,15 +9,12 @@ import './shell.css'
  * Handoff: `grid-template-rows: 46px 1fr` over `grid-template-columns: 208px 1fr`.
  */
 
-export interface AppShellProps {
-  /** Opens the command palette; supplied by the palette provider in #7. */
-  onOpenSearch?: () => void
-}
+export function AppShell() {
+  const { openPalette } = usePalette()
 
-export function AppShell({ onOpenSearch = () => {} }: AppShellProps) {
   return (
     <div className="shell">
-      <Header onOpenSearch={onOpenSearch} />
+      <Header onOpenSearch={openPalette} />
       <div className="shell__body">
         <LeftNav />
         <main className="shell__main">
