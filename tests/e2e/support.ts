@@ -101,6 +101,19 @@ export function modelCounts(page: Page): Locator {
   return page.locator('.health__counts')
 }
 
+/** The drawn nodes on the dependency-graph canvas, one per placed element. */
+export function graphNodes(page: Page): Locator {
+  return page.locator('.gnode')
+}
+
+/**
+ * `29 nodes · 47 relations · time point 2026` under a report title — and
+ * `· laying out…` appended to it for as long as the graph has no layout.
+ */
+export function reportStats(page: Page): Locator {
+  return page.locator('.chrome__stats')
+}
+
 /** A row in the inventory table, addressed by element name. */
 export function inventoryRow(page: Page, name: string): Locator {
   return page.locator('.table__row').filter({ hasText: name })

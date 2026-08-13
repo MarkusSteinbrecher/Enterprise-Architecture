@@ -8,11 +8,61 @@ import {
 } from './layout'
 
 /**
+ * Construct an ELK, working around what `elk.bundled.js` does when it believes
+ * it *is* the worker.
+ *
+ * The first time an ELK is constructed, the bundle requires its own
+ * `elk-worker.min.js`, and that file branches on
+ * `typeof document === 'undefined' && typeof self !== 'undefined'` — its test
+ * for "I am running inside a Web Worker". In that branch it installs itself as
+ * the worker (`self.onmessage = …`) and exports nothing at all.
+ *
+ * Both halves are fatal here, because this module runs inside a Web Worker of
+ * *our* making (`layout.worker.ts`). The `Worker` the bundle then reads off its
+ * own exports is `undefined`, so `new ELK()` threw "U8 is not a constructor" —
+ * the message the graph screen reported — and had it not thrown, the handler
+ * `layout.worker.ts` installed would already have been replaced by ELK's
+ * dispatcher, swallowing every later layout request until the ack timeout.
+ *
+ * Presenting a `document` for the length of the constructor call takes the
+ * export branch instead, which is the in-process layout worker we want: our own
+ * worker is already the thing keeping ELK off the main thread. elkjs reads
+ * nothing off the object — the only other mention of `document` in
+ * `elk-worker.min.js` is `$doc.documentMode`, behind an `msie` user-agent test —
+ * and it is removed again immediately, so nothing else in the worker can
+ * feature-detect a DOM that isn't there. Later constructions reuse the module
+ * the bundle cached on this one.
+ *
+ * **Do not memoise this at module scope.** The obvious tidy-up — construct once,
+ * reuse — is what makes `elk-worker-scope.test.ts` stop working, silently.
+ * elkjs decides the branch exactly once, when the first `new ELK()` requires its
+ * inner module, and that test only catches a regression because construction is
+ * deferred to call time: it deletes `document` in the test *body*, which is
+ * after imports have run. Build the ELK at import time and jsdom's `document` is
+ * still there, the good branch is cached before the test can fake the worker
+ * scope, and the file whose whole purpose is to catch this passes with the
+ * workaround removed. The per-call set/delete is a synchronous global write that
+ * is reverted before the next line; that is the cheaper thing to pay.
+ */
+function createElk(): InstanceType<typeof ELK> {
+  if (typeof document !== 'undefined') return new ELK()
+
+  const scope = globalThis as { document?: unknown }
+  scope.document = {}
+  try {
+    return new ELK()
+  } finally {
+    delete scope.document
+  }
+}
+
+/**
  * The ELK call itself, isolated so it can run either inside the worker or on the
- * main thread as a fallback. Nothing here touches the DOM.
+ * main thread as a fallback. It reads nothing from the DOM — the one `document`
+ * it writes is `createElk`'s decoy, gone before this function resumes.
  */
 export async function computeLayout(request: LayoutRequest): Promise<LayoutResponse> {
-  const elk = new ELK()
+  const elk = createElk()
   const graph = {
     id: 'root',
     layoutOptions: ELK_OPTIONS,

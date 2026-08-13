@@ -1,5 +1,41 @@
 # Session Log
 
+## 2026-08-13 (fix) — the dependency graph was broken in every browser: "U8 is not a constructor" (#54)
+
+The graph screen reported `The graph layout failed: U8 is not a constructor` on a green 467-test suite. Root cause: **`elk.bundled.js` cannot be used inside a Web Worker.** The first time an ELK is constructed the bundle requires its own `elk-worker.min.js`, and that file branches on `typeof document === 'undefined' && typeof self !== 'undefined'` — its test for "I am running inside a Web Worker". In that branch it installs itself as the worker (`self.onmessage = …`) and exports **no constructor at all**, so the `Worker` the bundle reads back off its own exports is `undefined` and `new ELK()` throws. Minified, that `undefined` is called `U8`.
+
+Two defects for the price of one: had the constructor not thrown, the handler `layout.worker.ts` installs would already have been replaced by ELK's dispatcher, and every later layout request would have gone unanswered until the 2s ack timeout.
+
+Fix in `elk-runner.ts`: present a `document` for the length of the constructor call, then remove it. That takes the export branch — the in-process layout worker, which is what we want, since our own worker is already the thing keeping ELK off the main thread. elkjs reads nothing off the object (its only other mention of `document` sits behind an `msie` user-agent test), and the browserify module it caches on that first construction serves every later one.
+
+**Why the suite was green.** The gap is the exact sibling of the one #50 harvested from #28. That review noted jsdom defines no `Worker`, so every test took the main-thread fallback, and answered it with a fake `Worker` driving the *protocol*. But the fake worker never runs the worker's *module scope* — and jsdom defines `document`, so every existing test, including the main-thread fallback, took elkjs's other branch. The thing the worker exists to do had no test that ran it under the conditions the worker actually has. `elk-worker-scope.test.ts` deletes `document`, leaves `self`, and drives the real ELK; with the shim removed it fails with `_Worker is not a constructor`, the unminified form of the reported error. It also asserts that `self.onmessage` survives and that the borrowed `document` is gone afterwards.
+
+Verified beyond the test: the production `layout.worker` chunk was driven directly in a faked worker scope, before and after — `{"error":"U8 is not a constructor"}` then a real layout. Suite 468 green, lint/tsc/build clean.
+
+**Candidate rule for the next harvest:** *a fake at the boundary tests the protocol, not the environment.* Faking `Worker` proves our messages are right; it cannot prove the code inside the worker runs, because the fake still executes in the caller's scope. Anything whose behaviour depends on which globals exist — `document`, `window`, `self` — needs a test that builds that scope.
+
+**Reviewed in the same session (PR #55), which is worth flagging as a weakness: author and reviewer were one session.** Posted as a comment, not an approval — GitHub refuses a self-approval and it should. Three things the review changed, all pushed to the branch:
+
+1. **The real finding was not the elkjs sniff — it was that the graph has no e2e journey.** `playwright.config.ts` says in its own docblock that the harness exists because *"workers, code-split chunks, the 404 redirect"* break in production and nowhere else. Fifteen journeys, and `grep -rn graph tests/e2e/` returned nothing. The harness was built for this exact risk and never pointed at the screen. `tests/e2e/dependency-graph.spec.ts` closes it, verified red against the reverted fix (0 nodes drawn).
+2. **Both of that journey's assertions were then falsified separately**, because a journey with one real assertion and one decorative one is worse than honest. Re-run with `window.Worker` deleted: the node count still **passed** (the main-thread fallback genuinely draws the graph) while the worker-URL assertion failed with `WORKERS RECORDED: []`. So "29 nodes appeared" alone would not have caught a dead worker — the two cover different failures.
+3. **Writing the journey produced the second rule.** Its first draft asserted "no layout-failure alert" *before* the node count, and that assertion passed against the fully broken graph: `toHaveCount(0)` is satisfied by a page that has not rendered yet. An absence asserted first is a one-sided bound wearing different clothes.
+
+Also caught: the PR made its own docblock false — `computeLayout` still said *"Nothing here touches the DOM"* three lines above code that writes `globalThis.document`.
+
+Left as a nit and deliberately **not** applied, so the diff a human reads stays the author's: `createElk` shims whenever `document` is absent, but elkjs only misbehaves when `document` is absent **and** `self` is present, so in plain Node it mutates a global for nothing. And one open judgement call for a second reader — keep the shim, or restructure onto `elk-api.js` with an elkjs-owned worker? The review argues keep, *because* the workaround is now guarded on both sides and can no longer break silently; but an author should not be ratifying that alone.
+
+Harvested: two CLAUDE.md lines (fake-at-the-boundary; presence-before-absence) and one review-skill bullet (grep `tests/e2e/` for the screen the PR touches).
+
+**Round 2 — the automated pass broke the review, which is the point of running it.** It returned ten findings, and the first falsified a claim I had already posted. I had "verified" the journey's *laid out by the worker, not the fallback* assertion by deleting `window.Worker` — the one failure mode where the Worker is never constructed. Every realistic one constructs it and fails after: `getWorker()` builds it before any outcome is known, and the recording subclass pushed the URL before `super()`. Confirmed by putting a `throw` at `layout.worker.ts` module scope and rebuilding: **the journey passed green with the worker completely dead.** That is the one-sided bound this very branch added a CLAUDE.md rule against, committed in the test written to demonstrate the rule.
+
+Fixed by asserting what actually separates the two paths: `layoutOnMainThread`'s `import('./elk-runner')` is the only fetch of that ~1.4MB chunk and the worker bundles its own copy, so *never requested* means the main thread never laid anything out. Red against the dead worker, green against a live one.
+
+Five more accepted: the unit test asserted only that two ids came back (`computeLayout` defaults missing geometry to `0`, so an all-zero layout passed — now asserts `b` above `a` and `height > 0`, verified red by forcing `y: 0`); `Reflect.deleteProperty`'s return was never checked; the journey number collided with file-round-trip's 5; the stats assertion compared a year from the Node process against one the browser computed; `getByRole('alert')` was page-wide. Two declined with reasons — memoising `createElk` (it would cache elkjs's good branch at import time and silently defeat the regression test; documented in the docblock where someone would try it) and `ELK` as a type (the default export is a value; `tsc` rejects it).
+
+**No new rule harvested from round 2, deliberately.** The failure was an existing rule applied too shallowly, not a missing one: *when a test asserts that work happened in a particular place, break that place the way it actually breaks* — deleting the constructor is not the failure mode, failing after construction is. That now lives in the journey's own comments.
+
+Standing conclusion for the working model: the strongest finding across both rounds came from the reviewer with no stake in the PR, and it caught an error in the *review*, not only in the code. Author-reviews are worth running and are not worth trusting alone.
+
 ## 2026-08-13 (review) — the phase-1 stack is merged: #24–#29 and #34, seven issues closed
 
 Same session as the entry below, continued. **Every open PR is merged and `main` is green on all six checks** — 467 unit tests, 15 e2e journeys, `tsc`, `eslint`, `format:check`, `build`, `validate:xsd`. Issues #6, #7, #8, #9, #10, #11 and #19 are closed. Phase 1 is done.
