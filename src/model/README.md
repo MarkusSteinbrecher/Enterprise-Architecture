@@ -29,6 +29,11 @@ notation shape set in list, card, graph, breadcrumb and palette contexts (ADR
 UI-2). Junction is a relationship connector rather than an element, but the
 exchange format serialises it in the element list, so it is carried here.
 
+The catalogue has one `Junction`, as the specification does. The exchange format
+has two concrete types instead, so the and/or flavour travels beside the type as
+`Element.junctionKind` — absent means `and`, which is what an unqualified
+junction is — and `io/exchange-format.ts` maps between the two shapes.
+
 Colour groups are not layers: Strategy renders with Business, Physical with
 Technology, and every passive-structure element renders in the slate ramp
 regardless of which layer it belongs to.
