@@ -59,13 +59,16 @@ export interface ModelStoreOptions {
 const DEFAULT_HISTORY_LIMIT = 200
 
 export class ModelStore {
-  #id: string
-  #name: string
-  #schemaVersion: number
+  // Assigned by `#adopt` from the constructor; the initialisers are here only
+  // because TypeScript cannot see a definite assignment through a method call.
+  #id = ''
+  #name = ''
+  #schemaVersion = SCHEMA_VERSION
   #elements = new Map<string, Element>()
   #relationships = new Map<string, Relationship>()
   #views: ViewDefinition[] = []
   #tagGroups: TagGroup[] = []
+  #propertyTypes: Record<string, string> | undefined
   #indexes: Indexes = emptyIndexes()
 
   #undo: CommandRecord[] = []
@@ -78,14 +81,9 @@ export class ModelStore {
   #historyLimit: number
 
   constructor(workspace: Workspace, options: ModelStoreOptions = {}) {
-    this.#id = workspace.id
-    this.#name = workspace.name
-    this.#schemaVersion = workspace.schemaVersion || SCHEMA_VERSION
-    this.#views = [...workspace.views]
-    this.#tagGroups = [...workspace.tagGroups]
     this.#author = options.author ?? 'you'
     this.#historyLimit = options.historyLimit ?? DEFAULT_HISTORY_LIMIT
-    this.#load(workspace)
+    this.#adopt(workspace)
   }
 
   // ── Reading ────────────────────────────────────────────────────────────────
@@ -233,7 +231,15 @@ export class ModelStore {
       .reverse()
   }
 
-  /** A plain, serialisable snapshot. Arrays are copies; the caller owns them. */
+  /**
+   * A plain, serialisable snapshot. Arrays are copies; the caller owns them.
+   *
+   * This is the model's only exit: SAVE FILE, Export and autosave all read it,
+   * so a `Workspace` field missing here is gone from every file the product
+   * writes. It mirrors `#adopt` field for field — change one, change both, and
+   * `model-store.test.ts` fails if a round trip through the store loses
+   * anything, which is the guard rather than either author's memory.
+   */
   snapshot(): Workspace {
     return {
       id: this.#id,
@@ -243,6 +249,10 @@ export class ModelStore {
       relationships: [...this.#relationships.values()],
       views: [...this.#views],
       tagGroups: [...this.#tagGroups],
+      // Absent, not empty, when nothing is declared: canonical JSON omits the
+      // key entirely, so a workspace without declared types keeps the bytes it
+      // had before this field existed (ADR 0004).
+      ...(this.#propertyTypes ? { propertyTypes: { ...this.#propertyTypes } } : {}),
     }
   }
 
@@ -395,12 +405,7 @@ export class ModelStore {
    * another workspace's unsaved work to this one.
    */
   replaceWorkspace(workspace: Workspace, { markClean }: { markClean: boolean }): void {
-    this.#id = workspace.id
-    this.#name = workspace.name
-    this.#schemaVersion = workspace.schemaVersion || SCHEMA_VERSION
-    this.#views = [...workspace.views]
-    this.#tagGroups = [...workspace.tagGroups]
-    this.#load(workspace)
+    this.#adopt(workspace)
     this.#undo = []
     this.#redo = []
     this.#history = []
@@ -426,6 +431,25 @@ export class ModelStore {
       if (relationship) out.push(relationship)
     }
     return out
+  }
+
+  /**
+   * Take on a workspace's identity and all of its non-indexed content.
+   *
+   * The constructor and `replaceWorkspace` both need this. When they each kept
+   * their own copy, a field added to `Workspace` had to be remembered in three
+   * places — and `propertyTypes` (#37) was remembered in none of them, so the
+   * exchange type declarations died between the importer and every file the
+   * product writes (#48). One place to add a field, one place to mirror it.
+   */
+  #adopt(workspace: Workspace): void {
+    this.#id = workspace.id
+    this.#name = workspace.name
+    this.#schemaVersion = workspace.schemaVersion || SCHEMA_VERSION
+    this.#views = [...workspace.views]
+    this.#tagGroups = [...workspace.tagGroups]
+    this.#propertyTypes = workspace.propertyTypes ? { ...workspace.propertyTypes } : undefined
+    this.#load(workspace)
   }
 
   #load(workspace: Workspace): void {
