@@ -4,6 +4,7 @@
  */
 
 export * from './problems'
+export * from './records'
 export * from './canonical-json'
 export * from './exchange-format'
 export * from './profile-properties'
