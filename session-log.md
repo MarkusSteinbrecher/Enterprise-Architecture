@@ -1,5 +1,11 @@
 # Session Log
 
+## 2026-09-29 — New direction: Archi-class modelling + repository + collaboration + transition states
+
+Sponsor direction: rebuild Archi's functionality as a modern web app (no Archi technology one-to-one), extended with a better repository, collaboration, and multiple repository states for planning transition architectures. Drafted `design/specs/archi-class-modelling-concept.md` (PR #73): Archi feature map from its user guide (adopt / redesign / extend / skip), hand-drawn views identified as the largest gap, transition states as overlays per #58 (not copies) with state-aware views, collaboration as "server optional" per #59, a six-phase order of work, and five decisions to ratify. Revises #56's "modelling second".
+
+Open: sponsor review of PR #73 and the five decisions in §7; then rewrite #56 and file phase-1 issues (views read-only: `View` model object, exchange/.archimate view + folder import, model tree).
+
 ## 2026-08-13 (fix) — the dependency graph was broken in every browser: "U8 is not a constructor" (#54)
 
 The graph screen reported `The graph layout failed: U8 is not a constructor` on a green 467-test suite. Root cause: **`elk.bundled.js` cannot be used inside a Web Worker.** The first time an ELK is constructed the bundle requires its own `elk-worker.min.js`, and that file branches on `typeof document === 'undefined' && typeof self !== 'undefined'` — its test for "I am running inside a Web Worker". In that branch it installs itself as the worker (`self.onmessage = …`) and exports **no constructor at all**, so the `Worker` the bundle reads back off its own exports is `undefined` and `new ELK()` throws. Minified, that `undefined` is called `U8`.
