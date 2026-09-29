@@ -1,5 +1,11 @@
 # Session Log
 
+## 2026-09-29 (cont.) — Concept merged; backlog carried over
+
+Sponsor merged #73. #56 rewritten to the three-pillar position (Model / Repository / Plan). New label `modelling`; tracking issue **#74** (model pillar, M1–M3) with phase-M1 issues: #75 `View` + `Folder` model objects (and rename saved report views to `ReportDefinition`), #76 exchange-format views + folders round-trip, #77 ArchiMate notation as SVG components, #78 spike + ADR diagram engine, #79 read-only view canvas, #80 model tree. #13's `.archimate` scope extended to views + folders; #72 T4 now points at #74. Wiki project page + log updated (HQ `751ef85`).
+
+Open: sponsor call on concept §7.5 (after M1: editor M2 or #72 T2 first); ADRs for #56–#59. Suggested start: #75 (everything in M1 depends on it) in parallel with #77 and the #78 spike.
+
 ## 2026-09-29 — New direction: Archi-class modelling + repository + collaboration + transition states
 
 Sponsor direction: rebuild Archi's functionality as a modern web app (no Archi technology one-to-one), extended with a better repository, collaboration, and multiple repository states for planning transition architectures. Drafted `design/specs/archi-class-modelling-concept.md` (PR #73): Archi feature map from its user guide (adopt / redesign / extend / skip), hand-drawn views identified as the largest gap, transition states as overlays per #58 (not copies) with state-aware views, collaboration as "server optional" per #59, a six-phase order of work, and five decisions to ratify. Revises #56's "modelling second".
