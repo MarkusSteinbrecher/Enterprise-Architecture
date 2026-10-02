@@ -1,5 +1,19 @@
 # Session Log
 
+## 2026-10-02 (cont.) — #75 merged; #76 implemented (PR #82)
+
+The sponsor merged #81 (#75). **#76 → PR #82** (`feat/76-exchange-views`, CI green, not yet reviewed): the exchange format now reads and writes `<views>` and `<organizations>`, and Archi's own export round-trips losslessly. Decisions carried forward:
+
+- **Archi's defaults are not overrides.** Archi writes its full computed style on every object; values equal to Archi's default are read as none, so imported views follow our theme. The default table was measured from Archi 5.10's export of all 61 types. The platform font counts as default only on most objects.
+- **The `archipelago.style` view property** carries what `<style>` cannot (text alignment and position, strikethrough) plus a `literal` flag for styles we wrote, so explicit "default" overrides survive our own round trip.
+- **Folder ids come from the label path** when the file has none (Archi never writes them); we write `identifier` on folder items.
+- **Fixture:** an original model (`scripts/fixtures/build-claims-model.ts`) exported by **real Archi 5.10**. With the sponsor's OK, Archi is now installed at `~/Applications/Archi.app` and its CLI is scripted (`scripts/fixtures/export-with-archi.sh`). The landscape view (~60 objects, nested, orthogonal bend-points) is ready as the #78 spike's test view.
+- **Fixed two pre-existing parser bugs:** numeric character references were not decoded, and a written CR was lost. Both also affected element documentation.
+- **New CI job, "Exchange format XSD":** validates everything the writer produces against the Diagram schema.
+- `src/io/fixtures/` is now in `.prettierignore`; Prettier had silently reformatted the byte-exact v1 fixture.
+
+Next: `/review-pr 82`. Then #77 (notation) and the #78 spike can start in parallel; #80 (model tree) is unblocked too.
+
 ## 2026-10-02 — #75 implemented (PR #81); stale checkout cleaned
 
 This checkout (`/Volumes/Archive/...`) was 112 commits behind and still held knowledge-base-era files. The sponsor had them deleted (Ferring proposal drafts, old `BACKLOG.md`, `Documentation/`, `local-docs/`) and main was fast-forwarded. A stray local `hq.yaml` edit is in `git stash`.
