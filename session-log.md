@@ -1,5 +1,19 @@
 # Session Log
 
+## 2026-10-02 (cont.) — #76 merged; #78 spike done, ADR 0006 proposed
+
+The sponsor merged #82 (#76) **without a `/review-pr` pass**. A review can still be run against main and its findings filed as follow-ups.
+
+**#78 spike.** Three candidates, measured in Chromium on the Archi-exported landscape view (85 objects), tiled to 510 and 1,360 objects, at 1× and 4× CPU throttle. The code is throwaway, on `spike/78-diagram-engine` (not for merge): a custom SVG editor, React Flow, and diagram-js (the library survey's pick; MIT, the toolkit under bpmn-js). Every candidate committed move, drag-out re-parenting and bend-point edits as **one command on our store**, and undo restored the model and the DOM, at every scale. Performance does not separate them at the required 300+ objects.
+
+**ADR 0006 (Proposed): a custom SVG editor over our own model.** It is the only option where the engine does not own the model state by construction. diagram-js does work, through a read-back adapter that clears its command stack, but that is a lossy-boundary risk, and its renderer cannot take the #77 React components. React Flow needs handles and draws edges under nodes by default. diagram-js's `ManhattanLayout` can be borrowed on its own (~3 KB gzip) for orthogonal routing. Carried forward:
+
+- M2 builds snapping, guides, align, resize, lasso and auto-scroll in-repo. File the M2 issues with that scope.
+- `updateView` clones every node, so each commit re-renders the whole view: 133 ms at 1,360 objects throttled. Fix it before the editor.
+- #79 is the first slice of the editor, with gestures off.
+
+Next: sponsor accepts or rejects ADR 0006 on the PR. Then #77 and #79; #80 is independent.
+
 ## 2026-10-02 (cont.) — #75 merged; #76 implemented (PR #82)
 
 The sponsor merged #81 (#75). **#76 → PR #82** (`feat/76-exchange-views`, CI green, not yet reviewed): the exchange format now reads and writes `<views>` and `<organizations>`, and Archi's own export round-trips losslessly. Decisions carried forward:
