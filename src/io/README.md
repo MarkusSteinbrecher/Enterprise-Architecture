@@ -6,11 +6,13 @@ git-friendly files are what LeanIX does not give you. Concept reference: §5.3.
 | File | What it owns |
 |---|---|
 | `canonical-json.ts` | the native format — deterministic, diffable |
+| `canonical-views.ts` | views and folders in the native format, and their repairs on read |
 | `exchange-format.ts` | Open Group ArchiMate Model Exchange Format, in and out |
 | `profile-properties.ts` | how the portfolio profile survives an exchange round trip |
 | `json-schema.ts` | the published schema, built from the metamodel |
 | `demo.ts`, `demo/archisurance.xml` | the bundled demo workspace |
 | `fixtures/junction-flow.xml` | a junction chain as a certified tool writes it |
+| `fixtures/workspace-v1.json` | a schema-1 file, written by the schema-1 writer — the migration's input |
 | `problems.ts` | structured import problems |
 
 ## Canonical JSON
@@ -19,7 +21,13 @@ The point is git. Two exports of the same model must be byte-identical, and a
 one-field edit must produce a one-line diff. So keys are sorted at every depth,
 arrays are sorted by id rather than by insertion order (Map iteration order is an
 implementation detail), absent and empty values are omitted rather than written
-as `null`, and the file ends with a newline.
+as `null`, and the file ends with a newline. Bend-points are the one array kept
+in written order, because their order is the route.
+
+Reading migrates. A schema-1 file's `views` were saved report definitions; they
+arrive as `reports`, with an `info` problem (`json.schema-upgraded`) saying the
+next save writes the new format. Stored IndexedDB snapshots are migrated by
+`migrateWorkspace` on load.
 
 The published schema is `design/archipelago-workspace.schema.json`, generated
 from the element catalogue by `npm run schema`. A test fails if the checked-in
@@ -44,11 +52,12 @@ their ArchiSurance model is not bundled either. It is fetched once and cached
 under `node_modules/.cache/`, so only the first run of a fresh checkout needs the
 network; `--refresh` re-fetches and `ARCHIMATE_XSD=<path>` uses your own copy.
 
-**Not read yet:** the format's `views` (diagrams) and `organizations` (folders).
-Both are reported as skipped rather than dropped silently — Archipelago generates
-its views from the model, and diagram support is phase 3. A *diagram* is not one
-of our `ViewDefinition`s: ours are saved report definitions, and those do survive
-(see "What the format has no home for" below).
+**Not read or written yet (#76):** the format's `views` (diagrams) and
+`organizations` (folders). The workspace holds both since #75, so both are
+reported in each direction rather than dropped silently: on import as skipped,
+on export as `exchange.views-not-written` / `exchange.folders-not-written`. Saved
+report definitions are not diagrams, and those do survive (see "What the format
+has no home for" below).
 
 ### Where the two shapes disagree
 
@@ -97,11 +106,12 @@ property and made the second export differ from the first.
 
 ### What the format has no home for
 
-Saved views and tag groups are not ArchiMate concepts, so the schema has nowhere
+Saved reports and tag groups are not ArchiMate concepts, so the schema has nowhere
 to put them — and dropping them meant an Archipelago → XML → Archipelago trip
-destroyed every saved view and every custom tag colour in silence. They now
-travel as two namespaced model properties (`archipelago.views`,
-`archipelago.tagGroups`) holding canonical JSON. Tag groups identical to the
+destroyed every saved report and every custom tag colour in silence. They now
+travel as two namespaced model properties (`archipelago.reports`,
+`archipelago.tagGroups`) holding canonical JSON. Files written before schema 2
+carry reports as `archipelago.views`, which is still read. Tag groups identical to the
 shipped default are left out and restored on the way back, so an ordinary file
 carries neither. Model-level properties that are *not* ours are reported as
 skipped: there is nowhere in a `Workspace` to keep them.

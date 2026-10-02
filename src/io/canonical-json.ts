@@ -12,16 +12,23 @@ import {
   type Element,
   type LifecycleDates,
   type PortfolioProfile,
-  type PropertyValue,
   type Relationship,
   type RelationshipProfile,
   type TagGroup,
-  type ViewDefinition,
+  type ReportDefinition,
   type Workspace,
 } from '@/model'
 import { isExchangeSafeId } from '@/store/ids'
 import { failed, problem, succeeded, type ImportProblem, type ImportResult } from './problems'
 import { setKey } from './records'
+import { asArray, byId, emptyToUndefined, isRecord, prune, readProperties } from './json-helpers'
+import {
+  canonicalFolder,
+  canonicalView,
+  readFolderRef,
+  readFolders,
+  readViews,
+} from './canonical-views'
 
 /**
  * Canonical JSON — the native format (concept §5.3 item 1).
@@ -37,6 +44,9 @@ import { setKey } from './records'
  *   text file in a repository ends.
  *
  * The published schema lives at `design/archipelago-workspace.schema.json`.
+ *
+ * Reading migrates: a schema-1 file's `views` were saved report definitions,
+ * and arrive as `reports` (#75).
  */
 
 export const CANONICAL_JSON_INDENT = 2
@@ -50,6 +60,8 @@ export function toCanonicalJson(workspace: Workspace): string {
     elements: [...workspace.elements].sort(byId).map(canonicalElement),
     relationships: [...workspace.relationships].sort(byId).map(canonicalRelationship),
     views: [...workspace.views].sort(byId).map(canonicalView),
+    folders: [...workspace.folders].sort(byId).map(canonicalFolder),
+    reports: [...workspace.reports].sort(byId).map(canonicalReport),
     tagGroups: [...workspace.tagGroups].sort(byId).map(canonicalTagGroup),
     propertyTypes: workspace.propertyTypes && emptyToUndefined(workspace.propertyTypes),
   }
@@ -102,10 +114,26 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
     )
   }
 
+  const legacy = schemaVersion > 0 && schemaVersion < 2
+  if (legacy) {
+    problems.push(
+      problem(
+        'info',
+        'json.schema-upgraded',
+        `This file was written in schema ${schemaVersion} and was upgraded to ${SCHEMA_VERSION}. Saving writes the new format, which older builds cannot read.`,
+        where,
+      ),
+    )
+  }
+
+  // Folders first: elements, relationships and views are checked against them.
+  const folders = legacy ? [] : readFolders(raw.folders, problems, where)
+  const folderIds = new Set(folders.map((folder) => folder.id))
+
   const elements: Element[] = []
   const knownIds = new Set<string>()
   for (const [index, candidate] of asArray(raw.elements).entries()) {
-    const element = readElement(candidate, index, problems, where)
+    const element = readElement(candidate, index, folderIds, problems, where)
     if (!element) continue
     if (knownIds.has(element.id)) {
       problems.push(
@@ -125,7 +153,7 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
   const relationships: Relationship[] = []
   const seenRelationshipIds = new Set<string>()
   for (const [index, candidate] of asArray(raw.relationships).entries()) {
-    const relationship = readRelationship(candidate, index, knownIds, problems, where)
+    const relationship = readRelationship(candidate, index, knownIds, folderIds, problems, where)
     if (!relationship) continue
     if (seenRelationshipIds.has(relationship.id)) {
       problems.push(
@@ -164,17 +192,26 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
     )
   }
 
-  // Malformed views and tag groups are dropped like everything else that cannot
-  // be read — but never silently: the next save would delete them for good.
-  const views: ViewDefinition[] = []
-  for (const [index, candidate] of asArray(raw.views).entries()) {
-    if (isViewDefinition(candidate)) views.push(candidate)
+  const views = legacy
+    ? []
+    : readViews(
+        raw.views,
+        { elements: knownIds, relationships: seenRelationshipIds, folders: folderIds },
+        problems,
+        where,
+      )
+
+  // Malformed reports and tag groups are dropped like everything else that
+  // cannot be read — but never silently: the next save would delete them for good.
+  const reports: ReportDefinition[] = []
+  for (const [index, candidate] of asArray(legacy ? raw.views : raw.reports).entries()) {
+    if (isReportDefinition(candidate)) reports.push(candidate)
     else {
       problems.push(
         problem(
           'warning',
-          'json.invalid-view',
-          `View ${index} is malformed and was skipped.`,
+          'json.invalid-report',
+          `Saved report ${index} is malformed and was skipped.`,
           where,
         ),
       )
@@ -198,10 +235,13 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
   const workspace: Workspace = {
     id: typeof raw.id === 'string' && raw.id ? raw.id : 'ws-imported',
     name: typeof raw.name === 'string' && raw.name ? raw.name : 'Imported workspace',
-    schemaVersion: schemaVersion || SCHEMA_VERSION,
+    // A migrated file is now the current shape; a newer one keeps its number.
+    schemaVersion: legacy || !schemaVersion ? SCHEMA_VERSION : schemaVersion,
     elements,
     relationships,
     views,
+    folders,
+    reports,
     tagGroups,
   }
   const propertyTypes = readPropertyTypes(raw.propertyTypes, problems, where)
@@ -224,6 +264,7 @@ function canonicalElement(element: Element): Record<string, unknown> {
     junctionKind: element.junctionKind === DEFAULT_JUNCTION_KIND ? undefined : element.junctionKind,
     properties: emptyToUndefined(element.properties),
     profile: element.profile ? prune({ ...element.profile }) : undefined,
+    folder: element.folder,
   })
 }
 
@@ -236,23 +277,24 @@ function canonicalRelationship(relationship: Relationship): Record<string, unkno
     name: relationship.name,
     properties: emptyToUndefined(relationship.properties),
     profile: relationship.profile ? prune({ ...relationship.profile }) : undefined,
+    folder: relationship.folder,
   })
 }
 
-function canonicalView(view: ViewDefinition): Record<string, unknown> {
-  return prune({ ...view })
+function canonicalReport(report: ReportDefinition): Record<string, unknown> {
+  return prune({ ...report })
 }
 
 /**
- * Views and tag groups as a canonical JSON string.
+ * Saved reports and tag groups as a canonical JSON string.
  *
  * The exchange format has no element for either, so rather than dropping them
  * the XML writer carries them as namespaced model properties (#36). Canonical
  * for the usual reason: the same model has to produce the same bytes, whichever
  * format it is written in.
  */
-export function canonicalViewsJson(views: readonly ViewDefinition[]): string {
-  return JSON.stringify([...views].sort(byId).map(canonicalView), sortKeys)
+export function canonicalReportsJson(reports: readonly ReportDefinition[]): string {
+  return JSON.stringify([...reports].sort(byId).map(canonicalReport), sortKeys)
 }
 
 export function canonicalTagGroupsJson(groups: readonly TagGroup[]): string {
@@ -281,31 +323,12 @@ function sortKeys(_key: string, value: unknown): unknown {
   return sorted
 }
 
-function byId(a: { id: string }, b: { id: string }): number {
-  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
-}
-
-/** Drop undefined and empty values so absent data never shows up as noise in a diff. */
-function prune(object: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(object)) {
-    if (value === undefined) continue
-    if (Array.isArray(value) && value.length === 0) continue
-    if (isRecord(value) && !Array.isArray(value) && Object.keys(value).length === 0) continue
-    setKey(out, key, value)
-  }
-  return out
-}
-
-function emptyToUndefined<T extends object>(value: T): T | undefined {
-  return Object.keys(value).length ? value : undefined
-}
-
 // ── Reading ──────────────────────────────────────────────────────────────────
 
 function readElement(
   candidate: unknown,
   index: number,
+  folderIds: ReadonlySet<string>,
   problems: ImportProblem[],
   where: { file?: string },
 ): Element | undefined {
@@ -337,6 +360,11 @@ function readElement(
     properties: readProperties(candidate.properties),
   }
   if (typeof candidate.documentation === 'string') element.documentation = candidate.documentation
+  const folder = readFolderRef(candidate.folder, `Element "${id}"`, folderIds, problems, {
+    ...where,
+    subject: id,
+  })
+  if (folder !== undefined) element.folder = folder
   if (candidate.junctionKind !== undefined) {
     if (type !== 'Junction') {
       problems.push(
@@ -372,6 +400,7 @@ function readRelationship(
   candidate: unknown,
   index: number,
   knownIds: Set<string>,
+  folderIds: ReadonlySet<string>,
   problems: ImportProblem[],
   where: { file?: string },
 ): Relationship | undefined {
@@ -428,6 +457,11 @@ function readRelationship(
     properties: readProperties(candidate.properties),
   }
   if (typeof candidate.name === 'string') relationship.name = candidate.name
+  const folder = readFolderRef(candidate.folder, `Relationship "${id}"`, folderIds, problems, {
+    ...where,
+    subject: id,
+  })
+  if (folder !== undefined) relationship.folder = folder
   if (isRecord(candidate.profile)) {
     const { profile, dropped } = readRelationshipProfile(candidate.profile)
     if (profile) relationship.profile = profile
@@ -538,20 +572,9 @@ function reportDroppedProfileFields(
   )
 }
 
-function readProperties(value: unknown): Record<string, PropertyValue> {
-  if (!isRecord(value)) return {}
-  const out: Record<string, PropertyValue> = {}
-  for (const [key, raw] of Object.entries(value)) {
-    if (typeof raw === 'string' || typeof raw === 'number' || typeof raw === 'boolean') {
-      setKey(out, key, raw)
-    }
-  }
-  return out
-}
-
-// Exported because the exchange reader validates the views and tag groups it
+// Exported because the exchange reader validates the reports and tag groups it
 // carries the same way this one does — one definition of "readable" per concept.
-export function isViewDefinition(value: unknown): value is ViewDefinition {
+export function isReportDefinition(value: unknown): value is ReportDefinition {
   return isRecord(value) && typeof value.id === 'string' && typeof value.name === 'string'
 }
 
@@ -600,16 +623,6 @@ function readPropertyTypes(
     )
   }
   return Object.keys(out).length ? out : undefined
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  // Arrays are excluded: a top-level JSON array must fail the workspace guard
-  // rather than import as an empty workspace.
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function asArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : []
 }
 
 function message(error: unknown): string {

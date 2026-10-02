@@ -1,4 +1,4 @@
-import { typeLabel, type Element, type Relationship } from '@/model'
+import { typeLabel, type Element, type Folder, type Relationship, type View } from '@/model'
 
 /**
  * Every mutation is a command.
@@ -11,15 +11,39 @@ import { typeLabel, type Element, type Relationship } from '@/model'
  *
  * `batch` exists for anything that must undo in one step: an Excel import, a
  * multi-field edit on the fact sheet, a bulk retag.
+ *
+ * A view is replaced whole on every edit (`update-view`): the store's node and
+ * connection operations compute the new view and dispatch one. At a few hundred
+ * nodes a view is small, and one command shape for every diagram edit is one
+ * inverse to get right rather than six. Removing an element or relationship
+ * carries the views it was drawn in as `cascadedViews`, so deleting a drawn
+ * element and undoing it restores the drawings with it.
  */
+
+/** A view as it was and as it became. */
+export interface ViewChange {
+  before: View
+  after: View
+}
 
 export type Command =
   | { kind: 'add-element'; element: Element }
   | { kind: 'update-element'; before: Element; after: Element }
-  | { kind: 'remove-element'; element: Element; cascaded: Relationship[] }
+  | {
+      kind: 'remove-element'
+      element: Element
+      cascaded: Relationship[]
+      cascadedViews?: ViewChange[]
+    }
   | { kind: 'add-relationship'; relationship: Relationship }
   | { kind: 'update-relationship'; before: Relationship; after: Relationship }
-  | { kind: 'remove-relationship'; relationship: Relationship }
+  | { kind: 'remove-relationship'; relationship: Relationship; cascadedViews?: ViewChange[] }
+  | { kind: 'add-view'; view: View }
+  | { kind: 'update-view'; before: View; after: View }
+  | { kind: 'remove-view'; view: View; cascadedViews?: ViewChange[] }
+  | { kind: 'add-folder'; folder: Folder }
+  | { kind: 'update-folder'; before: Folder; after: Folder }
+  | { kind: 'remove-folder'; folder: Folder }
   | { kind: 'rename-workspace'; before: string; after: string }
   | { kind: 'batch'; commands: Command[] }
 
@@ -42,13 +66,34 @@ export function commandSubjects(command: Command): string[] {
     case 'update-element':
       return [command.after.id]
     case 'remove-element':
-      return [command.element.id, ...command.cascaded.flatMap((r) => [r.source, r.target])]
+      return [
+        command.element.id,
+        ...command.cascaded.flatMap((r) => [r.source, r.target]),
+        ...viewIds(command.cascadedViews),
+      ]
     case 'add-relationship':
       return [command.relationship.id, command.relationship.source, command.relationship.target]
     case 'update-relationship':
       return [command.after.id, command.after.source, command.after.target]
     case 'remove-relationship':
-      return [command.relationship.id, command.relationship.source, command.relationship.target]
+      return [
+        command.relationship.id,
+        command.relationship.source,
+        command.relationship.target,
+        ...viewIds(command.cascadedViews),
+      ]
+    case 'add-view':
+      return [command.view.id]
+    case 'update-view':
+      return [command.after.id]
+    case 'remove-view':
+      return [command.view.id, ...viewIds(command.cascadedViews)]
+    case 'add-folder':
+      return [command.folder.id]
+    case 'update-folder':
+      return [command.after.id]
+    case 'remove-folder':
+      return [command.folder.id]
     case 'rename-workspace':
       return []
     case 'batch':
@@ -73,6 +118,20 @@ export function describeCommand(command: Command): string {
       return `Updated ${command.after.type} relation`
     case 'remove-relationship':
       return `Removed ${command.relationship.type} relation`
+    case 'add-view':
+      return `Created view “${command.view.name}”`
+    case 'update-view':
+      return describeViewUpdate(command.before, command.after)
+    case 'remove-view':
+      return `Deleted view “${command.view.name}”`
+    case 'add-folder':
+      return `Created folder “${command.folder.name}”`
+    case 'update-folder':
+      return command.before.name !== command.after.name
+        ? `Renamed folder “${command.before.name}” to “${command.after.name}”`
+        : `Moved folder “${command.after.name}”`
+    case 'remove-folder':
+      return `Deleted folder “${command.folder.name}”`
     case 'rename-workspace':
       return `Renamed workspace to “${command.after}”`
     case 'batch':
@@ -95,6 +154,49 @@ function describeElementUpdate(before: Element, after: Element): string {
   return `Updated ${what} of “${after.name}”`
 }
 
+/**
+ * Say what a view edit did, from the two states — the store's node and
+ * connection operations all arrive here as one `update-view`.
+ */
+function describeViewUpdate(before: View, after: View): string {
+  const name = `“${after.name}”`
+  const added = countNew(after.nodes, before.nodes)
+  const removed = countNew(before.nodes, after.nodes)
+  const linked = countNew(after.connections, before.connections)
+  const unlinked = countNew(before.connections, after.connections)
+  if (added && !removed) return `Added ${plural(added, 'node')} to ${name}`
+  if (removed && !added) return `Removed ${plural(removed, 'node')} from ${name}`
+  if (!added && !removed && linked && !unlinked)
+    return `Added ${plural(linked, 'connection')} to ${name}`
+  if (!added && !removed && unlinked && !linked) {
+    return `Removed ${plural(unlinked, 'connection')} from ${name}`
+  }
+  if (before.name !== after.name) return `Renamed view “${before.name}” to ${name}`
+  return `Edited view ${name}`
+}
+
+function countNew(items: readonly { id: string }[], against: readonly { id: string }[]): number {
+  const known = new Set(against.map((item) => item.id))
+  return items.filter((item) => !known.has(item.id)).length
+}
+
+function plural(n: number, noun: string): string {
+  return `${n} ${noun}${n === 1 ? '' : 's'}`
+}
+
+function viewIds(changes: readonly ViewChange[] | undefined): string[] {
+  return changes?.map((change) => change.after.id) ?? []
+}
+
+/** Swap before and after — the undo of a set of cascaded view edits. */
+function restoreViews(changes: readonly ViewChange[] | undefined): Command[] {
+  return (changes ?? []).map((change): Command => ({
+    kind: 'update-view',
+    before: change.after,
+    after: change.before,
+  }))
+}
+
 /** The inverse of a command — what undo applies. */
 export function invert(command: Command): Command {
   switch (command.kind) {
@@ -111,14 +213,36 @@ export function invert(command: Command): Command {
             kind: 'add-relationship',
             relationship,
           })),
+          // After the relationships: a restored view's connections refer to them.
+          ...restoreViews(command.cascadedViews),
         ],
       }
     case 'add-relationship':
       return { kind: 'remove-relationship', relationship: command.relationship }
     case 'update-relationship':
       return { kind: 'update-relationship', before: command.after, after: command.before }
-    case 'remove-relationship':
-      return { kind: 'add-relationship', relationship: command.relationship }
+    case 'remove-relationship': {
+      const add: Command = { kind: 'add-relationship', relationship: command.relationship }
+      return command.cascadedViews?.length
+        ? { kind: 'batch', commands: [add, ...restoreViews(command.cascadedViews)] }
+        : add
+    }
+    case 'add-view':
+      return { kind: 'remove-view', view: command.view }
+    case 'update-view':
+      return { kind: 'update-view', before: command.after, after: command.before }
+    case 'remove-view': {
+      const add: Command = { kind: 'add-view', view: command.view }
+      return command.cascadedViews?.length
+        ? { kind: 'batch', commands: [add, ...restoreViews(command.cascadedViews)] }
+        : add
+    }
+    case 'add-folder':
+      return { kind: 'remove-folder', folder: command.folder }
+    case 'update-folder':
+      return { kind: 'update-folder', before: command.after, after: command.before }
+    case 'remove-folder':
+      return { kind: 'add-folder', folder: command.folder }
     case 'rename-workspace':
       return { kind: 'rename-workspace', before: command.after, after: command.before }
     case 'batch':

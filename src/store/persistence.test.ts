@@ -1,8 +1,8 @@
 import 'fake-indexeddb/auto'
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { emptyWorkspace } from '@/model'
-import { smallWorkspace } from '@/test/fixtures'
+import { SCHEMA_VERSION, emptyWorkspace, type Workspace } from '@/model'
+import { drawnWorkspace, smallWorkspace } from '@/test/fixtures'
 import {
   GENERATIONS,
   deleteWorkspace,
@@ -88,5 +88,35 @@ describe('IndexedDB persistence', () => {
     expect(await loadWorkspace('ws-missing')).toBeUndefined()
     expect(await loadMostRecentWorkspace()).toBeUndefined()
     await expect(renameStoredWorkspace('ws-missing', 'x')).resolves.toBeUndefined()
+  })
+})
+
+describe('a snapshot an earlier build stored (#75)', () => {
+  /** What a schema-1 build put in IndexedDB: saved reports under `views`, no folders. */
+  function v1Snapshot(): Workspace {
+    const { folders: _folders, reports: _reports, ...rest } = smallWorkspace()
+    return {
+      ...rest,
+      schemaVersion: 1,
+      views: [{ id: 'report-eol', name: 'End-of-life applications', kind: 'graph' }],
+    } as unknown as Workspace
+  }
+
+  it('comes back in the current shape, its saved views as reports', async () => {
+    await saveSnapshot(v1Snapshot())
+    const restored = await loadWorkspace('ws-test')
+    expect(restored?.elements).toHaveLength(5)
+    expect(restored?.reports.map((report) => report.id)).toEqual(['report-eol'])
+    expect(restored?.views).toEqual([])
+    expect(restored?.folders).toEqual([])
+    expect(restored?.schemaVersion).toBe(SCHEMA_VERSION)
+  })
+
+  it('is migrated in every generation, not just the newest', async () => {
+    await saveSnapshot(v1Snapshot(), 1)
+    await saveSnapshot(drawnWorkspace(), 2)
+    const [newest, older] = await loadGenerations('ws-test')
+    expect(newest?.workspace.views).toHaveLength(2)
+    expect(older?.workspace.reports.map((report) => report.id)).toEqual(['report-eol'])
   })
 })
