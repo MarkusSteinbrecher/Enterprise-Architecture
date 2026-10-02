@@ -7,3 +7,6 @@ public
 test-results
 playwright-report
 blob-report
+
+# Fixtures are byte-exact copies of what a tool wrote — never reformat them.
+src/io/fixtures/

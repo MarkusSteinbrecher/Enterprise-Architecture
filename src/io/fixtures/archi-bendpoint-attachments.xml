@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  From Archi's test data, unmodified below this comment:
+  https://github.com/archimatetool/archi/blob/87e94ded859fb92fb937612afda5aef69b83b387/tests/org.opengroup.archimate.xmlexchange.tests/testdata/bendpoint.test.xml
+
+  The MIT License (MIT)
+
+  Copyright (c) 2013-2026 Phillip Beauvoir, Jean-Baptiste Sarrodie, The Open Group
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" identifier="id-019dd58b-68f1-7486-8548-1584050b4711">
+    <name xml:lang="en">Bendpoint test</name>
+    <elements>
+        <element identifier="id-019dd58c-fbb9-7f75-8731-7c7b4db67709" xsi:type="BusinessFunction">
+            <name xml:lang="en">Business Function</name>
+        </element>
+        <element identifier="id-019dd58c-3116-731f-a761-905e3234486b" xsi:type="BusinessService">
+            <name xml:lang="en">Business Service</name>
+        </element>
+    </elements>
+    <relationships>
+        <relationship identifier="id-019dd58d-947b-7f8b-9342-69b71072a882" xsi:type="Serving" source="id-019dd58c-3116-731f-a761-905e3234486b" target="id-019dd58c-fbb9-7f75-8731-7c7b4db67709"/>
+        <relationship identifier="id-019dd58d-4fcc-7e5e-a15c-617f4bf97c31" xsi:type="Realization" source="id-019dd58c-fbb9-7f75-8731-7c7b4db67709" target="id-019dd58c-3116-731f-a761-905e3234486b"/>
+    </relationships>
+    <views>
+        <diagrams>
+            <view identifier="id-019dd58b-68f1-765a-bca8-2716884f56b2">
+                <name xml:lang="en">View</name>
+                <node identifier="id-019dd58c-3116-72be-8618-072b804c1e6d" xsi:type="Element" elementRef="id-019dd58c-3116-731f-a761-905e3234486b" x="0" y="0" w="200" h="70" />
+                <node identifier="id-019dd58c-fbb9-73fa-8251-f74d2a8b73f6" xsi:type="Element" elementRef="id-019dd58c-fbb9-7f75-8731-7c7b4db67709" x="0" y="138" w="200" h="70" />
+                <connection identifier="id-019dd58d-4fcc-7b66-bbe6-ad9d4c3efc06" xsi:type="Relationship" relationshipRef="id-019dd58d-4fcc-7e5e-a15c-617f4bf97c31" source="id-019dd58c-fbb9-73fa-8251-f74d2a8b73f6" target="id-019dd58c-3116-72be-8618-072b804c1e6d">
+                    <sourceAttachment x="35" y="138" />
+                    <targetAttachment x="35" y="70" />
+                </connection>
+                <connection identifier="id-019dd58d-947b-7fb9-9542-5bf530b5c326" xsi:type="Relationship" relationshipRef="id-019dd58d-947b-7f8b-9342-69b71072a882" source="id-019dd58c-3116-72be-8618-072b804c1e6d" target="id-019dd58c-fbb9-73fa-8251-f74d2a8b73f6">
+                    <sourceAttachment x="160" y="70" />
+                    <targetAttachment x="160" y="138" />
+                </connection>
+            </view>
+        </diagrams>
+    </views>
+</model>

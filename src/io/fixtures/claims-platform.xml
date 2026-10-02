@@ -1,0 +1,1164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" identifier="m-claims">
+  <name xml:lang="en">Claims platform</name>
+  <documentation xml:lang="en">An original test model for Archipelago (MIT). Not ArchiSurance.</documentation>
+  <elements>
+    <element identifier="bp-handle" xsi:type="BusinessProcess">
+      <name xml:lang="en">Handle Claim</name>
+    </element>
+    <element identifier="bp-register" xsi:type="BusinessProcess">
+      <name xml:lang="en">Register</name>
+    </element>
+    <element identifier="bp-accept" xsi:type="BusinessProcess">
+      <name xml:lang="en">Accept</name>
+    </element>
+    <element identifier="bp-valuate" xsi:type="BusinessProcess">
+      <name xml:lang="en">Valuate</name>
+    </element>
+    <element identifier="bp-pay" xsi:type="BusinessProcess">
+      <name xml:lang="en">Pay</name>
+    </element>
+    <element identifier="be-damage" xsi:type="BusinessEvent">
+      <name xml:lang="en">Damage Occurred</name>
+    </element>
+    <element identifier="bo-claim" xsi:type="BusinessObject">
+      <name xml:lang="en">Claim</name>
+    </element>
+    <element identifier="ba-customer" xsi:type="BusinessActor">
+      <name xml:lang="en">Customer</name>
+      <documentation xml:lang="en">A policy holder making a claim.</documentation>
+    </element>
+    <element identifier="br-insurant" xsi:type="BusinessRole">
+      <name xml:lang="en">Insurant</name>
+    </element>
+    <element identifier="bs-registration" xsi:type="BusinessService">
+      <name xml:lang="en">Claim Registration Service</name>
+    </element>
+    <element identifier="bs-information" xsi:type="BusinessService">
+      <name xml:lang="en">Customer Information Service</name>
+    </element>
+    <element identifier="bs-payment" xsi:type="BusinessService">
+      <name xml:lang="en">Claims Payment Service</name>
+    </element>
+    <element identifier="as-claims" xsi:type="ApplicationService">
+      <name xml:lang="en">Claims Administration Service</name>
+    </element>
+    <element identifier="as-customer" xsi:type="ApplicationService">
+      <name xml:lang="en">Customer Administration Service</name>
+    </element>
+    <element identifier="as-payment" xsi:type="ApplicationService">
+      <name xml:lang="en">Payment Service</name>
+    </element>
+    <element identifier="do-claim" xsi:type="DataObject">
+      <name xml:lang="en">Claim Record</name>
+    </element>
+    <element identifier="do-customer" xsi:type="DataObject">
+      <name xml:lang="en">Customer File</name>
+    </element>
+    <element identifier="ac-portal" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Claims Portal</name>
+    </element>
+    <element identifier="ac-engine" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Claims Engine</name>
+      <documentation xml:lang="en">Rules-driven assessment.</documentation>
+    </element>
+    <element identifier="af-rules" xsi:type="ApplicationFunction">
+      <name xml:lang="en">Rules Evaluation</name>
+    </element>
+    <element identifier="af-calc" xsi:type="ApplicationFunction">
+      <name xml:lang="en">Payment Calculation</name>
+    </element>
+    <element identifier="ac-customer" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Customer Data Hub</name>
+    </element>
+    <element identifier="ai-portal" xsi:type="ApplicationInterface">
+      <name xml:lang="en">Portal UI</name>
+    </element>
+    <element identifier="ac-crm" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Legacy CRM</name>
+    </element>
+    <element identifier="ac-host" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Policy Host</name>
+    </element>
+    <element identifier="n-k8s" xsi:type="Node">
+      <name xml:lang="en">Kubernetes Cluster</name>
+    </element>
+    <element identifier="ss-runtime" xsi:type="SystemSoftware">
+      <name xml:lang="en">Claims Runtime</name>
+    </element>
+    <element identifier="ss-postgres" xsi:type="SystemSoftware">
+      <name xml:lang="en">PostgreSQL</name>
+    </element>
+    <element identifier="n-mainframe" xsi:type="Node">
+      <name xml:lang="en">Mainframe</name>
+    </element>
+    <element identifier="ss-cics" xsi:type="SystemSoftware">
+      <name xml:lang="en">CICS</name>
+    </element>
+    <element identifier="ts-hosting" xsi:type="TechnologyService">
+      <name xml:lang="en">Container Hosting</name>
+    </element>
+    <element identifier="ts-database" xsi:type="TechnologyService">
+      <name xml:lang="en">Database Service</name>
+    </element>
+    <element identifier="cn-backbone" xsi:type="CommunicationNetwork">
+      <name xml:lang="en">Backbone</name>
+    </element>
+    <element identifier="eq-scanner" xsi:type="Equipment">
+      <name xml:lang="en">Mail Scanner</name>
+    </element>
+    <element identifier="g-settle" xsi:type="Goal">
+      <name xml:lang="en">Settle claims within five days</name>
+    </element>
+    <element identifier="r-rules" xsi:type="Requirement">
+      <name xml:lang="en">Assessment is rules-driven</name>
+    </element>
+    <element identifier="wp-rollout" xsi:type="WorkPackage">
+      <name xml:lang="en">Rules engine rollout</name>
+    </element>
+    <element identifier="loc-zurich" xsi:type="Location">
+      <name xml:lang="en">Zurich data centre</name>
+    </element>
+    <element identifier="j-split" xsi:type="OrJunction">
+      <name xml:lang="en">Junction</name>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="r-cust-ins" source="ba-customer" target="br-insurant" xsi:type="Assignment" />
+    <relationship identifier="r-handle-reg" source="bp-handle" target="bs-registration" xsi:type="Realization" />
+    <relationship identifier="r-handle-pay" source="bp-handle" target="bs-payment" xsi:type="Realization" />
+    <relationship identifier="r-handle-register" source="bp-handle" target="bp-register" xsi:type="Composition" />
+    <relationship identifier="r-handle-accept" source="bp-handle" target="bp-accept" xsi:type="Composition" />
+    <relationship identifier="r-handle-valuate" source="bp-handle" target="bp-valuate" xsi:type="Composition" />
+    <relationship identifier="r-handle-pay2" source="bp-handle" target="bp-pay" xsi:type="Composition" />
+    <relationship identifier="r-register-accept" source="bp-register" target="bp-accept" xsi:type="Triggering" />
+    <relationship identifier="r-accept-split" source="bp-accept" target="j-split" xsi:type="Triggering" />
+    <relationship identifier="r-split-valuate" source="j-split" target="bp-valuate" xsi:type="Triggering" />
+    <relationship identifier="r-split-pay" source="j-split" target="bp-pay" xsi:type="Triggering">
+      <name xml:lang="en">fast track</name>
+    </relationship>
+    <relationship identifier="r-valuate-pay" source="bp-valuate" target="bp-pay" xsi:type="Triggering" />
+    <relationship identifier="r-damage-register" source="be-damage" target="bp-register" xsi:type="Triggering" />
+    <relationship identifier="r-handle-claim" source="bp-handle" target="bo-claim" xsi:type="Access" accessType="ReadWrite" />
+    <relationship identifier="r-engine-as" source="ac-engine" target="as-claims" xsi:type="Realization" />
+    <relationship identifier="r-engine-rules" source="ac-engine" target="af-rules" xsi:type="Assignment" />
+    <relationship identifier="r-engine-calc" source="ac-engine" target="af-calc" xsi:type="Assignment" />
+    <relationship identifier="r-calc-pay" source="af-calc" target="as-payment" xsi:type="Realization" />
+    <relationship identifier="r-cust-as" source="ac-customer" target="as-customer" xsi:type="Realization" />
+    <relationship identifier="r-portal-ai" source="ac-portal" target="ai-portal" xsi:type="Composition" />
+    <relationship identifier="r-portal-engine" source="ac-portal" target="ac-engine" xsi:type="Flow">
+      <name xml:lang="en">claim intake</name>
+    </relationship>
+    <relationship identifier="r-engine-claim" source="ac-engine" target="do-claim" xsi:type="Access" accessType="ReadWrite" />
+    <relationship identifier="r-cust-file" source="ac-customer" target="do-customer" xsi:type="Access" accessType="Read" />
+    <relationship identifier="r-crm-cust" source="ac-crm" target="ac-customer" xsi:type="Flow" />
+    <relationship identifier="r-claim-bo" source="do-claim" target="bo-claim" xsi:type="Realization" />
+    <relationship identifier="r-k8s-runtime" source="n-k8s" target="ss-runtime" xsi:type="Composition" />
+    <relationship identifier="r-k8s-pg" source="n-k8s" target="ss-postgres" xsi:type="Composition" />
+    <relationship identifier="r-mf-cics" source="n-mainframe" target="ss-cics" xsi:type="Composition" />
+    <relationship identifier="r-k8s-hosting" source="n-k8s" target="ts-hosting" xsi:type="Realization" />
+    <relationship identifier="r-pg-db" source="ss-postgres" target="ts-database" xsi:type="Realization" />
+    <relationship identifier="r-net-k8s" source="cn-backbone" target="n-k8s" xsi:type="Association" />
+    <relationship identifier="r-net-mf" source="cn-backbone" target="n-mainframe" xsi:type="Association" />
+    <relationship identifier="r-scanner-net" source="eq-scanner" target="cn-backbone" xsi:type="Association" />
+    <relationship identifier="r-zurich-k8s" source="loc-zurich" target="n-k8s" xsi:type="Aggregation" />
+    <relationship identifier="r-engine-req" source="ac-engine" target="r-rules" xsi:type="Realization" />
+    <relationship identifier="r-req-goal" source="r-rules" target="g-settle" xsi:type="Realization" />
+    <relationship identifier="r-wp-engine" source="wp-rollout" target="ac-engine" xsi:type="Realization" />
+    <relationship identifier="r-ins-reg" source="bs-registration" target="br-insurant" xsi:type="Serving" />
+    <relationship identifier="r-ins-info" source="bs-information" target="br-insurant" xsi:type="Serving" />
+    <relationship identifier="r-ins-pay" source="bs-payment" target="br-insurant" xsi:type="Serving" />
+    <relationship identifier="r-as-handle" source="as-claims" target="bp-handle" xsi:type="Serving" />
+    <relationship identifier="r-asc-info" source="as-customer" target="bp-handle" xsi:type="Serving" />
+    <relationship identifier="r-asp-pay" source="as-payment" target="bp-pay" xsi:type="Serving" />
+    <relationship identifier="r-host-crm" source="ac-host" target="ac-crm" xsi:type="Serving" />
+    <relationship identifier="r-hosting-engine" source="ts-hosting" target="ac-engine" xsi:type="Serving" />
+    <relationship identifier="r-hosting-portal" source="ts-hosting" target="ac-portal" xsi:type="Serving" />
+    <relationship identifier="r-db-customer" source="ts-database" target="ac-customer" xsi:type="Serving" />
+    <relationship identifier="r-cics-host" source="ss-cics" target="ac-host" xsi:type="Serving" />
+  </relationships>
+  <organizations>
+    <item>
+      <label xml:lang="en">Business</label>
+      <item>
+        <label xml:lang="en">Customer-facing</label>
+        <item identifierRef="ba-customer" />
+        <item identifierRef="br-insurant" />
+        <item identifierRef="bs-registration" />
+        <item identifierRef="bs-information" />
+        <item identifierRef="bs-payment" />
+      </item>
+      <item identifierRef="bp-handle" />
+      <item identifierRef="bp-register" />
+      <item identifierRef="bp-accept" />
+      <item identifierRef="bp-valuate" />
+      <item identifierRef="bp-pay" />
+      <item identifierRef="be-damage" />
+      <item identifierRef="bo-claim" />
+    </item>
+    <item>
+      <label xml:lang="en">Application</label>
+      <item>
+        <label xml:lang="en">Claims applications</label>
+        <item>
+          <label xml:lang="en">Legacy</label>
+          <item>
+            <label xml:lang="en">Host-based</label>
+            <item identifierRef="ac-host" />
+          </item>
+          <item identifierRef="ac-crm" />
+        </item>
+        <item identifierRef="ac-portal" />
+        <item identifierRef="ac-engine" />
+        <item identifierRef="af-rules" />
+        <item identifierRef="af-calc" />
+        <item identifierRef="ac-customer" />
+        <item identifierRef="ai-portal" />
+      </item>
+      <item identifierRef="as-claims" />
+      <item identifierRef="as-customer" />
+      <item identifierRef="as-payment" />
+      <item identifierRef="do-claim" />
+      <item identifierRef="do-customer" />
+    </item>
+    <item>
+      <label xml:lang="en">Technology &amp; Physical</label>
+      <item identifierRef="n-k8s" />
+      <item identifierRef="ss-runtime" />
+      <item identifierRef="ss-postgres" />
+      <item identifierRef="n-mainframe" />
+      <item identifierRef="ss-cics" />
+      <item identifierRef="ts-hosting" />
+      <item identifierRef="ts-database" />
+      <item identifierRef="cn-backbone" />
+      <item identifierRef="eq-scanner" />
+    </item>
+    <item>
+      <label xml:lang="en">Motivation</label>
+      <item identifierRef="g-settle" />
+      <item identifierRef="r-rules" />
+    </item>
+    <item>
+      <label xml:lang="en">Implementation &amp; Migration</label>
+      <item identifierRef="wp-rollout" />
+    </item>
+    <item>
+      <label xml:lang="en">Other</label>
+      <item identifierRef="loc-zurich" />
+      <item identifierRef="j-split" />
+    </item>
+    <item>
+      <label xml:lang="en">Relations</label>
+      <item>
+        <label xml:lang="en">Serving</label>
+        <item identifierRef="r-ins-reg" />
+        <item identifierRef="r-ins-info" />
+        <item identifierRef="r-ins-pay" />
+        <item identifierRef="r-as-handle" />
+        <item identifierRef="r-asc-info" />
+        <item identifierRef="r-asp-pay" />
+        <item identifierRef="r-host-crm" />
+        <item identifierRef="r-hosting-engine" />
+        <item identifierRef="r-hosting-portal" />
+        <item identifierRef="r-db-customer" />
+        <item identifierRef="r-cics-host" />
+      </item>
+      <item identifierRef="r-cust-ins" />
+      <item identifierRef="r-handle-reg" />
+      <item identifierRef="r-handle-pay" />
+      <item identifierRef="r-handle-register" />
+      <item identifierRef="r-handle-accept" />
+      <item identifierRef="r-handle-valuate" />
+      <item identifierRef="r-handle-pay2" />
+      <item identifierRef="r-register-accept" />
+      <item identifierRef="r-accept-split" />
+      <item identifierRef="r-split-valuate" />
+      <item identifierRef="r-split-pay" />
+      <item identifierRef="r-valuate-pay" />
+      <item identifierRef="r-damage-register" />
+      <item identifierRef="r-handle-claim" />
+      <item identifierRef="r-engine-as" />
+      <item identifierRef="r-engine-rules" />
+      <item identifierRef="r-engine-calc" />
+      <item identifierRef="r-calc-pay" />
+      <item identifierRef="r-cust-as" />
+      <item identifierRef="r-portal-ai" />
+      <item identifierRef="r-portal-engine" />
+      <item identifierRef="r-engine-claim" />
+      <item identifierRef="r-cust-file" />
+      <item identifierRef="r-crm-cust" />
+      <item identifierRef="r-claim-bo" />
+      <item identifierRef="r-k8s-runtime" />
+      <item identifierRef="r-k8s-pg" />
+      <item identifierRef="r-mf-cics" />
+      <item identifierRef="r-k8s-hosting" />
+      <item identifierRef="r-pg-db" />
+      <item identifierRef="r-net-k8s" />
+      <item identifierRef="r-net-mf" />
+      <item identifierRef="r-scanner-net" />
+      <item identifierRef="r-zurich-k8s" />
+      <item identifierRef="r-engine-req" />
+      <item identifierRef="r-req-goal" />
+      <item identifierRef="r-wp-engine" />
+    </item>
+    <item>
+      <label xml:lang="en">Views</label>
+      <item>
+        <label xml:lang="en">Landscapes</label>
+        <item identifierRef="v-landscape" />
+        <item identifierRef="v-empty" />
+      </item>
+      <item identifierRef="v-data" />
+    </item>
+  </organizations>
+  <views>
+    <diagrams>
+      <view identifier="v-landscape" xsi:type="Diagram" viewpoint="Layered">
+        <name xml:lang="en">Claims landscape</name>
+        <documentation xml:lang="en">Business, application and platform layers of the claims platform.</documentation>
+        <node identifier="o-g-business" x="20" y="20" w="1180" h="300" xsi:type="Container">
+          <label xml:lang="en">Business</label>
+          <style>
+            <fillColor r="255" g="245" b="214" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <node identifier="o-customer" elementRef="ba-customer" xsi:type="Element" x="40" y="60" w="150" h="55">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-insurant" elementRef="br-insurant" xsi:type="Element" x="240" y="60" w="150" h="55">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-reg-svc" elementRef="bs-registration" xsi:type="Element" x="460" y="60" w="150" h="55">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-info-svc" elementRef="bs-information" xsi:type="Element" x="660" y="60" w="150" h="55">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-pay-svc" elementRef="bs-payment" xsi:type="Element" x="860" y="60" w="150" h="55">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-damage" elementRef="be-damage" xsi:type="Element" x="40" y="180" w="120" h="55">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-handle" elementRef="bp-handle" xsi:type="Element" x="200" y="150" w="760" h="140">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+            <node identifier="o-register" elementRef="bp-register" xsi:type="Element" x="220" y="200" w="120" h="55">
+              <style>
+                <fillColor r="255" g="255" b="181" a="100" />
+                <lineColor r="92" g="92" b="92" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
+            <node identifier="o-accept" elementRef="bp-accept" xsi:type="Element" x="380" y="200" w="120" h="55">
+              <style>
+                <fillColor r="255" g="255" b="181" a="100" />
+                <lineColor r="92" g="92" b="92" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
+            <node identifier="o-split" elementRef="j-split" xsi:type="Element" x="540" y="220" w="15" h="15">
+              <style>
+                <fillColor r="0" g="0" b="0" a="100" />
+                <lineColor r="0" g="0" b="0" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
+            <node identifier="o-valuate" elementRef="bp-valuate" xsi:type="Element" x="600" y="180" w="120" h="50">
+              <style>
+                <fillColor r="255" g="255" b="181" a="100" />
+                <lineColor r="92" g="92" b="92" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
+            <node identifier="o-pay" elementRef="bp-pay" xsi:type="Element" x="800" y="200" w="120" h="55">
+              <style>
+                <fillColor r="255" g="255" b="181" a="100" />
+                <lineColor r="92" g="92" b="92" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
+          </node>
+          <node identifier="o-claim-bo" elementRef="bo-claim" xsi:type="Element" x="1000" y="180" w="150" h="55">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-note-biz" xsi:type="Label" x="1000" y="60" w="170" h="70">
+            <label xml:lang="en">Fast track skips valuation&#xD;
+for claims under 500.</label>
+            <style>
+              <fillColor r="255" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+        </node>
+        <node identifier="o-g-apps" x="20" y="360" w="1180" h="320" xsi:type="Container">
+          <label xml:lang="en">Applications</label>
+          <style>
+            <fillColor r="210" g="215" b="215" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <node identifier="o-as-claims" elementRef="as-claims" xsi:type="Element" x="200" y="390" w="180" h="55">
+            <style>
+              <fillColor r="181" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-as-customer" elementRef="as-customer" xsi:type="Element" x="460" y="390" w="180" h="55">
+            <style>
+              <fillColor r="181" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-as-payment" elementRef="as-payment" xsi:type="Element" x="800" y="390" w="150" h="55">
+            <style>
+              <fillColor r="181" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-portal" elementRef="ac-portal" xsi:type="Element" x="40" y="500" w="150" h="55">
+            <style>
+              <fillColor r="181" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-ai-portal" elementRef="ai-portal" xsi:type="Element" x="40" y="600" w="150" h="50">
+            <style>
+              <fillColor r="181" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-engine" elementRef="ac-engine" xsi:type="Element" x="220" y="480" w="400" h="160">
+            <style>
+              <fillColor r="201" g="231" b="247" a="100" />
+              <lineColor r="29" g="92" b="140" a="100" />
+              <font name="Arial" size="11" style="bold">
+                <color r="11" g="46" b="74" />
+              </font>
+            </style>
+            <node identifier="o-rules" elementRef="af-rules" xsi:type="Element" x="240" y="560" w="160" h="55">
+              <style>
+                <fillColor r="181" g="255" b="255" a="100" />
+                <lineColor r="92" g="92" b="92" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
+            <node identifier="o-calc" elementRef="af-calc" xsi:type="Element" x="440" y="560" w="160" h="55">
+              <style>
+                <fillColor r="181" g="255" b="255" a="100" />
+                <lineColor r="92" g="92" b="92" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
+          </node>
+          <node identifier="o-customer-hub" elementRef="ac-customer" xsi:type="Element" x="660" y="500" w="150" h="55">
+            <style>
+              <fillColor r="181" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-crm" elementRef="ac-crm" xsi:type="Element" x="860" y="500" w="150" h="55">
+            <style>
+              <fillColor r="224" g="224" b="224" a="63" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-host" elementRef="ac-host" xsi:type="Element" x="1030" y="500" w="150" h="55">
+            <style>
+              <fillColor r="181" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-do-claim" elementRef="do-claim" xsi:type="Element" x="660" y="610" w="150" h="50">
+            <style>
+              <fillColor r="181" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-do-customer" elementRef="do-customer" xsi:type="Element" x="860" y="610" w="150" h="50">
+            <style>
+              <fillColor r="181" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+        </node>
+        <node identifier="o-g-platform" x="20" y="720" w="1180" h="300" xsi:type="Container">
+          <label xml:lang="en">Platform</label>
+          <style>
+            <fillColor r="210" g="215" b="215" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <node identifier="o-hosting" elementRef="ts-hosting" xsi:type="Element" x="200" y="750" w="150" h="55">
+            <style>
+              <fillColor r="201" g="231" b="183" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-database" elementRef="ts-database" xsi:type="Element" x="660" y="750" w="150" h="55">
+            <style>
+              <fillColor r="201" g="231" b="183" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-k8s" elementRef="n-k8s" xsi:type="Element" x="180" y="830" w="560" h="150">
+            <style>
+              <fillColor r="201" g="231" b="183" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+            <node identifier="o-runtime" elementRef="ss-runtime" xsi:type="Element" x="220" y="880" w="150" h="55">
+              <style>
+                <fillColor r="201" g="231" b="183" a="100" />
+                <lineColor r="92" g="92" b="92" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
+            <node identifier="o-postgres" elementRef="ss-postgres" xsi:type="Element" x="540" y="880" w="150" h="55">
+              <style>
+                <fillColor r="201" g="231" b="183" a="100" />
+                <lineColor r="92" g="92" b="92" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
+          </node>
+          <node identifier="o-mainframe" elementRef="n-mainframe" xsi:type="Element" x="860" y="830" w="300" h="150">
+            <style>
+              <fillColor r="201" g="231" b="183" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+            <node identifier="o-cics" elementRef="ss-cics" xsi:type="Element" x="940" y="890" w="140" h="55">
+              <style>
+                <fillColor r="201" g="231" b="183" a="100" />
+                <lineColor r="92" g="92" b="92" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
+          </node>
+          <node identifier="o-backbone" elementRef="cn-backbone" xsi:type="Element" x="40" y="960" w="120" h="45">
+            <style>
+              <fillColor r="201" g="231" b="183" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="o-scanner" elementRef="eq-scanner" xsi:type="Element" x="40" y="860" w="120" h="55">
+            <style>
+              <fillColor r="201" g="231" b="183" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+        </node>
+        <node identifier="o-zurich" elementRef="loc-zurich" xsi:type="Element" x="1240" y="830" w="150" h="55">
+          <style>
+            <fillColor r="237" g="207" b="226" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-goal" elementRef="g-settle" xsi:type="Element" x="1240" y="60" w="170" h="60">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-req" elementRef="r-rules" xsi:type="Element" x="1240" y="180" w="170" h="60">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-rollout" elementRef="wp-rollout" xsi:type="Element" x="1240" y="500" w="170" h="55">
+          <style>
+            <fillColor r="255" g="224" b="224" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-ref-data" xsi:type="Label" x="1240" y="640" w="170" h="55">
+          <label xml:lang="en">Claim data</label>
+          <style>
+            <fillColor r="220" g="235" b="235" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <viewRef ref="v-data" />
+        </node>
+        <node identifier="o-note-ref" xsi:type="Label" x="1240" y="380" w="170" h="70">
+          <label xml:lang="en">Data ownership: see the Claim data view.</label>
+          <style>
+            <fillColor r="255" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <connection identifier="c-cust-ins" relationshipRef="r-cust-ins" xsi:type="Relationship" source="o-customer" target="o-insurant">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-reg-ins" relationshipRef="r-ins-reg" xsi:type="Relationship" source="o-reg-svc" target="o-insurant">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-info-ins" relationshipRef="r-ins-info" xsi:type="Relationship" source="o-info-svc" target="o-insurant">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="735" y="40" />
+          <bendpoint x="315" y="40" />
+        </connection>
+        <connection identifier="c-pay-ins" relationshipRef="r-ins-pay" xsi:type="Relationship" source="o-pay-svc" target="o-insurant">
+          <style>
+            <lineColor r="122" g="122" b="122" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="935" y="30" />
+          <bendpoint x="300" y="30" />
+        </connection>
+        <connection identifier="c-damage-register" relationshipRef="r-damage-register" xsi:type="Relationship" source="o-damage" target="o-register">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-handle-reg" relationshipRef="r-handle-reg" xsi:type="Relationship" source="o-handle" target="o-reg-svc">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-handle-pay" relationshipRef="r-handle-pay" xsi:type="Relationship" source="o-handle" target="o-pay-svc">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-handle-claim" relationshipRef="r-handle-claim" xsi:type="Relationship" source="o-handle" target="o-claim-bo">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-register-accept" relationshipRef="r-register-accept" xsi:type="Relationship" source="o-register" target="o-accept">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-accept-split" relationshipRef="r-accept-split" xsi:type="Relationship" source="o-accept" target="o-split">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-split-valuate" relationshipRef="r-split-valuate" xsi:type="Relationship" source="o-split" target="o-valuate">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-split-pay" relationshipRef="r-split-pay" xsi:type="Relationship" source="o-split" target="o-pay">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="547" y="270" />
+          <bendpoint x="860" y="270" />
+        </connection>
+        <connection identifier="c-valuate-pay" relationshipRef="r-valuate-pay" xsi:type="Relationship" source="o-valuate" target="o-pay">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-note-split" xsi:type="Line" source="o-note-biz" target="o-split">
+          <style>
+            <lineColor r="153" g="153" b="153" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-as-handle" relationshipRef="r-as-handle" xsi:type="Relationship" source="o-as-claims" target="o-handle">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-asc-handle" relationshipRef="r-asc-info" xsi:type="Relationship" source="o-as-customer" target="o-handle">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-asp-pay" relationshipRef="r-asp-pay" xsi:type="Relationship" source="o-as-payment" target="o-pay">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-portal-ai" relationshipRef="r-portal-ai" xsi:type="Relationship" source="o-portal" target="o-ai-portal">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-portal-engine" relationshipRef="r-portal-engine" xsi:type="Relationship" source="o-portal" target="o-engine">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-engine-as" relationshipRef="r-engine-as" xsi:type="Relationship" source="o-engine" target="o-as-claims">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-engine-claim" relationshipRef="r-engine-claim" xsi:type="Relationship" source="o-engine" target="o-do-claim">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="640" y="635" />
+        </connection>
+        <connection identifier="c-engine-req" relationshipRef="r-engine-req" xsi:type="Relationship" source="o-engine" target="o-req">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-calc-pay" relationshipRef="r-calc-pay" xsi:type="Relationship" source="o-calc" target="o-as-payment">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="520" y="470" />
+          <bendpoint x="875" y="470" />
+        </connection>
+        <connection identifier="c-cust-as" relationshipRef="r-cust-as" xsi:type="Relationship" source="o-customer-hub" target="o-as-customer">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-cust-file" relationshipRef="r-cust-file" xsi:type="Relationship" source="o-customer-hub" target="o-do-customer">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-crm-cust" relationshipRef="r-crm-cust" xsi:type="Relationship" source="o-crm" target="o-customer-hub">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-host-crm" relationshipRef="r-host-crm" xsi:type="Relationship" source="o-host" target="o-crm">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-hosting-engine" relationshipRef="r-hosting-engine" xsi:type="Relationship" source="o-hosting" target="o-engine">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="275" y="700" />
+          <bendpoint x="420" y="700" />
+        </connection>
+        <connection identifier="c-hosting-portal" relationshipRef="r-hosting-portal" xsi:type="Relationship" source="o-hosting" target="o-portal">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="180" y="777" />
+          <bendpoint x="115" y="777" />
+        </connection>
+        <connection identifier="c-db-customer" relationshipRef="r-db-customer" xsi:type="Relationship" source="o-database" target="o-customer-hub">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-k8s-hosting" relationshipRef="r-k8s-hosting" xsi:type="Relationship" source="o-k8s" target="o-hosting">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-pg-db" relationshipRef="r-pg-db" xsi:type="Relationship" source="o-postgres" target="o-database">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-cics-host" relationshipRef="r-cics-host" xsi:type="Relationship" source="o-cics" target="o-host">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-net-k8s" relationshipRef="r-net-k8s" xsi:type="Relationship" source="o-backbone" target="o-k8s">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-net-mf" relationshipRef="r-net-mf" xsi:type="Relationship" source="o-backbone" target="o-mainframe">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="100" y="1010" />
+          <bendpoint x="1010" y="1010" />
+        </connection>
+        <connection identifier="c-scanner-net" relationshipRef="r-scanner-net" xsi:type="Relationship" source="o-scanner" target="o-backbone">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-zurich-k8s" relationshipRef="r-zurich-k8s" xsi:type="Relationship" source="o-zurich" target="o-k8s">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-req-goal" relationshipRef="r-req-goal" xsi:type="Relationship" source="o-req" target="o-goal">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-wp-engine" relationshipRef="r-wp-engine" xsi:type="Relationship" source="o-rollout" target="o-engine">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-note-ref" xsi:type="Line" source="o-note-ref" target="o-ref-data">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+      </view>
+      <view identifier="v-empty" xsi:type="Diagram">
+        <name xml:lang="en">Target state (to do)</name>
+      </view>
+      <view identifier="v-data" xsi:type="Diagram">
+        <name xml:lang="en">Claim data</name>
+        <node identifier="d-engine" elementRef="ac-engine" xsi:type="Element" x="40" y="40" w="150" h="55">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="d-claim" elementRef="do-claim" xsi:type="Element" x="300" y="40" w="150" h="55">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="d-claim-bo" elementRef="bo-claim" xsi:type="Element" x="300" y="160" w="150" h="55">
+          <style>
+            <fillColor r="255" g="255" b="181" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="d-hub" elementRef="ac-customer" xsi:type="Element" x="40" y="280" w="150" h="55">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="d-file" elementRef="do-customer" xsi:type="Element" x="300" y="280" w="150" h="55">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="d-claim-2" elementRef="do-claim" xsi:type="Element" x="560" y="40" w="150" h="55">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <connection identifier="dc-engine-claim" relationshipRef="r-engine-claim" xsi:type="Relationship" source="d-engine" target="d-claim">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="dc-engine-claim-2" relationshipRef="r-engine-claim" xsi:type="Relationship" source="d-engine" target="d-claim-2">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="115" y="20" />
+          <bendpoint x="635" y="20" />
+        </connection>
+        <connection identifier="dc-claim-bo" relationshipRef="r-claim-bo" xsi:type="Relationship" source="d-claim" target="d-claim-bo">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="dc-hub-file" relationshipRef="r-cust-file" xsi:type="Relationship" source="d-hub" target="d-file">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+      </view>
+    </diagrams>
+  </views>
+</model>

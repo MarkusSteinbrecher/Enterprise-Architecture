@@ -4,11 +4,14 @@ import {
   DEFAULT_JUNCTION_KIND,
   DEFAULT_TAG_GROUP,
   SCHEMA_VERSION,
+  defaultFolderRoot,
+  findElementType,
   isElementType,
   isRelationshipType,
   type AccessType,
   type Element,
   type ElementType,
+  type FolderRoot,
   type JunctionKind,
   type PropertyValue,
   type Relationship,
@@ -23,6 +26,25 @@ import {
 } from './canonical-json'
 import { failed, problem, succeeded, type ImportProblem, type ImportResult } from './problems'
 import { setKey } from './records'
+import {
+  asString,
+  attr,
+  claimIdentifier,
+  langString,
+  list,
+  listed,
+  text,
+  type RawNode,
+} from './exchange-xml'
+import {
+  STYLE_KEY,
+  carriesStyle,
+  memberGroups,
+  readOrganizations,
+  readViews,
+  writeOrganizations,
+  writeViews,
+} from './exchange-views'
 import {
   PROFILE_NAMESPACE,
   profileToProperties,
@@ -45,15 +67,18 @@ import {
  * control over either. Reading uses fast-xml-parser; writing is string building
  * with explicit escaping.
  *
- * Not read or written yet: the format's `<views>` (diagrams) and
- * `<organizations>` (folder structure) — that is #76. Both are reported rather
- * than silently dropped, in each direction. Saved report definitions are not
- * diagrams; the writer carries those as model properties.
+ * Diagrams (`<views>`) and folders (`<organizations>`) are read and written by
+ * `exchange-views.ts` (#76). Saved report definitions are not diagrams; the
+ * writer carries those as model properties.
  */
 
 const NS = 'http://www.opengroup.org/xsd/archimate/3.0/'
 const XSI = 'http://www.w3.org/2001/XMLSchema-instance'
-const SCHEMA_LOCATION = `${NS} http://www.opengroup.org/xsd/archimate/3.1/archimate3_Model.xsd`
+/**
+ * The Diagram schema, which includes the Model schema and adds views — what
+ * Archi references too. A file without views is valid against either.
+ */
+const SCHEMA_LOCATION = `${NS} http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd`
 
 /**
  * Model-level properties carrying what the format has no home for.
@@ -134,7 +159,6 @@ export function exportExchange(
   options: ExchangeExportOptions = {},
 ): ExchangeExportResult {
   const problems: ImportProblem[] = []
-  reportNotWritten(workspace, problems)
   const ids = exchangeIdentifiers(workspace, problems)
   const modelProperties = modelLevelProperties(workspace)
   const definitions = collectPropertyDefinitions(workspace, modelProperties, ids, problems)
@@ -206,6 +230,36 @@ export function exportExchange(
     lines.push('  </relationships>')
   }
 
+  const written = new Set<string>([
+    ...workspace.elements.map((element) => element.id),
+    ...relationships.map((relationship) => relationship.id),
+    ...workspace.views.map((view) => view.id),
+  ])
+  const writing = { of: ids.of, written: (id: string) => written.has(id), claim: ids.claim }
+  lines.push(
+    ...writeOrganizations(
+      workspace.folders,
+      [
+        ...workspace.elements.map((element) => ({
+          id: element.id,
+          root: elementGroup(element),
+          ...(element.folder !== undefined ? { folder: element.folder } : {}),
+        })),
+        ...relationships.map((relationship) => ({
+          id: relationship.id,
+          root: 'relations' as const,
+          ...(relationship.folder !== undefined ? { folder: relationship.folder } : {}),
+        })),
+        ...workspace.views.map((view) => ({
+          id: view.id,
+          root: 'views' as const,
+          ...(view.folder !== undefined ? { folder: view.folder } : {}),
+        })),
+      ],
+      writing,
+    ),
+  )
+
   if (definitions.size) {
     lines.push('  <propertyDefinitions>')
     for (const [key, definition] of definitions) {
@@ -217,6 +271,15 @@ export function exportExchange(
     }
     lines.push('  </propertyDefinitions>')
   }
+
+  lines.push(
+    ...writeViews(workspace.views, {
+      ...writing,
+      elements: new Map(workspace.elements.map((element) => [element.id, element])),
+      propertyLines: (properties, indent) => propertyLines(properties, definitions, indent),
+      problems,
+    }),
+  )
 
   lines.push('</model>')
   return { xml: `${lines.join('\n')}\n`, problems }
@@ -233,6 +296,12 @@ export function exportExchangeXml(
   options: ExchangeExportOptions = {},
 ): string {
   return exportExchange(workspace, options).xml
+}
+
+/** The fixed group an element is filed under when it has no folder. */
+function elementGroup(element: Element): FolderRoot {
+  const meta = findElementType(element.type)
+  return meta ? defaultFolderRoot(meta.layer) : 'other'
 }
 
 /** The concrete schema type for an element: junctions are And or Or, never bare. */
@@ -271,7 +340,8 @@ interface ExchangeIdentifiers {
  * needs.
  */
 function exchangeIdentifiers(workspace: Workspace, problems: ImportProblem[]): ExchangeIdentifiers {
-  const conceptIds = [...workspace.elements, ...workspace.relationships].map(
+  // Views are identified concepts too: a view reference points at one by id.
+  const conceptIds = [...workspace.elements, ...workspace.relationships, ...workspace.views].map(
     (concept) => concept.id,
   )
   const used = new Set(conceptIds.filter(isExchangeSafeId))
@@ -316,20 +386,6 @@ function exchangeIdentifiers(workspace: Workspace, problems: ImportProblem[]): E
     knows: (id) => byId.has(id),
     claim: (base) => claimIdentifier(base, used),
   }
-}
-
-/** An unused XML name for `id`, close to how it was spelled. */
-function claimIdentifier(id: string, used: Set<string>): string {
-  const base = sanitiseId(id)
-  let candidate = base
-  for (let n = 2; used.has(candidate); n += 1) candidate = `${base}-${n}`
-  used.add(candidate)
-  return candidate
-}
-
-function sanitiseId(id: string): string {
-  const cleaned = id.replace(/[^A-Za-z0-9_.-]/g, '-')
-  return /^[A-Za-z_]/.test(cleaned) ? cleaned : `id-${cleaned}`
 }
 
 /** What the workspace carries that the schema has no element for. */
@@ -401,6 +457,10 @@ function collectPropertyDefinitions(
     remember(relationship.properties)
     remember(relationshipProfileToProperties(relationship.profile))
   }
+  for (const view of workspace.views) {
+    remember(view.properties)
+    if (carriesStyle(view)) remember({ [STYLE_KEY]: '' })
+  }
 
   // A Map, not the record itself: the keys are the file's, and `declared['toString']`
   // on a plain object hands back a function (#37, finding 2's shape one file over).
@@ -437,29 +497,7 @@ function definitionType(seen: Set<string>): ExchangePropertyType {
   return only === 'boolean' || only === 'number' ? only : 'string'
 }
 
-function text(value: string): string {
-  return (
-    value
-      // Control characters are illegal in XML 1.0 even as numeric references
-      // (only tab, LF and CR survive), so they are stripped rather than written
-      // into a file no parser would accept back.
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-  )
-}
-
-function attr(value: string): string {
-  return text(value).replace(/"/g, '&quot;')
-}
-
 // ── Import ───────────────────────────────────────────────────────────────────
-
-interface RawNode {
-  [key: string]: unknown
-}
 
 /** A property definition as the file declares it: the key, and how to read values. */
 interface DeclaredProperty {
@@ -485,6 +523,11 @@ const parser = new XMLParser({
   parseAttributeValue: false,
   parseTagValue: false,
   trimValues: true,
+  // Decode numeric character references. Off, `&#xD;&#xA;` — how Archi writes a
+  // line break in documentation or a note — arrived as those literal characters,
+  // and `&#233;` as six characters instead of an é (#76). `&amp;#65;` still reads
+  // as the text `&#65;`: the escaped ampersand is decoded once, not twice.
+  htmlEntities: true,
 })
 
 export function importExchangeXml(xml: string, file?: string): ImportResult {
@@ -575,17 +618,35 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   const tagGroups = carried(modelProperties[TAG_GROUPS_KEY], isTagGroup, 'tag groups', reader)
 
   reportForeignModelProperties(modelProperties, problems, where)
+
+  const views = readViews(model, {
+    elements: new Map(elements.map((element) => [element.id, element])),
+    relationships: new Map(relationships.map((relationship) => [relationship.id, relationship])),
+    readProperties: (raw) => readProperties(raw, reader),
+    problems,
+    where,
+  })
+  const { folders, membership } = readOrganizations(
+    model,
+    memberGroups(elements, relationships, views),
+    problems,
+    where,
+  )
+  const fileIn = <T extends { id: string; folder?: string }>(item: T): T => {
+    const folder = membership.get(item.id)
+    return folder === undefined ? item : { ...item, folder }
+  }
+  // Property values were read on the way; an unresolved definition can be on a view.
   reportUnresolvedProperties(reader)
-  reportSkipped(model, problems, where)
 
   const workspace: Workspace = {
     id: asString(model['@identifier']) || 'ws-imported',
     name: langString(model.name) || 'Imported model',
     schemaVersion: SCHEMA_VERSION,
-    elements,
-    relationships,
-    views: [],
-    folders: [],
+    elements: elements.map(fileIn),
+    relationships: relationships.map(fileIn),
+    views: views.map(fileIn),
+    folders,
     reports: reports ?? [],
     tagGroups: tagGroups ?? [DEFAULT_TAG_GROUP],
   }
@@ -915,104 +976,4 @@ function reportUnresolvedProperties(reader: Reader): void {
       reader.where,
     ),
   )
-}
-
-/**
- * Diagrams and folders are not written yet (#76). The export still succeeds —
- * the model itself is complete — but the loss is named, so nobody discovers it
- * by reopening the file.
- */
-function reportNotWritten(workspace: Workspace, problems: ImportProblem[]): void {
-  if (workspace.views.length) {
-    const n = workspace.views.length
-    problems.push(
-      problem(
-        'warning',
-        'exchange.views-not-written',
-        `${n} view${n === 1 ? ' was' : 's were'} not written — the exchange-format export does not carry diagrams yet. Save as JSON to keep ${n === 1 ? 'it' : 'them'}.`,
-      ),
-    )
-  }
-  const filed = [...workspace.elements, ...workspace.relationships, ...workspace.views].filter(
-    (item) => item.folder !== undefined,
-  ).length
-  if (workspace.folders.length) {
-    problems.push(
-      problem(
-        'warning',
-        'exchange.folders-not-written',
-        `The folder structure (${workspace.folders.length} folder${workspace.folders.length === 1 ? '' : 's'}, ${filed} filed object${filed === 1 ? '' : 's'}) was not written — the exchange-format export does not carry folders yet. Save as JSON to keep it.`,
-      ),
-    )
-  }
-}
-
-/** Views and organizations are not read yet — say so rather than dropping them. */
-function reportSkipped(model: RawNode, problems: ImportProblem[], where: { file?: string }): void {
-  const views = list((model.views as RawNode | undefined)?.diagrams).flatMap((diagrams) =>
-    list((diagrams as RawNode).view),
-  ).length
-  if (views) {
-    problems.push(
-      problem(
-        'info',
-        'exchange.views-skipped',
-        `${views} diagram${views === 1 ? ' was' : 's were'} not imported — Archipelago generates its views from the model rather than storing them.`,
-        where,
-      ),
-    )
-  }
-  const organizations = list(model.organizations).length
-  if (organizations) {
-    problems.push(
-      problem(
-        'info',
-        'exchange.organizations-skipped',
-        'The folder organization in this file was not imported.',
-        where,
-      ),
-    )
-  }
-}
-
-// ── XML shape helpers ────────────────────────────────────────────────────────
-
-/** The first few of a list, for a message that must stay one line. */
-function listed(values: readonly string[]): string {
-  return values.slice(0, 3).join(', ') + (values.length > 3 ? ', …' : '')
-}
-
-/** fast-xml-parser collapses a single child to an object; normalise to an array. */
-function list(value: unknown): RawNode[] {
-  if (value === undefined || value === null) return []
-  if (Array.isArray(value)) return value.filter(isRawNode)
-  return isRawNode(value) ? [value] : []
-}
-
-function isRawNode(value: unknown): value is RawNode {
-  return typeof value === 'object' && value !== null
-}
-
-function asString(value: unknown): string | undefined {
-  return typeof value === 'string' ? value : typeof value === 'number' ? String(value) : undefined
-}
-
-/**
- * `LangStringType` may appear as a bare string, as `{ '#text': … }` when it
- * carries `xml:lang`, or repeated once per language. Take the first value.
- */
-function langString(value: unknown): string | undefined {
-  if (value === undefined || value === null) return undefined
-  if (typeof value === 'string') return value
-  if (typeof value === 'number') return String(value)
-  if (Array.isArray(value)) return langString(value[0])
-  if (isRawNode(value)) {
-    const inner = value['#text']
-    if (typeof inner === 'string' || typeof inner === 'number') return String(inner)
-    // `<value xml:lang="en"></value>` parses to its attributes alone. The value
-    // is the empty string, not "no value" — reading it as absent dropped the
-    // property and made the next export differ from this one (#36).
-    return ''
-  }
-  return undefined
 }

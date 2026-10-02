@@ -158,16 +158,18 @@ describe('exchange format problems', () => {
     expect(result.problems.every((p) => p.file === 'partly.xml')).toBe(true)
   })
 
-  it('reports diagrams and folders as skipped rather than dropping them silently', () => {
+  it('reads diagrams and folders rather than skipping them (#76)', () => {
     const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
   <name xml:lang="en">With views</name>
   <elements><element identifier="e1" xsi:type="Capability"><name xml:lang="en">C</name></element></elements>
-  <organizations><item identifierRef="e1"/></organizations>
+  <organizations><item><label xml:lang="en">Strategy</label><item><label xml:lang="en">Core</label><item identifierRef="e1"/></item></item></organizations>
   <views><diagrams><view identifier="v1" xsi:type="Diagram"><name xml:lang="en">Layered</name></view></diagrams></views>
 </model>`
-    const codes = importExchangeXml(xml).problems.map((p) => p.code)
-    expect(codes).toContain('exchange.views-skipped')
-    expect(codes).toContain('exchange.organizations-skipped')
+    const result = importExchangeXml(xml)
+    expect(result.workspace?.views.map((view) => view.name)).toEqual(['Layered'])
+    expect(result.workspace?.folders.map((folder) => folder.name)).toEqual(['Core'])
+    expect(result.workspace?.elements[0]?.folder).toBe(result.workspace?.folders[0]?.id)
+    expect(result.problems).toEqual([])
   })
 
   it('skips a duplicate identifier instead of overwriting the first element', () => {
@@ -943,16 +945,15 @@ describe('a property key the writer did not choose (found while fixing #37 findi
   })
 })
 
-describe('hand-drawn views and folders, before #76 carries them', () => {
-  it('names the views and folders an XML export leaves out, instead of losing them quietly', () => {
-    const { xml, problems } = exportExchange(drawnWorkspace())
-    // The model itself is all there.
-    expect(importExchangeXml(xml).workspace?.elements).toHaveLength(5)
-    expect(problems.map((p) => p.code)).toEqual([
-      'exchange.views-not-written',
-      'exchange.folders-not-written',
-    ])
-    expect(problems[1]?.message).toContain('5 folders, 4 filed objects')
+describe('hand-drawn views and folders in the exchange format (#76)', () => {
+  it('writes views and folders, and reads them back as they were', () => {
+    const workspace = drawnWorkspace()
+    const { xml, problems } = exportExchange(workspace)
+    expect(problems).toEqual([])
+    const back = importExchangeXml(xml)
+    expect(back.problems).toEqual([])
+    expect(back.workspace?.views).toHaveLength(2)
+    expect(toCanonicalJson(back.workspace as Workspace)).toBe(toCanonicalJson(workspace))
   })
 
   it('says nothing about views or folders when there are none', () => {

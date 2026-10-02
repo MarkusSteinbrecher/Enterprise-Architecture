@@ -38,6 +38,34 @@ jobs:
       - name: Build
         run: npm run build
 
+  exchange-xsd:
+    name: Exchange format XSD
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libxml2-utils
+
+      # The Open Group's XSDs are not vendored (MIT repo); the script fetches them
+      # once into node_modules/.cache, and this keeps that fetch to one per cache.
+      - uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/archipelago
+          key: archimate-xsd-3.1
+
+      # Every file the writer produces — the bundled models, Archi's own export
+      # round-tripped, and our drawn views — validated against the Diagram schema.
+      - name: Validate exchange-format output
+        run: npm run validate:xsd
+
   e2e:
     name: End-to-end journeys
     runs-on: ubuntu-latest
