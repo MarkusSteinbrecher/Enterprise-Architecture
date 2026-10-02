@@ -43,6 +43,7 @@
     "@vitejs/plugin-react": "^4.3.3",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
+    "diagram-js": "^15.28.0",
     "eslint": "^9.15.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",

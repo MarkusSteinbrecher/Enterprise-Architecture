@@ -1,0 +1,470 @@
+[
+ {
+  "throttle": 1,
+  "engine": "custom",
+  "copies": 1,
+  "objects": 85,
+  "firstPaintMs": 73,
+  "mountMs": 8,
+  "dragFrames": {
+   "n": 45,
+   "p50": 8.3,
+   "p95": 8.5,
+   "max": 10
+  },
+  "move": {
+   "commands": 1,
+   "moved": true,
+   "keptParent": true
+  },
+  "moveUndo": {
+   "restored": true,
+   "domRestored": true
+  },
+  "dragOut": {
+   "commands": 1,
+   "reparented": true,
+   "from": "o-g-apps",
+   "to": "o-damage"
+  },
+  "bend": {
+   "commands": 1,
+   "added": 1
+  },
+  "bendUndo": {
+   "restored": true
+  },
+  "containerDragFrames": {
+   "n": 53,
+   "p50": 8.3,
+   "p95": 8.5,
+   "max": 9.3
+  },
+  "containerCommands": 1,
+  "panFrames": {
+   "n": 53,
+   "p50": 8.3,
+   "p95": 8.9,
+   "max": 9.8
+  },
+  "commitMs": 14.4,
+  "undoMs": 13.4,
+  "errors": []
+ },
+ {
+  "throttle": 1,
+  "engine": "custom",
+  "copies": 6,
+  "objects": 510,
+  "firstPaintMs": 82,
+  "mountMs": 16,
+  "dragFrames": {
+   "n": 45,
+   "p50": 8.3,
+   "p95": 8.7,
+   "max": 16.6
+  },
+  "move": {
+   "commands": 1,
+   "moved": true,
+   "keptParent": true
+  },
+  "moveUndo": {
+   "restored": true,
+   "domRestored": true
+  },
+  "dragOut": {
+   "commands": 1,
+   "reparented": true,
+   "from": "o-g-apps",
+   "to": "o-damage"
+  },
+  "bend": {
+   "commands": 1,
+   "added": 1
+  },
+  "bendUndo": {
+   "restored": true
+  },
+  "containerDragFrames": {
+   "n": 55,
+   "p50": 8.3,
+   "p95": 9.1,
+   "max": 10.2
+  },
+  "containerCommands": 1,
+  "panFrames": {
+   "n": 55,
+   "p50": 8.3,
+   "p95": 8.4,
+   "max": 9.5
+  },
+  "commitMs": 12.2,
+  "undoMs": 12.9,
+  "errors": []
+ },
+ {
+  "throttle": 1,
+  "engine": "custom",
+  "copies": 16,
+  "objects": 1360,
+  "firstPaintMs": 99,
+  "mountMs": 35,
+  "dragFrames": {
+   "n": 74,
+   "p50": 8.3,
+   "p95": 9.8,
+   "max": 33.3
+  },
+  "move": {
+   "commands": 1,
+   "moved": true,
+   "keptParent": true
+  },
+  "moveUndo": {
+   "restored": true,
+   "domRestored": true
+  },
+  "dragOut": {
+   "commands": 1,
+   "reparented": true,
+   "from": "o-g-apps",
+   "to": "o-damage"
+  },
+  "bend": {
+   "commands": 1,
+   "added": 1
+  },
+  "bendUndo": {
+   "restored": true
+  },
+  "containerDragFrames": {
+   "n": 93,
+   "p50": 8.3,
+   "p95": 9.6,
+   "max": 24.9
+  },
+  "containerCommands": 1,
+  "panFrames": {
+   "n": 96,
+   "p50": 8.3,
+   "p95": 8.5,
+   "max": 23.6
+  },
+  "commitMs": 33.7,
+  "undoMs": 25.8,
+  "errors": []
+ },
+ {
+  "throttle": 1,
+  "engine": "reactflow",
+  "copies": 1,
+  "objects": 85,
+  "firstPaintMs": 73,
+  "mountMs": 8,
+  "dragFrames": {
+   "n": 44,
+   "p50": 8.3,
+   "p95": 8.5,
+   "max": 10.2
+  },
+  "move": {
+   "commands": 1,
+   "moved": true,
+   "keptParent": true
+  },
+  "moveUndo": {
+   "restored": true,
+   "domRestored": true
+  },
+  "dragOut": {
+   "commands": 1,
+   "reparented": true,
+   "from": "o-g-apps",
+   "to": "o-g-business"
+  },
+  "bend": {
+   "commands": 1,
+   "added": 1
+  },
+  "bendUndo": {
+   "restored": true
+  },
+  "containerDragFrames": {
+   "n": 53,
+   "p50": 8.3,
+   "p95": 8.4,
+   "max": 9.4
+  },
+  "containerCommands": 1,
+  "panFrames": {
+   "n": 53,
+   "p50": 8.3,
+   "p95": 10,
+   "max": 17
+  },
+  "commitMs": 15,
+  "undoMs": 9.7,
+  "errors": []
+ },
+ {
+  "throttle": 1,
+  "engine": "reactflow",
+  "copies": 6,
+  "objects": 510,
+  "firstPaintMs": 75,
+  "mountMs": 8,
+  "dragFrames": {
+   "n": 44,
+   "p50": 8.3,
+   "p95": 10.1,
+   "max": 25
+  },
+  "move": {
+   "commands": 1,
+   "moved": true,
+   "keptParent": true
+  },
+  "moveUndo": {
+   "restored": true,
+   "domRestored": true
+  },
+  "dragOut": {
+   "commands": 1,
+   "reparented": true,
+   "from": "o-g-apps",
+   "to": "o-g-business"
+  },
+  "bend": {
+   "commands": 1,
+   "added": 1
+  },
+  "bendUndo": {
+   "restored": true
+  },
+  "containerDragFrames": {
+   "n": 52,
+   "p50": 8.3,
+   "p95": 10,
+   "max": 24.9
+  },
+  "containerCommands": 1,
+  "panFrames": {
+   "n": 51,
+   "p50": 8.3,
+   "p95": 10.4,
+   "max": 33.3
+  },
+  "commitMs": 21.8,
+  "undoMs": 17.3,
+  "errors": []
+ },
+ {
+  "throttle": 1,
+  "engine": "reactflow",
+  "copies": 16,
+  "objects": 1360,
+  "firstPaintMs": 74,
+  "mountMs": 8,
+  "dragFrames": {
+   "n": 37,
+   "p50": 8.3,
+   "p95": 25.1,
+   "max": 76.5
+  },
+  "move": {
+   "commands": 1,
+   "moved": true,
+   "keptParent": true
+  },
+  "moveUndo": {
+   "restored": true,
+   "domRestored": true
+  },
+  "dragOut": {
+   "commands": 1,
+   "reparented": true,
+   "from": "o-g-apps",
+   "to": "o-g-business"
+  },
+  "bend": {
+   "commands": 1,
+   "added": 1
+  },
+  "bendUndo": {
+   "restored": true
+  },
+  "containerDragFrames": {
+   "n": 50,
+   "p50": 8.3,
+   "p95": 10.3,
+   "max": 66.8
+  },
+  "containerCommands": 1,
+  "panFrames": {
+   "n": 53,
+   "p50": 8.3,
+   "p95": 10.3,
+   "max": 74.9
+  },
+  "commitMs": 30.5,
+  "undoMs": 21.5,
+  "errors": []
+ },
+ {
+  "throttle": 1,
+  "engine": "diagramjs",
+  "copies": 1,
+  "objects": 85,
+  "firstPaintMs": 78,
+  "mountMs": 13,
+  "dragFrames": {
+   "n": 43,
+   "p50": 8.3,
+   "p95": 9.2,
+   "max": 16.8
+  },
+  "move": {
+   "commands": 1,
+   "moved": true,
+   "keptParent": true
+  },
+  "moveUndo": {
+   "restored": true,
+   "domRestored": true
+  },
+  "dragOut": {
+   "commands": 1,
+   "reparented": true,
+   "from": "o-g-apps",
+   "to": "o-damage"
+  },
+  "bend": {
+   "commands": 1,
+   "added": 2
+  },
+  "bendUndo": {
+   "restored": true
+  },
+  "containerDragFrames": {
+   "n": 53,
+   "p50": 8.3,
+   "p95": 9.8,
+   "max": 16.6
+  },
+  "containerCommands": 1,
+  "panFrames": {
+   "n": 53,
+   "p50": 8.3,
+   "p95": 8.8,
+   "max": 17
+  },
+  "commitMs": 16,
+  "undoMs": 13.6,
+  "errors": []
+ },
+ {
+  "throttle": 1,
+  "engine": "diagramjs",
+  "copies": 6,
+  "objects": 510,
+  "firstPaintMs": 94,
+  "mountMs": 29,
+  "dragFrames": {
+   "n": 44,
+   "p50": 8.3,
+   "p95": 8.4,
+   "max": 10
+  },
+  "move": {
+   "commands": 1,
+   "moved": true,
+   "keptParent": true
+  },
+  "moveUndo": {
+   "restored": true,
+   "domRestored": true
+  },
+  "dragOut": {
+   "commands": 1,
+   "reparented": true,
+   "from": "o-g-apps",
+   "to": "o-damage"
+  },
+  "bend": {
+   "commands": 1,
+   "added": 2
+  },
+  "bendUndo": {
+   "restored": true
+  },
+  "containerDragFrames": {
+   "n": 55,
+   "p50": 8.3,
+   "p95": 8.4,
+   "max": 9.3
+  },
+  "containerCommands": 1,
+  "panFrames": {
+   "n": 54,
+   "p50": 8.3,
+   "p95": 10,
+   "max": 10.2
+  },
+  "commitMs": 16.1,
+  "undoMs": 29.3,
+  "errors": []
+ },
+ {
+  "throttle": 1,
+  "engine": "diagramjs",
+  "copies": 16,
+  "objects": 1360,
+  "firstPaintMs": 127,
+  "mountMs": 62,
+  "dragFrames": {
+   "n": 45,
+   "p50": 8.3,
+   "p95": 9.3,
+   "max": 10.2
+  },
+  "move": {
+   "commands": 1,
+   "moved": true,
+   "keptParent": true
+  },
+  "moveUndo": {
+   "restored": true,
+   "domRestored": true
+  },
+  "dragOut": {
+   "commands": 1,
+   "reparented": true,
+   "from": "o-g-apps",
+   "to": "o-damage"
+  },
+  "bend": {
+   "commands": 1,
+   "added": 2
+  },
+  "bendUndo": {
+   "restored": true
+  },
+  "containerDragFrames": {
+   "n": 55,
+   "p50": 8.3,
+   "p95": 16.6,
+   "max": 25
+  },
+  "containerCommands": 1,
+  "panFrames": {
+   "n": 58,
+   "p50": 8.3,
+   "p95": 9.2,
+   "max": 10.1
+  },
+  "commitMs": 19.2,
+  "undoMs": 59.3,
+  "errors": []
+ }
+]

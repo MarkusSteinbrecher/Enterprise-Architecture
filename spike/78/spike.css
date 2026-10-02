@@ -1,0 +1,5 @@
+html, body, #root { height: 100%; margin: 0; background: var(--paper); }
+.spike-root { position: relative; width: 100vw; height: 100vh; }
+.spike-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+.spike-label { font: 11px var(--font-ui); fill: var(--ink); }
+.spike-code { font: 9px var(--font-mono); fill: var(--ink3); }
