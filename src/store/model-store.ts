@@ -3,11 +3,23 @@ import {
   SCHEMA_VERSION,
   completenessScore,
   modelHealth,
+  elementsInView,
+  relationshipsInView,
+  removeConnections,
+  removeNodes,
+  viewsReferencedBy,
+  withoutElement,
+  withoutRelationship,
+  withoutViewReference,
   type Element,
+  type Folder,
   type Relationship,
   type RelationshipType,
+  type ReportDefinition,
   type TagGroup,
-  type ViewDefinition,
+  type View,
+  type ViewConnection,
+  type ViewNode,
   type Workspace,
 } from '@/model'
 import {
@@ -16,6 +28,7 @@ import {
   invert,
   type Command,
   type CommandRecord,
+  type ViewChange,
 } from './commands'
 import { newId } from './ids'
 
@@ -48,6 +61,12 @@ interface Indexes {
   byTarget: Map<string, Set<string>>
   byType: Map<RelationshipType, Set<string>>
   elementsByType: Map<string, Set<string>>
+  /** Element id → ids of the views that draw it (#75: "Appears in views"). */
+  viewsByElement: Map<string, Set<string>>
+  /** Relationship id → ids of the views that draw it. */
+  viewsByRelationship: Map<string, Set<string>>
+  /** View id → ids of the views holding a reference to it. */
+  viewsByReference: Map<string, Set<string>>
 }
 
 export interface ModelStoreOptions {
@@ -67,7 +86,9 @@ export class ModelStore {
   #schemaVersion = SCHEMA_VERSION
   #elements = new Map<string, Element>()
   #relationships = new Map<string, Relationship>()
-  #views: ViewDefinition[] = []
+  #views = new Map<string, View>()
+  #folders = new Map<string, Folder>()
+  #reports: ReportDefinition[] = []
   #tagGroups: TagGroup[] = []
   #propertyTypes: Record<string, string> | undefined
   #indexes: Indexes = emptyIndexes()
@@ -115,8 +136,13 @@ export class ModelStore {
     return this.#relationships.size
   }
 
-  get views(): readonly ViewDefinition[] {
-    return this.#views
+  get viewCount(): number {
+    return this.#views.size
+  }
+
+  /** Saved report definitions. */
+  get reports(): readonly ReportDefinition[] {
+    return this.#reports
   }
 
   get tagGroups(): readonly TagGroup[] {
@@ -159,6 +185,37 @@ export class ModelStore {
 
   relationshipList(): Relationship[] {
     return [...this.#relationships.values()]
+  }
+
+  view(id: string): View | undefined {
+    return this.#views.get(id)
+  }
+
+  viewList(): View[] {
+    return [...this.#views.values()]
+  }
+
+  folder(id: string): Folder | undefined {
+    return this.#folders.get(id)
+  }
+
+  folderList(): Folder[] {
+    return [...this.#folders.values()]
+  }
+
+  /** Views that draw `elementId` — the fact sheet's "Appears in views". */
+  viewsDrawing(elementId: string): View[] {
+    return this.#resolveViews(this.#indexes.viewsByElement.get(elementId))
+  }
+
+  /** Views that draw `relationshipId`. */
+  viewsDrawingRelationship(relationshipId: string): View[] {
+    return this.#resolveViews(this.#indexes.viewsByRelationship.get(relationshipId))
+  }
+
+  /** Views that hold a reference to view `viewId`. */
+  viewsReferencing(viewId: string): View[] {
+    return this.#resolveViews(this.#indexes.viewsByReference.get(viewId))
   }
 
   elementsOfType(type: string): Element[] {
@@ -266,7 +323,9 @@ export class ModelStore {
       schemaVersion: this.#schemaVersion,
       elements: [...this.#elements.values()],
       relationships: [...this.#relationships.values()],
-      views: [...this.#views],
+      views: [...this.#views.values()],
+      folders: [...this.#folders.values()],
+      reports: [...this.#reports],
       tagGroups: [...this.#tagGroups],
       // Absent, not empty, when nothing is declared: canonical JSON omits the
       // key entirely, so a workspace without declared types keeps the bytes it
@@ -315,8 +374,13 @@ export class ModelStore {
     mutate({
       addElement: (element) => collected.push({ kind: 'add-element', element }),
       updateElement: (before, after) => collected.push({ kind: 'update-element', before, after }),
-      removeElement: (element, cascaded) =>
-        collected.push({ kind: 'remove-element', element, cascaded }),
+      removeElement: (element, cascaded, cascadedViews) =>
+        collected.push({
+          kind: 'remove-element',
+          element,
+          cascaded,
+          ...(cascadedViews?.length ? { cascadedViews } : {}),
+        }),
       addRelationship: (relationship) => collected.push({ kind: 'add-relationship', relationship }),
       updateRelationship: (before, after) =>
         collected.push({ kind: 'update-relationship', before, after }),
@@ -345,12 +409,38 @@ export class ModelStore {
     return after
   }
 
-  /** Deleting an element cascades to every relationship touching it. */
+  /**
+   * Deleting an element cascades to every relationship touching it, and to its
+   * drawings in every view — with the connections attached to them — as one
+   * undoable command.
+   */
   removeElement(id: string): void {
     const element = this.#elements.get(id)
     if (!element) return
     const cascaded = this.relationshipsOf(id)
-    this.dispatch({ kind: 'remove-element', element, cascaded })
+    // Every view drawing the element or one of the relationships going with it.
+    // Normally the second set is inside the first, but a connection the validator
+    // would flag (drawn between the wrong nodes) can draw a relationship in a
+    // view that does not draw its element, and must not outlive it either.
+    const touched = new Set(this.#indexes.viewsByElement.get(id))
+    for (const relationship of cascaded) {
+      for (const viewId of this.#indexes.viewsByRelationship.get(relationship.id) ?? []) {
+        touched.add(viewId)
+      }
+    }
+    const cascadedViews = this.#viewChanges(touched, (view) => {
+      let after = withoutElement(view, id) ?? view
+      for (const relationship of cascaded) {
+        after = withoutRelationship(after, relationship.id) ?? after
+      }
+      return after === view ? undefined : after
+    })
+    this.dispatch({
+      kind: 'remove-element',
+      element,
+      cascaded,
+      ...(cascadedViews.length ? { cascadedViews } : {}),
+    })
   }
 
   addRelationship(relationship: Relationship): Relationship {
@@ -369,10 +459,167 @@ export class ModelStore {
     return after
   }
 
+  /** Deleting a relationship removes its drawings from every view, in the same step. */
   removeRelationship(id: string): void {
     const relationship = this.#relationships.get(id)
     if (!relationship) return
-    this.dispatch({ kind: 'remove-relationship', relationship })
+    const cascadedViews = this.#viewChanges(this.#indexes.viewsByRelationship.get(id), (view) =>
+      withoutRelationship(view, id),
+    )
+    this.dispatch({
+      kind: 'remove-relationship',
+      relationship,
+      ...(cascadedViews.length ? { cascadedViews } : {}),
+    })
+  }
+
+  // ── Views ──────────────────────────────────────────────────────────────────
+
+  addView(view: View): View {
+    this.dispatch({ kind: 'add-view', view })
+    return view
+  }
+
+  /** Replace a view wholesale; `before` is captured for you. */
+  updateView(id: string, change: (view: View) => View): View | undefined {
+    const before = this.#views.get(id)
+    if (!before) return undefined
+    const after = change(structuredClone(before))
+    this.dispatch({ kind: 'update-view', before, after })
+    return after
+  }
+
+  /** Deleting a view also removes the references other views hold to it. */
+  removeView(id: string): void {
+    const view = this.#views.get(id)
+    if (!view) return
+    const referrers = new Set(this.#indexes.viewsByReference.get(id))
+    referrers.delete(id) // its references to itself go with it
+    const cascadedViews = this.#viewChanges(referrers, (other) => withoutViewReference(other, id))
+    this.dispatch({
+      kind: 'remove-view',
+      view,
+      ...(cascadedViews.length ? { cascadedViews } : {}),
+    })
+  }
+
+  addNode(viewId: string, node: ViewNode): ViewNode | undefined {
+    return this.updateView(viewId, (view) => ({ ...view, nodes: [...view.nodes, node] }))
+      ? node
+      : undefined
+  }
+
+  updateNode(viewId: string, nodeId: string, change: (node: ViewNode) => ViewNode): void {
+    const view = this.#views.get(viewId)
+    if (!view?.nodes.some((node) => node.id === nodeId)) return
+    this.updateView(viewId, (draft) => ({
+      ...draft,
+      nodes: draft.nodes.map((node) => (node.id === nodeId ? change(node) : node)),
+    }))
+  }
+
+  /**
+   * Remove a node and its connections. Nodes nested in it stay where they were
+   * drawn, lifted to its parent (see `removeNodes`).
+   */
+  removeNode(viewId: string, nodeId: string): void {
+    const view = this.#views.get(viewId)
+    if (!view?.nodes.some((node) => node.id === nodeId)) return
+    this.updateView(viewId, (draft) => removeNodes(draft, new Set([nodeId])))
+  }
+
+  addConnection(viewId: string, connection: ViewConnection): ViewConnection | undefined {
+    return this.updateView(viewId, (view) => ({
+      ...view,
+      connections: [...view.connections, connection],
+    }))
+      ? connection
+      : undefined
+  }
+
+  updateConnection(
+    viewId: string,
+    connectionId: string,
+    change: (connection: ViewConnection) => ViewConnection,
+  ): void {
+    const view = this.#views.get(viewId)
+    if (!view?.connections.some((connection) => connection.id === connectionId)) return
+    this.updateView(viewId, (draft) => ({
+      ...draft,
+      connections: draft.connections.map((connection) =>
+        connection.id === connectionId ? change(connection) : connection,
+      ),
+    }))
+  }
+
+  removeConnection(viewId: string, connectionId: string): void {
+    const view = this.#views.get(viewId)
+    if (!view?.connections.some((connection) => connection.id === connectionId)) return
+    this.updateView(viewId, (draft) => removeConnections(draft, new Set([connectionId])))
+  }
+
+  // ── Folders ────────────────────────────────────────────────────────────────
+
+  addFolder(folder: Folder): Folder {
+    this.dispatch({ kind: 'add-folder', folder })
+    return folder
+  }
+
+  /** Rename or move a folder; `before` is captured for you. */
+  updateFolder(id: string, change: (folder: Folder) => Folder): Folder | undefined {
+    const before = this.#folders.get(id)
+    if (!before) return undefined
+    const after = change(structuredClone(before))
+    this.dispatch({ kind: 'update-folder', before, after })
+    return after
+  }
+
+  /**
+   * Delete a folder, and keep what was in it. Its subfolders and members move up
+   * to where the folder itself sat — the parent folder, or the top-level group —
+   * in the same undoable step. Folders are organisation, not semantics (#75), so
+   * removing one must never take model content with it.
+   */
+  removeFolder(id: string): void {
+    const folder = this.#folders.get(id)
+    if (!folder) return
+    const commands: Command[] = []
+    const rehome = <T extends { folder?: string }>(item: T): T => {
+      const moved = { ...item }
+      if (folder.parent === undefined) delete moved.folder
+      else moved.folder = folder.parent
+      return moved
+    }
+    for (const child of this.#folders.values()) {
+      if (child.parent !== id) continue
+      const after: Folder = { ...child }
+      delete after.parent
+      if (folder.parent === undefined) {
+        if (folder.root !== undefined) after.root = folder.root
+      } else after.parent = folder.parent
+      commands.push({ kind: 'update-folder', before: child, after })
+    }
+    for (const element of this.#elements.values()) {
+      if (element.folder === id) {
+        commands.push({ kind: 'update-element', before: element, after: rehome(element) })
+      }
+    }
+    for (const relationship of this.#relationships.values()) {
+      if (relationship.folder === id) {
+        commands.push({
+          kind: 'update-relationship',
+          before: relationship,
+          after: rehome(relationship),
+        })
+      }
+    }
+    for (const view of this.#views.values()) {
+      if (view.folder === id)
+        commands.push({ kind: 'update-view', before: view, after: rehome(view) })
+    }
+    commands.push({ kind: 'remove-folder', folder })
+    const only = commands.length === 1 ? commands[0] : undefined
+    this.dispatch(only ?? { kind: 'batch', commands })
   }
 
   rename(name: string): void {
@@ -455,10 +702,10 @@ export class ModelStore {
     return true
   }
 
-  saveView(view: ViewDefinition): void {
-    const index = this.#views.findIndex((v) => v.id === view.id)
-    if (index >= 0) this.#views[index] = view
-    else this.#views.push(view)
+  saveReport(report: ReportDefinition): void {
+    const index = this.#reports.findIndex((r) => r.id === report.id)
+    if (index >= 0) this.#reports[index] = report
+    else this.#reports.push(report)
     this.#dirty += 1
     this.#bump()
   }
@@ -475,6 +722,31 @@ export class ModelStore {
     return out
   }
 
+  #resolveViews(ids: Set<string> | undefined): View[] {
+    if (!ids || ids.size === 0) return []
+    const out: View[] = []
+    for (const id of ids) {
+      const view = this.#views.get(id)
+      if (view) out.push(view)
+    }
+    return out
+  }
+
+  /** Apply `change` to each of `viewIds`, keeping the ones it actually changed. */
+  #viewChanges(
+    viewIds: Iterable<string> | undefined,
+    change: (view: View) => View | undefined,
+  ): ViewChange[] {
+    const changes: ViewChange[] = []
+    for (const id of viewIds ?? []) {
+      const before = this.#views.get(id)
+      if (!before) continue
+      const after = change(before)
+      if (after && after !== before) changes.push({ before, after })
+    }
+    return changes
+  }
+
   /**
    * Take on a workspace's identity and all of its non-indexed content.
    *
@@ -488,7 +760,8 @@ export class ModelStore {
     this.#id = workspace.id
     this.#name = workspace.name
     this.#schemaVersion = workspace.schemaVersion || SCHEMA_VERSION
-    this.#views = [...workspace.views]
+    this.#reports = [...workspace.reports]
+    this.#folders = new Map(workspace.folders.map((folder) => [folder.id, folder]))
     this.#tagGroups = [...workspace.tagGroups]
     this.#propertyTypes = workspace.propertyTypes ? { ...workspace.propertyTypes } : undefined
     this.#load(workspace)
@@ -500,6 +773,8 @@ export class ModelStore {
     this.#indexes = emptyIndexes()
     for (const element of this.#elements.values()) this.#indexElement(element)
     for (const relationship of this.#relationships.values()) this.#indexRelationship(relationship)
+    this.#views = new Map(workspace.views.map((view) => [view.id, view]))
+    for (const view of this.#views.values()) this.#indexView(view)
   }
 
   #bump(): void {
@@ -516,6 +791,7 @@ export class ModelStore {
         this.#insertElement(command.after)
         break
       case 'remove-element':
+        this.#applyViewChanges(command.cascadedViews)
         for (const relationship of command.cascaded) this.#deleteRelationship(relationship.id)
         this.#deleteElement(command.element.id)
         break
@@ -527,7 +803,29 @@ export class ModelStore {
         this.#insertRelationship(command.after)
         break
       case 'remove-relationship':
+        this.#applyViewChanges(command.cascadedViews)
         this.#deleteRelationship(command.relationship.id)
+        break
+      case 'add-view':
+        this.#insertView(command.view)
+        break
+      case 'update-view':
+        this.#deleteView(command.before.id)
+        this.#insertView(command.after)
+        break
+      case 'remove-view':
+        this.#applyViewChanges(command.cascadedViews)
+        this.#deleteView(command.view.id)
+        break
+      case 'add-folder':
+        this.#folders.set(command.folder.id, command.folder)
+        break
+      case 'update-folder':
+        this.#folders.delete(command.before.id)
+        this.#folders.set(command.after.id, command.after)
+        break
+      case 'remove-folder':
+        this.#folders.delete(command.folder.id)
         break
       case 'rename-workspace':
         this.#name = command.after
@@ -536,6 +834,43 @@ export class ModelStore {
         for (const inner of command.commands) this.#applyCommand(inner)
         break
     }
+  }
+
+  #applyViewChanges(changes: readonly ViewChange[] | undefined): void {
+    for (const change of changes ?? []) {
+      this.#deleteView(change.before.id)
+      this.#insertView(change.after)
+    }
+  }
+
+  #insertView(view: View): void {
+    const existing = this.#views.get(view.id)
+    if (existing) this.#unindexView(existing)
+    this.#views.set(view.id, view)
+    this.#indexView(view)
+  }
+
+  #deleteView(id: string): void {
+    const view = this.#views.get(id)
+    if (!view) return
+    this.#unindexView(view)
+    this.#views.delete(id)
+  }
+
+  #indexView(view: View): void {
+    for (const id of elementsInView(view)) addTo(this.#indexes.viewsByElement, id, view.id)
+    for (const id of relationshipsInView(view))
+      addTo(this.#indexes.viewsByRelationship, id, view.id)
+    for (const id of viewsReferencedBy(view)) addTo(this.#indexes.viewsByReference, id, view.id)
+  }
+
+  #unindexView(view: View): void {
+    for (const id of elementsInView(view)) removeFrom(this.#indexes.viewsByElement, id, view.id)
+    for (const id of relationshipsInView(view)) {
+      removeFrom(this.#indexes.viewsByRelationship, id, view.id)
+    }
+    for (const id of viewsReferencedBy(view))
+      removeFrom(this.#indexes.viewsByReference, id, view.id)
   }
 
   #insertElement(element: Element): void {
@@ -590,7 +925,8 @@ export class ModelStore {
 export interface TransactionDraft {
   addElement(element: Element): void
   updateElement(before: Element, after: Element): void
-  removeElement(element: Element, cascaded: Relationship[]): void
+  /** Pass the views the element is drawn in, or the drawings are left dangling. */
+  removeElement(element: Element, cascaded: Relationship[], cascadedViews?: ViewChange[]): void
   addRelationship(relationship: Relationship): void
   updateRelationship(before: Relationship, after: Relationship): void
   removeRelationship(relationship: Relationship): void
@@ -602,6 +938,9 @@ function emptyIndexes(): Indexes {
     byTarget: new Map(),
     byType: new Map(),
     elementsByType: new Map(),
+    viewsByElement: new Map(),
+    viewsByRelationship: new Map(),
+    viewsByReference: new Map(),
   }
 }
 

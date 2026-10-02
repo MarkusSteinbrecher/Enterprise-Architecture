@@ -1,0 +1,156 @@
+{
+  "elements": [
+    {
+      "documentation": "New rules-driven claim assessment platform.",
+      "id": "app-claims",
+      "name": "Claim Handling Engine",
+      "profile": {
+        "businessCriticality": 4,
+        "functionalFit": 4,
+        "lifecycle": {
+          "active": "2027-01-01",
+          "endOfLife": "2034-01-01",
+          "phaseIn": "2025-01-01",
+          "phaseOut": "2033-01-01",
+          "plan": "2024-01-01"
+        },
+        "tags": [
+          "Core",
+          "Cloud target"
+        ],
+        "technicalFit": 4,
+        "timeClassification": "Invest"
+      },
+      "properties": {
+        "owner": "Claims"
+      },
+      "type": "ApplicationComponent"
+    },
+    {
+      "documentation": "Intake, assessment, settlement and recovery of claims.",
+      "id": "cap-claim",
+      "name": "Claim Handling",
+      "profile": {
+        "tags": [
+          "Core"
+        ]
+      },
+      "properties": {
+        "owner": "Claims"
+      },
+      "type": "Capability"
+    },
+    {
+      "id": "obj-claim",
+      "name": "Claim Record",
+      "type": "DataObject"
+    },
+    {
+      "id": "proc-claim",
+      "name": "Handle Claim",
+      "properties": {
+        "owner": "Claims"
+      },
+      "type": "BusinessProcess"
+    },
+    {
+      "id": "tec-k8s",
+      "name": "Kubernetes Platform",
+      "properties": {
+        "owner": "Platform Ops"
+      },
+      "type": "Node"
+    }
+  ],
+  "id": "ws-test",
+  "name": "Claims (schema 1)",
+  "relationships": [
+    {
+      "id": "rel-app-obj",
+      "profile": {
+        "accessType": "ReadWrite"
+      },
+      "source": "app-claims",
+      "target": "obj-claim",
+      "type": "Access"
+    },
+    {
+      "id": "rel-app-proc",
+      "profile": {
+        "annualCost": 1200000,
+        "currency": "EUR"
+      },
+      "source": "app-claims",
+      "target": "proc-claim",
+      "type": "Serving"
+    },
+    {
+      "id": "rel-k8s-app",
+      "source": "tec-k8s",
+      "target": "app-claims",
+      "type": "Serving"
+    },
+    {
+      "id": "rel-proc-cap",
+      "source": "proc-claim",
+      "target": "cap-claim",
+      "type": "Realization"
+    }
+  ],
+  "schemaVersion": 1,
+  "tagGroups": [
+    {
+      "id": "tg-portfolio",
+      "multiSelect": true,
+      "name": "Portfolio",
+      "tags": [
+        {
+          "colourToken": "var(--app)",
+          "name": "Cloud target"
+        },
+        {
+          "colourToken": "var(--accent2)",
+          "name": "Core"
+        },
+        {
+          "colourToken": "var(--accent)",
+          "name": "Differentiating"
+        },
+        {
+          "colourToken": "var(--mot)",
+          "name": "GDPR"
+        },
+        {
+          "colourToken": "var(--pas)",
+          "name": "Supporting"
+        },
+        {
+          "colourToken": "var(--lc-eol)",
+          "name": "Vendor risk"
+        }
+      ]
+    }
+  ],
+  "views": [
+    {
+      "baseType": "Capability",
+      "id": "report-caps",
+      "kind": "capability-map",
+      "name": "Capability map"
+    },
+    {
+      "colorView": "lifecycle",
+      "filter": {
+        "facets": [
+          "layer:application",
+          "lifecycle:endOfLife"
+        ],
+        "mode": "AND"
+      },
+      "id": "report-eol",
+      "kind": "graph",
+      "name": "End-of-life applications",
+      "timePoint": 2030
+    }
+  ]
+}

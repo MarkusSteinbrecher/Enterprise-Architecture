@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_TAG_GROUP, SCHEMA_VERSION, validate, type Element, type Workspace } from '@/model'
 import { isExchangeSafeId } from '@/store/ids'
-import { smallWorkspace } from '@/test/fixtures'
+import { drawnWorkspace, smallWorkspace } from '@/test/fixtures'
 import { fromCanonicalJson, toCanonicalJson } from './canonical-json'
 import { exportExchange, exportExchangeXml, importExchangeXml } from './exchange-format'
 import { DEMO_WORKSPACE_XML, loadDemoWorkspace } from './demo'
@@ -485,10 +485,10 @@ describe('identifiers that are not XML names (issue #36)', () => {
 })
 
 describe('what the exchange format has no home for (issue #36)', () => {
-  it('carries saved views and custom tag groups through the round trip', () => {
+  it('carries saved reports and custom tag groups through the round trip', () => {
     const workspace: Workspace = {
       ...smallWorkspace(),
-      views: [
+      reports: [
         {
           id: 'view-eol',
           name: 'End-of-life applications',
@@ -510,7 +510,7 @@ describe('what the exchange format has no home for (issue #36)', () => {
       ],
     }
     const restored = roundTrip(workspace)
-    expect(restored.views).toEqual(workspace.views)
+    expect(restored.reports).toEqual(workspace.reports)
     expect(restored.tagGroups).toEqual(workspace.tagGroups)
   })
 
@@ -520,7 +520,7 @@ describe('what the exchange format has no home for (issue #36)', () => {
     expect(importExchangeXml(xml).workspace?.tagGroups).toEqual([DEFAULT_TAG_GROUP])
   })
 
-  it('reports carried views it cannot read instead of pretending there were none', () => {
+  it('reports carried reports it cannot read instead of pretending there were none', () => {
     const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
   <name xml:lang="en">Broken carry</name>
   <properties><property propertyDefinitionRef="p1"><value xml:lang="en">not json</value></property></properties>
@@ -529,7 +529,7 @@ describe('what the exchange format has no home for (issue #36)', () => {
   </propertyDefinitions>
 </model>`
     const result = importExchangeXml(xml)
-    expect(result.workspace?.views).toEqual([])
+    expect(result.workspace?.reports).toEqual([])
     expect(result.problems.map((p) => p.code)).toContain('exchange.carried-unreadable')
   })
 
@@ -641,6 +641,8 @@ describe('hardening (review findings, PR #37)', () => {
       elements,
       relationships: [],
       views: [],
+      folders: [],
+      reports: [],
       tagGroups: [DEFAULT_TAG_GROUP],
     }
   }
@@ -870,7 +872,7 @@ describe('hardening (review findings, PR #37)', () => {
   })
 
   describe('finding 10 — the fallback branches nothing was driving', () => {
-    it('counts the carried views it had to drop', () => {
+    it('counts the carried reports it had to drop', () => {
       const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m1">
   <name xml:lang="en">Half broken carry</name>
   <properties><property propertyDefinitionRef="p1"><value xml:lang="en">[{"id":"v1","name":"Kept","kind":"graph"},{"nope":true},7]</value></property></properties>
@@ -879,10 +881,10 @@ describe('hardening (review findings, PR #37)', () => {
   </propertyDefinitions>
 </model>`
       const result = importExchangeXml(xml)
-      expect(result.workspace?.views.map((view) => view.id)).toEqual(['v1'])
+      expect(result.workspace?.reports.map((report) => report.id)).toEqual(['v1'])
       expect(
         result.problems.find((p) => p.code === 'exchange.carried-unreadable')?.message,
-      ).toContain('2 of the 3 saved views')
+      ).toContain('2 of the 3 saved reports')
     })
   })
 })
@@ -938,5 +940,37 @@ describe('a property key the writer did not choose (found while fixing #37 findi
     const workspace = importExchangeXml(withKey('__proto__')).workspace!
     expect(Object.getPrototypeOf(workspace.elements[0]!.properties)).toBe(Object.prototype)
     expect(({} as Record<string, unknown>).mine).toBeUndefined()
+  })
+})
+
+describe('hand-drawn views and folders, before #76 carries them', () => {
+  it('names the views and folders an XML export leaves out, instead of losing them quietly', () => {
+    const { xml, problems } = exportExchange(drawnWorkspace())
+    // The model itself is all there.
+    expect(importExchangeXml(xml).workspace?.elements).toHaveLength(5)
+    expect(problems.map((p) => p.code)).toEqual([
+      'exchange.views-not-written',
+      'exchange.folders-not-written',
+    ])
+    expect(problems[1]?.message).toContain('5 folders, 4 filed objects')
+  })
+
+  it('says nothing about views or folders when there are none', () => {
+    const { problems } = exportExchange(smallWorkspace())
+    expect(problems).toEqual([])
+  })
+
+  it('carries saved reports under the new key, and still reads the schema-1 key', () => {
+    const workspace: Workspace = {
+      ...smallWorkspace(),
+      reports: [{ id: 'r1', name: 'Capabilities', kind: 'capability-map' }],
+    }
+    const xml = exportExchangeXml(workspace)
+    expect(xml).toContain('archipelago.reports')
+    expect(xml).not.toContain('archipelago.views')
+    expect(importExchangeXml(xml).workspace?.reports).toEqual(workspace.reports)
+    const legacy = importExchangeXml(xml.replace('archipelago.reports', 'archipelago.views'))
+    expect(legacy.workspace?.reports).toEqual(workspace.reports)
+    expect(legacy.problems).toEqual([])
   })
 })

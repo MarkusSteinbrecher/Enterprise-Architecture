@@ -16,8 +16,11 @@ UI reference: `design/specs/open-ea-repository-ui-spec.md` §3.1, §2.2.
 | `profile.ts` | portfolio profile types, scales, TIME, tags |
 | `lifecycle.ts` | phase derivation from dates |
 | `completeness.ts` | completeness scoring and model health |
-| `workspace.ts` | `Element`, `Relationship`, `ViewDefinition`, `Workspace` |
+| `workspace.ts` | `Element`, `Relationship`, `View`, `Folder`, `ReportDefinition`, `Workspace` |
+| `views.ts` | pure view operations: node removal with lifting, absolute bounds |
+| `migrate.ts` | bringing a stored workspace from an earlier schema forward |
 | `validate.ts` | whole-model validation |
+| `validate-views.ts` | referential integrity of views and folders |
 
 ## Element types
 
@@ -120,3 +123,20 @@ tag); an Application Component at 13.
 Weights live in `COMPLETENESS_CONFIG` and nowhere else. The colour ramp is ≥75
 green, ≥50 amber, else red (handoff, "Derived values"); model health is the
 rounded mean of element completeness.
+
+## Views and folders (#75)
+
+A `View` is a hand-drawn diagram: `nodes` (an element drawing, a note, a group,
+or a reference to another view) and `connections` (a relationship drawing, or a
+plain line). Node bounds are **relative to the parent node**, so moving a
+container is one edit; bend-points are absolute view coordinates. Ids of nodes
+and connections are unique within their view.
+
+A `Folder` is organisation, not semantics. Each sits either in another folder
+(`parent`) or directly in one of the fixed top-level groups (`root`) — never
+both. Membership is on the member (`folder` on elements, relationships and
+views); absent means the default group for its kind, which `defaultFolderRoot`
+gives for an element's layer.
+
+Saved report definitions were called `ViewDefinition` and stored under `views`
+in schema 1; schema 2 renamed them `ReportDefinition`, stored under `reports`.

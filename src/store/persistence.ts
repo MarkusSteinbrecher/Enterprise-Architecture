@@ -1,5 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
-import type { Workspace } from '@/model'
+import { migrateWorkspace, type Workspace } from '@/model'
 
 /**
  * IndexedDB persistence (concept §5.2).
@@ -131,7 +131,11 @@ export async function loadWorkspace(id: string): Promise<Workspace | undefined> 
 export async function loadGenerations(id: string): Promise<Snapshot[]> {
   const db = await openDatabase()
   const all = await db.getAllFromIndex('snapshots', 'byWorkspace', id)
-  return all.toSorted((a, b) => b.seq - a.seq)
+  // A snapshot written by an earlier build has that build's shape; bring it
+  // forward here, the one place stored workspaces come back in (#75).
+  return all
+    .toSorted((a, b) => b.seq - a.seq)
+    .map((snapshot) => ({ ...snapshot, workspace: migrateWorkspace(snapshot.workspace) }))
 }
 
 /** The workspace to open on boot — the most recently written one. */

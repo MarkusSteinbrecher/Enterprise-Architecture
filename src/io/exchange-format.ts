@@ -16,10 +16,10 @@ import {
 } from '@/model'
 import { isExchangeSafeId } from '@/store/ids'
 import {
+  canonicalReportsJson,
   canonicalTagGroupsJson,
-  canonicalViewsJson,
+  isReportDefinition,
   isTagGroup,
-  isViewDefinition,
 } from './canonical-json'
 import { failed, problem, succeeded, type ImportProblem, type ImportResult } from './problems'
 import { setKey } from './records'
@@ -45,11 +45,10 @@ import {
  * control over either. Reading uses fast-xml-parser; writing is string building
  * with explicit escaping.
  *
- * Not read yet: the format's `<views>` (diagrams) and `<organizations>` (folder
- * structure). Both are reported as skipped rather than silently dropped —
- * diagram support is phase 3 (concept §6.3). Note that a *diagram* is not one of
- * our `ViewDefinition`s: ours are saved report definitions, and those the writer
- * does carry, as model properties.
+ * Not read or written yet: the format's `<views>` (diagrams) and
+ * `<organizations>` (folder structure) — that is #76. Both are reported rather
+ * than silently dropped, in each direction. Saved report definitions are not
+ * diagrams; the writer carries those as model properties.
  */
 
 const NS = 'http://www.opengroup.org/xsd/archimate/3.0/'
@@ -59,14 +58,18 @@ const SCHEMA_LOCATION = `${NS} http://www.opengroup.org/xsd/archimate/3.1/archim
 /**
  * Model-level properties carrying what the format has no home for.
  *
- * Saved report views and tag groups are not ArchiMate concepts, so the schema
+ * Saved reports and tag groups are not ArchiMate concepts, so the schema
  * has nowhere to put them and an earlier build simply dropped both — an
  * Archipelago → XML → Archipelago trip destroyed every saved view and every
  * custom tag colour without saying a word (#36). They now travel as two
  * namespaced model properties: a tool that does not know Archipelago shows two
  * extra key/value pairs on the model and hands them back untouched.
+ *
+ * Reports travelled as `archipelago.views` until schema 2 renamed them (#75);
+ * a file written then is still read.
  */
-const VIEWS_KEY = `${PROFILE_NAMESPACE}.views`
+const REPORTS_KEY = `${PROFILE_NAMESPACE}.reports`
+const LEGACY_REPORTS_KEY = `${PROFILE_NAMESPACE}.views`
 const TAG_GROUPS_KEY = `${PROFILE_NAMESPACE}.tagGroups`
 
 /** Tag groups identical to the shipped default are left out — import restores them. */
@@ -131,6 +134,7 @@ export function exportExchange(
   options: ExchangeExportOptions = {},
 ): ExchangeExportResult {
   const problems: ImportProblem[] = []
+  reportNotWritten(workspace, problems)
   const ids = exchangeIdentifiers(workspace, problems)
   const modelProperties = modelLevelProperties(workspace)
   const definitions = collectPropertyDefinitions(workspace, modelProperties, ids, problems)
@@ -331,7 +335,7 @@ function sanitiseId(id: string): string {
 /** What the workspace carries that the schema has no element for. */
 function modelLevelProperties(workspace: Workspace): Record<string, PropertyValue> {
   const out: Record<string, PropertyValue> = {}
-  if (workspace.views.length) out[VIEWS_KEY] = canonicalViewsJson(workspace.views)
+  if (workspace.reports.length) out[REPORTS_KEY] = canonicalReportsJson(workspace.reports)
   const tagGroups = canonicalTagGroupsJson(workspace.tagGroups)
   if (tagGroups !== DEFAULT_TAG_GROUPS_JSON) out[TAG_GROUPS_KEY] = tagGroups
   return out
@@ -565,7 +569,9 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   }
 
   const modelProperties = readProperties(model, reader)
-  const views = carried(modelProperties[VIEWS_KEY], isViewDefinition, 'saved views', reader)
+  const reports =
+    carried(modelProperties[REPORTS_KEY], isReportDefinition, 'saved reports', reader) ??
+    carried(modelProperties[LEGACY_REPORTS_KEY], isReportDefinition, 'saved reports', reader)
   const tagGroups = carried(modelProperties[TAG_GROUPS_KEY], isTagGroup, 'tag groups', reader)
 
   reportForeignModelProperties(modelProperties, problems, where)
@@ -578,7 +584,9 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     schemaVersion: SCHEMA_VERSION,
     elements,
     relationships,
-    views: views ?? [],
+    views: [],
+    folders: [],
+    reports: reports ?? [],
     tagGroups: tagGroups ?? [DEFAULT_TAG_GROUP],
   }
   const propertyTypes = declaredPropertyTypes(reader.definitions)
@@ -883,7 +891,7 @@ function reportForeignModelProperties(
   where: { file?: string },
 ): void {
   const foreign = Object.keys(modelProperties).filter(
-    (key) => key !== VIEWS_KEY && key !== TAG_GROUPS_KEY,
+    (key) => key !== REPORTS_KEY && key !== LEGACY_REPORTS_KEY && key !== TAG_GROUPS_KEY,
   )
   if (!foreign.length) return
   problems.push(
@@ -907,6 +915,36 @@ function reportUnresolvedProperties(reader: Reader): void {
       reader.where,
     ),
   )
+}
+
+/**
+ * Diagrams and folders are not written yet (#76). The export still succeeds —
+ * the model itself is complete — but the loss is named, so nobody discovers it
+ * by reopening the file.
+ */
+function reportNotWritten(workspace: Workspace, problems: ImportProblem[]): void {
+  if (workspace.views.length) {
+    const n = workspace.views.length
+    problems.push(
+      problem(
+        'warning',
+        'exchange.views-not-written',
+        `${n} view${n === 1 ? ' was' : 's were'} not written — the exchange-format export does not carry diagrams yet. Save as JSON to keep ${n === 1 ? 'it' : 'them'}.`,
+      ),
+    )
+  }
+  const filed = [...workspace.elements, ...workspace.relationships, ...workspace.views].filter(
+    (item) => item.folder !== undefined,
+  ).length
+  if (workspace.folders.length) {
+    problems.push(
+      problem(
+        'warning',
+        'exchange.folders-not-written',
+        `The folder structure (${workspace.folders.length} folder${workspace.folders.length === 1 ? '' : 's'}, ${filed} filed object${filed === 1 ? '' : 's'}) was not written — the exchange-format export does not carry folders yet. Save as JSON to keep it.`,
+      ),
+    )
+  }
 }
 
 /** Views and organizations are not read yet — say so rather than dropping them. */

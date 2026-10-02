@@ -2,7 +2,9 @@ import {
   SCHEMA_VERSION,
   DEFAULT_TAG_GROUP,
   type Element,
+  type Folder,
   type Relationship,
+  type View,
   type Workspace,
 } from '@/model'
 
@@ -98,6 +100,8 @@ export function smallWorkspace(): Workspace {
     elements,
     relationships,
     views: [],
+    folders: [],
+    reports: [],
     tagGroups: [DEFAULT_TAG_GROUP],
   }
 }
@@ -176,6 +180,161 @@ export function syntheticWorkspace(size: number, id = 'ws-synthetic'): Workspace
     elements,
     relationships,
     views: [],
+    folders: [],
+    reports: [],
     tagGroups: [DEFAULT_TAG_GROUP],
   }
+}
+
+/**
+ * `smallWorkspace` drawn (#75): folders, two views, nesting, bend-points, a
+ * note, a group, a view reference and appearance overrides. The Claim Handling
+ * Engine is drawn in both views, so deleting it has to reach into each.
+ */
+export function drawnWorkspace(): Workspace {
+  const base = smallWorkspace()
+  const folders: Folder[] = [
+    { id: 'f-business', name: 'Claims', root: 'business' },
+    {
+      id: 'f-core',
+      name: 'Core processes',
+      parent: 'f-business',
+      documentation: 'The money-makers.',
+    },
+    { id: 'f-apps', name: 'Claims apps', root: 'application' },
+    { id: 'f-relations', name: 'Claims relations', root: 'relations' },
+    { id: 'f-views', name: 'Landscapes', root: 'views' },
+  ]
+  const fileIn: Record<string, string> = {
+    'proc-claim': 'f-core',
+    'app-claims': 'f-apps',
+    'rel-app-proc': 'f-relations',
+  }
+  const elements = base.elements.map((element) => {
+    const folder = fileIn[element.id]
+    return folder ? { ...element, folder } : element
+  })
+  const relationships = base.relationships.map((relationship) => {
+    const folder = fileIn[relationship.id]
+    return folder ? { ...relationship, folder } : relationship
+  })
+
+  const landscape: View = {
+    id: 'view-landscape',
+    name: 'Claims landscape',
+    documentation: 'How claims are handled, top to bottom.',
+    viewpoint: 'Layered',
+    folder: 'f-views',
+    properties: { status: 'draft' },
+    nodes: [
+      {
+        id: 'g-claims',
+        kind: 'group',
+        name: 'Claims',
+        bounds: { x: 0, y: 0, width: 600, height: 400 },
+        appearance: { fillColor: '#f5f0e6', lineColor: '#333333', lineWidth: 2 },
+      },
+      {
+        id: 'n-proc',
+        kind: 'element',
+        element: 'proc-claim',
+        parent: 'g-claims',
+        bounds: { x: 20, y: 40, width: 120, height: 55 },
+      },
+      {
+        id: 'n-app',
+        kind: 'element',
+        element: 'app-claims',
+        parent: 'g-claims',
+        bounds: { x: 20, y: 200, width: 120, height: 55 },
+        appearance: {
+          fontName: 'Inter',
+          fontSize: 11,
+          fontColor: '#000000',
+          fontStyle: ['bold', 'italic'],
+          textAlignment: 'left',
+          textPosition: 'top',
+        },
+      },
+      {
+        id: 'n-k8s',
+        kind: 'element',
+        element: 'tec-k8s',
+        bounds: { x: 20, y: 460, width: 120, height: 55 },
+      },
+      {
+        id: 'n-note',
+        kind: 'note',
+        text: 'Rules engine goes live 2027.',
+        bounds: { x: 300, y: 40, width: 180, height: 60 },
+        parent: 'g-claims',
+      },
+      {
+        id: 'n-ref',
+        kind: 'view-ref',
+        view: 'view-detail',
+        bounds: { x: 300, y: 460, width: 120, height: 55 },
+      },
+    ],
+    connections: [
+      {
+        id: 'c-serving',
+        kind: 'relationship',
+        relationship: 'rel-app-proc',
+        source: 'n-app',
+        target: 'n-proc',
+        bendpoints: [
+          { x: 80, y: 180 },
+          { x: 80, y: 120 },
+        ],
+      },
+      {
+        id: 'c-k8s',
+        kind: 'relationship',
+        relationship: 'rel-k8s-app',
+        source: 'n-k8s',
+        target: 'n-app',
+        appearance: { lineColor: '#aa0000' },
+      },
+      { id: 'c-note', kind: 'line', name: 'see', source: 'n-note', target: 'n-app' },
+    ],
+  }
+  const detail: View = {
+    id: 'view-detail',
+    name: 'Claim data',
+    properties: {},
+    nodes: [
+      {
+        id: 'd-app',
+        kind: 'element',
+        element: 'app-claims',
+        bounds: { x: 0, y: 0, width: 120, height: 55 },
+      },
+      {
+        id: 'd-obj',
+        kind: 'element',
+        element: 'obj-claim',
+        bounds: { x: 200, y: 0, width: 120, height: 55 },
+      },
+    ],
+    connections: [
+      {
+        id: 'd-access',
+        kind: 'relationship',
+        relationship: 'rel-app-obj',
+        source: 'd-app',
+        target: 'd-obj',
+      },
+    ],
+  }
+
+  // In canonical order (everything by id), so a workspace read back from its
+  // own canonical JSON compares equal to this one, arrays included.
+  const byId = (a: { id: string }, b: { id: string }) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  const views = [detail, landscape].map((view) => ({
+    ...view,
+    nodes: [...view.nodes].sort(byId),
+    connections: [...view.connections].sort(byId),
+  }))
+  return { ...base, elements, relationships, folders: [...folders].sort(byId), views }
 }

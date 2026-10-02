@@ -4,15 +4,15 @@ In-memory typed graph, command stack, IndexedDB persistence, second-tab safety,
 and the React binding. Concept reference: `design/specs/open-ea-repository-concept.md`
 §5.1–5.2 (ADR-002).
 
-| File | What it owns |
-|---|---|
-| `model-store.ts` | the graph: id maps, adjacency indexes, undo/redo, dirty counter |
-| `commands.ts` | the command type, its inverse, and its human description |
-| `persistence.ts` | IndexedDB via `idb` — snapshots, rolling generations, workspace list |
-| `autosave.ts` | debounced idle-scheduled writes from a live store |
-| `tab-lock.ts` | Web Locks writer election + BroadcastChannel takeover |
-| `context.ts` | `useModelStore`, `useModelVersion`, `useModelSelector` |
-| `ModelStoreProvider.tsx` | boot: restore, claim the lock, wire autosave |
+| File                     | What it owns                                                         |
+| ------------------------ | -------------------------------------------------------------------- |
+| `model-store.ts`         | the graph: id maps, adjacency indexes, undo/redo, dirty counter      |
+| `commands.ts`            | the command type, its inverse, and its human description             |
+| `persistence.ts`         | IndexedDB via `idb` — snapshots, rolling generations, workspace list |
+| `autosave.ts`            | debounced idle-scheduled writes from a live store                    |
+| `tab-lock.ts`            | Web Locks writer election + BroadcastChannel takeover                |
+| `context.ts`             | `useModelStore`, `useModelVersion`, `useModelSelector`               |
+| `ModelStoreProvider.tsx` | boot: restore, claim the lock, wire autosave                         |
 
 ## Why in-memory
 
@@ -54,7 +54,7 @@ a BroadcastChannel — the writer steps down and the requester picks it up. The
 takeover UI is issue #11.
 
 `acquire()` uses `ifAvailable: true` so a second tab gets an immediate answer
-instead of queueing behind the holder, and it resolves the role from *inside* the
+instead of queueing behind the holder, and it resolves the role from _inside_ the
 lock callback: awaiting the request promise would block until the lock is
 released, which for the winning tab is never.
 

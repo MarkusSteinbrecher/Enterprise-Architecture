@@ -4,6 +4,7 @@ import { validateRelationship } from './validity'
 import { LIFECYCLE_PHASES } from './profile'
 import { parseLifecycleDate } from './lifecycle'
 import type { Workspace } from './workspace'
+import { validateViewsAndFolders } from './validate-views'
 
 /**
  * Whole-model validation. Findings are structured rather than thrown so the UI
@@ -18,9 +19,9 @@ export interface Finding {
   /** Stable machine code, e.g. `relationship.dangling-source`. */
   code: string
   message: string
-  /** Element or relationship the finding concerns, when it has one. */
+  /** Element, relationship, view or folder the finding concerns, when it has one. */
   subjectId?: string
-  subjectKind?: 'element' | 'relationship' | 'workspace'
+  subjectKind?: 'element' | 'relationship' | 'view' | 'folder' | 'workspace'
 }
 
 export interface ValidationReport {
@@ -175,6 +176,8 @@ export function validate(workspace: Workspace): ValidationReport {
       }
     }
   }
+
+  validateViewsAndFolders(workspace, findings)
 
   if (workspace.schemaVersion <= 0) {
     findings.push({

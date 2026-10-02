@@ -1,10 +1,14 @@
 import {
   BUSINESS_CRITICALITY_LABELS,
   ELEMENT_TYPE_NAMES,
+  FOLDER_ROOTS,
+  FONT_STYLES,
   JUNCTION_KINDS,
   LIFECYCLE_PHASES,
   RELATIONSHIP_TYPE_NAMES,
   SCHEMA_VERSION,
+  TEXT_ALIGNMENTS,
+  TEXT_POSITIONS,
   TIME_CLASSIFICATIONS,
 } from '@/model'
 
@@ -44,7 +48,17 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
       name: { type: 'string' },
       elements: { type: 'array', items: { $ref: '#/$defs/element' } },
       relationships: { type: 'array', items: { $ref: '#/$defs/relationship' } },
-      views: { type: 'array', items: { $ref: '#/$defs/view' } },
+      views: {
+        type: 'array',
+        description: 'Hand-drawn diagrams. (Schema 1 used this key for saved reports.)',
+        items: { $ref: '#/$defs/view' },
+      },
+      folders: { type: 'array', items: { $ref: '#/$defs/folder' } },
+      reports: {
+        type: 'array',
+        description: 'Saved report definitions.',
+        items: { $ref: '#/$defs/report' },
+      },
       tagGroups: { type: 'array', items: { $ref: '#/$defs/tagGroup' } },
       propertyTypes: {
         type: 'object',
@@ -76,6 +90,7 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           },
           properties: { $ref: '#/$defs/properties' },
           profile: { $ref: '#/$defs/portfolioProfile' },
+          folder: { $ref: '#/$defs/folderRef' },
         },
       },
       relationship: {
@@ -90,6 +105,7 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           name: { type: 'string' },
           properties: { $ref: '#/$defs/properties' },
           profile: { $ref: '#/$defs/relationshipProfile' },
+          folder: { $ref: '#/$defs/folderRef' },
         },
       },
       properties: {
@@ -141,8 +157,130 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           accessType: { enum: ['Access', 'Read', 'Write', 'ReadWrite'] },
         },
       },
+      folderRef: {
+        type: 'string',
+        description:
+          'id of the folder this object is filed in. Absent means the default group for its kind.',
+      },
+      folder: {
+        type: 'object',
+        description:
+          'User organisation of the model tree; no semantics. Exactly one of parent and root is set.',
+        required: ['id', 'name'],
+        additionalProperties: false,
+        properties: {
+          id: { type: 'string', minLength: 1 },
+          name: { type: 'string' },
+          documentation: { type: 'string' },
+          parent: { type: 'string', description: 'id of the enclosing folder' },
+          root: {
+            enum: [...FOLDER_ROOTS],
+            description: 'The fixed top-level group a top-level folder sits in.',
+          },
+        },
+        oneOf: [{ required: ['parent'] }, { required: ['root'] }],
+      },
       view: {
         type: 'object',
+        description: 'A hand-drawn diagram.',
+        required: ['id', 'name'],
+        additionalProperties: false,
+        properties: {
+          id: { type: 'string', minLength: 1 },
+          name: { type: 'string' },
+          documentation: { type: 'string' },
+          viewpoint: { type: 'string', description: 'ArchiMate viewpoint name.' },
+          folder: { $ref: '#/$defs/folderRef' },
+          properties: { $ref: '#/$defs/properties' },
+          nodes: { type: 'array', items: { $ref: '#/$defs/viewNode' } },
+          connections: { type: 'array', items: { $ref: '#/$defs/viewConnection' } },
+        },
+      },
+      bounds: {
+        type: 'object',
+        description: 'Position relative to the parent node (or the view), and size.',
+        required: ['x', 'y', 'width', 'height'],
+        additionalProperties: false,
+        properties: {
+          x: { type: 'number' },
+          y: { type: 'number' },
+          width: { type: 'number', minimum: 0 },
+          height: { type: 'number', minimum: 0 },
+        },
+      },
+      appearance: {
+        type: 'object',
+        description: "Overrides of the notation's default look. Absent fields mean the default.",
+        additionalProperties: false,
+        properties: {
+          fillColor: { $ref: '#/$defs/colour' },
+          lineColor: { $ref: '#/$defs/colour' },
+          lineWidth: { type: 'number', exclusiveMinimum: 0 },
+          fontName: { type: 'string', minLength: 1 },
+          fontSize: { type: 'number', exclusiveMinimum: 0 },
+          fontColor: { $ref: '#/$defs/colour' },
+          fontStyle: { type: 'array', items: { enum: [...FONT_STYLES] } },
+          textAlignment: { enum: [...TEXT_ALIGNMENTS] },
+          textPosition: { enum: [...TEXT_POSITIONS] },
+        },
+      },
+      colour: { type: 'string', pattern: '^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$' },
+      viewNode: {
+        type: 'object',
+        description: 'A diagram object: a drawn element, a note, a group or a view reference.',
+        required: ['id', 'kind', 'bounds'],
+        properties: {
+          id: { type: 'string', minLength: 1, description: 'Unique within its view.' },
+          kind: { enum: ['element', 'note', 'group', 'view-ref'] },
+          bounds: { $ref: '#/$defs/bounds' },
+          parent: { type: 'string', description: 'id of the enclosing node in the same view' },
+          appearance: { $ref: '#/$defs/appearance' },
+          element: { type: 'string', description: "kind 'element': id of the element drawn" },
+          text: { type: 'string', description: "kind 'note'" },
+          name: { type: 'string', description: "kind 'group'" },
+          documentation: { type: 'string', description: "kind 'group'" },
+          view: { type: 'string', description: "kind 'view-ref': id of the view referenced" },
+        },
+        additionalProperties: false,
+        allOf: [
+          requiredForKind('element', 'element'),
+          requiredForKind('note', 'text'),
+          requiredForKind('group', 'name'),
+          requiredForKind('view-ref', 'view'),
+        ],
+      },
+      viewConnection: {
+        type: 'object',
+        description: 'A drawn relationship, or a plain line between notes and groups.',
+        required: ['id', 'kind', 'source', 'target'],
+        additionalProperties: false,
+        properties: {
+          id: { type: 'string', minLength: 1, description: 'Unique within its view.' },
+          kind: { enum: ['relationship', 'line'] },
+          source: { type: 'string', description: 'id of the source node' },
+          target: { type: 'string', description: 'id of the target node' },
+          bendpoints: {
+            type: 'array',
+            description: 'Route corners from source to target, in view coordinates.',
+            items: {
+              type: 'object',
+              required: ['x', 'y'],
+              additionalProperties: false,
+              properties: { x: { type: 'number' }, y: { type: 'number' } },
+            },
+          },
+          appearance: { $ref: '#/$defs/appearance' },
+          relationship: {
+            type: 'string',
+            description: "kind 'relationship': id of the relationship drawn",
+          },
+          name: { type: 'string', description: "kind 'line'" },
+        },
+        allOf: [requiredForKind('relationship', 'relationship')],
+      },
+      report: {
+        type: 'object',
+        description: 'A saved report definition.',
         required: ['id', 'name', 'kind'],
         properties: {
           id: { type: 'string' },
@@ -190,6 +328,11 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
       },
     },
   }
+}
+
+/** "When `kind` is `kind`, `field` is required." */
+function requiredForKind(kind: string, field: string): Record<string, unknown> {
+  return { if: { properties: { kind: { const: kind } } }, then: { required: [field] } }
 }
 
 /** The schema as it is written to disk. */

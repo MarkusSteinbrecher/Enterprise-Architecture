@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { emptyWorkspace, type Element, type Relationship, type Workspace } from '@/model'
 import { exportExchange, importExchangeXml, toCanonicalJson } from '@/io'
-import { smallWorkspace } from '@/test/fixtures'
+import { drawnWorkspace, smallWorkspace } from '@/test/fixtures'
 import { ModelStore } from './model-store'
 
 /** One property declared `date` — a type `PropertyValue` cannot carry itself. */
@@ -333,8 +333,8 @@ describe('a workspace survives the store intact', () => {
   /** Every optional field populated, so nothing can be dropped unnoticed. */
   function fullWorkspace(): Workspace {
     return {
-      ...smallWorkspace(),
-      views: [
+      ...drawnWorkspace(),
+      reports: [
         {
           id: 'view-1',
           name: 'Overview',

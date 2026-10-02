@@ -129,7 +129,9 @@ describe('canonical JSON import problems', () => {
   })
 
   it('reads a file with no elements at all', () => {
-    const result = fromCanonicalJson(JSON.stringify({ schemaVersion: 1, id: 'ws', name: 'Empty' }))
+    const result = fromCanonicalJson(
+      JSON.stringify({ schemaVersion: SCHEMA_VERSION, id: 'ws', name: 'Empty' }),
+    )
     expect(result.ok).toBe(true)
     expect(result.workspace?.elements).toEqual([])
     expect(result.workspace?.name).toBe('Empty')
@@ -232,21 +234,21 @@ describe('canonical JSON hardening (review findings, PR #17)', () => {
     expect(result.problems[0]).toMatchObject({ code: 'json.invalid-profile', subject: 'r' })
   })
 
-  it('reports malformed views and tag groups instead of dropping them silently', () => {
+  it('reports malformed saved reports and tag groups instead of dropping them silently', () => {
     const result = fromCanonicalJson(
       JSON.stringify({
         schemaVersion: SCHEMA_VERSION,
         id: 'ws',
         name: 'W',
-        views: [{ id: 'v1' }],
+        reports: [{ id: 'v1' }],
         tagGroups: [{ name: 'no id or tags' }],
       }),
     )
-    expect(result.workspace?.views).toEqual([])
+    expect(result.workspace?.reports).toEqual([])
     expect(result.workspace?.tagGroups).toEqual([])
     expect(result.problems.map((p) => p.code).sort()).toEqual([
+      'json.invalid-report',
       'json.invalid-tag-group',
-      'json.invalid-view',
     ])
   })
 
@@ -302,7 +304,7 @@ describe('junctions and exchange-safe ids (issue #36)', () => {
   it('ignores a junction kind on something that is not a junction, and says so', () => {
     const result = fromCanonicalJson(
       JSON.stringify({
-        schemaVersion: 1,
+        schemaVersion: SCHEMA_VERSION,
         id: 'ws',
         name: 'W',
         elements: [{ id: 'a', type: 'Capability', name: 'A', junctionKind: 'or' }],
@@ -318,7 +320,7 @@ describe('junctions and exchange-safe ids (issue #36)', () => {
   it('reports a junction kind that is neither and nor or', () => {
     const result = fromCanonicalJson(
       JSON.stringify({
-        schemaVersion: 1,
+        schemaVersion: SCHEMA_VERSION,
         id: 'ws',
         name: 'W',
         elements: [{ id: 'j', type: 'Junction', name: 'J', junctionKind: 'xor' }],
@@ -332,7 +334,7 @@ describe('junctions and exchange-safe ids (issue #36)', () => {
   it('warns once about ids the exchange format would have to rewrite', () => {
     const result = fromCanonicalJson(
       JSON.stringify({
-        schemaVersion: 1,
+        schemaVersion: SCHEMA_VERSION,
         id: 'ws',
         name: 'W',
         elements: [
