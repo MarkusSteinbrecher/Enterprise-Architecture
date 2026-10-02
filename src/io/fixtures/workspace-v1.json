@@ -14,10 +14,7 @@
           "phaseOut": "2033-01-01",
           "plan": "2024-01-01"
         },
-        "tags": [
-          "Core",
-          "Cloud target"
-        ],
+        "tags": ["Core", "Cloud target"],
         "technicalFit": 4,
         "timeClassification": "Invest"
       },
@@ -31,9 +28,7 @@
       "id": "cap-claim",
       "name": "Claim Handling",
       "profile": {
-        "tags": [
-          "Core"
-        ]
+        "tags": ["Core"]
       },
       "properties": {
         "owner": "Claims"
@@ -141,10 +136,7 @@
     {
       "colorView": "lifecycle",
       "filter": {
-        "facets": [
-          "layer:application",
-          "lifecycle:endOfLife"
-        ],
+        "facets": ["layer:application", "lifecycle:endOfLife"],
         "mode": "AND"
       },
       "id": "report-eol",

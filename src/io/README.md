@@ -3,17 +3,23 @@
 Interop is the differentiator (concept §3.3): ArchiMate-native round-tripping and
 git-friendly files are what LeanIX does not give you. Concept reference: §5.3.
 
-| File | What it owns |
-|---|---|
-| `canonical-json.ts` | the native format — deterministic, diffable |
-| `canonical-views.ts` | views and folders in the native format, and their repairs on read |
-| `exchange-format.ts` | Open Group ArchiMate Model Exchange Format, in and out |
-| `profile-properties.ts` | how the portfolio profile survives an exchange round trip |
-| `json-schema.ts` | the published schema, built from the metamodel |
-| `demo.ts`, `demo/archisurance.xml` | the bundled demo workspace |
-| `fixtures/junction-flow.xml` | a junction chain as a certified tool writes it |
-| `fixtures/workspace-v1.json` | a schema-1 file, written by the schema-1 writer — the migration's input |
-| `problems.ts` | structured import problems |
+| File                                       | What it owns                                                              |
+| ------------------------------------------ | ------------------------------------------------------------------------- |
+| `canonical-json.ts`                        | the native format — deterministic, diffable                               |
+| `canonical-views.ts`                       | views and folders in the native format, and their repairs on read         |
+| `exchange-format.ts`                       | Open Group ArchiMate Model Exchange Format, in and out                    |
+| `profile-properties.ts`                    | how the portfolio profile survives an exchange round trip                 |
+| `json-schema.ts`                           | the published schema, built from the metamodel                            |
+| `demo.ts`, `demo/archisurance.xml`         | the bundled demo workspace                                                |
+| `fixtures/junction-flow.xml`               | a junction chain as a certified tool writes it                            |
+| `fixtures/workspace-v1.json`               | a schema-1 file, written by the schema-1 writer — the migration's input   |
+| `exchange-views.ts`                        | diagrams and folders in the exchange format (#76)                         |
+| `exchange-xml.ts`                          | XML escaping and reading helpers both exchange modules share              |
+| `fixtures/claims-platform.archimate`       | an original Archi model (ours) with nesting, styles, bend-points, folders |
+| `fixtures/claims-platform.xml`             | that model **as Archi 5.10 exported it** — the #76 import fixture         |
+| `fixtures/unsupported-view-constructs.xml` | one of each view construct we cannot carry                                |
+| `fixtures/archi-bendpoint-attachments.xml` | Archi's own MIT test file (attribution inside)                            |
+| `problems.ts`                              | structured import problems                                                |
 
 ## Canonical JSON
 
@@ -52,12 +58,58 @@ their ArchiSurance model is not bundled either. It is fetched once and cached
 under `node_modules/.cache/`, so only the first run of a fresh checkout needs the
 network; `--refresh` re-fetches and `ARCHIMATE_XSD=<path>` uses your own copy.
 
-**Not read or written yet (#76):** the format's `views` (diagrams) and
-`organizations` (folders). The workspace holds both since #75, so both are
-reported in each direction rather than dropped silently: on import as skipped,
-on export as `exchange.views-not-written` / `exchange.folders-not-written`. Saved
-report definitions are not diagrams, and those do survive (see "What the format
-has no home for" below).
+`npm run validate:xsd` validates against `archimate3_Diagram.xsd`, which
+includes the View and Model schemas; CI runs it in its own job.
+
+### Diagrams and folders (#76)
+
+`exchange-views.ts` reads and writes `<views><diagrams>` and `<organizations>`.
+The mapping decisions:
+
+- **Nodes.** `Element` → element node, `Container` → group, `Label` → note, or a
+  view reference when it carries a `<viewRef>`. Connections are `Relationship`
+  or `Line`. The format places nodes absolutely; we place them relative to their
+  parent, so the boundary converts both ways. Bend-points are absolute on both
+  sides.
+- **What the format cannot hold is repaired on the way out, with a problem.** A
+  view reaching above or left of the origin is shifted (`exchange.view-shifted`);
+  fractional or zero sizes are rounded (`exchange.view-rounded`); a shape nested
+  in a note or view reference — only element and group nodes may contain others
+  — moves to the nearest real container at the same place
+  (`exchange.nesting-flattened`); a node or connection id that clashes with
+  another id in the file is renamed (`exchange.view-ids-renamed`).
+- **Archi's defaults are not overrides.** Archi writes its whole computed style
+  on every object — the type's fill, a grey outline, the platform font. A value
+  equal to Archi's default for that kind of object is read as no override, so an
+  imported view follows our theme except where someone actually chose a colour.
+  The defaults were measured from Archi 5.10's own export of every element type.
+  The platform font counts as the default only when most objects carry it.
+- **What `<style>` cannot say travels in the view's `archipelago.style`
+  property**: text alignment, text position, strikethrough, and a `literal` flag
+  on every style we wrote. A literal style is read as written — otherwise an
+  explicit override that happens to equal Archi's default (black text) would be
+  dropped on our own round trip.
+- **Folders.** Top-level items named like the fixed groups ("Business",
+  "Technology & Physical", "Relations", "Views", …) are those groups. Every other
+  item is a folder. Archi writes folder items without identifiers, so a folder's
+  id comes from its label path (`folder-application-claims-applications-legacy`)
+  — the same file always yields the same ids. We write `identifier` on folder
+  items, so our own ids survive. A top-level item outside any group goes where
+  most of its contents belong (`exchange.folder-group-inferred`).
+- **Not carried, and said so:** connection attachment points
+  (`exchange.connection-attachment-ignored`), connections ending on connections
+  (`exchange.connection-on-connection`), labels bound to a concept
+  (`exchange.label-binding-ignored`), node and view types other than the
+  standard ones, and anything referring to what the file does not hold.
+
+Archi omits from its export a connection drawn between a shape and a shape
+nested inside it — the nesting already shows the relationship — so an import
+has what the file has, which can be one fewer than the Archi model.
+
+Two parser details, both found here: numeric character references are decoded
+(`htmlEntities`), so Archi's `&#xD;&#xA;` line breaks arrive as line breaks; and
+the writer escapes CR (and LF and tab inside attributes), which every XML parser
+would otherwise normalise away.
 
 ### Where the two shapes disagree
 
@@ -70,7 +122,7 @@ travels beside the type as `Element.junctionKind` (absent means `and`, which is
 what an unqualified junction is) and the reader and writer map between the two.
 Before this, importing a file with a junction dropped the junction **and every
 relationship touching it**, so whole flow chains vanished, and exporting one
-produced XML that failed validation. Absent is the *only* spelling of `and` that
+produced XML that failed validation. Absent is the _only_ spelling of `and` that
 gets written: reading `AndJunction` back as an explicit `and` made two files
 holding one model differ byte for byte, which is what ADR 0004 exists to stop.
 
@@ -83,7 +135,7 @@ a relationship whose endpoint is not in the model is left out rather than writte
 as an unresolvable reference. `fromCanonicalJson` warns at import time, so the
 surprise lands when the file is read rather than when it is exported.
 
-**Property types.** The schema types a property *definition*, not each value, so
+**Property types.** The schema types a property _definition_, not each value, so
 `"pii": true` and `"capacity": 42` came back as the strings `"true"` and `"42"` —
 enough to break a filter and to make the next canonical-JSON export differ from
 the last. Definitions are now typed from the values the model actually holds. A
@@ -91,7 +143,7 @@ key used inconsistently (a number here, a word there) falls back to `string` and
 says so, because the format allows one type per key.
 
 Two halves of that were still lossy until the #37 review. A `number` value is
-only read as one when its *text* survives the trip: `Number` is not reversible,
+only read as one when its _text_ survives the trip: `Number` is not reversible,
 so `0912345678`, `1.50` and a twenty-digit account number all came back spelled
 differently and the next export wrote the new spelling. And the schema's
 `currency`, `date` and `time` have no counterpart in `PropertyValue` — their
@@ -113,7 +165,7 @@ travel as two namespaced model properties (`archipelago.reports`,
 `archipelago.tagGroups`) holding canonical JSON. Files written before schema 2
 carry reports as `archipelago.views`, which is still read. Tag groups identical to the
 shipped default are left out and restored on the way back, so an ordinary file
-carries neither. Model-level properties that are *not* ours are reported as
+carries neither. Model-level properties that are _not_ ours are reported as
 skipped: there is nowhere in a `Workspace` to keep them.
 
 `exportExchange` returns the XML **and** the problems; `exportExchangeXml` is the
@@ -132,7 +184,7 @@ Two details that are easy to get wrong. Keys are stripped on import from an
 **allowlist** of the keys this module reads, not by namespace prefix: a key a
 newer build wrote (or an architect borrowed the prefix for) has to survive as an
 ordinary property rather than being deleted. That allowlist was only half the
-job — a key this build *does* know but whose value it cannot read
+job — a key this build _does_ know but whose value it cannot read
 (`archipelago.timeClassification: "Banana"`) was stripped by one function and
 rejected by the other, and nothing reconciled them, so it vanished with
 `problems: []`. `readPortfolioProfile` now hands back what it could not read and
@@ -140,7 +192,7 @@ rejected by the other, and nothing reconciled them, so it vanished with
 
 And tags travel as a comma-separated list — readable in any tool's property sheet
 — unless a tag contains a comma or padding, in which case the whole list is
-written as a JSON array. The two forms have to be told apart *exactly*: testing
+written as a JSON array. The two forms have to be told apart _exactly_: testing
 the first character for `[` is a guess, and it was wrong for a tag spelled like
 the escaped form (`["a"]` came back as the single tag `a`; `[]` took
 `profile.tags` with it). One function, `asTagArray`, decides — and the writer
@@ -148,7 +200,7 @@ refuses the comma form for anything the reader would take as JSON.
 
 ## Import problems are data, not exceptions
 
-A real model file is usually *mostly* right: an unknown element type, a
+A real model file is usually _mostly_ right: an unknown element type, a
 relationship pointing at something that was deleted, a diagram we do not read yet.
 Refusing a 4,000-element file over any of those would be useless. An import
 returns what it could build plus a structured list of what it could not, and the
@@ -160,7 +212,7 @@ UI shows both.
 object on purpose: "Explore the demo" runs the same import path a user's own file
 runs, so the code that gets exercised most is the code that must not break.
 
-**Provenance.** It is an insurance landscape *in the spirit of* The Open Group's
+**Provenance.** It is an insurance landscape _in the spirit of_ The Open Group's
 ArchiSurance case study — 29 elements and 47 relationships authored for this
 project, carried over from the design prototype. The Open Group's own ArchiSurance
 model is copyrighted and the widely-mirrored copies are GPL-3.0; neither can be

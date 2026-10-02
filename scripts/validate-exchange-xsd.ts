@@ -1,26 +1,37 @@
 /**
  * Validates our exchange-format output against the Open Group's published XSDs.
  *
- * `xmllint` does the validating, so this needs libxml2 — which is why it is a
- * script you run rather than a CI step. `exchange-format.test.ts` covers the
- * structural rules offline.
+ * `xmllint` does the validating, so this needs libxml2: locally, it is a script
+ * you run; in CI, a job of its own installs libxml2 and runs it on every push
+ * (#76). The unit tests cover the structural rules offline.
  *
- * The XSD is **not vendored**: it is The Open Group's, and this repo is MIT —
- * the same reason their ArchiSurance model is not in here either. It is fetched
- * once and cached under `node_modules/.cache/`, so only the first run of a fresh
- * checkout needs the network and nobody's bad day takes the check down (#37).
- * Use `--refresh` to re-fetch, or point `ARCHIMATE_XSD` at your own copy.
+ * The XSDs are **not vendored**: they are The Open Group's, and this repo is MIT
+ * — the same reason their ArchiSurance model is not in here either. They are
+ * fetched once and cached under `node_modules/.cache/`, so only the first run of
+ * a fresh checkout needs the network and nobody's bad day takes the check down
+ * (#37). Use `--refresh` to re-fetch, or point `ARCHIMATE_XSD` at your own copy
+ * of `archimate3_Diagram.xsd` (with `archimate3_View.xsd` and
+ * `archimate3_Model.xsd` beside it).
+ *
+ * Validation is against the Diagram schema, which includes the View and Model
+ * schemas: it is the one that knows `<views>` (#76), and the one Archi names.
+ * CI runs this script in its own job (`.github/workflows/ci.yml`).
  *
  * Usage: npm run validate:xsd [-- --refresh]
  */
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { basename, dirname, join } from 'node:path'
+import { basename, join } from 'node:path'
 import { exportExchange, importExchangeXml } from '../src/io/exchange-format'
+import { drawnWorkspace } from '../src/test/fixtures'
 
-const XSD_URL = 'https://www.opengroup.org/xsd/archimate/3.1/archimate3_Model.xsd'
-const CACHE = join('node_modules', '.cache', 'archipelago', 'archimate3_Model.xsd')
+const XSD_BASE = 'https://www.opengroup.org/xsd/archimate/3.1/'
+/** The Diagram schema includes View, which includes Model; all three sit together. */
+const XSD_FILES = ['archimate3_Diagram.xsd', 'archimate3_View.xsd', 'archimate3_Model.xsd']
+const CACHE_DIR = join('node_modules', '.cache', 'archipelago')
+const CACHE = join(CACHE_DIR, 'archimate3_Diagram.xsd')
+const cached = () => XSD_FILES.every((file) => existsSync(join(CACHE_DIR, file)))
 
 const work = mkdtempSync(join(tmpdir(), 'archipelago-xsd-'))
 
@@ -37,29 +48,34 @@ async function schemaPath(): Promise<string> {
   }
 
   const refresh = process.argv.includes('--refresh')
-  if (!refresh && existsSync(CACHE)) {
+  if (!refresh && cached()) {
     const age = Math.round((Date.now() - statSync(CACHE).mtimeMs) / 86_400_000)
-    console.log(`Using the cached XSD (${age} day${age === 1 ? '' : 's'} old; --refresh to re-fetch)`)
+    console.log(
+      `Using the cached XSD (${age} day${age === 1 ? '' : 's'} old; --refresh to re-fetch)`,
+    )
     return CACHE
   }
 
-  console.log(`Fetching ${XSD_URL}`)
   try {
-    const response = await fetch(XSD_URL)
-    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
-    mkdirSync(dirname(CACHE), { recursive: true })
-    writeFileSync(CACHE, await response.text())
+    mkdirSync(CACHE_DIR, { recursive: true })
+    for (const file of XSD_FILES) {
+      console.log(`Fetching ${XSD_BASE}${file}`)
+      const response = await fetch(`${XSD_BASE}${file}`)
+      if (!response.ok) throw new Error(`${file}: ${response.status} ${response.statusText}`)
+      writeFileSync(join(CACHE_DIR, file), await response.text())
+    }
     return CACHE
   } catch (error) {
     const why = error instanceof Error ? error.message : String(error)
-    if (existsSync(CACHE)) {
+    if (cached()) {
       console.warn(`Could not fetch the XSD (${why}); falling back to the cached copy.`)
       return CACHE
     }
     console.error(
       `Could not fetch the XSD (${why}), and there is no cached copy.\n` +
         `The schema is The Open Group's and is not redistributed in this MIT repo. Either\n` +
-        `get online for one run, or download it from ${XSD_URL} and set ARCHIMATE_XSD to it.`,
+        `get online for one run, or download ${XSD_FILES.join(', ')} from ${XSD_BASE} into one\n` +
+        `folder and set ARCHIMATE_XSD to the Diagram one.`,
     )
     process.exit(1)
   }
@@ -77,6 +93,8 @@ const xsdPath = await schemaPath()
 const sources = [
   { label: 'bundled demo', path: 'src/io/demo/archisurance.xml' },
   { label: 'junction fixture', path: 'src/io/fixtures/junction-flow.xml' },
+  // Views, nesting, bend-points, styles and folders, as Archi 5.10 exported them (#76).
+  { label: 'Archi views and folders', path: 'src/io/fixtures/claims-platform.xml' },
 ]
 
 const targets: { label: string; path: string }[] = []
@@ -149,11 +167,41 @@ if (typed) {
   targets.push({ label: 'declared currency/date/time/number types, re-exported', path: typedPath })
 }
 
+// Our own views and folders, written by us (#76): nesting, a note, a group, a
+// view reference, bend-points, appearance, and the carried archipelago.style.
+{
+  const drawnPath = join(work, 'drawn-workspace.xml')
+  writeFileSync(drawnPath, exportExchange(drawnWorkspace()).xml)
+  targets.push({ label: 'drawn workspace, written by us', path: drawnPath })
+
+  // The awkward cases the writer has to repair: a view above and left of the
+  // origin, fractional positions, a shape nested in a note.
+  const awkward = drawnWorkspace()
+  const landscape = awkward.views.find((view) => view.id === 'view-landscape')
+  if (landscape) {
+    landscape.nodes = landscape.nodes.map((node) =>
+      node.id === 'n-k8s'
+        ? { ...node, bounds: { x: -40.5, y: -12.25, width: 0, height: 55.5 } }
+        : node,
+    )
+    landscape.nodes.push({
+      id: 'n-sticker',
+      kind: 'note',
+      text: 'nested in a note',
+      parent: 'n-note',
+      bounds: { x: 5, y: 5, width: 40, height: 20 },
+    })
+  }
+  const awkwardPath = join(work, 'awkward-views.xml')
+  writeFileSync(awkwardPath, exportExchange(awkward).xml)
+  targets.push({ label: 'views the writer had to shift, round and flatten', path: awkwardPath })
+}
+
 let failures = 0
 for (const target of targets) {
   try {
     execFileSync('xmllint', ['--noout', '--schema', xsdPath, target.path], { stdio: 'pipe' })
-    console.log(`✓ ${target.label} validates against the ArchiMate 3.1 exchange XSD`)
+    console.log(`✓ ${target.label} validates against the ArchiMate 3.1 exchange XSD (Diagram)`)
   } catch (error) {
     failures += 1
     const stderr = error instanceof Error && 'stderr' in error ? String(error.stderr) : ''
