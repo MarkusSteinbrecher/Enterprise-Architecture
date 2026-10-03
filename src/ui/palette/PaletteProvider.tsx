@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { useNavigate } from 'react-router-dom'
 import { toggleTheme } from '@/app/theme'
 import { useSaveWorkspace } from '@/ui/shell/use-save-workspace'
+import { useUndoRedo } from '@/ui/shell/use-undo-redo'
 import { CommandPalette, type PaletteAction } from './CommandPalette'
 import { PaletteContext } from './context'
-import { isModalOpen, isTypingTarget } from './typing-target'
+import { hasNativeUndo, historyShortcut, isModalOpen, isTypingTarget } from './typing-target'
 
 /**
  * Owns palette visibility and the global keyboard bindings.
@@ -14,12 +15,17 @@ import { isModalOpen, isTypingTarget } from './typing-target'
  * the inventory. Those single-letter bindings are suppressed while the palette is
  * open *and* while any text input has focus, which is the handoff's known
  * prototype gap #1.
+ *
+ * `⌘Z` undoes and `⇧⌘Z` / `Ctrl+Y` redo (#88), except in a text field, which
+ * keeps its own undo, and under a modal, whose form the model step would pull
+ * out from under.
  */
 
 export function PaletteProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const { saveFile } = useSaveWorkspace()
+  const { undoLabel, redoLabel, undo, redo } = useUndoRedo()
 
   const openPalette = useCallback(() => setOpen(true), [])
   const closePalette = useCallback(() => setOpen(false), [])
@@ -35,8 +41,11 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
       // tab demoted to reader (whose edits are memory-only, since its autosaver
       // is disabled) could still zero the one indicator that would have said so.
       { id: 'save', label: 'Save file', glyph: 'SV', run: () => void saveFile() },
+      // Present only when there is a step to take, named for what it would do.
+      ...(undoLabel ? [{ id: 'undo', label: `Undo: ${undoLabel}`, glyph: 'UN', run: undo }] : []),
+      ...(redoLabel ? [{ id: 'redo', label: `Redo: ${redoLabel}`, glyph: 'RE', run: redo }] : []),
     ],
-    [navigate, saveFile],
+    [navigate, saveFile, undoLabel, redoLabel, undo, redo],
   )
 
   useEffect(() => {
@@ -53,6 +62,15 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
         return
       }
 
+      const step = historyShortcut(event)
+      if (step) {
+        if (open || isModalOpen() || hasNativeUndo(event.target)) return
+        event.preventDefault()
+        if (step === 'undo') undo()
+        else redo()
+        return
+      }
+
       // Everything below is a bare single-letter binding.
       if (open || isModalOpen()) return
       if (event.metaKey || event.ctrlKey || event.altKey) return
@@ -64,7 +82,7 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [open, navigate])
+  }, [open, navigate, undo, redo])
 
   const value = useMemo(
     () => ({ open, openPalette, closePalette }),

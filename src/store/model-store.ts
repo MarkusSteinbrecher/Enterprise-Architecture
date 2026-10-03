@@ -167,6 +167,16 @@ export class ModelStore {
     return this.#redo.length > 0
   }
 
+  /** What `undo()` would revert, for the controls' tooltips (#88). */
+  get nextUndo(): CommandRecord | undefined {
+    return this.#undo.at(-1)
+  }
+
+  /** What `redo()` would re-apply. */
+  get nextRedo(): CommandRecord | undefined {
+    return this.#redo.at(-1)
+  }
+
   element(id: string): Element | undefined {
     return this.#elements.get(id)
   }

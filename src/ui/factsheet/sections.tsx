@@ -64,6 +64,9 @@ export function DocumentationSection({
       <SectionHeading label="Documentation" />
       {editing ? (
         <textarea
+          // Keyed on the model's text so an undo or redo shows here; left as it
+          // was, the old text would commit again on the next blur (#88).
+          key={documentation ?? ''}
           className="sheet__textarea"
           defaultValue={documentation ?? ''}
           onBlur={(event) => onChange(event.target.value)}
@@ -129,7 +132,9 @@ export function LifecycleSection({
                   className="lifecycle__input"
                   type="date"
                   aria-label={`${LIFECYCLE_PHASE_LABELS[candidate]} date`}
-                  defaultValue={profile?.lifecycle?.[candidate] ?? ''}
+                  // Controlled: it commits on every change, and an undo has to
+                  // show here rather than wait for the next one (#88).
+                  value={profile?.lifecycle?.[candidate] ?? ''}
                   onChange={(event) => onChange(candidate, event.target.value)}
                 />
               ) : (

@@ -191,6 +191,9 @@ export function ElementScreen() {
             <div style={{ minWidth: 0 }}>
               {editing ? (
                 <input
+                  // Keyed on the name so an undo or redo shows here; left as it
+                  // was, the undone name would commit again on the next blur (#88).
+                  key={element.name}
                   className="sheet__title-input"
                   aria-label="Name"
                   defaultValue={element.name}

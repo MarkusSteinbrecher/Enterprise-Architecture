@@ -37,3 +37,26 @@ export function isTypingTarget(target: EventTarget | null): boolean {
 export function isModalOpen(doc: Document = document): boolean {
   return doc.querySelector('[role="dialog"][aria-modal="true"]') !== null
 }
+
+/**
+ * Does this element have an undo of its own? Text fields do: ⌘Z there reverts
+ * the typing, and taking it for the model would lose that (#88). A `<select>`
+ * swallows letters but has no undo, so after picking a fit rating ⌘Z still
+ * reaches the model.
+ */
+export function hasNativeUndo(target: EventTarget | null): boolean {
+  return isTypingTarget(target) && !(target instanceof HTMLSelectElement)
+}
+
+/**
+ * Which history step a key press asks for: ⌘Z / Ctrl+Z undoes, ⇧⌘Z /
+ * Ctrl+Shift+Z redoes, and so does Ctrl+Y, the Windows spelling. ⌘Y is left
+ * alone: in macOS browsers it opens the history.
+ */
+export function historyShortcut(event: KeyboardEvent): 'undo' | 'redo' | undefined {
+  if (!(event.metaKey || event.ctrlKey) || event.altKey) return undefined
+  const key = event.key.toLowerCase()
+  if (key === 'z') return event.shiftKey ? 'redo' : 'undo'
+  if (key === 'y' && event.ctrlKey && !event.metaKey && !event.shiftKey) return 'redo'
+  return undefined
+}
