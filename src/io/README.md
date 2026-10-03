@@ -19,6 +19,9 @@ git-friendly files are what LeanIX does not give you. Concept reference: §5.3.
 | `fixtures/claims-platform.xml`             | that model **as Archi 5.10 exported it** — the #76 import fixture         |
 | `fixtures/unsupported-view-constructs.xml` | one of each view construct we cannot carry                                |
 | `fixtures/archi-bendpoint-attachments.xml` | Archi's own MIT test file (attribution inside)                            |
+| `archimate-native.ts`                      | Archi's own `.archimate` model file, read in (#13)                        |
+| `default-sizes.ts`                         | the size Archi draws a shape at when the file does not say                |
+| `fixtures/archi-coverage.{archimate,xml}`  | every `.archimate` edge case, and Archi 5.10's (XSD-invalid) export of it |
 | `problems.ts`                              | structured import problems                                                |
 
 ## Canonical JSON
@@ -234,3 +237,42 @@ model is copyrighted and the widely-mirrored copies are GPL-3.0; neither can be
 bundled in an MIT repository. Lifecycle dates and portfolio assessments are
 illustrative — they exist so the reports have colour, and they describe no real
 organisation.
+
+## Archi's model file (#13)
+
+`archimate-native.ts` reads a `.archimate` straight into the model rather than
+through the exchange format. `readWorkspaceFile` chooses it by the root's Archi
+namespace, not the extension. Archi's file is closer to the model than its
+export is, and the export loses things, so the readers deliberately disagree in
+a few places. `archimate-native.test.ts` reads each checked-in pair (one model
+saved by Archi, and exported by Archi) and allows only these differences:
+
+- **Archi's export loses things the native file has**: text alignment and
+  position, a shape's line width, a line's name, folder ids (the export has
+  none, so the exchange reader makes them up), and a connection between a shape
+  and one nested in it (Archi hides it on screen and leaves it out of the export).
+- **Default sizes.** A shape left at its default size is stored as `-1 × -1`.
+  Archi's export writes that through as `w="-1"`, which fails its own XSD. Both
+  readers resolve it from `default-sizes.ts` (`archimate.default-size`,
+  `exchange.default-size`). Archi computes the export's bendpoints from the
+  `-1`; the native reader computes them from the size Archi draws.
+- **Alpha.** Archi stores opacity as 0–255 and the exchange format as a whole
+  percent, so a native alpha moves by up to 1/255 on an exchange round trip.
+
+Bendpoints are stored relative to both ends: the i-th of n is drawn at the
+weighted mean of its source- and target-relative points, weight (i + 1)/(n + 1),
+from integer centres, floored. That is GEF's `RelativeBendpoint`, and the
+`v-rounding` view checks it against Archi's export at odd sizes.
+
+Archi codes are mapped: access `0`–`3` (absent is `0`, Write), text alignment
+`1`/`2`/`4`, text position `0`/`1`/`2`, viewpoint ids to the exchange names
+(taken from Archi's export of all 24), and an SWT font string to name, size and
+bold/italic. A specialization becomes the `Specialization` property, as Archi's
+export does.
+
+Each of these is reported, never silently dropped: sketches and canvases,
+images, a relationship that ends on a relationship, a connection that ends on a
+connection, display settings without a counterpart (gradient, …), connection
+routers, folder properties, relationship documentation, and the model's
+purpose. An Archi model saved with images is a zip archive, which is refused
+with an explanation (`archimate.archive-unsupported`).

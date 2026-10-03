@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" xmlns:canvas="http://www.archimatetool.com/archimate/canvas" name="Archi coverage" id="m-coverage" version="5.0.0">
+  <purpose>Edge cases for the .archimate reader (#13). Original test model for Archipelago (MIT).</purpose>
+  <folder name="Strategy" id="f-top-strategy" type="strategy">
+    <element xsi:type="archimate:Capability" name="Claims management" id="cap-claims"/>
+  </folder>
+  <folder name="Business" id="f-top-business" type="business">
+    <folder name="Actors" id="f-actors">
+      <documentation>Who does the work.</documentation>
+      <property key="owner" value="Business architecture"/>
+      <element xsi:type="archimate:BusinessActor" name="Adjuster" id="ba-adjuster">
+        <documentation>Assesses a claim.&#xD;&#xA;Second line.</documentation>
+        <property key="owner" value="Claims"/>
+        <property key="headcount" value="42"/>
+        <property key="empty"/>
+      </element>
+    </folder>
+    <element xsi:type="archimate:BusinessObject" name="Claim" id="bo-claim"/>
+    <element xsi:type="archimate:BusinessProcess" name="Assess" id="bp-assess"/>
+  </folder>
+  <folder name="Application" id="f-top-application" type="application">
+    <element xsi:type="archimate:ApplicationComponent" name="Claims Engine" id="ac-engine" profiles="p-micro"/>
+    <element xsi:type="archimate:DataObject" name="Claim Record" id="do-claim"/>
+  </folder>
+  <folder name="Technology &amp; Physical" id="f-top-technology" type="technology">
+    <element xsi:type="archimate:Node" name="Server" id="n-server"/>
+  </folder>
+  <folder name="Motivation" id="f-top-motivation" type="motivation">
+    <element xsi:type="archimate:Goal" name="Fast settlement" id="g-fast"/>
+    <element xsi:type="archimate:Driver" name="Cost pressure" id="d-cost"/>
+  </folder>
+  <folder name="Implementation &amp; Migration" id="f-top-implementation_migration" type="implementation_migration">
+    <element xsi:type="archimate:WorkPackage" name="Rollout" id="wp-rollout"/>
+  </folder>
+  <folder name="Other" id="f-top-other" type="other">
+    <element xsi:type="archimate:Junction" name="And" id="j-and"/>
+    <element xsi:type="archimate:Junction" name="Or" id="j-or" type="or"/>
+    <element xsi:type="archimate:Grouping" name="Claims domain" id="grp-claims"/>
+  </folder>
+  <folder name="Relations" id="f-top-relations" type="relations">
+    <folder name="Access" id="f-access">
+      <element xsi:type="archimate:AccessRelationship" id="r-write" source="bp-assess" target="bo-claim"/>
+      <element xsi:type="archimate:AccessRelationship" id="r-read" source="ac-engine" target="do-claim" accessType="1"/>
+      <element xsi:type="archimate:AccessRelationship" id="r-access" source="ba-adjuster" target="bo-claim" accessType="2"/>
+      <element xsi:type="archimate:AccessRelationship" id="r-readwrite" source="ac-engine" target="bo-claim" accessType="3"/>
+    </folder>
+    <element xsi:type="archimate:InfluenceRelationship" id="r-influence" name="Drives" source="d-cost" target="g-fast" strength="++">
+      <documentation>Cost pressure drives speed.</documentation>
+      <property key="confidence" value="high"/>
+    </element>
+    <element xsi:type="archimate:AssociationRelationship" id="r-directed" source="ba-adjuster" target="ac-engine" directed="true"/>
+    <element xsi:type="archimate:AssociationRelationship" id="r-on-relation" source="g-fast" target="r-influence"/>
+    <element xsi:type="archimate:AssignmentRelationship" id="r-assign" source="ba-adjuster" target="bp-assess"/>
+    <element xsi:type="archimate:AccessRelationship" id="r-assign-back" source="bp-assess" target="bo-claim" accessType="1"/>
+    <element xsi:type="archimate:TriggeringRelationship" id="r-and-or" source="j-and" target="j-or"/>
+    <element xsi:type="archimate:SpecializationRelationship" id="r-spec" source="do-claim" target="do-claim"/>
+    <element xsi:type="archimate:AggregationRelationship" id="r-group" source="grp-claims" target="ac-engine"/>
+  </folder>
+  <folder name="Views" id="f-top-diagrams" type="diagrams">
+    <folder name="Viewpoints" id="f-viewpoints">
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp application_cooperation" id="vp-application_cooperation" viewpoint="application_cooperation"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp application_usage" id="vp-application_usage" viewpoint="application_usage"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp business_process_cooperation" id="vp-business_process_cooperation" viewpoint="business_process_cooperation"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp capability" id="vp-capability" viewpoint="capability"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp goal_realization" id="vp-goal_realization" viewpoint="goal_realization"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp implementation_deployment" id="vp-implementation_deployment" viewpoint="implementation_deployment"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp implementation_migration" id="vp-implementation_migration" viewpoint="implementation_migration"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp information_structure" id="vp-information_structure" viewpoint="information_structure"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp layered" id="vp-layered" viewpoint="layered"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp migration" id="vp-migration" viewpoint="migration"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp motivation" id="vp-motivation" viewpoint="motivation"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp organization" id="vp-organization" viewpoint="organization"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp outcome_realization" id="vp-outcome_realization" viewpoint="outcome_realization"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp physical" id="vp-physical" viewpoint="physical"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp product" id="vp-product" viewpoint="product"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp project" id="vp-project" viewpoint="project"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp requirements_realization" id="vp-requirements_realization" viewpoint="requirements_realization"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp resource" id="vp-resource" viewpoint="resource"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp service_realization" id="vp-service_realization" viewpoint="service_realization"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp stakeholder" id="vp-stakeholder" viewpoint="stakeholder"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp strategy" id="vp-strategy" viewpoint="strategy"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp technology" id="vp-technology" viewpoint="technology"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp technology_usage" id="vp-technology_usage" viewpoint="technology_usage"/>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="vp value_stream" id="vp-value_stream" viewpoint="value_stream"/>
+    </folder>
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Edge cases" id="v-edges" connectionRouterType="2">
+      <documentation>Defaults, appearance and the things a reader must report.</documentation>
+      <property key="audience" value="Architects"/>
+      <child xsi:type="archimate:DiagramObject" id="o-adjuster" archimateElement="ba-adjuster" textAlignment="1" textPosition="2" fillColor="#ffe0a0" alpha="128" lineColor="#336699" lineAlpha="200" font="1|Helvetica|14.0|2|COCOA|1|Helvetica-Oblique" fontColor="#802020">
+        <bounds x="40" y="40" width="-1" height="-1"/>
+        <sourceConnection xsi:type="archimate:Connection" id="c-directed" source="o-adjuster" target="o-engine" archimateRelationship="r-directed" lineWidth="3" lineColor="#008000">
+          <bendpoint startX="100" startY="0" endX="-100" endY="80"/>
+        </sourceConnection>
+        <sourceConnection xsi:type="archimate:Connection" id="c-assign" source="o-adjuster" target="o-assess" archimateRelationship="r-assign"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-engine" targetConnections="c-directed" archimateElement="ac-engine" gradient="1">
+        <bounds x="300" y="120" width="160" height="70"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-assess" targetConnections="c-assign" archimateElement="bp-assess">
+        <bounds x="40" y="240" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-cost" archimateElement="d-cost">
+        <bounds x="600" y="40" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="c-influence" source="o-cost" target="o-fast" archimateRelationship="r-influence"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-fast" targetConnections="c-influence c-note-line" archimateElement="g-fast">
+        <bounds x="600" y="200" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:Group" id="o-group" name="Grouped" textAlignment="4">
+        <documentation>A visual group with documentation.</documentation>
+        <bounds x="40" y="360" width="-1" height="-1"/>
+        <child xsi:type="archimate:Note" id="o-note" textAlignment="2">
+          <bounds x="10" y="30" width="-1" height="-1"/>
+          <content>A note inside a group.</content>
+          <sourceConnection xsi:type="archimate:DiagramModelConnection" id="c-note-line" name="see" source="o-note" target="o-fast"/>
+          <sourceConnection xsi:type="archimate:DiagramModelConnection" id="c-note-conn" source="o-note" target="c-influence"/>
+        </child>
+      </child>
+      <child xsi:type="archimate:DiagramModelReference" id="o-ref" model="vp-layered">
+        <bounds x="800" y="40" width="-1" height="-1"/>
+      </child>
+      <child xsi:type="archimate:DiagramModelImage" id="o-image">
+        <bounds x="800" y="200" width="100" height="100"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-and" archimateElement="j-and">
+        <bounds x="500" y="320" width="-1" height="-1"/>
+        <sourceConnection xsi:type="archimate:Connection" id="c-and-or" source="o-and" target="o-or" archimateRelationship="r-and-or"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-or" targetConnections="c-and-or" archimateElement="j-or">
+        <bounds x="600" y="320" width="-1" height="-1"/>
+      </child>
+    </element>
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Rounding" id="v-rounding">
+      <child xsi:type="archimate:DiagramObject" id="q-from" archimateElement="bp-assess">
+        <bounds x="0" y="0" width="15" height="15"/>
+        <sourceConnection xsi:type="archimate:Connection" id="q-half" source="q-from" target="q-to" archimateRelationship="r-assign-back">
+          <bendpoint startX="0" startY="0" endX="0" endY="0"/>
+        </sourceConnection>
+        <sourceConnection xsi:type="archimate:Connection" id="q-thirds" source="q-from" target="q-to" archimateRelationship="r-assign-back">
+          <bendpoint startX="3" startY="40" endX="-50" endY="41"/>
+          <bendpoint startX="10" startY="-7" endX="-31" endY="5"/>
+        </sourceConnection>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="q-to" targetConnections="q-half q-thirds" archimateElement="bo-claim">
+        <bounds x="101" y="63" width="121" height="57"/>
+      </child>
+    </element>
+    <element xsi:type="archimate:SketchModel" name="A sketch" id="s-sketch"/>
+    <element xsi:type="canvas:CanvasModel" name="A canvas" id="cv-canvas"/>
+  </folder>
+  <profile name="Microservice" id="p-micro" conceptType="ApplicationComponent"/>
+</archimate:model>

@@ -18,7 +18,12 @@ test('the model tree shows folders, moves by drag and drop, and follows the sele
 }) => {
   await startEmpty(page)
   await importWorkspaceFile(page, FIXTURE)
-  await expect(page.getByRole('dialog', { name: 'Import' })).toBeHidden()
+  // Archi exports the model's purpose as its documentation, which has nowhere
+  // to go yet, so the report stays open to say so (#13).
+  const dialog = page.getByRole('dialog', { name: 'Import' })
+  await expect(dialog).toContainText('documentation was not imported')
+  await dialog.getByRole('button', { name: 'Done' }).click()
+  await expect(dialog).toBeHidden()
 
   const tree = page.getByRole('tree', { name: 'Model tree' })
   const item = (name: string | RegExp) => tree.getByRole('treeitem', { name, exact: true })

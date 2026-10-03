@@ -1,5 +1,6 @@
 import type { Workspace } from '@/model'
 import { fromCanonicalJson } from './canonical-json'
+import { importArchimate, isArchiModel } from './archimate-native'
 import { importExchangeXml } from './exchange-format'
 import {
   downloadText,
@@ -145,21 +146,41 @@ export async function openWorkspaceFile(): Promise<OpenedFile | undefined> {
 }
 
 /**
- * Parse a file the user handed us, choosing the reader by extension and falling
- * back to sniffing the first non-whitespace character — a `.txt` that starts
- * with `<` is still an exchange file, and refusing it would be pedantry.
+ * Parse a file the user handed us, choosing the reader by what the file holds:
+ * Archi's own model file, the exchange format, or canonical JSON. The extension
+ * only breaks a tie — Archi writes `.archimate`, but a `.xml` can be either kind
+ * of XML, and a `.txt` that starts with `<` is still a model (#13).
  */
 export async function readWorkspaceFile(file: File): Promise<ImportResult> {
   const text = await file.text()
+  // An Archi model with images in it is saved as a zip archive, not as XML. Its
+  // signature is four ASCII bytes, so the decoded text starts with them too.
+  if (text.startsWith('PK\u0003\u0004')) {
+    return {
+      ok: false,
+      problems: [
+        problem(
+          'error',
+          'archimate.archive-unsupported',
+          `“${file.name}” is an Archi model saved with images, which Archi stores as a compressed archive. Archipelago cannot open those yet: in Archi, remove the images or use File → Export → Model to Open Exchange File, and open that instead.`,
+          { file: file.name },
+        ),
+      ],
+    }
+  }
+
   const name = file.name.toLowerCase()
-
-  if (name.endsWith('.json')) return fromCanonicalJson(text, file.name)
-  if (name.endsWith('.xml') || name.endsWith('.archimate'))
-    return importExchangeXml(text, file.name)
-
   const first = text.trimStart()[0]
-  if (first === '<') return importExchangeXml(text, file.name)
-  if (first === '{') return fromCanonicalJson(text, file.name)
+
+  if (first === '<') {
+    return isArchiModel(text)
+      ? importArchimate(text, file.name)
+      : importExchangeXml(text, file.name)
+  }
+  if (first === '{' || name.endsWith('.json')) return fromCanonicalJson(text, file.name)
+  // An XML extension on something that is not XML gets the XML reader's diagnosis.
+  if (name.endsWith('.archimate')) return importArchimate(text, file.name)
+  if (name.endsWith('.xml')) return importExchangeXml(text, file.name)
 
   return {
     ok: false,
@@ -167,7 +188,7 @@ export async function readWorkspaceFile(file: File): Promise<ImportResult> {
       problem(
         'error',
         'file.unrecognised',
-        `“${file.name}” is neither canonical JSON nor ArchiMate exchange XML.`,
+        `“${file.name}” is neither canonical JSON, an Archi model, nor ArchiMate exchange XML.`,
         { file: file.name },
       ),
     ],
