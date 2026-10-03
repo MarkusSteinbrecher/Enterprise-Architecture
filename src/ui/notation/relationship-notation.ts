@@ -90,3 +90,18 @@ export function relationshipHeads(
     ...(notation.target ? { target: notation.target } : {}),
   }
 }
+
+/**
+ * The text drawn at the middle of a relationship: its name and, on an
+ * influence, its modifier (#84) — `++` alone, or `Drives (++)` beside a name.
+ */
+export function relationshipLabel({
+  name,
+  modifier,
+}: {
+  name?: string
+  modifier?: string
+}): string | undefined {
+  if (name && modifier) return `${name} (${modifier})`
+  return name || modifier || undefined
+}

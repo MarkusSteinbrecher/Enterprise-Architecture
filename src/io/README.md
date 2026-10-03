@@ -113,8 +113,8 @@ would otherwise normalise away.
 
 ### Where the two shapes disagree
 
-Four places where the schema and the model do not line up. Each was losing data
-until #36; each is now a mapping with a test.
+Five places where the schema and the model do not line up. Each was losing data
+until it was found (#36, #84); each is now a mapping with a test.
 
 **Junctions.** The catalogue follows the specification, which has one `Junction`;
 the schema has two concrete types, `AndJunction` and `OrJunction`. So the flavour
@@ -125,6 +125,18 @@ relationship touching it**, so whole flow chains vanished, and exporting one
 produced XML that failed validation. Absent is the _only_ spelling of `and` that
 gets written: reading `AndJunction` back as an explicit `and` made two files
 holding one model differ byte for byte, which is what ADR 0004 exists to stop.
+
+**Type-specific relationship attributes** (#84). The schema defines three
+attributes on one relationship type each: `accessType` on Access, `isDirected`
+on Association and `modifier` on Influence. The model carries the last two on
+`Relationship` beside the type (`accessType` predates them and lives in the
+profile). Absent `isDirected` means undirected, which is the schema default, so
+`false`, `0` and absent are one model and only `isDirected="true"` is written.
+`modifier` is any text — the schema's type is a union with `xs:string`, so `7`
+is as valid as `++`. An attribute on the wrong type, or a value the schema
+forbids, is an `ImportProblem` on the way in and on the way out; it is never
+carried, because a model holding one exports a file the XSD rejects. The test
+fixture `relationship-attributes.xml` was written by Archi itself.
 
 **Identifiers.** `xs:ID` values are XML names: no leading digit, no punctuation
 beyond `_.-`. Ids we generate always qualify (`el-<uuid>`), but the native reader
@@ -178,7 +190,8 @@ Profiles serialise as namespaced ArchiMate properties (`archipelago.lifecycle.pl
 `archipelago.timeClassification`, …). A tool that has never heard of Archipelago
 sees a few extra key/value pairs and round-trips them untouched; we read them back
 into typed fields. `accessType` is the exception — it is a native attribute of the
-Access relationship, so it is written as one.
+Access relationship, so it is written as one (see _Type-specific relationship
+attributes_ above).
 
 Two details that are easy to get wrong. Keys are stripped on import from an
 **allowlist** of the keys this module reads, not by namespace prefix: a key a

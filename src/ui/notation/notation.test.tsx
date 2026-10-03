@@ -11,7 +11,12 @@ import {
 import { ElementShape } from './ElementShape'
 import { RelationshipLine } from './RelationshipLine'
 import { ELEMENT_NOTATION, notationColourGroup } from './element-notation'
-import { DASH, RELATIONSHIP_NOTATION, relationshipHeads } from './relationship-notation'
+import {
+  DASH,
+  RELATIONSHIP_NOTATION,
+  relationshipHeads,
+  relationshipLabel,
+} from './relationship-notation'
 import { quoteFamily, wrapText, type Measure } from './text'
 
 function svg(node: ReactElement): SVGSVGElement {
@@ -183,6 +188,13 @@ describe('relationship styles', () => {
     expect(directed.querySelector('[data-end="target"]')!.getAttribute('data-head')).toBe(
       'half-arrow',
     )
+  })
+
+  it('labels a relationship with its name, its modifier, or both', () => {
+    expect(relationshipLabel({})).toBeUndefined()
+    expect(relationshipLabel({ name: 'Drives' })).toBe('Drives')
+    expect(relationshipLabel({ modifier: '++' })).toBe('++')
+    expect(relationshipLabel({ name: 'Drives', modifier: '++' })).toBe('Drives (++)')
   })
 
   it('shows an influence modifier as a label', () => {

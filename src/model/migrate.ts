@@ -12,10 +12,13 @@ import { SCHEMA_VERSION, type Workspace } from './workspace'
  * - **1 → 2** (#75): `views` held saved report definitions. They move to
  *   `reports`, and `views` now holds hand-drawn diagrams, of which a v1
  *   workspace has none. Folders are new.
+ * - **2 → 3** (#84): only the version moves. Relationships gained optional
+ *   `isDirected` and `modifier`, which a schema-2 workspace never has.
  */
 export function migrateWorkspace(stored: Workspace): Workspace {
   const version = stored.schemaVersion || SCHEMA_VERSION
-  if (version >= 2) return stored
+  if (version >= SCHEMA_VERSION) return stored
+  if (version >= 2) return { ...stored, schemaVersion: SCHEMA_VERSION }
   const legacy = stored as unknown as LegacyV1
   return {
     ...stored,

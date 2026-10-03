@@ -15,8 +15,11 @@ import type { Layer } from './layers'
  *
  * - 1: elements, relationships, saved report views (`views`), tag groups.
  * - 2: hand-drawn views (`views`), folders; saved report views move to `reports`.
+ * - 3: `Relationship.isDirected` and `Relationship.modifier` (#84). No shape
+ *   change for older data; the bump is so a schema-2 build warns that it drops
+ *   them rather than losing them quietly.
  */
-export const SCHEMA_VERSION = 2
+export const SCHEMA_VERSION = 3
 
 /** ArchiMate properties are string-valued in the exchange format; numbers and
  *  booleans are allowed here and serialise as their string form. */
@@ -64,6 +67,17 @@ export interface Relationship {
   name?: string
   properties: Record<string, PropertyValue>
   profile?: RelationshipProfile
+  /**
+   * Association only: drawn with a half-arrowhead at the target. Absent means
+   * undirected, which is what the specification says an unqualified association
+   * is, so `false` is never stored.
+   */
+  isDirected?: true
+  /**
+   * Influence only: the strength the specification annotates the line with —
+   * `+`, `++`, `-`, `--`, or any other text, such as a number on a scale.
+   */
+  modifier?: string
   /** Folder the relationship is filed in; absent means the Relations group. */
   folder?: string
 }
