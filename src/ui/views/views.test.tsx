@@ -224,13 +224,6 @@ describe('the view screen', () => {
     expect(screen.getByRole('button', { name: 'Export SVG' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Export PNG' })).toBeDisabled()
   })
-
-  it('lists the views from the left nav', async () => {
-    renderApp(fixture(), { route: '/views' })
-    const link = await screen.findByRole('link', { name: 'Claims landscape' })
-    expect(link).toHaveAttribute('href', `/view/${LANDSCAPE}`)
-    expect(screen.getByRole('link', { name: /Views/ })).toBeInTheDocument()
-  })
 })
 
 describe('Appears in views', () => {

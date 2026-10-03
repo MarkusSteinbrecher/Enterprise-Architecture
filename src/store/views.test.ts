@@ -218,6 +218,84 @@ describe('folders (#75)', () => {
   })
 })
 
+describe('moveToFolder (#80)', () => {
+  it('moves an element in one undoable command, and canonical JSON says so deterministically', () => {
+    const s = store()
+    s.addFolder({ id: 'f-legacy', name: 'Legacy', root: 'application' })
+    const before = model(s)
+    const history = s.history.length
+
+    expect(s.moveToFolder('element', 'app-claims', { folder: 'f-legacy' })).toBe(true)
+    expect(s.history).toHaveLength(history + 1)
+    expect(s.history.at(-1)?.label).toBe('Moved “Claim Handling Engine”')
+    const after = model(s)
+    expect(after).not.toBe(before)
+    const element = JSON.parse(after).elements.find((e: { id: string }) => e.id === 'app-claims')
+    expect(element.folder).toBe('f-legacy')
+
+    // Undo is byte-identical to before, redo to after.
+    s.undo()
+    expect(model(s)).toBe(before)
+    s.redo()
+    expect(model(s)).toBe(after)
+
+    // And the same move from the same start always serialises the same.
+    const again = store()
+    again.addFolder({ id: 'f-legacy', name: 'Legacy', root: 'application' })
+    again.moveToFolder('element', 'app-claims', { folder: 'f-legacy' })
+    expect(model(again)).toBe(after)
+  })
+
+  it('moves to a group by dropping the folder field, not by storing the group', () => {
+    const s = store()
+    expect(s.moveToFolder('element', 'app-claims', { root: 'application' })).toBe(true)
+    expect(s.element('app-claims')).not.toHaveProperty('folder')
+    expect(s.moveToFolder('relationship', 'rel-app-proc', { root: 'relations' })).toBe(true)
+    expect(s.relationship('rel-app-proc')).not.toHaveProperty('folder')
+    expect(s.moveToFolder('view', 'view-landscape', { root: 'views' })).toBe(true)
+    expect(s.view('view-landscape')).not.toHaveProperty('folder')
+    expect(s.history.at(-1)?.label).toBe('Moved view “Claims landscape”')
+  })
+
+  it('moves a folder between parent and group, with exactly one of the two set', () => {
+    const s = store()
+    expect(s.moveToFolder('folder', 'f-core', { root: 'business' })).toBe(true)
+    expect(s.folder('f-core')).toMatchObject({ root: 'business' })
+    expect(s.folder('f-core')).not.toHaveProperty('parent')
+    expect(s.moveToFolder('folder', 'f-core', { folder: 'f-business' })).toBe(true)
+    expect(s.folder('f-core')).toMatchObject({ parent: 'f-business' })
+    expect(s.folder('f-core')).not.toHaveProperty('root')
+    expect(s.history.at(-1)?.label).toBe('Moved folder “Core processes”')
+  })
+
+  it('refuses a move it cannot make, and dispatches nothing', () => {
+    const s = store()
+    const before = model(s)
+    // Another group.
+    expect(s.moveToFolder('element', 'app-claims', { folder: 'f-core' })).toBe(false)
+    expect(s.moveToFolder('element', 'app-claims', { root: 'business' })).toBe(false)
+    expect(s.moveToFolder('relationship', 'rel-app-proc', { root: 'views' })).toBe(false)
+    expect(s.moveToFolder('view', 'view-landscape', { folder: 'f-relations' })).toBe(false)
+    expect(s.moveToFolder('folder', 'f-core', { root: 'application' })).toBe(false)
+    // Into itself, or into its own subfolder.
+    expect(s.moveToFolder('folder', 'f-business', { folder: 'f-business' })).toBe(false)
+    expect(s.moveToFolder('folder', 'f-business', { folder: 'f-core' })).toBe(false)
+    // Unknown destination or subject.
+    expect(s.moveToFolder('element', 'app-claims', { folder: 'f-gone' })).toBe(false)
+    expect(s.moveToFolder('element', 'no-such-element', { root: 'application' })).toBe(false)
+    expect(s.history).toHaveLength(0)
+    expect(model(s)).toBe(before)
+  })
+
+  it('puts nothing on the undo stack for a move to where the object already is', () => {
+    const s = store()
+    expect(s.moveToFolder('element', 'app-claims', { folder: 'f-apps' })).toBe(true)
+    expect(s.moveToFolder('folder', 'f-core', { folder: 'f-business' })).toBe(true)
+    expect(s.moveToFolder('folder', 'f-business', { root: 'business' })).toBe(true)
+    expect(s.history).toHaveLength(0)
+  })
+})
+
 describe('a view the validator would flag (#75)', () => {
   it('still loses the drawing of a relationship deleted with its element', () => {
     const workspace = drawnWorkspace()

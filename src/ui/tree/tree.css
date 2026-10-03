@@ -1,0 +1,173 @@
+/*
+ * The model tree panel (#80). No handoff section covers it, so it borrows the
+ * left nav's vocabulary: surface background, hairline border, 9.5px mono section
+ * label, Space Grotesk names, mono type codes, no radius, no shadow.
+ */
+
+.model-tree {
+  width: 264px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--bd);
+  background: var(--surface);
+}
+
+.model-tree__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 12px 8px 8px 12px;
+}
+
+.model-tree__tools {
+  display: flex;
+  gap: 2px;
+}
+
+.model-tree__tool {
+  height: 22px;
+  padding: 0 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  font: 500 9.5px/1 var(--font-mono);
+  color: var(--ink2);
+}
+
+.model-tree__tool:hover:not(:disabled) {
+  border-color: var(--bd);
+  background: var(--panel);
+}
+
+.model-tree__tool:disabled {
+  color: var(--ink3);
+  opacity: 0.6;
+}
+
+.model-tree__filter {
+  margin: 0 8px 6px;
+  height: 26px;
+  padding: 0 8px;
+  background: var(--panel);
+  border: 1px solid var(--bd);
+  font: 400 12px/1 var(--font-ui);
+}
+
+.model-tree__filter:hover {
+  border-color: var(--bd2);
+}
+
+.model-tree__count {
+  padding: 0 12px 6px;
+  font: 500 9.5px/1 var(--font-mono);
+  color: var(--ink3);
+}
+
+.model-tree__scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 12px;
+}
+
+/* The tree keeps focus; the active row shows it. */
+.model-tree__scroll:focus-visible {
+  outline: none;
+}
+
+.tree__virtual {
+  position: relative;
+}
+
+.tree__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding-right: 8px;
+  border-left: 2px solid transparent;
+  font: 400 12.5px/1 var(--font-ui);
+  color: var(--ink);
+  cursor: default;
+  user-select: none;
+}
+
+.tree__row:hover {
+  background: var(--panel);
+}
+
+.tree__row--root {
+  font-weight: 500;
+}
+
+.tree__row--selected {
+  background: var(--panel);
+  border-left-color: var(--accent);
+}
+
+.model-tree__scroll:focus-visible .tree__row--active {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.tree__row--cut {
+  opacity: 0.45;
+}
+
+.tree__row--drop {
+  outline: 1px dashed var(--accent);
+  outline-offset: -1px;
+  background: var(--panel);
+}
+
+.tree__caret {
+  width: 10px;
+  flex: none;
+  font: 400 9.5px/1 var(--font-mono);
+  color: var(--ink3);
+  text-align: center;
+}
+
+.tree__glyph--folder {
+  width: 13px;
+  height: 10px;
+  flex: none;
+  border: 1px solid var(--ink3);
+  border-top-width: 3px;
+}
+
+.tree__code {
+  flex: none;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 2px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--bd2);
+  font: 500 7px/1 var(--font-mono);
+  color: var(--ink2);
+}
+
+.tree__code--view {
+  border-color: var(--ink3);
+}
+
+.tree__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree__rename {
+  flex: 1;
+  min-width: 0;
+  height: 20px;
+  padding: 0 4px;
+  background: var(--paper);
+  border: 1px solid var(--accent);
+  font: 400 12.5px/1 var(--font-ui);
+}

@@ -203,6 +203,10 @@
   min-height: 0;
 }
 
+.shell__body--tree {
+  grid-template-columns: var(--w-nav) auto 1fr;
+}
+
 .nav {
   border-right: 1px solid var(--bd);
   background: var(--surface);

@@ -11,6 +11,7 @@ user-facing flow **works**; the Playwright specs in [`../e2e/`](../e2e) verify t
 | Faceted filtering and saved searches          | [`inventory-filter.md`](inventory-filter.md) | `../e2e/inventory-filter.spec.ts` |
 | Editing an element and the save-state counter | [`fact-sheet-edit.md`](fact-sheet-edit.md)   | `../e2e/fact-sheet-edit.spec.ts`  |
 | Export → reimport → export                    | [`file-round-trip.md`](file-round-trip.md)   | `../e2e/file-round-trip.spec.ts`  |
+| Model tree: folders, moving, selection        | [`model-tree.md`](model-tree.md)             | `../e2e/model-tree.spec.ts`       |
 
 The scripts cover the same ground as the specs on purpose, plus the parts a machine cannot
 judge: whether the wrong thing flashed on screen, whether a message reads as alarming,

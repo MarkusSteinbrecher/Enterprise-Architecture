@@ -115,7 +115,10 @@ export function describeCommand(command: Command): string {
     case 'add-relationship':
       return `Added ${command.relationship.type} relation`
     case 'update-relationship':
-      return `Updated ${command.after.type} relation`
+      return command.before.folder !== command.after.folder &&
+        sameApartFromFolder(command.before, command.after)
+        ? `Moved ${command.after.type} relation`
+        : `Updated ${command.after.type} relation`
     case 'remove-relationship':
       return `Removed ${command.relationship.type} relation`
     case 'add-view':
@@ -143,6 +146,9 @@ export function describeCommand(command: Command): string {
 
 /** Name the fields that actually changed — vague history entries are useless. */
 function describeElementUpdate(before: Element, after: Element): string {
+  if (before.folder !== after.folder && sameApartFromFolder(before, after)) {
+    return `Moved “${after.name}”`
+  }
   const changed: string[] = []
   if (before.name !== after.name) changed.push('name')
   if (before.documentation !== after.documentation) changed.push('documentation')
@@ -172,7 +178,17 @@ function describeViewUpdate(before: View, after: View): string {
     return `Removed ${plural(unlinked, 'connection')} from ${name}`
   }
   if (before.name !== after.name) return `Renamed view “${before.name}” to ${name}`
+  if (before.folder !== after.folder && sameApartFromFolder(before, after)) {
+    return `Moved view ${name}`
+  }
   return `Edited view ${name}`
+}
+
+/** True when two versions of an object differ in nothing but their folder. */
+function sameApartFromFolder<T extends { folder?: string }>(before: T, after: T): boolean {
+  const { folder: _before, ...restBefore } = before
+  const { folder: _after, ...restAfter } = after
+  return JSON.stringify(restBefore) === JSON.stringify(restAfter)
 }
 
 function countNew(items: readonly { id: string }[], against: readonly { id: string }[]): number {

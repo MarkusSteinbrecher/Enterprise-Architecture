@@ -7,7 +7,7 @@ import { test, expect, importWorkspaceFile, startEmpty } from './support'
  *
  * The fixture is our own model exported by real Archi 5.10 (#76). It is
  * imported through the app's import dialog, as a user's file would be, and the
- * view is reached by the way a user would reach it: the nav, then the list.
+ * view is reached by the way a user would reach it: through the model tree.
  *
  * Counts are hard-coded from the fixture rather than read from `src/`, so the
  * test cannot agree with the code by construction.
@@ -22,8 +22,10 @@ test('an imported Archi view draws every node and connection', async ({ page }, 
   // An import with nothing to report closes its own dialog.
   await expect(page.getByRole('dialog', { name: 'Import' })).toBeHidden()
 
-  await page.getByRole('link', { name: /^Views/ }).click()
-  await page.getByRole('link', { name: 'Claims landscape' }).click()
+  const tree = page.getByRole('tree', { name: 'Model tree' })
+  await tree.getByRole('treeitem', { name: 'Views', exact: true }).click()
+  await tree.getByRole('treeitem', { name: 'Landscapes' }).click()
+  await tree.getByRole('treeitem', { name: 'Claims landscape' }).click()
   await expect(page.getByRole('heading', { name: 'Claims landscape' })).toBeVisible()
 
   const canvas = page.getByTestId('view-canvas')

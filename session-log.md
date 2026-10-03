@@ -1,5 +1,21 @@
 # Session Log
 
+## 2026-10-03 (cont.) — #80 implemented (model tree)
+
+**#80, model tree with folders** (`src/ui/tree/`). The tree is a panel between the left nav and the content, as in Archi. The nav's **Model tree** item shows or hides it, and that choice is kept in localStorage. It lists the nine fixed groups, the user's folders and every element, relationship and view, with folders first and then names in a fixed `en` sort. The `/views` stopgap and its nav item are gone. Decisions carried forward:
+
+- **Moves go through one store command, `moveToFolder`.** It keeps each kind in its own group, refuses a folder dropped into itself, and puts no command on the undo stack for a move to where the object already is. The rules live in `src/model/folders.ts`, so the tree refuses a drop while the user is still dragging.
+- **Selection lives in the URL.** The tree highlights the fact sheet's element, the open view, or the element selected on the canvas. To make that work, the canvas now mirrors its selection into `?element=` (replace, not push) and follows that parameter when the tree changes it.
+- **Activating an element** on a view that draws it selects it on the canvas; anywhere else it opens the fact sheet. Relationships have no screen of their own yet, so activating one does nothing.
+- **`aria-activedescendant`, not roving tabindex,** because the rows are windowed above 150. The tree scrolls the active row into its window.
+- **Broken folders are never dropped:** a member whose folder is missing sits in its own group, and a folder on a cycle or with a missing parent sits at the top of Other.
+- The tree's announcements use a polite live region rather than `role="status"`, because that role is the save notice's and the journeys find the notice by it.
+- Keyboard moves use cut and paste (⌘X/⌘V), so drag and drop has a keyboard equivalent.
+
+708 unit tests and 18 e2e journeys pass (1 skipped, as before). Mutation-checked: windowing, scroll to the active row, Right to expand, type-ahead not reaching the global shortcuts, and the canvas-to-URL sync.
+
+Open: the app has no undo button or ⌘Z yet, so moves and folder edits can only be undone at the store level (worth an issue). Next: #13; #84 is a bug.
+
 ## 2026-10-03 (cont.) — #79 merged
 
 PR #86 (#79, read-only view canvas) merged to main; issue #79 closed. Local `feat/79-view-canvas` deleted. The remote `feat/77-notation` and `feat/79-view-canvas` branches are still there (the assistant was not permitted to delete them). The `assets/*` screenshot branches stay because the PR bodies link to their images.
