@@ -329,7 +329,8 @@ describe('exchange hardening (review findings, PR #17)', () => {
 describe('junctions (issue #36)', () => {
   const importFixture = () => {
     const result = importExchangeXml(junctionFlowXml, 'junction-flow.xml')
-    expect(result.problems).toEqual([])
+    // The fixture describes itself in the model's documentation, which has nowhere to go.
+    expect(result.problems.map((p) => p.code)).toEqual(['exchange.model-documentation-skipped'])
     return result.workspace!
   }
 

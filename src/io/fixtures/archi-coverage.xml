@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" identifier="m-coverage">
+  <name xml:lang="en">Archi coverage</name>
+  <documentation xml:lang="en">Edge cases for the .archimate reader (#13). Original test model for Archipelago (MIT).</documentation>
+  <elements>
+    <element identifier="cap-claims" xsi:type="Capability">
+      <name xml:lang="en">Claims management</name>
+    </element>
+    <element identifier="bo-claim" xsi:type="BusinessObject">
+      <name xml:lang="en">Claim</name>
+    </element>
+    <element identifier="bp-assess" xsi:type="BusinessProcess">
+      <name xml:lang="en">Assess</name>
+    </element>
+    <element identifier="ba-adjuster" xsi:type="BusinessActor">
+      <name xml:lang="en">Adjuster</name>
+      <documentation xml:lang="en">Assesses a claim.&#xD;
+Second line.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value xml:lang="en">Claims</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="en">42</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value xml:lang="en" />
+        </property>
+      </properties>
+    </element>
+    <element identifier="ac-engine" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Claims Engine</name>
+      <properties>
+        <property propertyDefinitionRef="specialization">
+          <value xml:lang="en">Microservice</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="do-claim" xsi:type="DataObject">
+      <name xml:lang="en">Claim Record</name>
+    </element>
+    <element identifier="n-server" xsi:type="Node">
+      <name xml:lang="en">Server</name>
+    </element>
+    <element identifier="g-fast" xsi:type="Goal">
+      <name xml:lang="en">Fast settlement</name>
+    </element>
+    <element identifier="d-cost" xsi:type="Driver">
+      <name xml:lang="en">Cost pressure</name>
+    </element>
+    <element identifier="wp-rollout" xsi:type="WorkPackage">
+      <name xml:lang="en">Rollout</name>
+    </element>
+    <element identifier="j-and" xsi:type="AndJunction">
+      <name xml:lang="en">And</name>
+    </element>
+    <element identifier="j-or" xsi:type="OrJunction">
+      <name xml:lang="en">Or</name>
+    </element>
+    <element identifier="grp-claims" xsi:type="Grouping">
+      <name xml:lang="en">Claims domain</name>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="r-influence" source="d-cost" target="g-fast" xsi:type="Influence" modifier="++">
+      <name xml:lang="en">Drives</name>
+      <documentation xml:lang="en">Cost pressure drives speed.</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-4">
+          <value xml:lang="en">high</value>
+        </property>
+      </properties>
+    </relationship>
+    <relationship identifier="r-directed" source="ba-adjuster" target="ac-engine" xsi:type="Association" isDirected="true" />
+    <relationship identifier="r-on-relation" source="g-fast" target="r-influence" xsi:type="Association" />
+    <relationship identifier="r-assign" source="ba-adjuster" target="bp-assess" xsi:type="Assignment" />
+    <relationship identifier="r-assign-back" source="bp-assess" target="bo-claim" xsi:type="Access" accessType="Read" />
+    <relationship identifier="r-and-or" source="j-and" target="j-or" xsi:type="Triggering" />
+    <relationship identifier="r-spec" source="do-claim" target="do-claim" xsi:type="Specialization" />
+    <relationship identifier="r-group" source="grp-claims" target="ac-engine" xsi:type="Aggregation" />
+    <relationship identifier="r-write" source="bp-assess" target="bo-claim" xsi:type="Access" accessType="Write" />
+    <relationship identifier="r-read" source="ac-engine" target="do-claim" xsi:type="Access" accessType="Read" />
+    <relationship identifier="r-access" source="ba-adjuster" target="bo-claim" xsi:type="Access" accessType="Access" />
+    <relationship identifier="r-readwrite" source="ac-engine" target="bo-claim" xsi:type="Access" accessType="ReadWrite" />
+  </relationships>
+  <organizations>
+    <item>
+      <label xml:lang="en">Strategy</label>
+      <item identifierRef="cap-claims" />
+    </item>
+    <item>
+      <label xml:lang="en">Business</label>
+      <item>
+        <label xml:lang="en">Actors</label>
+        <documentation xml:lang="en">Who does the work.</documentation>
+        <item identifierRef="ba-adjuster" />
+      </item>
+      <item identifierRef="bo-claim" />
+      <item identifierRef="bp-assess" />
+    </item>
+    <item>
+      <label xml:lang="en">Application</label>
+      <item identifierRef="ac-engine" />
+      <item identifierRef="do-claim" />
+    </item>
+    <item>
+      <label xml:lang="en">Technology &amp; Physical</label>
+      <item identifierRef="n-server" />
+    </item>
+    <item>
+      <label xml:lang="en">Motivation</label>
+      <item identifierRef="g-fast" />
+      <item identifierRef="d-cost" />
+    </item>
+    <item>
+      <label xml:lang="en">Implementation &amp; Migration</label>
+      <item identifierRef="wp-rollout" />
+    </item>
+    <item>
+      <label xml:lang="en">Other</label>
+      <item identifierRef="j-and" />
+      <item identifierRef="j-or" />
+      <item identifierRef="grp-claims" />
+    </item>
+    <item>
+      <label xml:lang="en">Relations</label>
+      <item>
+        <label xml:lang="en">Access</label>
+        <item identifierRef="r-write" />
+        <item identifierRef="r-read" />
+        <item identifierRef="r-access" />
+        <item identifierRef="r-readwrite" />
+      </item>
+      <item identifierRef="r-influence" />
+      <item identifierRef="r-directed" />
+      <item identifierRef="r-on-relation" />
+      <item identifierRef="r-assign" />
+      <item identifierRef="r-assign-back" />
+      <item identifierRef="r-and-or" />
+      <item identifierRef="r-spec" />
+      <item identifierRef="r-group" />
+    </item>
+    <item>
+      <label xml:lang="en">Views</label>
+      <item>
+        <label xml:lang="en">Viewpoints</label>
+        <item identifierRef="vp-application_cooperation" />
+        <item identifierRef="vp-application_usage" />
+        <item identifierRef="vp-business_process_cooperation" />
+        <item identifierRef="vp-capability" />
+        <item identifierRef="vp-goal_realization" />
+        <item identifierRef="vp-implementation_deployment" />
+        <item identifierRef="vp-implementation_migration" />
+        <item identifierRef="vp-information_structure" />
+        <item identifierRef="vp-layered" />
+        <item identifierRef="vp-migration" />
+        <item identifierRef="vp-motivation" />
+        <item identifierRef="vp-organization" />
+        <item identifierRef="vp-outcome_realization" />
+        <item identifierRef="vp-physical" />
+        <item identifierRef="vp-product" />
+        <item identifierRef="vp-project" />
+        <item identifierRef="vp-requirements_realization" />
+        <item identifierRef="vp-resource" />
+        <item identifierRef="vp-service_realization" />
+        <item identifierRef="vp-stakeholder" />
+        <item identifierRef="vp-strategy" />
+        <item identifierRef="vp-technology" />
+        <item identifierRef="vp-technology_usage" />
+        <item identifierRef="vp-value_stream" />
+      </item>
+      <item identifierRef="v-edges" />
+      <item identifierRef="v-rounding" />
+    </item>
+  </organizations>
+  <propertyDefinitions>
+    <propertyDefinition identifier="specialization" type="string">
+      <name>Specialization</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-5" type="string">
+      <name>audience</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-4" type="string">
+      <name>confidence</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-3" type="string">
+      <name>empty</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-2" type="string">
+      <name>headcount</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-1" type="string">
+      <name>owner</name>
+    </propertyDefinition>
+  </propertyDefinitions>
+  <views>
+    <diagrams>
+      <view identifier="vp-application_cooperation" xsi:type="Diagram" viewpoint="Application Cooperation">
+        <name xml:lang="en">vp application_cooperation</name>
+      </view>
+      <view identifier="vp-application_usage" xsi:type="Diagram" viewpoint="Application Usage">
+        <name xml:lang="en">vp application_usage</name>
+      </view>
+      <view identifier="vp-business_process_cooperation" xsi:type="Diagram" viewpoint="Business Process Cooperation">
+        <name xml:lang="en">vp business_process_cooperation</name>
+      </view>
+      <view identifier="vp-capability" xsi:type="Diagram" viewpoint="Capability Map">
+        <name xml:lang="en">vp capability</name>
+      </view>
+      <view identifier="vp-goal_realization" xsi:type="Diagram" viewpoint="Goal Realization">
+        <name xml:lang="en">vp goal_realization</name>
+      </view>
+      <view identifier="vp-implementation_deployment" xsi:type="Diagram" viewpoint="Implementation and Deployment">
+        <name xml:lang="en">vp implementation_deployment</name>
+      </view>
+      <view identifier="vp-implementation_migration" xsi:type="Diagram" viewpoint="Implementation and Migration">
+        <name xml:lang="en">vp implementation_migration</name>
+      </view>
+      <view identifier="vp-information_structure" xsi:type="Diagram" viewpoint="Information Structure">
+        <name xml:lang="en">vp information_structure</name>
+      </view>
+      <view identifier="vp-layered" xsi:type="Diagram" viewpoint="Layered">
+        <name xml:lang="en">vp layered</name>
+      </view>
+      <view identifier="vp-migration" xsi:type="Diagram" viewpoint="Migration">
+        <name xml:lang="en">vp migration</name>
+      </view>
+      <view identifier="vp-motivation" xsi:type="Diagram" viewpoint="Motivation">
+        <name xml:lang="en">vp motivation</name>
+      </view>
+      <view identifier="vp-organization" xsi:type="Diagram" viewpoint="Organization">
+        <name xml:lang="en">vp organization</name>
+      </view>
+      <view identifier="vp-outcome_realization" xsi:type="Diagram" viewpoint="Outcome Realization">
+        <name xml:lang="en">vp outcome_realization</name>
+      </view>
+      <view identifier="vp-physical" xsi:type="Diagram" viewpoint="Physical">
+        <name xml:lang="en">vp physical</name>
+      </view>
+      <view identifier="vp-product" xsi:type="Diagram" viewpoint="Product">
+        <name xml:lang="en">vp product</name>
+      </view>
+      <view identifier="vp-project" xsi:type="Diagram" viewpoint="Project">
+        <name xml:lang="en">vp project</name>
+      </view>
+      <view identifier="vp-requirements_realization" xsi:type="Diagram" viewpoint="Requirements Realization">
+        <name xml:lang="en">vp requirements_realization</name>
+      </view>
+      <view identifier="vp-resource" xsi:type="Diagram" viewpoint="Resource Map">
+        <name xml:lang="en">vp resource</name>
+      </view>
+      <view identifier="vp-service_realization" xsi:type="Diagram" viewpoint="Service Realization">
+        <name xml:lang="en">vp service_realization</name>
+      </view>
+      <view identifier="vp-stakeholder" xsi:type="Diagram" viewpoint="Stakeholder">
+        <name xml:lang="en">vp stakeholder</name>
+      </view>
+      <view identifier="vp-strategy" xsi:type="Diagram" viewpoint="Strategy">
+        <name xml:lang="en">vp strategy</name>
+      </view>
+      <view identifier="vp-technology" xsi:type="Diagram" viewpoint="Technology">
+        <name xml:lang="en">vp technology</name>
+      </view>
+      <view identifier="vp-technology_usage" xsi:type="Diagram" viewpoint="Technology Usage">
+        <name xml:lang="en">vp technology_usage</name>
+      </view>
+      <view identifier="vp-value_stream" xsi:type="Diagram" viewpoint="Value Stream">
+        <name xml:lang="en">vp value_stream</name>
+      </view>
+      <view identifier="v-edges" xsi:type="Diagram">
+        <name xml:lang="en">Edge cases</name>
+        <documentation xml:lang="en">Defaults, appearance and the things a reader must report.</documentation>
+        <properties>
+          <property propertyDefinitionRef="propid-5">
+            <value xml:lang="en">Architects</value>
+          </property>
+        </properties>
+        <node identifier="o-adjuster" elementRef="ba-adjuster" xsi:type="Element" x="40" y="40" w="-1" h="-1">
+          <style>
+            <fillColor r="255" g="224" b="160" a="50" />
+            <lineColor r="51" g="102" b="153" a="100" />
+            <font name="Helvetica" size="14" style="italic">
+              <color r="128" g="32" b="32" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-engine" elementRef="ac-engine" xsi:type="Element" x="300" y="120" w="160" h="70">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-assess" elementRef="bp-assess" xsi:type="Element" x="40" y="240" w="120" h="55">
+          <style>
+            <fillColor r="255" g="255" b="181" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-cost" elementRef="d-cost" xsi:type="Element" x="600" y="40" w="120" h="55">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-fast" elementRef="g-fast" xsi:type="Element" x="600" y="200" w="120" h="55">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-group" x="40" y="360" w="-1" h="-1" xsi:type="Container">
+          <label xml:lang="en">Grouped</label>
+          <documentation xml:lang="en">A visual group with documentation.</documentation>
+          <style>
+            <fillColor r="210" g="215" b="215" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <node identifier="o-note" xsi:type="Label" x="50" y="390" w="-1" h="-1">
+            <label xml:lang="en">A note inside a group.</label>
+            <style>
+              <fillColor r="255" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+        </node>
+        <node identifier="o-ref" xsi:type="Label" x="800" y="40" w="-1" h="-1">
+          <label xml:lang="en">vp layered</label>
+          <style>
+            <fillColor r="220" g="235" b="235" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <viewRef ref="vp-layered" />
+        </node>
+        <node identifier="o-and" elementRef="j-and" xsi:type="Element" x="500" y="320" w="-1" h="-1">
+          <style>
+            <fillColor r="0" g="0" b="0" a="100" />
+            <lineColor r="0" g="0" b="0" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-or" elementRef="j-or" xsi:type="Element" x="600" y="320" w="-1" h="-1">
+          <style>
+            <fillColor r="0" g="0" b="0" a="100" />
+            <lineColor r="0" g="0" b="0" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <connection identifier="c-directed" relationshipRef="r-directed" xsi:type="Relationship" source="o-adjuster" target="o-engine">
+          <style lineWidth="3">
+            <lineColor r="0" g="128" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="210" y="137" />
+        </connection>
+        <connection identifier="c-assign" relationshipRef="r-assign" xsi:type="Relationship" source="o-adjuster" target="o-assess">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-influence" relationshipRef="r-influence" xsi:type="Relationship" source="o-cost" target="o-fast">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-note-line" xsi:type="Line" source="o-note" target="o-fast">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-note-conn" xsi:type="Line" source="o-note" target="c-influence">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-and-or" relationshipRef="r-and-or" xsi:type="Relationship" source="o-and" target="o-or">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+      </view>
+      <view identifier="v-rounding" xsi:type="Diagram">
+        <name xml:lang="en">Rounding</name>
+        <node identifier="q-from" elementRef="bp-assess" xsi:type="Element" x="0" y="0" w="15" h="15">
+          <style>
+            <fillColor r="255" g="255" b="181" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="q-to" elementRef="bo-claim" xsi:type="Element" x="101" y="63" w="121" h="57">
+          <style>
+            <fillColor r="255" g="255" b="181" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <connection identifier="q-half" relationshipRef="r-assign-back" xsi:type="Relationship" source="q-from" target="q-to">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="84" y="49" />
+        </connection>
+        <connection identifier="q-thirds" relationshipRef="r-assign-back" xsi:type="Relationship" source="q-from" target="q-to">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="43" y="75" />
+          <bendpoint x="92" y="64" />
+        </connection>
+      </view>
+    </diagrams>
+  </views>
+</model>

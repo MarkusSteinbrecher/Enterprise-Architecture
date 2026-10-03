@@ -17,7 +17,8 @@ import archiXml from './fixtures/relationship-attributes.xml?raw'
 function fromArchi(): Workspace {
   const result = importExchangeXml(archiXml, 'relationship-attributes.xml')
   if (!result.workspace) throw new Error('fixture did not import')
-  expect(result.problems).toEqual([])
+  // The model's purpose, which Archi exports as its documentation, is all it reports.
+  expect(result.problems.map((p) => p.code)).toEqual(['exchange.model-documentation-skipped'])
   return result.workspace
 }
 
