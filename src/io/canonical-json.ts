@@ -116,8 +116,12 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
     )
   }
 
+  // `legacy` is the v1 shape, whose `views` were reports; anything older than
+  // this build is upgraded, so a v2 file saves as the current version (#90)
+  // just as a v2 workspace reloaded from IndexedDB does (`migrateWorkspace`).
   const legacy = schemaVersion > 0 && schemaVersion < 2
-  if (legacy) {
+  const upgraded = schemaVersion > 0 && schemaVersion < SCHEMA_VERSION
+  if (upgraded) {
     problems.push(
       problem(
         'info',
@@ -238,7 +242,7 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
     id: typeof raw.id === 'string' && raw.id ? raw.id : 'ws-imported',
     name: typeof raw.name === 'string' && raw.name ? raw.name : 'Imported workspace',
     // A migrated file is now the current shape; a newer one keeps its number.
-    schemaVersion: legacy || !schemaVersion ? SCHEMA_VERSION : schemaVersion,
+    schemaVersion: upgraded || !schemaVersion ? SCHEMA_VERSION : schemaVersion,
     elements,
     relationships,
     views,

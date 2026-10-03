@@ -142,6 +142,21 @@ describe('an attribute on the wrong type, or with a value the schema forbids (#8
     }
   })
 
+  it.each([
+    ['surrounding spaces', ' ++ ', '++'],
+    ['only spaces', '   ', undefined],
+  ])('writes a modifier with %s as it will read back, and says so (#90)', (_, modifier, back) => {
+    const workspace = fromArchi()
+    byId(workspace, 'r-satisfaction-faster').modifier = modifier
+    const { xml, problems } = exportExchange(workspace)
+    expect(problems.map((p) => [p.code, p.subject])).toEqual([
+      ['exchange.relationship-modifier-trimmed', 'r-satisfaction-faster'],
+    ])
+    const reread = importExchangeXml(xml)
+    expect(reread.problems).toEqual([])
+    expect(byId(reread.workspace!, 'r-satisfaction-faster').modifier).toBe(back)
+  })
+
   it('does not write a misplaced attribute, and says so', () => {
     const workspace = fromArchi()
     const flow = byId(workspace, 'r-claim-policy')
@@ -193,7 +208,7 @@ describe('canonical JSON guards (#84)', () => {
     expect(result.problems.map((p) => p.code)).toEqual(['json.relationship-attribute-ignored'])
   })
 
-  it('keeps an accessType that sits beside other profile fields on the wrong type', () => {
+  it('drops an accessType on the wrong type but keeps the profile fields beside it', () => {
     const result = readOne({
       type: 'Serving',
       profile: { accessType: 'Read', supportType: 'Leading' },
