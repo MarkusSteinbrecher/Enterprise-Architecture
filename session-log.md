@@ -1,5 +1,11 @@
 # Session Log
 
+## 2026-10-03 (cont.) — #79 merged
+
+PR #86 (#79, read-only view canvas) merged to main; issue #79 closed. Local `feat/79-view-canvas` deleted. The remote `feat/77-notation` and `feat/79-view-canvas` branches are still there (the assistant was not permitted to delete them). The `assets/*` screenshot branches stay because the PR bodies link to their images.
+
+Next: #80 (model tree, replacing the `/views` stopgap); #84 is a small import bug.
+
 ## 2026-10-03 (cont.) — #77 merged; #79 implemented
 
 **#79, read-only view canvas** (`src/ui/views/`). `/view/:id` (keyed on the id) draws a hand-drawn view with the #77 notation. It covers nesting, notes, groups, view references, connections with bend-points and Archi-style chopbox anchors, and appearance overrides. It has fit, zoom (buttons, ⌘/Ctrl + wheel, pinch), pan (drag, wheel), an outline mini-map, selection with a summary panel and "Open fact sheet", and SVG/PNG export. The fact sheet's "Appears in" now lists the views that draw the element and opens each with the element selected (`?element=`). A stopgap `/views` list and a "Views" nav item stand in until the #80 model tree. Decisions carried forward:
