@@ -30,9 +30,11 @@ implementation detail), absent and empty values are omitted rather than written
 as `null`, and the file ends with a newline. Bend-points are the one array kept
 in written order, because their order is the route.
 
-Reading migrates. A schema-1 file's `views` were saved report definitions; they
-arrive as `reports`, with an `info` problem (`json.schema-upgraded`) saying the
-next save writes the new format. Stored IndexedDB snapshots are migrated by
+Reading migrates. A file from an older schema is read at the current version,
+with an `info` problem (`json.schema-upgraded`) saying the next save writes the
+new format, so a schema-2 build reading it warns before dropping what it does
+not know (#90). A schema-1 file's `views` were saved report definitions; they
+arrive as `reports`. Stored IndexedDB snapshots are migrated by
 `migrateWorkspace` on load.
 
 The published schema is `design/archipelago-workspace.schema.json`, generated

@@ -24,6 +24,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSy
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { exportExchange, importExchangeXml } from '../src/io/exchange-format'
+import type { Workspace } from '../src/model'
 import { drawnWorkspace } from '../src/test/fixtures'
 
 const XSD_BASE = 'https://www.opengroup.org/xsd/archimate/3.1/'
@@ -97,15 +98,23 @@ const sources = [
   { label: 'Archi views and folders', path: 'src/io/fixtures/claims-platform.xml' },
 ]
 
+/**
+ * A fixture that does not import fails the run. Skipping it instead would pass
+ * without validating what it exists to check (#90).
+ */
+function imported(xml: string, label: string): Workspace {
+  const { workspace } = importExchangeXml(xml, label)
+  if (!workspace) {
+    console.error(`✗ ${label} did not import, so nothing it covers was validated.`)
+    process.exit(1)
+  }
+  return workspace
+}
+
 const targets: { label: string; path: string }[] = []
 for (const source of sources) {
   targets.push(source)
-  const imported = importExchangeXml(readFileSync(source.path, 'utf8'), source.path)
-  if (!imported.workspace) {
-    console.error(`${source.path} did not import.`)
-    process.exit(1)
-  }
-  const { xml, problems } = exportExchange(imported.workspace)
+  const { xml, problems } = exportExchange(imported(readFileSync(source.path, 'utf8'), source.path))
   for (const problem of problems) {
     console.log(`  ${problem.severity}: ${problem.message}`)
   }
@@ -117,8 +126,8 @@ for (const source of sources) {
 // A workspace whose ids are not XML names — legal in canonical JSON, illegal as
 // xs:ID. The writer rewrites them; the schema is the judge of whether it did so
 // well enough (#36).
-const demo = importExchangeXml(readFileSync(sources[0]!.path, 'utf8')).workspace
-if (demo) {
+{
+  const demo = imported(readFileSync(sources[0]!.path, 'utf8'), sources[0]!.path)
   const original = demo.elements[0]!.id
   const rename = (id: string) => (id === original ? '9 odd:id' : id)
   const { xml } = exportExchange({
@@ -139,7 +148,7 @@ if (demo) {
 // The declared property types the model now carries (#37, finding 6): the XSD is
 // the judge of whether `currency`, `date` and `time` are spellings it accepts on
 // a propertyDefinition, and it is the only thing that can say so.
-const typed = importExchangeXml(
+const typed = imported(
   `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m-typed">
   <name xml:lang="en">Declared types</name>
   <elements>
@@ -160,12 +169,11 @@ const typed = importExchangeXml(
     <propertyDefinition identifier="p4" type="number"><name xml:lang="en">assetNo</name></propertyDefinition>
   </propertyDefinitions>
 </model>`,
-).workspace
-if (typed) {
-  const typedPath = join(work, 'declared-property-types.xml')
-  writeFileSync(typedPath, exportExchange(typed).xml)
-  targets.push({ label: 'declared currency/date/time/number types, re-exported', path: typedPath })
-}
+  'declared property types',
+)
+const typedPath = join(work, 'declared-property-types.xml')
+writeFileSync(typedPath, exportExchange(typed).xml)
+targets.push({ label: 'declared currency/date/time/number types, re-exported', path: typedPath })
 
 // Our own views and folders, written by us (#76): nesting, a note, a group, a
 // view reference, bend-points, appearance, and the carried archipelago.style.
@@ -178,20 +186,22 @@ if (typed) {
   // origin, fractional positions, a shape nested in a note.
   const awkward = drawnWorkspace()
   const landscape = awkward.views.find((view) => view.id === 'view-landscape')
-  if (landscape) {
-    landscape.nodes = landscape.nodes.map((node) =>
-      node.id === 'n-k8s'
-        ? { ...node, bounds: { x: -40.5, y: -12.25, width: 0, height: 55.5 } }
-        : node,
-    )
-    landscape.nodes.push({
-      id: 'n-sticker',
-      kind: 'note',
-      text: 'nested in a note',
-      parent: 'n-note',
-      bounds: { x: 5, y: 5, width: 40, height: 20 },
-    })
+  if (!landscape) {
+    console.error('✗ drawnWorkspace() has no view-landscape, so the awkward views were not built.')
+    process.exit(1)
   }
+  landscape.nodes = landscape.nodes.map((node) =>
+    node.id === 'n-k8s'
+      ? { ...node, bounds: { x: -40.5, y: -12.25, width: 0, height: 55.5 } }
+      : node,
+  )
+  landscape.nodes.push({
+    id: 'n-sticker',
+    kind: 'note',
+    text: 'nested in a note',
+    parent: 'n-note',
+    bounds: { x: 5, y: 5, width: 40, height: 20 },
+  })
   const awkwardPath = join(work, 'awkward-views.xml')
   writeFileSync(awkwardPath, exportExchange(awkward).xml)
   targets.push({ label: 'views the writer had to shift, round and flatten', path: awkwardPath })
@@ -201,12 +211,10 @@ if (typed) {
 // wrote and written back by us.
 {
   const archi = readFileSync(join('src', 'io', 'fixtures', 'relationship-attributes.xml'), 'utf8')
-  const attributes = importExchangeXml(archi).workspace
-  if (attributes) {
-    const attributesPath = join(work, 'relationship-attributes.xml')
-    writeFileSync(attributesPath, exportExchange(attributes).xml)
-    targets.push({ label: 'isDirected and modifier, re-exported', path: attributesPath })
-  }
+  const attributes = imported(archi, 'relationship-attributes.xml')
+  const attributesPath = join(work, 'relationship-attributes.xml')
+  writeFileSync(attributesPath, exportExchange(attributes).xml)
+  targets.push({ label: 'isDirected and modifier, re-exported', path: attributesPath })
 }
 
 let failures = 0
