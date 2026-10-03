@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { COMPLETENESS_CONFIG } from '@/model'
 import { useModelSelector } from '@/store'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
@@ -29,6 +29,7 @@ const PLANNED: PlannedItem[] = [
 ]
 
 export function LeftNav() {
+  const location = useLocation()
   const stats = useModelSelector((store) => {
     let missingOwner = 0
     for (const element of store.elements()) {
@@ -37,6 +38,7 @@ export function LeftNav() {
     }
     return {
       elements: store.elementCount,
+      views: store.viewCount,
       relationships: store.relationshipCount,
       health: store.health(),
       missingOwner,
@@ -63,6 +65,17 @@ export function LeftNav() {
       >
         <span className="nav__glyph" aria-hidden="true" />
         <span className="nav__text">Dependency graph</span>
+      </NavLink>
+      <NavLink
+        to="/views"
+        // A single view is part of "Views" too, so the item stays lit on /view/:id.
+        className={({ isActive }) =>
+          `nav__item${isActive || location.pathname.startsWith('/view/') ? ' nav__item--active' : ''}`
+        }
+      >
+        <span className="nav__glyph" aria-hidden="true" />
+        <span className="nav__text">Views</span>
+        <span className="nav__badge">{stats.views}</span>
       </NavLink>
 
       {PLANNED.map((item) => (

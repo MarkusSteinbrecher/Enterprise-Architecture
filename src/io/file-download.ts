@@ -28,7 +28,10 @@ export function serialiseWorkspace(workspace: Workspace, format: ExportFormat): 
 }
 
 export function downloadText(fileName: string, contents: string, mimeType: string): void {
-  const blob = new Blob([contents], { type: `${mimeType};charset=utf-8` })
+  downloadBlob(fileName, new Blob([contents], { type: `${mimeType};charset=utf-8` }))
+}
+
+export function downloadBlob(fileName: string, blob: Blob): void {
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = url

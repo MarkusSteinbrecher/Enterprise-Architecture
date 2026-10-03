@@ -70,6 +70,11 @@ export function ElementScreen() {
         entries,
         completeness: completenessDetail(element, { relationCount: relationships.length }),
         history: s.historyFor(id),
+        // Display order only, never serialised: the explicit locale keeps it stable across machines.
+        views: s
+          .viewsDrawing(id)
+          .map((drawn) => ({ id: drawn.id, name: drawn.name }))
+          .sort((a, b) => a.name.localeCompare(b.name, 'en')),
         candidates: s.elementList().filter((candidate) => candidate.id !== id),
         elementById: (other: string) => s.element(other),
         tagToken: (tag: string) => tagColourToken(s.snapshot(), tag),
@@ -346,9 +351,22 @@ export function ElementScreen() {
 
           <section>
             <SectionHeading label="Appears in" />
-            <p className="appears-in__empty">
-              No saved views yet. Reports save their definitions here in phase 2.
-            </p>
+            {view.views.length === 0 ? (
+              <p className="appears-in__empty">Not drawn in any view.</p>
+            ) : (
+              <div className="appears-in">
+                {view.views.map((drawn) => (
+                  <Link
+                    key={drawn.id}
+                    className="appears-in__row"
+                    to={`/view/${encodeURIComponent(drawn.id)}?element=${encodeURIComponent(element.id)}`}
+                  >
+                    <span className="appears-in__glyph" aria-hidden="true" />
+                    {drawn.name || '(unnamed view)'}
+                  </Link>
+                ))}
+              </div>
+            )}
           </section>
 
           <section>

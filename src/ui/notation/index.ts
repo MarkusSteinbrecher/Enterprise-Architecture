@@ -13,3 +13,5 @@ export {
   type Pattern,
 } from './relationship-notation'
 export { wrapText, measureText } from './text'
+export { NoteShape, GroupShape, ViewReferenceShape, MissingShape } from './DiagramObjectShapes'
+export { NotationText } from './NotationText'
