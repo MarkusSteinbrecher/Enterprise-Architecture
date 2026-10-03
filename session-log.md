@@ -1,5 +1,20 @@
 # Session Log
 
+## 2026-10-03 — #78 merged (ADR 0006 accepted); #77 implemented
+
+**#77, ArchiMate 3.2 notation** (`src/ui/notation/`): `ElementShape` for all 61 element types, in the rectangle figure and in the alternative figure where ArchiMate defines one. `RelationshipLine` draws all 11 relationship types, plus the access-direction, directed-association and influence-label variants. The dev-only gallery is at `/dev/notation`; it is not in the production bundle. Decisions carried forward:
+
+- **Glyphs are drawn into any box.** One definition serves both the corner icon and the full-size alternative figure.
+- **Relationship notation follows the spec, not `RELATIONSHIP_TYPES.notation`.** That field is the dependency graph's simplification: it calls Realization solid and Association dashed. The notation test holds the spec table.
+- **Passive structure is coloured by layer on diagrams.** In the catalogue's neutral `pas` group, a Business Object and a Data Object are pixel-identical; the "every type draws differently" test caught it. The report legend keeps `pas`.
+- **Heads are geometry, not `<marker>`s.** Markers need page-unique ids and break when one diagram is exported on its own.
+- **Text wraps by canvas measurement.** Only the lines beside the icon are narrowed. A word is split only when it is wider than the whole shape. Widths are not cached until the web font has loaded.
+- 500 shapes render in 53 ms (161 ms at 4× CPU throttle) on the dev build: `scripts/measure-notation.ts`.
+
+Filed **#84**: the exchange importer silently drops `Association/@isDirected` and `Influence/@modifier`. The notation takes both as props already.
+
+Next: #79 (read-only canvas) is unblocked; #80 is independent; #84 is a bug.
+
 ## 2026-10-02 (cont.) — #76 merged; #78 spike done, ADR 0006 proposed
 
 The sponsor merged #82 (#76) **without a `/review-pr` pass**. A review can still be run against main and its findings filed as follow-ups.
