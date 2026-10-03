@@ -142,9 +142,13 @@ describe('the keyboard', () => {
     await user.keyboard('{Meta>}z{/Meta}')
     expect(documentation()).toHaveValue('New rules-driven claim assessment platform.')
 
+    // A date field keeps focus after it commits and has no undo of its own, so
+    // ⌘Z from inside it reaches the model, as it does from a select.
     const active = screen.getByLabelText('Active date')
+    act(() => active.focus())
     fireEvent.change(active, { target: { value: '2028-06-01' } })
     expect(screen.getByLabelText('Active date')).toHaveValue('2028-06-01')
+    expect(document.activeElement).toBe(screen.getByLabelText('Active date'))
     await user.keyboard('{Meta>}z{/Meta}')
     expect(screen.getByLabelText('Active date')).toHaveValue('2027-01-01')
   })
@@ -167,13 +171,15 @@ describe('the keyboard', () => {
     const user = userEvent.setup()
     await moveEngineToLegacy(user)
 
-    await user.keyboard('{Control>}k{/Control}')
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    // The palette's input is focused; dispatch at the body to get past that guard.
+    // Not the palette: its own `open` flag would stop ⌘Z before the modal check.
+    await user.click(screen.getByRole('link', { name: /^Inventory/ }))
+    await user.click(screen.getByRole('button', { name: '+ Element' }))
+    const dialog = screen.getByRole('dialog', { name: 'New element' })
+    expect(dialog).toHaveAttribute('aria-modal', 'true')
+    // At the body, past the text-field guard, so only the modal check can stop it.
     fireEvent.keyDown(document.body, { key: 'z', metaKey: true })
-    await user.keyboard('{Escape}')
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(ownerFolder('Claim Handling Engine')).toBe('Legacy')
+    expect(undoButton()).toHaveAttribute('title', 'Undo: Moved “Claim Handling Engine”')
   })
 })
 
