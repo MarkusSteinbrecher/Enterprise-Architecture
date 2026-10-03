@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { COMPLETENESS_CONFIG } from '@/model'
 import { useModelSelector } from '@/store'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
@@ -28,8 +28,14 @@ const PLANNED: PlannedItem[] = [
   { label: 'Portfolio' },
 ]
 
-export function LeftNav() {
-  const location = useLocation()
+export interface LeftNavProps {
+  treeOpen: boolean
+  /** Id of the tree panel, for `aria-controls`. */
+  treeId: string
+  onToggleTree: () => void
+}
+
+export function LeftNav({ treeOpen, treeId, onToggleTree }: LeftNavProps) {
   const stats = useModelSelector((store) => {
     let missingOwner = 0
     for (const element of store.elements()) {
@@ -66,17 +72,18 @@ export function LeftNav() {
         <span className="nav__glyph" aria-hidden="true" />
         <span className="nav__text">Dependency graph</span>
       </NavLink>
-      <NavLink
-        to="/views"
-        // A single view is part of "Views" too, so the item stays lit on /view/:id.
-        className={({ isActive }) =>
-          `nav__item${isActive || location.pathname.startsWith('/view/') ? ' nav__item--active' : ''}`
-        }
+      <button
+        type="button"
+        className={`nav__item${treeOpen ? ' nav__item--active' : ''}`}
+        aria-expanded={treeOpen}
+        aria-controls={treeOpen ? treeId : undefined}
+        onClick={onToggleTree}
+        title={treeOpen ? 'Hide the model tree' : 'Show the model tree'}
       >
         <span className="nav__glyph" aria-hidden="true" />
-        <span className="nav__text">Views</span>
-        <span className="nav__badge">{stats.views}</span>
-      </NavLink>
+        <span className="nav__text">Model tree</span>
+        <span className="nav__badge">{stats.views ? `${stats.views} views` : ''}</span>
+      </button>
 
       {PLANNED.map((item) => (
         <button

@@ -2,6 +2,9 @@ import {
   DEFAULT_TAG_GROUP,
   SCHEMA_VERSION,
   completenessScore,
+  destinationRoot,
+  elementFolderRoot,
+  isWithinFolder,
   modelHealth,
   elementsInView,
   relationshipsInView,
@@ -12,7 +15,9 @@ import {
   withoutRelationship,
   withoutViewReference,
   type Element,
+  type FileableKind,
   type Folder,
+  type FolderDestination,
   type Relationship,
   type RelationshipType,
   type ReportDefinition,
@@ -620,6 +625,74 @@ export class ModelStore {
     commands.push({ kind: 'remove-folder', folder })
     const only = commands.length === 1 ? commands[0] : undefined
     this.dispatch(only ?? { kind: 'batch', commands })
+  }
+
+  /**
+   * File an element, relationship, view or folder somewhere else in the model
+   * tree, as one undoable command (#80). Refused — `false`, nothing dispatched —
+   * when the destination is not in the model, is in another group than the
+   * object belongs in, or (for a folder) is the folder itself or inside it. A
+   * move to where the object already is succeeds without a command, so a drop
+   * back onto its own folder does not put a no-op on the undo stack.
+   */
+  moveToFolder(kind: FileableKind, id: string, destination: FolderDestination): boolean {
+    if ('folder' in destination && !this.#folders.has(destination.folder)) return false
+    const root = destinationRoot(destination, this.#folders)
+    if (root === undefined) return false
+    const into = 'folder' in destination ? destination.folder : undefined
+    const refile = <T extends { folder?: string }>(item: T): T => {
+      const moved = { ...item }
+      if (into === undefined) delete moved.folder
+      else moved.folder = into
+      return moved
+    }
+
+    switch (kind) {
+      case 'element': {
+        const element = this.#elements.get(id)
+        if (!element || elementFolderRoot(element.type) !== root) return false
+        if (element.folder === into) return true
+        this.dispatch({ kind: 'update-element', before: element, after: refile(element) })
+        return true
+      }
+      case 'relationship': {
+        const relationship = this.#relationships.get(id)
+        if (!relationship || root !== 'relations') return false
+        if (relationship.folder === into) return true
+        this.dispatch({
+          kind: 'update-relationship',
+          before: relationship,
+          after: refile(relationship),
+        })
+        return true
+      }
+      case 'view': {
+        const view = this.#views.get(id)
+        if (!view || root !== 'views') return false
+        if (view.folder === into) return true
+        this.dispatch({ kind: 'update-view', before: view, after: refile(view) })
+        return true
+      }
+      case 'folder': {
+        const folder = this.#folders.get(id)
+        if (!folder || destinationRoot({ folder: id }, this.#folders) !== root) return false
+        if (into !== undefined && isWithinFolder(into, id, this.#folders)) return false
+        if (
+          into === undefined
+            ? folder.root === root && folder.parent === undefined
+            : folder.parent === into && folder.root === undefined
+        ) {
+          return true
+        }
+        const after: Folder = { ...folder }
+        delete after.parent
+        delete after.root
+        if (into === undefined) after.root = root
+        else after.parent = into
+        this.dispatch({ kind: 'update-folder', before: folder, after })
+        return true
+      }
+    }
   }
 
   rename(name: string): void {

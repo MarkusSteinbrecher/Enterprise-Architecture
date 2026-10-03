@@ -21,6 +21,7 @@ UI reference: `design/specs/open-ea-repository-ui-spec.md` §3.1, §2.2.
 | `migrate.ts` | bringing a stored workspace from an earlier schema forward |
 | `validate.ts` | whole-model validation |
 | `validate-views.ts` | referential integrity of views and folders |
+| `folders.ts` | where things may be filed: each kind's group, no folder inside itself |
 
 ## Element types
 
@@ -137,6 +138,12 @@ A `Folder` is organisation, not semantics. Each sits either in another folder
 both. Membership is on the member (`folder` on elements, relationships and
 views); absent means the default group for its kind, which `defaultFolderRoot`
 gives for an element's layer.
+
+The model tree (#80) moves things with the store's `moveToFolder`, which keeps
+each kind in its own group — an element under its layer's group, a relationship
+under Relations, a view under Views, a folder in the group it was made in — and
+refuses a folder moved into itself. `folders.ts` holds those rules, so the tree
+can refuse a drop before the store would.
 
 Saved report definitions were called `ViewDefinition` and stored under `views`
 in schema 1; schema 2 renamed them `ReportDefinition`, stored under `reports`.

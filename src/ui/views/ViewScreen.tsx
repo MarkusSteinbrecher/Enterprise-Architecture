@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { typeLabel, type Point, type View, type ViewNode } from '@/model'
 import { downloadBlob, downloadText } from '@/io'
 import { useModelStore, useModelVersion, type ModelStore } from '@/store'
@@ -37,9 +37,7 @@ export function ViewScreen() {
         <p role="alert" className="view-screen__notice">
           There is no view with the id <code>{id}</code> in this workspace.
         </p>
-        <Link to="/views" className="button">
-          All views
-        </Link>
+        <p className="view-screen__notice">Open a view from the model tree.</p>
       </div>
     )
   }
@@ -52,7 +50,7 @@ const ZOOM_STEP = 1.2
 
 function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const navigate = useNavigate()
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const bounds = useMemo(() => absoluteIndex(view), [view])
   const children = useMemo(() => childrenIndex(view), [view])
   const drawing = useMemo(() => drawingBounds(view, bounds), [view, bounds])
@@ -88,6 +86,30 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       : null,
   )
   const [exportError, setExportError] = useState<string | null>(null)
+
+  /**
+   * Selection is mirrored into `?element=` so the model tree (#80), which reads
+   * the URL, highlights the element selected here. `replace`: a click on a shape
+   * is not a step Back should rewind.
+   */
+  const select = useCallback(
+    (nodeId: string | null) => {
+      setSelected(nodeId)
+      const node = nodeId === null ? undefined : view.nodes.find((n) => n.id === nodeId)
+      const element = node?.kind === 'element' ? node.element : null
+      if (params.get('element') === element) return
+      setParams(
+        (current) => {
+          const next = new URLSearchParams(current)
+          if (element === null) next.delete('element')
+          else next.set('element', element)
+          return next
+        },
+        { replace: true },
+      )
+    },
+    [view, params, setParams],
+  )
 
   useLayoutEffect(() => {
     const el = canvas.current
@@ -133,6 +155,41 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       )
     } else setViewport(fitted)
   }, [size, drawing, bounds, initialTarget])
+
+  /**
+   * The other direction: the tree selects an element by rewriting `?element=`.
+   * Select its first drawing, and bring it on screen if it is not — without
+   * touching a zoom the user chose.
+   */
+  useEffect(() => {
+    if (!requested) return
+    const current = selected === null ? undefined : view.nodes.find((n) => n.id === selected)
+    if (current?.kind === 'element' && current.element === requested) return
+    const node = view.nodes.find((n) => n.kind === 'element' && n.element === requested)
+    if (!node) return
+    setSelected(node.id)
+    const target = bounds.get(node.id)
+    if (!target || !viewport || size.width === 0) return
+    const left = target.x * viewport.zoom + viewport.x
+    const top = target.y * viewport.zoom + viewport.y
+    const onScreen =
+      left >= 0 &&
+      top >= 0 &&
+      left + target.width * viewport.zoom <= size.width &&
+      top + target.height * viewport.zoom <= size.height
+    if (!onScreen) {
+      steer(
+        centreOn(
+          viewport,
+          { x: target.x + target.width / 2, y: target.y + target.height / 2 },
+          size.width,
+          size.height,
+        ),
+      )
+    }
+    // Only a change of the requested element moves the selection.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requested])
 
   // Ctrl/⌘ + wheel (and trackpad pinch) zooms about the pointer; a plain wheel
   // pans. The listener is native because React's wheel listener is passive and
@@ -270,7 +327,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           tabIndex={0}
           aria-label={`View ${view.name}`}
           onKeyDown={(event) => {
-            if (event.key === 'Escape') setSelected(null)
+            if (event.key === 'Escape') select(null)
           }}
           onPointerDown={(event) => {
             if (event.button !== 0) return
@@ -296,7 +353,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           onPointerUp={() => {
             const g = gesture.current
             gesture.current = null
-            if (g && !g.moved) setSelected(g.node)
+            if (g && !g.moved) select(g.node)
           }}
           onDoubleClick={(event) => {
             const node = view.nodes.find((n) => n.id === nodeAt(event.target))
@@ -335,7 +392,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           )}
         </div>
         {selectedNode && (
-          <SelectionPanel node={selectedNode} store={store} onClose={() => setSelected(null)} />
+          <SelectionPanel node={selectedNode} store={store} onClose={() => select(null)} />
         )}
       </div>
     </div>
