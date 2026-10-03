@@ -5,6 +5,8 @@ import { AppShell } from '@/ui/shell/AppShell'
 import { InventoryScreen } from '@/ui/inventory/InventoryScreen'
 import { ElementScreen } from '@/ui/factsheet/ElementScreen'
 import { GraphScreen } from '@/ui/graph/GraphScreen'
+import { ViewScreen } from '@/ui/views/ViewScreen'
+import { ViewsScreen } from '@/ui/views/ViewsScreen'
 import { PaletteProvider } from '@/ui/palette/PaletteProvider'
 import { FileWorkspaceProvider } from '@/ui/files/FileWorkspaceProvider'
 import { FirstRun } from '@/ui/files/FirstRun'
@@ -22,6 +24,12 @@ import { SaveNotice } from '@/ui/files/SaveNotice'
 function KeyedElementScreen() {
   const { id = '' } = useParams()
   return <ElementScreen key={id} />
+}
+
+/** Same reason as above: viewport and selection are per view. */
+function KeyedViewScreen() {
+  const { id = '' } = useParams()
+  return <ViewScreen key={id} />
 }
 
 /**
@@ -74,6 +82,8 @@ function AppRoutes() {
         <Route path="/inventory" element={<InventoryScreen />} />
         <Route path="/element/:id" element={<KeyedElementScreen />} />
         <Route path="/graph" element={<GraphScreen />} />
+        <Route path="/views" element={<ViewsScreen />} />
+        <Route path="/view/:id" element={<KeyedViewScreen />} />
         <Route path="*" element={<Navigate to="/inventory" replace />} />
       </Route>
     </Routes>

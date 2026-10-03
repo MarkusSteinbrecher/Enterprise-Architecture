@@ -82,3 +82,8 @@ if (!window.matchMedia) {
     dispatchEvent: () => false,
   })) as typeof window.matchMedia
 }
+
+// jsdom has no 2D canvas and logs "Not implemented" when asked for one. A
+// browser without one returns null, which is the case the code handles.
+HTMLCanvasElement.prototype.getContext = (() =>
+  null) as typeof HTMLCanvasElement.prototype.getContext

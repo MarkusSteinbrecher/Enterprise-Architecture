@@ -510,6 +510,14 @@
   color: var(--ink2);
 }
 
+a.appears-in__row {
+  text-decoration: none;
+}
+
+a.appears-in__row:hover {
+  color: var(--accent);
+}
+
 .appears-in__glyph {
   width: 9px;
   height: 9px;

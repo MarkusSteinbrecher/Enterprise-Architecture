@@ -1,5 +1,20 @@
 # Session Log
 
+## 2026-10-03 (cont.) — #77 merged; #79 implemented
+
+**#79, read-only view canvas** (`src/ui/views/`). `/view/:id` (keyed on the id) draws a hand-drawn view with the #77 notation. It covers nesting, notes, groups, view references, connections with bend-points and Archi-style chopbox anchors, and appearance overrides. It has fit, zoom (buttons, ⌘/Ctrl + wheel, pinch), pan (drag, wheel), an outline mini-map, selection with a summary panel and "Open fact sheet", and SVG/PNG export. The fact sheet's "Appears in" now lists the views that draw the element and opens each with the element selected (`?element=`). A stopgap `/views` list and a "Views" nav item stand in until the #80 model tree. Decisions carried forward:
+
+- **The drawing is pure** (`ViewDrawing`). The canvas, the export and the M2 editor draw the same component; the export clones the on-screen drawing and resolves every `var(--…)`.
+- **A broken parent chain** (missing parent or cycle) draws the node at the top level, never drops it.
+- **Fit tracks the canvas size until the user pans or zooms.** Fit hands control back.
+- **A layout bug the e2e journey caught:** a three-row grid with a conditional error row put the canvas in an `auto` row, so it opened at 10% in a 150px strip. The screen is now a flex column, and the journey asserts that fit fills the canvas.
+- PNG export uses a system font: an SVG drawn into an image cannot reach the page's web fonts. Authored fill colours stay literal in dark mode; whether to adapt them is open.
+- Test setup stubs `HTMLCanvasElement.getContext` to null (jsdom logged "Not implemented").
+
+670 unit tests and 17 e2e journeys pass. Mutation-checked: bend-points, nesting offsets, export contents.
+
+Next: #80 (model tree, replacing the `/views` stopgap), then #13; #84 is a bug.
+
 ## 2026-10-03 — #78 merged (ADR 0006 accepted); #77 implemented
 
 **#77, ArchiMate 3.2 notation** (`src/ui/notation/`): `ElementShape` for all 61 element types, in the rectangle figure and in the alternative figure where ArchiMate defines one. `RelationshipLine` draws all 11 relationship types, plus the access-direction, directed-association and influence-label variants. The dev-only gallery is at `/dev/notation`; it is not in the production bundle. Decisions carried forward:
