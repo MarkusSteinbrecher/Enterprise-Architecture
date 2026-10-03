@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" identifier="m-attributes">
+  <name xml:lang="en">Claim drivers</name>
+  <documentation xml:lang="en">An original test model for Archipelago (MIT): a directed association, an undirected one, and influences with and without a modifier (#84).</documentation>
+  <elements>
+    <element identifier="ba-customer" xsi:type="BusinessActor">
+      <name xml:lang="en">Customer</name>
+    </element>
+    <element identifier="bo-claim" xsi:type="BusinessObject">
+      <name xml:lang="en">Claim</name>
+    </element>
+    <element identifier="bo-policy" xsi:type="BusinessObject">
+      <name xml:lang="en">Policy</name>
+    </element>
+    <element identifier="dr-satisfaction" xsi:type="Driver">
+      <name xml:lang="en">Customer satisfaction</name>
+    </element>
+    <element identifier="go-faster" xsi:type="Goal">
+      <name xml:lang="en">Settle claims faster</name>
+    </element>
+    <element identifier="go-fraud" xsi:type="Goal">
+      <name xml:lang="en">Reduce fraud</name>
+    </element>
+    <element identifier="go-cost" xsi:type="Goal">
+      <name xml:lang="en">Lower handling cost</name>
+    </element>
+    <element identifier="go-premiums" xsi:type="Goal">
+      <name xml:lang="en">Keep premiums stable</name>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="r-files" source="ba-customer" target="bo-claim" xsi:type="Association" isDirected="true">
+      <name xml:lang="en">files</name>
+    </relationship>
+    <relationship identifier="r-claim-policy" source="bo-claim" target="bo-policy" xsi:type="Association" />
+    <relationship identifier="r-satisfaction-faster" source="dr-satisfaction" target="go-faster" xsi:type="Influence" modifier="++" />
+    <relationship identifier="r-faster-fraud" source="go-faster" target="go-fraud" xsi:type="Influence" modifier="-" />
+    <relationship identifier="r-faster-cost" source="go-faster" target="go-cost" xsi:type="Influence" modifier="7" />
+    <relationship identifier="r-cost-premiums" source="go-cost" target="go-premiums" xsi:type="Influence" />
+  </relationships>
+  <organizations>
+    <item>
+      <label xml:lang="en">Business</label>
+      <item identifierRef="ba-customer" />
+      <item identifierRef="bo-claim" />
+      <item identifierRef="bo-policy" />
+    </item>
+    <item>
+      <label xml:lang="en">Motivation</label>
+      <item identifierRef="dr-satisfaction" />
+      <item identifierRef="go-faster" />
+      <item identifierRef="go-fraud" />
+      <item identifierRef="go-cost" />
+      <item identifierRef="go-premiums" />
+    </item>
+    <item>
+      <label xml:lang="en">Relations</label>
+      <item identifierRef="r-files" />
+      <item identifierRef="r-claim-policy" />
+      <item identifierRef="r-satisfaction-faster" />
+      <item identifierRef="r-faster-fraud" />
+      <item identifierRef="r-faster-cost" />
+      <item identifierRef="r-cost-premiums" />
+    </item>
+  </organizations>
+</model>

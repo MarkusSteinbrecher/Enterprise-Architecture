@@ -16,7 +16,7 @@
     "schemaVersion": {
       "type": "integer",
       "minimum": 1,
-      "description": "Format version. This build writes 2."
+      "description": "Format version. This build writes 3."
     },
     "id": {
       "type": "string",
@@ -223,6 +223,15 @@
         "name": {
           "type": "string"
         },
+        "isDirected": {
+          "type": "boolean",
+          "description": "Association only. true draws a half-arrowhead at the target; absent (or false) is undirected."
+        },
+        "modifier": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Influence only. The strength: ++, +, 0, -, --, or any other text such as a number on a scale."
+        },
         "properties": {
           "$ref": "#/$defs/properties"
         },
@@ -232,7 +241,58 @@
         "folder": {
           "$ref": "#/$defs/folderRef"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "isDirected"
+            ]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "const": "Association"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "modifier"
+            ]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "const": "Influence"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "profile"
+            ],
+            "properties": {
+              "profile": {
+                "required": [
+                  "accessType"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "const": "Access"
+              }
+            }
+          }
+        }
+      ]
     },
     "properties": {
       "type": "object",
@@ -353,7 +413,8 @@
             "Read",
             "Write",
             "ReadWrite"
-          ]
+          ],
+          "description": "Access relationships only."
         }
       }
     },

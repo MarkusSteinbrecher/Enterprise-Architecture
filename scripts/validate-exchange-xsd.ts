@@ -197,6 +197,18 @@ if (typed) {
   targets.push({ label: 'views the writer had to shift, round and flatten', path: awkwardPath })
 }
 
+// Directed associations and influence modifiers (#84), read from what Archi
+// wrote and written back by us.
+{
+  const archi = readFileSync(join('src', 'io', 'fixtures', 'relationship-attributes.xml'), 'utf8')
+  const attributes = importExchangeXml(archi).workspace
+  if (attributes) {
+    const attributesPath = join(work, 'relationship-attributes.xml')
+    writeFileSync(attributesPath, exportExchange(attributes).xml)
+    targets.push({ label: 'isDirected and modifier, re-exported', path: attributesPath })
+  }
+}
+
 let failures = 0
 for (const target of targets) {
   try {

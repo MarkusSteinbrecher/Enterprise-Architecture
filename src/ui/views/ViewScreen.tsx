@@ -57,17 +57,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const lookups = useMemo<DrawingLookups>(
     () => ({
       element: (elementId) => store.element(elementId),
-      relationship: (relationshipId) => {
-        const relationship = store.relationship(relationshipId)
-        if (!relationship) return undefined
-        return {
-          type: relationship.type,
-          ...(relationship.name ? { name: relationship.name } : {}),
-          ...(relationship.profile?.accessType
-            ? { accessType: relationship.profile.accessType }
-            : {}),
-        }
-      },
+      relationship: (relationshipId) => store.relationship(relationshipId),
       viewName: (viewId) => store.view(viewId)?.name,
     }),
     // A new view object means the model changed; the lookups read the store live.

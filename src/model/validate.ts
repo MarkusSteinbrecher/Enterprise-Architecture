@@ -1,5 +1,9 @@
 import { findElementType, isElementType, typeLabel } from './element-types'
-import { isRelationshipType } from './relationship-types'
+import {
+  TYPE_SPECIFIC_ATTRIBUTES,
+  isRelationshipType,
+  misplacedAttributes,
+} from './relationship-types'
 import { validateRelationship } from './validity'
 import { LIFECYCLE_PHASES } from './profile'
 import { parseLifecycleDate } from './lifecycle'
@@ -127,6 +131,16 @@ export function validate(workspace: Workspace): ValidationReport {
         subjectKind: 'relationship',
       })
       continue
+    }
+
+    for (const attribute of misplacedAttributes(relationship)) {
+      findings.push({
+        severity: 'error',
+        code: 'relationship.misplaced-attribute',
+        message: `Relationship ${relationship.id} is a ${relationship.type} but carries ${attribute}, which only a ${TYPE_SPECIFIC_ATTRIBUTES[attribute]} relationship has.`,
+        subjectId: relationship.id,
+        subjectKind: 'relationship',
+      })
     }
 
     const source = elementsById.get(relationship.source)

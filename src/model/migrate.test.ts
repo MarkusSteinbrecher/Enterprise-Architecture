@@ -30,4 +30,9 @@ describe('migrating a stored workspace (#75)', () => {
       tagGroups: [],
     })
   })
+  it('moves a schema-2 workspace to the current version without touching its contents', () => {
+    const v2 = { ...drawnWorkspace(), schemaVersion: 2 }
+    expect(migrateWorkspace(v2)).toEqual({ ...v2, schemaVersion: SCHEMA_VERSION })
+    expect(SCHEMA_VERSION).toBe(3)
+  })
 })

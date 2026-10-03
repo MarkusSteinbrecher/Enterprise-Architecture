@@ -6,8 +6,12 @@ import {
   SCHEMA_VERSION,
   defaultFolderRoot,
   findElementType,
+  TYPE_SPECIFIC_ATTRIBUTES,
+  isAccessType,
   isElementType,
+  isInfluenceModifier,
   isRelationshipType,
+  misplacedAttributes,
   type AccessType,
   type Element,
   type ElementType,
@@ -15,6 +19,8 @@ import {
   type JunctionKind,
   type PropertyValue,
   type Relationship,
+  type RelationshipType,
+  type TypeSpecificAttribute,
   type Workspace,
 } from '@/model'
 import { isExchangeSafeId } from '@/store/ids'
@@ -143,6 +149,35 @@ export interface ExchangeExportResult {
 // ── Export ───────────────────────────────────────────────────────────────────
 
 /**
+ * `accessType`, `isDirected` and `modifier`, each written only on the type the
+ * schema defines it for. One on the wrong type would make the file invalid, so
+ * it is left out and said so (#84).
+ */
+function typeSpecificAttributes(relationship: Relationship, problems: ImportProblem[]): string {
+  const misplaced = misplacedAttributes(relationship)
+  for (const attribute of misplaced) {
+    problems.push(
+      problem(
+        'warning',
+        'exchange.relationship-attribute-dropped',
+        `Relationship "${relationship.id}" is a ${relationship.type} but carries ${attribute}, which only ${TYPE_SPECIFIC_ATTRIBUTES[attribute]} relationships have. The exchange schema does not allow it there, so it was left out.`,
+        { subject: relationship.id },
+      ),
+    )
+  }
+  const written = (attribute: TypeSpecificAttribute) => !misplaced.includes(attribute)
+  let out = ''
+  if (relationship.profile?.accessType && written('accessType')) {
+    out += ` accessType="${attr(relationship.profile.accessType)}"`
+  }
+  if (relationship.isDirected && written('isDirected')) out += ' isDirected="true"'
+  if (relationship.modifier !== undefined && written('modifier')) {
+    out += ` modifier="${attr(relationship.modifier)}"`
+  }
+  return out
+}
+
+/**
  * Serialise a workspace to exchange-format XML, reporting what had to change.
  *
  * Two things can change on the way out: an id that is not a legal XML name has
@@ -214,12 +249,8 @@ export function exportExchange(
         ...relationship.properties,
         ...relationshipProfileToProperties(relationship.profile),
       }
-      const accessType =
-        relationship.type === 'Access' && relationship.profile?.accessType
-          ? ` accessType="${attr(relationship.profile.accessType)}"`
-          : ''
       lines.push(
-        `    <relationship identifier="${attr(ids.of(relationship.id))}" source="${attr(ids.of(relationship.source))}" target="${attr(ids.of(relationship.target))}"${accessType} xsi:type="${attr(relationship.type)}">`,
+        `    <relationship identifier="${attr(ids.of(relationship.id))}" source="${attr(ids.of(relationship.source))}" target="${attr(ids.of(relationship.target))}"${typeSpecificAttributes(relationship, problems)} xsi:type="${attr(relationship.type)}">`,
       )
       if (relationship.name) {
         lines.push(`      <name xml:lang="en">${text(relationship.name)}</name>`)
@@ -851,13 +882,71 @@ function readRelationship(
   if (name) relationship.name = name
 
   const profile = read.profile ?? {}
-  const accessType = asString(raw['@accessType'])
-  if (type === 'Access' && accessType && (ACCESS_TYPES as readonly string[]).includes(accessType)) {
-    profile.accessType = accessType as AccessType
-  }
+  const attributes = readTypeSpecificAttributes(raw, id, type, reader)
+  if (attributes.accessType) profile.accessType = attributes.accessType
+  if (attributes.isDirected) relationship.isDirected = true
+  if (attributes.modifier !== undefined) relationship.modifier = attributes.modifier
   if (Object.keys(profile).length) relationship.profile = profile
 
   return relationship
+}
+
+/**
+ * `accessType`, `isDirected` and `modifier`: the attributes the schema defines
+ * on one relationship type each (#84). One on another type, or a value the
+ * schema does not allow, is reported rather than read — the file said something
+ * this model cannot hold, and dropping it quietly is what #84 was.
+ */
+function readTypeSpecificAttributes(
+  raw: RawNode,
+  id: string,
+  type: RelationshipType,
+  reader: Reader,
+): { accessType?: AccessType; isDirected?: true; modifier?: string } {
+  const out: { accessType?: AccessType; isDirected?: true; modifier?: string } = {}
+  const ignored = (message: string) =>
+    reader.problems.push(
+      problem('warning', 'exchange.relationship-attribute-ignored', message, {
+        ...reader.where,
+        subject: id,
+      }),
+    )
+
+  for (const attribute of Object.keys(TYPE_SPECIFIC_ATTRIBUTES) as TypeSpecificAttribute[]) {
+    const value = asString(raw[`@${attribute}`])
+    if (value === undefined) continue
+    const owner = TYPE_SPECIFIC_ATTRIBUTES[attribute]
+    if (type !== owner) {
+      ignored(
+        `Relationship "${id}" is a ${type}, but carries ${attribute}="${value}", which only ${owner} relationships have. It was ignored.`,
+      )
+      continue
+    }
+    switch (attribute) {
+      case 'accessType':
+        if (isAccessType(value)) out.accessType = value
+        else {
+          ignored(
+            `Access relationship "${id}" has accessType "${value}", which is not one of ${ACCESS_TYPES.join(', ')}. It was ignored.`,
+          )
+        }
+        break
+      case 'isDirected':
+        // xs:boolean: the schema allows 1 and 0 as well as the words.
+        if (value === 'true' || value === '1') out.isDirected = true
+        else if (value !== 'false' && value !== '0') {
+          ignored(
+            `Association "${id}" has isDirected "${value}", which is not a boolean. It was read as undirected.`,
+          )
+        }
+        break
+      case 'modifier':
+        // An empty modifier is no modifier; anything else is the file's text.
+        if (isInfluenceModifier(value)) out.modifier = value
+        break
+    }
+  }
+  return out
 }
 
 function readProperties(raw: RawNode, reader: Reader): Record<string, PropertyValue> {

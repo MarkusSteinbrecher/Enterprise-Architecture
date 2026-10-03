@@ -38,6 +38,12 @@ has two concrete types instead, so the and/or flavour travels beside the type as
 `Element.junctionKind` — absent means `and`, which is what an unqualified
 junction is — and `io/exchange-format.ts` maps between the two shapes.
 
+Three relationship attributes belong to one type each (`TYPE_SPECIFIC_ATTRIBUTES`):
+`accessType` on Access (in the profile), `isDirected` on Association and
+`modifier` on Influence (on `Relationship`). `misplacedAttributes` is the one
+definition of "on the wrong type"; the readers, the exchange writer and
+`validate` all use it (#84).
+
 Colour groups are not layers: Strategy renders with Business, Physical with
 Technology, and every passive-structure element renders in the slate ramp
 regardless of which layer it belongs to.

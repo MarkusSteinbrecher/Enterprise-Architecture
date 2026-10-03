@@ -64,6 +64,55 @@ export function relationshipTypeMeta(type: RelationshipType): RelationshipTypeMe
 export const ACCESS_TYPES = ['Access', 'Read', 'Write', 'ReadWrite'] as const
 export type AccessType = (typeof ACCESS_TYPES)[number]
 
+export function isAccessType(value: unknown): value is AccessType {
+  return typeof value === 'string' && (ACCESS_TYPES as readonly string[]).includes(value)
+}
+
+/**
+ * The strengths the specification names for an Influence. The exchange schema
+ * also allows any other text (`InfluenceModifierType` is a union with
+ * `xs:string`), so these are suggestions, not a closed set.
+ */
+export const INFLUENCE_STRENGTHS = ['++', '+', '0', '-', '--'] as const
+
+/**
+ * A modifier worth storing: any non-empty text. Empty is what a cleared form
+ * field yields, and means "no modifier", so it is not one.
+ */
+export function isInfluenceModifier(value: unknown): value is string {
+  return typeof value === 'string' && value !== ''
+}
+
+/**
+ * Attributes ArchiMate defines on one relationship type only, and the type
+ * each belongs to. Anything carrying one on another type is malformed: the
+ * exchange schema would reject the file that wrote it.
+ */
+export const TYPE_SPECIFIC_ATTRIBUTES = {
+  accessType: 'Access',
+  isDirected: 'Association',
+  modifier: 'Influence',
+} as const satisfies Record<string, RelationshipType>
+
+export type TypeSpecificAttribute = keyof typeof TYPE_SPECIFIC_ATTRIBUTES
+
+/** The type-specific attributes this relationship carries on the wrong type. */
+export function misplacedAttributes(relationship: {
+  type: RelationshipType
+  isDirected?: boolean
+  modifier?: string
+  profile?: { accessType?: AccessType }
+}): TypeSpecificAttribute[] {
+  const carried: Record<TypeSpecificAttribute, boolean> = {
+    accessType: relationship.profile?.accessType !== undefined,
+    isDirected: relationship.isDirected !== undefined,
+    modifier: relationship.modifier !== undefined,
+  }
+  return (Object.keys(TYPE_SPECIFIC_ATTRIBUTES) as TypeSpecificAttribute[]).filter(
+    (attribute) => carried[attribute] && TYPE_SPECIFIC_ATTRIBUTES[attribute] !== relationship.type,
+  )
+}
+
 /**
  * Fixed display order for the fact sheet's RELATIONS blocks (handoff, "Screen 2").
  * The eight the handoff names come first, in its order; the remaining three follow.

@@ -1,13 +1,5 @@
 import { memo } from 'react'
-import type {
-  AccessType,
-  Bounds,
-  ElementType,
-  JunctionKind,
-  RelationshipType,
-  View,
-  ViewNode,
-} from '@/model'
+import type { Bounds, ElementType, JunctionKind, Relationship, View, ViewNode } from '@/model'
 import {
   ElementShape,
   GroupShape,
@@ -15,6 +7,7 @@ import {
   NoteShape,
   RelationshipLine,
   ViewReferenceShape,
+  relationshipLabel,
 } from '@/ui/notation'
 import { connectionRoute } from './geometry'
 
@@ -36,7 +29,7 @@ export interface DrawingLookups {
   element(id: string): { type: ElementType; name: string; junctionKind?: JunctionKind } | undefined
   relationship(
     id: string,
-  ): { type: RelationshipType; name?: string; accessType?: AccessType } | undefined
+  ): Pick<Relationship, 'type' | 'name' | 'isDirected' | 'modifier' | 'profile'> | undefined
   viewName(id: string): string | undefined
 }
 
@@ -74,13 +67,17 @@ export const ViewDrawing = memo(function ViewDrawing({
           if (connection.kind === 'relationship') {
             const relationship = lookups.relationship(connection.relationship)
             if (relationship) {
+              const label = relationshipLabel(relationship)
               return (
                 <g key={connection.id} data-connection={connection.id}>
                   <RelationshipLine
                     type={relationship.type}
                     points={points}
-                    {...(relationship.accessType ? { accessType: relationship.accessType } : {})}
-                    {...(relationship.name ? { label: relationship.name } : {})}
+                    {...(relationship.profile?.accessType
+                      ? { accessType: relationship.profile.accessType }
+                      : {})}
+                    {...(relationship.isDirected ? { directed: true } : {})}
+                    {...(label ? { label } : {})}
                     {...(connection.appearance ? { appearance: connection.appearance } : {})}
                   />
                 </g>

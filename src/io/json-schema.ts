@@ -1,8 +1,10 @@
 import {
+  ACCESS_TYPES,
   BUSINESS_CRITICALITY_LABELS,
   ELEMENT_TYPE_NAMES,
   FOLDER_ROOTS,
   FONT_STYLES,
+  INFLUENCE_STRENGTHS,
   JUNCTION_KINDS,
   LIFECYCLE_PHASES,
   RELATIONSHIP_TYPE_NAMES,
@@ -10,6 +12,7 @@ import {
   TEXT_ALIGNMENTS,
   TEXT_POSITIONS,
   TIME_CLASSIFICATIONS,
+  TYPE_SPECIFIC_ATTRIBUTES,
 } from '@/model'
 
 /**
@@ -103,10 +106,28 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           source: { type: 'string', description: 'id of the source element' },
           target: { type: 'string', description: 'id of the target element' },
           name: { type: 'string' },
+          isDirected: {
+            type: 'boolean',
+            description:
+              'Association only. true draws a half-arrowhead at the target; absent (or false) is undirected.',
+          },
+          modifier: {
+            type: 'string',
+            minLength: 1,
+            description: `Influence only. The strength: ${INFLUENCE_STRENGTHS.join(', ')}, or any other text such as a number on a scale.`,
+          },
           properties: { $ref: '#/$defs/properties' },
           profile: { $ref: '#/$defs/relationshipProfile' },
           folder: { $ref: '#/$defs/folderRef' },
         },
+        allOf: [
+          onlyOnType({ required: ['isDirected'] }, TYPE_SPECIFIC_ATTRIBUTES.isDirected),
+          onlyOnType({ required: ['modifier'] }, TYPE_SPECIFIC_ATTRIBUTES.modifier),
+          onlyOnType(
+            { required: ['profile'], properties: { profile: { required: ['accessType'] } } },
+            TYPE_SPECIFIC_ATTRIBUTES.accessType,
+          ),
+        ],
       },
       properties: {
         type: 'object',
@@ -154,7 +175,7 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           supportType: { type: 'string' },
           validFrom: { type: 'string', format: 'date' },
           validTo: { type: 'string', format: 'date' },
-          accessType: { enum: ['Access', 'Read', 'Write', 'ReadWrite'] },
+          accessType: { enum: [...ACCESS_TYPES], description: 'Access relationships only.' },
         },
       },
       folderRef: {
@@ -333,6 +354,11 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
 /** "When `kind` is `kind`, `field` is required." */
 function requiredForKind(kind: string, field: string): Record<string, unknown> {
   return { if: { properties: { kind: { const: kind } } }, then: { required: [field] } }
+}
+
+/** A relationship matching `carries` must be of `type` (#84). */
+function onlyOnType(carries: Record<string, unknown>, type: string): Record<string, unknown> {
+  return { if: carries, then: { properties: { type: { const: type } } } }
 }
 
 /** The schema as it is written to disk. */

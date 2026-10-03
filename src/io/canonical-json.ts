@@ -1,14 +1,16 @@
 import {
-  ACCESS_TYPES,
   DEFAULT_JUNCTION_KIND,
   LIFECYCLE_PHASES,
   SCHEMA_VERSION,
+  TYPE_SPECIFIC_ATTRIBUTES,
+  isAccessType,
   isElementType,
   isFitLevel,
+  isInfluenceModifier,
   isJunctionKind,
   isRelationshipType,
   isTimeClassification,
-  type AccessType,
+  misplacedAttributes,
   type Element,
   type LifecycleDates,
   type PortfolioProfile,
@@ -275,6 +277,8 @@ function canonicalRelationship(relationship: Relationship): Record<string, unkno
     source: relationship.source,
     target: relationship.target,
     name: relationship.name,
+    isDirected: relationship.isDirected,
+    modifier: relationship.modifier,
     properties: emptyToUndefined(relationship.properties),
     profile: relationship.profile ? prune({ ...relationship.profile }) : undefined,
     folder: relationship.folder,
@@ -467,7 +471,61 @@ function readRelationship(
     if (profile) relationship.profile = profile
     reportDroppedProfileFields('Relationship', id, dropped, problems, where)
   }
+  readTypeSpecificAttributes(relationship, candidate, problems, { ...where, subject: id })
   return relationship
+}
+
+/**
+ * `isDirected`, `modifier` and the profile's `accessType` each belong to one
+ * relationship type (#84). A value on the wrong type, or one this build cannot
+ * read, is reported and left out rather than carried into a model the exchange
+ * schema would reject.
+ */
+function readTypeSpecificAttributes(
+  relationship: Relationship,
+  candidate: Record<string, unknown>,
+  problems: ImportProblem[],
+  where: { file?: string; subject: string },
+): void {
+  const ignored = (message: string) =>
+    problems.push(problem('warning', 'json.relationship-attribute-ignored', message, where))
+  const { id, type } = relationship
+
+  if (candidate.isDirected !== undefined) {
+    if (typeof candidate.isDirected !== 'boolean') {
+      ignored(
+        `Relationship "${id}" has isDirected ${JSON.stringify(candidate.isDirected)}, which is not true or false; it was read as undirected.`,
+      )
+    } else if (candidate.isDirected) {
+      // false is the default, and absent is how the model spells it.
+      relationship.isDirected = true
+    }
+  }
+  if (candidate.modifier !== undefined) {
+    if (isInfluenceModifier(candidate.modifier)) relationship.modifier = candidate.modifier
+    else if (candidate.modifier !== '') {
+      ignored(
+        `Relationship "${id}" has modifier ${JSON.stringify(candidate.modifier)}, which is not text; it was ignored.`,
+      )
+    }
+  }
+
+  for (const attribute of misplacedAttributes(relationship)) {
+    ignored(
+      `Relationship "${id}" is a ${type}, not ${article(TYPE_SPECIFIC_ATTRIBUTES[attribute])}, so its ${attribute} was ignored.`,
+    )
+    if (attribute === 'accessType') {
+      const profile = relationship.profile
+      if (profile) {
+        delete profile.accessType
+        if (!Object.keys(profile).length) delete relationship.profile
+      }
+    } else delete relationship[attribute]
+  }
+}
+
+function article(type: string): string {
+  return `${/^[AEIOU]/.test(type) ? 'an' : 'a'} ${type}`
 }
 
 /**
@@ -542,9 +600,8 @@ function readRelationshipProfile(raw: Record<string, unknown>): {
         break
       }
       case 'accessType': {
-        if (typeof value === 'string' && (ACCESS_TYPES as readonly string[]).includes(value)) {
-          profile.accessType = value as AccessType
-        } else dropped.push(key)
+        if (isAccessType(value)) profile.accessType = value
+        else dropped.push(key)
         break
       }
       default:

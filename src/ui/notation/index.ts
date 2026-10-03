@@ -9,6 +9,7 @@ export { ELEMENT_NOTATION, type ElementNotation, type Body } from './element-not
 export {
   RELATIONSHIP_NOTATION,
   relationshipHeads,
+  relationshipLabel,
   type Head,
   type Pattern,
 } from './relationship-notation'

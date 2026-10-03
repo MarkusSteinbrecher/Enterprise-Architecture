@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import claimsXml from '@/io/fixtures/claims-platform.xml?raw'
+import attributesXml from '@/io/fixtures/relationship-attributes.xml?raw'
 import { importExchangeXml } from '@/io'
 import { absoluteBounds, type View, type ViewNode, type Workspace } from '@/model'
 import { renderApp } from '@/test/render'
@@ -321,5 +322,60 @@ describe('export', () => {
   it('makes a file name from the view name', () => {
     expect(viewFileName('Claims landscape', 'svg')).toBe('claims-landscape.svg')
     expect(viewFileName('  ***  ', 'png')).toBe('view.png')
+  })
+})
+
+describe('directed associations and influence modifiers on the canvas (#84)', () => {
+  /** The Archi fixture's elements in a row, with every relationship drawn. */
+  function drawnFromArchi() {
+    const workspace = importExchangeXml(attributesXml).workspace!
+    const nodes: ViewNode[] = workspace.elements.map((element, i) => ({
+      id: `n-${element.id}`,
+      kind: 'element',
+      element: element.id,
+      bounds: { x: i * 200, y: (i % 2) * 150, width: 120, height: 55 },
+    }))
+    const v: View = {
+      ...view(nodes),
+      connections: workspace.relationships.map((relationship) => ({
+        id: `c-${relationship.id}`,
+        kind: 'relationship',
+        relationship: relationship.id,
+        source: `n-${relationship.source}`,
+        target: `n-${relationship.target}`,
+      })),
+    }
+    const { container } = render(
+      <svg>
+        <ViewDrawing
+          view={v}
+          bounds={absoluteIndex(v)}
+          children={childrenIndex(v)}
+          lookups={{
+            element: (id) => workspace.elements.find((e) => e.id === id),
+            relationship: (id) => workspace.relationships.find((r) => r.id === id),
+            viewName: () => undefined,
+          }}
+        />
+      </svg>,
+    )
+    return (id: string) => container.querySelector(`[data-connection="c-${id}"]`)!
+  }
+
+  it('draws a half arrow on the association Archi marked directed, and none on the other', () => {
+    const connection = drawnFromArchi()
+    expect(connection('r-files').querySelector('[data-end="target"]')).toHaveAttribute(
+      'data-head',
+      'half-arrow',
+    )
+    expect(connection('r-claim-policy').querySelector('[data-head]')).toBeNull()
+  })
+
+  it('labels each influence with its modifier, beside the name when it has one', () => {
+    const connection = drawnFromArchi()
+    expect(connection('r-satisfaction-faster').querySelector('text')).toHaveTextContent(/^\+\+$/)
+    expect(connection('r-faster-cost').querySelector('text')).toHaveTextContent(/^7$/)
+    expect(connection('r-cost-premiums').querySelector('text')).toBeNull()
+    expect(connection('r-files').querySelector('text')).toHaveTextContent(/^files$/)
   })
 })

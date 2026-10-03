@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="Claim drivers" id="m-attributes" version="5.0.0">
+  <purpose>An original test model for Archipelago (MIT): a directed association, an undirected one, and influences with and without a modifier (#84).</purpose>
+  <folder name="Business" id="f-business" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Customer" id="ba-customer"/>
+    <element xsi:type="archimate:BusinessObject" name="Claim" id="bo-claim"/>
+    <element xsi:type="archimate:BusinessObject" name="Policy" id="bo-policy"/>
+  </folder>
+  <folder name="Motivation" id="f-motivation" type="motivation">
+    <element xsi:type="archimate:Driver" name="Customer satisfaction" id="dr-satisfaction"/>
+    <element xsi:type="archimate:Goal" name="Settle claims faster" id="go-faster"/>
+    <element xsi:type="archimate:Goal" name="Reduce fraud" id="go-fraud"/>
+    <element xsi:type="archimate:Goal" name="Lower handling cost" id="go-cost"/>
+    <element xsi:type="archimate:Goal" name="Keep premiums stable" id="go-premiums"/>
+  </folder>
+  <folder name="Relations" id="f-relations" type="relations">
+    <element xsi:type="archimate:AssociationRelationship" name="files" id="r-files" source="ba-customer" target="bo-claim" directed="true"/>
+    <element xsi:type="archimate:AssociationRelationship" id="r-claim-policy" source="bo-claim" target="bo-policy"/>
+    <element xsi:type="archimate:InfluenceRelationship" id="r-satisfaction-faster" source="dr-satisfaction" target="go-faster" strength="++"/>
+    <element xsi:type="archimate:InfluenceRelationship" id="r-faster-fraud" source="go-faster" target="go-fraud" strength="-"/>
+    <element xsi:type="archimate:InfluenceRelationship" id="r-faster-cost" source="go-faster" target="go-cost" strength="7"/>
+    <element xsi:type="archimate:InfluenceRelationship" id="r-cost-premiums" source="go-cost" target="go-premiums"/>
+  </folder>
+</archimate:model>
