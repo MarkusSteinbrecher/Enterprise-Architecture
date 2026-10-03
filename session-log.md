@@ -1,5 +1,22 @@
 # Session Log
 
+## 2026-10-03 (cont.) — #80 merged; #84 implemented
+
+PR #87 (#80, model tree) merged; local branch deleted.
+
+**#84, directed associations and influence modifiers.** `Relationship` gains `isDirected` (Association) and `modifier` (Influence), beside the type as `junctionKind` is on elements. The exchange format and canonical JSON both read and write them. The JSON schema allows each only on its own type, and the view canvas draws the half-arrow and the modifier label. Decisions carried forward:
+
+- **One definition of "on the wrong type":** `TYPE_SPECIFIC_ATTRIBUTES` and `misplacedAttributes` in `relationship-types.ts`. The two readers, the exchange writer and `validate` (`relationship.misplaced-attribute`) all use it. It covers `accessType` too, which the exchange reader used to drop silently when it was on the wrong type or had an unknown value.
+- **Absent means undirected.** `false`, `0` and absent are one model, and only `isDirected="true"` is written (ADR 0004).
+- **`modifier` is any non-empty text.** The XSD type is a union with `xs:string`, so Archi's `7` is as valid as `++`.
+- **Schema version 3.** The shape doesn't change for older data. The bump makes a schema-2 build warn that it is dropping the values instead of losing them quietly.
+- `ViewDrawing`'s relationship lookup now returns the model's relationship rather than a hand-mapped subset.
+- Fixture `src/io/fixtures/relationship-attributes.{archimate,xml}`: the XML was exported by Archi 5.10 (`scripts/fixtures/export-with-archi.sh` now exports both fixtures). `npm run validate:xsd` checks our re-export.
+
+734 unit tests and the round-trip journey pass. Mutation-checked: reader, writer, canonical writer, both guards, and the canvas head and label.
+
+Open: no UI edits these attributes yet. When one does, it goes through `isInfluenceModifier`. Next: #88 (undo/redo in the UI), then #13.
+
 ## 2026-10-03 (cont.) — #80 implemented (model tree)
 
 **#80, model tree with folders** (`src/ui/tree/`). The tree is a panel between the left nav and the content, as in Archi. The nav's **Model tree** item shows or hides it, and that choice is kept in localStorage. It lists the nine fixed groups, the user's folders and every element, relationship and view, with folders first and then names in a fixed `en` sort. The `/views` stopgap and its nav item are gone. Decisions carried forward:
