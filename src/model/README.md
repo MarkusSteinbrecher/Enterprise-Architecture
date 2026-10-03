@@ -7,21 +7,21 @@ semantics from here and nowhere else.
 Concept reference: `design/specs/open-ea-repository-concept.md` §4.
 UI reference: `design/specs/open-ea-repository-ui-spec.md` §3.1, §2.2.
 
-| File                    | What it owns                                                                 |
-| ----------------------- | ---------------------------------------------------------------------------- |
-| `layers.ts`             | layers, aspects, the six colour groups                                       |
-| `element-types.ts`      | the 61-element catalogue, two-letter codes                                   |
-| `relationship-types.ts` | the 11 relationship types, notation, abbreviations                           |
-| `validity.ts`           | the relationship validity matrix                                             |
-| `profile.ts`            | portfolio profile types, scales, TIME, tags                                  |
-| `lifecycle.ts`          | phase derivation from dates                                                  |
-| `completeness.ts`       | completeness scoring and model health                                        |
-| `workspace.ts`          | `Element`, `Relationship`, `View`, `Folder`, `ReportDefinition`, `Workspace` |
-| `views.ts`              | pure view operations: node removal with lifting, absolute bounds             |
-| `migrate.ts`            | bringing a stored workspace from an earlier schema forward                   |
-| `validate.ts`           | whole-model validation                                                       |
-| `validate-views.ts`     | referential integrity of views and folders                                   |
-| `folders.ts`            | where things may be filed: each kind's group, no folder inside itself        |
+| File | What it owns |
+|---|---|
+| `layers.ts` | layers, aspects, the six colour groups |
+| `element-types.ts` | the 61-element catalogue, two-letter codes |
+| `relationship-types.ts` | the 11 relationship types, notation, abbreviations |
+| `validity.ts` | the relationship validity matrix |
+| `profile.ts` | portfolio profile types, scales, TIME, tags |
+| `lifecycle.ts` | phase derivation from dates |
+| `completeness.ts` | completeness scoring and model health |
+| `workspace.ts` | `Element`, `Relationship`, `View`, `Folder`, `ReportDefinition`, `Workspace` |
+| `views.ts` | pure view operations: node removal with lifting, absolute bounds |
+| `migrate.ts` | bringing a stored workspace from an earlier schema forward |
+| `validate.ts` | whole-model validation |
+| `validate-views.ts` | referential integrity of views and folders |
+| `folders.ts` | where things may be filed: each kind's group, no folder inside itself |
 
 ## Element types
 
@@ -72,7 +72,7 @@ prove the rules are not vacuous.
 ## Lifecycle derivation
 
 There is no stored lifecycle phase (ADR UI-3). Each date is the date its phase
-_starts_, and the phase at a time point is the last phase whose start has been
+*starts*, and the phase at a time point is the last phase whose start has been
 reached:
 
 ```
@@ -92,22 +92,22 @@ dates, and nothing can drift.
 
 ## Completeness scoring
 
-_(UI spec open question 4 — resolved here.)_
+*(UI spec open question 4 — resolved here.)*
 
 Completeness is the **weighted fraction of the fields expected of an element**,
 as a percentage. Which fields are expected depends on the element type.
 
-| Criterion                | Weight | Applies to                                                    |
-| ------------------------ | ------ | ------------------------------------------------------------- |
-| Documentation            | 2      | every element                                                 |
-| Owner (`owner` property) | 1      | every element                                                 |
-| At least one relation    | 2      | every element                                                 |
-| Tags                     | 1      | every element                                                 |
-| Lifecycle dates          | 3      | profiled types — scored as the fraction of the five dates set |
-| Functional fit           | 1      | profiled types                                                |
-| Technical fit            | 1      | profiled types                                                |
-| Business criticality     | 1      | profiled types                                                |
-| TIME classification      | 1      | profiled types                                                |
+| Criterion | Weight | Applies to |
+|---|---|---|
+| Documentation | 2 | every element |
+| Owner (`owner` property) | 1 | every element |
+| At least one relation | 2 | every element |
+| Tags | 1 | every element |
+| Lifecycle dates | 3 | profiled types — scored as the fraction of the five dates set |
+| Functional fit | 1 | profiled types |
+| Technical fit | 1 | profiled types |
+| Business criticality | 1 | profiled types |
+| TIME classification | 1 | profiled types |
 
 "Profiled types" are the element types that carry a portfolio profile —
 `PROFILED_TYPES` in `profile.ts`, Application Component and the IT-component-like
