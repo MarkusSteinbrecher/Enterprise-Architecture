@@ -38,14 +38,20 @@ export function isModalOpen(doc: Document = document): boolean {
   return doc.querySelector('[role="dialog"][aria-modal="true"]') !== null
 }
 
+/** Inputs that take keys but hold no text, so the browser keeps no undo for them. */
+const NO_TEXT_UNDO = ['date', 'time', 'datetime-local', 'month', 'week']
+
 /**
  * Does this element have an undo of its own? Text fields do: ⌘Z there reverts
  * the typing, and taking it for the model would lose that (#88). A `<select>`
- * swallows letters but has no undo, so after picking a fit rating ⌘Z still
- * reaches the model.
+ * and the date-like inputs swallow keys but have no undo, and each commits on
+ * change, so after picking a fit rating or a lifecycle date ⌘Z still reaches
+ * the model.
  */
 export function hasNativeUndo(target: EventTarget | null): boolean {
-  return isTypingTarget(target) && !(target instanceof HTMLSelectElement)
+  if (!isTypingTarget(target)) return false
+  if (target instanceof HTMLSelectElement) return false
+  return !(target instanceof HTMLInputElement && NO_TEXT_UNDO.includes(target.type))
 }
 
 /**
