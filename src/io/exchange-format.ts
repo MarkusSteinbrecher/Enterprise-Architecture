@@ -172,9 +172,32 @@ function typeSpecificAttributes(relationship: Relationship, problems: ImportProb
   }
   if (relationship.isDirected && written('isDirected')) out += ' isDirected="true"'
   if (relationship.modifier !== undefined && written('modifier')) {
-    out += ` modifier="${attr(relationship.modifier)}"`
+    out += modifierAttribute(relationship, problems)
   }
   return out
+}
+
+/**
+ * The reader trims attribute values (`trimValues` cannot spare attributes), so a
+ * modifier with surrounding spaces would come back changed, and one of only
+ * spaces would come back as none. Write what will be read, and say so (#90).
+ */
+function modifierAttribute(relationship: Relationship, problems: ImportProblem[]): string {
+  const modifier = relationship.modifier ?? ''
+  const trimmed = modifier.trim()
+  if (trimmed !== modifier) {
+    problems.push(
+      problem(
+        'warning',
+        'exchange.relationship-modifier-trimmed',
+        trimmed
+          ? `Influence "${relationship.id}" has modifier ${JSON.stringify(modifier)}; it was written as ${JSON.stringify(trimmed)}, without the surrounding spaces.`
+          : `Influence "${relationship.id}" has a modifier of only spaces, which reads back as none, so it was left out.`,
+        { subject: relationship.id },
+      ),
+    )
+  }
+  return trimmed ? ` modifier="${attr(trimmed)}"` : ''
 }
 
 /**

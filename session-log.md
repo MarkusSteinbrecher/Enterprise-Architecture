@@ -1,5 +1,17 @@
 # Session Log
 
+## 2026-10-03 (cont.) — #84 reviewed post-merge; #90 fixed
+
+PR #89 (#84) merged before its review finished, so the review went on as a PR comment and its three findings became **#90**, fixed on `feat/90-schema-upgrade-modifier-trim`:
+
+- **A JSON file from any older schema is read at the current version**, with `json.schema-upgraded` (`canonical-json.ts`). Before, only schema 1 was upgraded, so a schema-2 file saved as 2, while the same model reloaded from IndexedDB saved as 3. `legacy` still means the v1 shape; `upgraded` is the new "older than this build".
+- **The exchange writer trims `modifier` and says so** (`exchange.relationship-modifier-trimmed`). fast-xml-parser's `trimValues` trims attributes before any processor sees them, and turning it off would change how every name and documentation text is read. A modifier of only spaces is left out, with a warning.
+- **`validate:xsd` exits 1 when a fixture does not import**, rather than skipping its target. Checked by replacing the #84 fixture with garbage.
+
+Each fix is mutation-checked. 737 unit tests and the round-trip journey pass.
+
+Open: element and relationship *names* are trimmed by the same parser setting, silently. That was already so before #90 and is not filed. Next: #88.
+
 ## 2026-10-03 (cont.) — #80 merged; #84 implemented
 
 PR #87 (#80, model tree) merged; local branch deleted.

@@ -153,6 +153,18 @@ describe('a schema-1 workspace (#75)', () => {
   })
 })
 
+describe('an older schema version (#90)', () => {
+  it('reads a file one version back at the current version, as the IndexedDB path does (#90)', () => {
+    const raw = JSON.parse(toCanonicalJson(drawnWorkspace()))
+    const previous = { ...raw, schemaVersion: SCHEMA_VERSION - 1 }
+    const result = fromCanonicalJson(JSON.stringify(previous))
+    expect(codes(result.problems)).toEqual(['json.schema-upgraded'])
+    expect(result.workspace?.schemaVersion).toBe(SCHEMA_VERSION)
+    // Nothing else changes: the file says the current version and is otherwise the same.
+    expect(JSON.parse(toCanonicalJson(result.workspace as Workspace))).toEqual(raw)
+  })
+})
+
 describe('what the reader repairs, and says it did (#75)', () => {
   it('skips a node that draws an element the file does not have, and its connections', () => {
     const result = readEdited((raw) => {
