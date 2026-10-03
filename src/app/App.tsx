@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { lazy, Suspense, useState } from 'react'
+import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { useModelSelector, useModelStoreContext } from '@/store'
 import { AppShell } from '@/ui/shell/AppShell'
 import { InventoryScreen } from '@/ui/inventory/InventoryScreen'
@@ -24,6 +24,14 @@ function KeyedElementScreen() {
   return <ElementScreen key={id} />
 }
 
+/**
+ * Dev-only screens, absent from the production bundle: `import.meta.env.DEV` is
+ * a build-time constant, so the lazy import is dropped with the dead branch.
+ */
+const NotationGallery = import.meta.env.DEV
+  ? lazy(() => import('@/ui/notation/NotationGallery'))
+  : null
+
 export function App() {
   return (
     <FileWorkspaceProvider>
@@ -44,7 +52,16 @@ function AppRoutes() {
   const { role, ready } = useModelStoreContext()
   const elementCount = useModelSelector((store) => store.elementCount)
   const [startedEmpty, setStartedEmpty] = useState(false)
+  const { pathname } = useLocation()
 
+  // The notation gallery needs no model, so it skips first run and the shell.
+  if (NotationGallery && pathname === '/dev/notation') {
+    return (
+      <Suspense fallback={null}>
+        <NotationGallery />
+      </Suspense>
+    )
+  }
   if (role === 'reader') return <TakeoverScreen />
   if (ready && elementCount === 0 && !startedEmpty) {
     return <FirstRun onStartEmpty={() => setStartedEmpty(true)} />
