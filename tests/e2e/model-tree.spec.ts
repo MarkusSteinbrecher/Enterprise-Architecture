@@ -40,6 +40,12 @@ test('the model tree shows folders, moves by drag and drop, and follows the sele
   // Host-based is now empty, so it has nothing to open.
   await expect(item('Host-based')).not.toHaveAttribute('aria-expanded')
 
+  // ⌘Z puts it back in Host-based, and ⇧⌘Z files it in Claims applications again (#88).
+  await page.keyboard.press('ControlOrMeta+z')
+  await expect(host).toHaveAttribute('aria-level', '5')
+  await page.keyboard.press('ControlOrMeta+Shift+z')
+  await expect(host).toHaveAttribute('aria-level', '3')
+
   // A drop into another group is refused: the element stays where it was.
   await item('Business').click()
   await host.dragTo(item('Business'))

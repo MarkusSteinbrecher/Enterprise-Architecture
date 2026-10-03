@@ -1,5 +1,19 @@
 # Session Log
 
+## 2026-10-03 (cont.) — #88 + #31 implemented (undo and redo in the UI)
+
+**Undo and redo reach the user** (`feat/88-undo-redo-ui`, closing #88 and the older #31). ⌘Z / Ctrl+Z undo and ⇧⌘Z / Ctrl+Shift+Z / Ctrl+Y redo. The header has **Undo** and **Redo** buttons, with tooltips that name the step from `describeCommand`, and the palette offers `Undo: …` / `Redo: …` when there is a step to take. Decisions carried forward:
+
+- **One owner, `useUndoRedo`**, as `useSaveWorkspace` is for saving, so the reader guard lives in one place. The keyboard binding sits in `PaletteProvider`, which outlives the shell a reader sees, so the guard can't rely on hidden buttons.
+- **`hasNativeUndo`, not `isTypingTarget`, decides who gets ⌘Z.** Text fields keep the browser's undo. A `<select>` swallows letters but has no undo, so ⌘Z after picking a fit rating reaches the model. ⌘Y is left alone, because it opens the history in macOS browsers.
+- **The counter keeps counting.** Undo and redo each add one, since the counter is "changes since the last save". The manual docs now say so.
+- **Fact-sheet fields follow the model.** The name and documentation inputs were uncontrolled, so after an undo they still showed the undone text and committed it again on the next blur. They are now keyed on the value. The lifecycle date commits on every change, so keying it would steal focus mid-typing, and it became controlled instead.
+- `ModelStore.nextUndo` / `nextRedo` expose the next record for the labels.
+
+745 unit tests and 18 journeys pass. Mutation-checked: the binding, the text-field, modal and select guards, both reader guards, Ctrl+Y, and each of the three fact-sheet fields. Each turns a test red when removed, and the tree journey fails without the binding.
+
+Open: PR #91 (#90) and this PR are awaiting review. Next: #13.
+
 ## 2026-10-03 (cont.) — #80 merged; #84 implemented
 
 PR #87 (#80, model tree) merged; local branch deleted.

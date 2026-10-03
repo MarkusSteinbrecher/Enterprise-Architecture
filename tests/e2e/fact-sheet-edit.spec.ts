@@ -15,12 +15,8 @@ import {
  * An edit has to do three things at once: change what the sheet shows, add one
  * line of history, and move the save-state counter by exactly one. The counter
  * is the app's trust surface — it promises "this many changes are not in your
- * file" — so it is asserted on every step rather than at the end.
- *
- * **Not yet covered: undo and redo.** Issue #19 specifies this journey as
- * edit → undo → redo. The store has had both since #4, but neither is reachable
- * from the UI — no shortcut, no palette action — so there is nothing to drive.
- * Tracked in #31, which extends this spec to the full journey.
+ * file" — so it is asserted on every step rather than at the end, undo and redo
+ * included: each is one more change since the last save (#31, #88).
  *
  * Manual counterpart: `tests/manual/fact-sheet-edit.md`.
  */
@@ -44,6 +40,21 @@ test('changing a fit rating updates the sheet, the history and the dirty counter
 
   // One edit, one command, one step on the counter.
   expect(await dirtyCount(page)).toBe(before + 1)
+
+  // Undo from the keyboard while the select still has focus: a select has no
+  // undo of its own, so ⌘Z reaches the model.
+  const select = functionalFit.getByRole('combobox')
+  await page.keyboard.press('ControlOrMeta+z')
+  await expect(select.locator('option:checked')).toHaveText('Unreasonable')
+  expect(await dirtyCount(page)).toBe(before + 2)
+
+  await page.keyboard.press('ControlOrMeta+Shift+z')
+  await expect(select.locator('option:checked')).toHaveText('Perfect')
+  expect(await dirtyCount(page)).toBe(before + 3)
+  await expect(page.getByRole('button', { name: 'Undo', exact: true })).toHaveAttribute(
+    'title',
+    `Undo: Updated assessment of “${ELEMENT}”`,
+  )
 
   await page.getByRole('button', { name: 'Done', exact: true }).click()
   await expect(functionalFit).toContainText('Perfect')

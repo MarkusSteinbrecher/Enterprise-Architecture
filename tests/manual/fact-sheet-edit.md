@@ -23,6 +23,13 @@
 5. Set **Functional fit** to _Perfect_ — expected: the save-state indicator goes up by
    exactly one (to **LOCAL · 2 UNSAVED**), and the History rail gains one entry reading
    _Updated assessment of "CRM System"_. One edit, one line of history, one step on the counter.
+   Hover **Undo** in the header — expected: its tooltip reads _Undo: Updated assessment of
+   "CRM System"_.
+   5a. Press **⌘Z** (Ctrl+Z) — expected: Functional fit is back to _Unreasonable_ and the
+   counter goes up by one more (an undo is a change since the last save). Press **⇧⌘Z**
+   (Ctrl+Shift+Z or Ctrl+Y) — expected: _Perfect_ again, and one more step on the counter.
+   5b. Click into the name field, type a few letters, press **⌘Z** — expected: only the typing
+   is undone (the browser's own undo); the fit rating stays _Perfect_.
 6. Set **Technical fit** to _Fully adequate_ — expected: one more step on the counter, one
    more history entry.
 7. Click **Done** — expected: the dropdowns become values again, showing _Perfect_ and
@@ -39,6 +46,7 @@
 
 - [ ] An edit is visible on the sheet immediately, without a save step
 - [ ] Each edit moves the save-state counter by exactly one
+- [ ] ⌘Z and ⇧⌘Z undo and redo the model everywhere except inside a text field
 - [ ] Each edit adds one history entry that names _what_ changed, not just "modified"
 - [ ] Edits survive a reload, and the reload does not itself count as a change
 - [ ] The inventory reflects the edit
@@ -46,10 +54,7 @@
 
 ## Notes for the tester
 
-- **Undo and redo do not exist in the UI yet** (issue #31). The model keeps a full undo
-  stack, but nothing reaches it — no ⌘Z, no menu item. Do not file this; do report anything
-  else that leaves you unable to reverse a change.
-- The save-state counter means "changes not in your file". It counts _every_ change,
-  including ones that put a value back where it was.
+- The save-state counter counts changes since the last save. It counts _every_ change,
+  undo and redo included, even one that puts a value back where the file has it.
 - The Relations, Assessment and Quality tabs at the top of the sheet are deliberately
   inert — everything lives on Overview for now.

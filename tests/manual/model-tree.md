@@ -30,7 +30,9 @@
    row, Enter opens. Typing a letter jumps to the next row starting with it — and must not
    switch screens (the app's `g` and `i` shortcuts stay out of the tree).
 8. Select an element row, press ⌘X (Ctrl+X), move to a folder of the same group, press ⌘V
-   (Ctrl+V) — expected: the element moves there.
+   (Ctrl+V) — expected: the element moves there. Press ⌘Z (Ctrl+Z) — expected: it is back
+   where it was; ⇧⌘Z (Ctrl+Shift+Z) moves it again. The header's **Undo** tooltip names
+   the move.
 9. Open **Views → Landscapes → Claims landscape**, then click **Claims Engine** in the tree —
    expected: it is selected on the canvas, the view stays open.
 10. Click another shape on the canvas — expected: the tree opens to that element and
@@ -50,4 +52,4 @@
 
 ## Notes for the tester
 
-- Moves and folder edits are undoable at the store level; there is no undo button yet.
+- Every move and folder edit is undoable with ⌘Z and the header's **Undo**.

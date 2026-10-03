@@ -2,6 +2,7 @@ import { useModelStoreContext } from '@/store'
 import { useFileWorkspace } from '@/ui/files/context'
 import { SaveStateIndicator } from './SaveStateIndicator'
 import { ThemeToggle } from './ThemeToggle'
+import { useUndoRedo } from './use-undo-redo'
 
 /**
  * The 46px header (handoff "Global chrome" → Header).
@@ -17,6 +18,7 @@ export function Header({ onOpenSearch }: HeaderProps) {
   const { role } = useModelStoreContext()
   const { save, startImport, fileName, hasHandle, canPickFiles } = useFileWorkspace()
   const readOnly = role === 'reader'
+  const { undoLabel, redoLabel, undo, redo } = useUndoRedo()
 
   const saveTitle = hasHandle
     ? `Save to ${fileName}`
@@ -55,6 +57,27 @@ export function Header({ onOpenSearch }: HeaderProps) {
           title="Export as ArchiMate Model Exchange Format XML"
         >
           Export
+        </button>
+        <div className="header__divider" aria-hidden="true" />
+        <button
+          type="button"
+          className="header__action"
+          onClick={undo}
+          disabled={!undoLabel}
+          title={undoLabel ? `Undo: ${undoLabel}` : 'Nothing to undo'}
+          aria-keyshortcuts="Meta+Z Control+Z"
+        >
+          Undo
+        </button>
+        <button
+          type="button"
+          className="header__action"
+          onClick={redo}
+          disabled={!redoLabel}
+          title={redoLabel ? `Redo: ${redoLabel}` : 'Nothing to redo'}
+          aria-keyshortcuts="Meta+Shift+Z Control+Shift+Z Control+Y"
+        >
+          Redo
         </button>
       </div>
 
