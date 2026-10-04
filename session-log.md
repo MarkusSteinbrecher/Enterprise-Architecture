@@ -1,5 +1,16 @@
 # Session Log
 
+## 2026-10-04 (cont.) — #93 merged; #98 reviewed post-merge
+
+- **#93** (the #92 follow-ups): merged `main` into it, which conflicted only in this file. Reviewed and merged. Mutation-checked one guard at a time. The palette's `open` check is redundant with `isModalOpen()`, because the palette is `aria-modal`.
+- **#98 (#13) reviewed after merge**, the third PR in a row merged before review. All four criteria are met, but the review found:
+  - **#99:** a file sent to the wrong reader imports as empty and `ok`, with no problem. Dispatch is a substring match.
+  - **#100:** nine silent drops in the native reader, plus notes and groups that Archi centres reading as left-aligned. Archi's `TEXT_ALIGNMENT_EDEFAULT` is 2, and the coverage fixture was hand-written.
+  - **#101 (harness):** readers should report any attribute or child they did not consume.
+- **Harvested** into CLAUDE.md on `fix/98-review-followups`: readers ignore by omission, and fixtures must come from the tool.
+
+Open: fix #99 and #100 on `fix/98-review-followups`, then #101; the #74 decision (M2 editor or transformation core) is still pending.
+
 ## 2026-10-04 — Session wrap-up (2026-10-03 → 04)
 
 **What was done**, one session across five PRs:
