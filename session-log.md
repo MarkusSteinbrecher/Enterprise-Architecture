@@ -1,5 +1,9 @@
 # Session Log
 
+## 2026-10-04 (cont.) — #104 (#103) reviewed before merge
+
+`/review-pr 104`. All four #103 criteria are met. One blocking finding: the new fail-closed `*.root-unreadable` check sits ahead of `*.not-a-model`, so an empty, plain-text or element-less `.xml`/`.archimate` is now told that it "parses as XML… please report this file". Reproduced against `main`. The fix is to raise it only when the parser found a model and the scan did not. A nice-to-have: legacy-namespace files are routed natively, but their Archi 1/2 types (`UsedByRelationship`, `Infrastructure*`) come back as `unknown-type`. The review was posted as a comment, because GitHub refuses request-changes on your own PR. **Harvested:** sharpened the CLAUDE.md fail-closed line (a666a0a+): a closed branch inherits every input of the check it precedes. Open: the finding-1 fix on the branch, then merge.
+
 ## 2026-10-04 (cont.) — #102 (#99) merged; reviewed post-merge
 
 #102 merged before review, the fourth in a row. The post-merge review (code pass by an independent agent) found that the new guard **fails open**: a `[` in a doctype's quoted system id makes `xmlRoot` return undefined, both `root?.`-guarded refusals are skipped, and #99's silent empty import is back. Also, exchange files with no `xmlns` or an `https` namespace are newly refused, and legacy Archi files (`bolton.ac.uk`) get a misleading error. All filed as **#103**. **Harvested** into CLAUDE.md on `fix/103-reader-choice-followups`: a guard that can't classify its input fails closed.
