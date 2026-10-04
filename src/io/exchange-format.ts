@@ -30,7 +30,14 @@ import {
   isReportDefinition,
   isTagGroup,
 } from './canonical-json'
-import { failed, problem, succeeded, type ImportProblem, type ImportResult } from './problems'
+import {
+  failed,
+  problem,
+  relationshipDocumentationSkipped,
+  succeeded,
+  type ImportProblem,
+  type ImportResult,
+} from './problems'
 import { setKey } from './records'
 import {
   asString,
@@ -99,9 +106,9 @@ const SCHEMA_LOCATION = `${NS} http://www.opengroup.org/xsd/archimate/3.1/archim
  * Reports travelled as `archipelago.views` until schema 2 renamed them (#75);
  * a file written then is still read.
  */
-const REPORTS_KEY = `${PROFILE_NAMESPACE}.reports`
-const LEGACY_REPORTS_KEY = `${PROFILE_NAMESPACE}.views`
-const TAG_GROUPS_KEY = `${PROFILE_NAMESPACE}.tagGroups`
+export const REPORTS_KEY = `${PROFILE_NAMESPACE}.reports`
+export const LEGACY_REPORTS_KEY = `${PROFILE_NAMESPACE}.views`
+export const TAG_GROUPS_KEY = `${PROFILE_NAMESPACE}.tagGroups`
 
 /** Tag groups identical to the shipped default are left out — import restores them. */
 const DEFAULT_TAG_GROUPS_JSON = canonicalTagGroupsJson([DEFAULT_TAG_GROUP])
@@ -559,6 +566,12 @@ interface DeclaredProperty {
   type: string
 }
 
+/** Where a reader reports to: the problem list and the file it is reading. */
+export interface ProblemSink {
+  problems: ImportProblem[]
+  where: { file?: string }
+}
+
 /** Everything the readers below need, so the argument lists stay honest. */
 interface Reader {
   definitions: Map<string, DeclaredProperty>
@@ -692,6 +705,20 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   }
   // Property values were read on the way; an unresolved definition can be on a view.
   reportUnresolvedProperties(reader)
+  const documented = list((model.relationships as RawNode | undefined)?.relationship).filter(
+    (raw) => langString(raw.documentation),
+  ).length
+  if (documented) problems.push(relationshipDocumentationSkipped(documented, where))
+  if (langString(model.documentation)) {
+    problems.push(
+      problem(
+        'info',
+        'exchange.model-documentation-skipped',
+        'The model’s documentation was not imported — Archipelago has no place for it yet.',
+        where,
+      ),
+    )
+  }
 
   const workspace: Workspace = {
     id: asString(model['@identifier']) || 'ws-imported',
@@ -825,7 +852,11 @@ function readElement(raw: RawNode, reader: Reader): Element | undefined {
  * lost — but the assessment the file was trying to express did not arrive, and
  * saying so is the difference between this and the silent drop it replaced (#37).
  */
-function reportUnreadProfileKeys(subject: string, unread: readonly string[], reader: Reader): void {
+export function reportUnreadProfileKeys(
+  subject: string,
+  unread: readonly string[],
+  reader: ProblemSink,
+): void {
   if (!unread.length) return
   reader.problems.push(
     problem(
@@ -1019,11 +1050,11 @@ function typedValue(value: string, type: string): PropertyValue {
  * Read back one of the lists the writer carries as a model property. `undefined`
  * means the file carries none, which is not the same as carrying an empty one.
  */
-function carried<T>(
+export function carried<T>(
   raw: PropertyValue | undefined,
   isValid: (value: unknown) => value is T,
   what: string,
-  reader: Reader,
+  reader: ProblemSink,
 ): T[] | undefined {
   if (raw === undefined) return undefined
   let parsed: unknown
@@ -1058,7 +1089,7 @@ function carried<T>(
 }
 
 /** Model-level properties are read for what is ours; the rest have nowhere to go. */
-function reportForeignModelProperties(
+export function reportForeignModelProperties(
   modelProperties: Record<string, PropertyValue>,
   problems: ImportProblem[],
   where: { file?: string },

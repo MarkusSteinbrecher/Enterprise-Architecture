@@ -5,6 +5,7 @@ import { toCanonicalJson } from './canonical-json'
 import { exportExchange, importExchangeXml } from './exchange-format'
 import claimsArchimate from './fixtures/claims-platform.archimate?raw'
 import claimsXml from './fixtures/claims-platform.xml?raw'
+import coverageXml from './fixtures/archi-coverage.xml?raw'
 import attachmentsXml from './fixtures/archi-bendpoint-attachments.xml?raw'
 import unsupportedXml from './fixtures/unsupported-view-constructs.xml?raw'
 
@@ -43,7 +44,10 @@ describe('an exchange file exported by Archi 5.10 (#76)', () => {
   const workspace = read(claimsXml)
 
   it('imports with nothing to report', () => {
-    expect(importExchangeXml(claimsXml).problems).toEqual([])
+    // Only the model's purpose, which Archipelago has no place for yet.
+    expect(importExchangeXml(claimsXml).problems.map((p) => p.code)).toEqual([
+      'exchange.model-documentation-skipped',
+    ])
     expect(validate(workspace).findings).toEqual([])
   })
 
@@ -359,5 +363,29 @@ describe('XML text the parser used to mangle (found in #76)', () => {
     if (element) element.documentation = 'a\r\nb'
     const back = read(exportExchange(workspace).xml)
     expect(back.elements.find((e) => e.id === element?.id)?.documentation).toBe('a\r\nb')
+  })
+})
+
+describe('a shape Archi left at its default size (#13)', () => {
+  // Archi exports such a shape as w="-1" h="-1", which its own XSD rejects.
+  const result = importExchangeXml(coverageXml)
+  const edges = result.workspace!.views.find((view) => view.id === 'v-edges')!
+  const bounds = (id: string) => edges.nodes.find((node) => node.id === id)!.bounds
+
+  it('is drawn at the size Archi draws it, by kind', () => {
+    expect(coverageXml).toContain(
+      'identifier="o-adjuster" elementRef="ba-adjuster" xsi:type="Element" x="40" y="40" w="-1" h="-1"',
+    )
+    expect(bounds('o-adjuster')).toEqual({ x: 40, y: 40, width: 120, height: 55 })
+    expect(bounds('o-group')).toMatchObject({ width: 400, height: 140 })
+    expect(bounds('o-note')).toMatchObject({ width: 185, height: 80 })
+    expect(bounds('o-and')).toMatchObject({ width: 15, height: 15 })
+    expect(bounds('o-engine')).toMatchObject({ width: 160, height: 70 })
+  })
+
+  it('says so, once', () => {
+    const notes = result.problems.filter((p) => p.code === 'exchange.default-size')
+    expect(notes).toHaveLength(1)
+    expect(notes[0]!.message).toMatch(/^6 shapes/)
   })
 })

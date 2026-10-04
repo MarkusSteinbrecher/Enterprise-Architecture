@@ -61,3 +61,19 @@ export function summariseProblems(problems: readonly ImportProblem[]): string {
   if (skipped) parts.push(`${skipped} skipped`)
   return parts.length ? parts.join(' · ') : 'No problems'
 }
+
+/**
+ * Relationships have no documentation field yet, so both readers say how many
+ * descriptions they could not keep rather than losing them quietly (#13).
+ */
+export function relationshipDocumentationSkipped(
+  count: number,
+  where: { file?: string },
+): ImportProblem {
+  return problem(
+    'warning',
+    'import.relationship-documentation-skipped',
+    `${count} relationship${count === 1 ? ' has' : 's have'} documentation, which Archipelago cannot hold on a relationship yet. It was not imported.`,
+    where,
+  )
+}

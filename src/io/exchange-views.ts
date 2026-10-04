@@ -22,6 +22,7 @@ import {
 } from '@/model'
 import { isExchangeSafeId } from '@/store/ids'
 import { problem, type ImportProblem } from './problems'
+import { defaultNodeSize } from './default-sizes'
 import {
   asString,
   attr,
@@ -175,13 +176,13 @@ export function carriesStyle(view: View): boolean {
   return [...view.nodes, ...view.connections].some((item) => carriedStyle(item) !== undefined)
 }
 
-interface CarriedEntries {
+export interface CarriedEntries {
   entries: Map<string, Record<string, unknown>>
   unread: number
 }
 
 /** The carried style entries, by file id. Malformed entries are counted, not thrown. */
-function readCarriedStyle(raw: PropertyValue | undefined): CarriedEntries {
+export function readCarriedStyle(raw: PropertyValue | undefined): CarriedEntries {
   const entries = new Map<string, Record<string, unknown>>()
   if (raw === undefined) return { entries, unread: 0 }
   let parsed: unknown
@@ -202,7 +203,7 @@ function readCarriedStyle(raw: PropertyValue | undefined): CarriedEntries {
 }
 
 /** Apply the carried text settings to the shapes and lines they name. */
-function applyCarriedStyle(
+export function applyCarriedStyle(
   view: View,
   carried: CarriedEntries,
   problems: ImportProblem[],
@@ -256,6 +257,7 @@ export interface ViewReadContext {
 interface Tally {
   attachments: number
   onConnections: number
+  defaultSized: number
 }
 
 export function readViews(model: RawNode, context: ViewReadContext): View[] {
@@ -264,7 +266,7 @@ export function readViews(model: RawNode, context: ViewReadContext): View[] {
   )
   const viewIds = new Set(raws.map((raw) => asString(raw['@identifier'])).filter(isString))
   const font = dominantFont(raws)
-  const tally: Tally = { attachments: 0, onConnections: 0 }
+  const tally: Tally = { attachments: 0, onConnections: 0, defaultSized: 0 }
   // A connection may end on another connection (the format allows it, Archi
   // draws it). The IDREF does not say which it points at, so collect them.
   const connectionIds = new Set(
@@ -299,6 +301,16 @@ export function readViews(model: RawNode, context: ViewReadContext): View[] {
         'info',
         'exchange.connection-attachment-ignored',
         `${tally.attachments} connection end${tally.attachments === 1 ? '' : 's'} carried a fixed attachment point. Archipelago attaches connections at the shape outline, so ${tally.attachments === 1 ? 'that end' : 'those ends'} may be drawn slightly differently.`,
+        context.where,
+      ),
+    )
+  }
+  if (tally.defaultSized) {
+    context.problems.push(
+      problem(
+        'info',
+        'exchange.default-size',
+        `${tally.defaultSized} shape${tally.defaultSized === 1 ? ' has' : 's have'} no size in the file (Archi exports a shape left at its default size as -1). ${tally.defaultSized === 1 ? 'It was' : 'They were'} drawn at Archi's standard defaults (120 × 55 for an element).`,
         context.where,
       ),
     )
@@ -379,7 +391,7 @@ function readView(
   const walk = (raws: RawNode[], parent: Anchor | undefined) => {
     for (const rawNode of raws) {
       let anchor = parent
-      const node = readNode(rawNode, parent, viewIds, font, literal, context, skip)
+      const node = readNode(rawNode, parent, viewIds, font, literal, tally, context, skip)
       if (node && nodeIds.has(node.id)) {
         skip(
           'exchange.duplicate-node-id',
@@ -434,6 +446,7 @@ function readNode(
   viewIds: ReadonlySet<string>,
   font: FontKey | undefined,
   literal: (id: string) => boolean,
+  tally: Tally,
   context: ViewReadContext,
   skip: (code: string, message: string) => void,
 ): ViewNode | undefined {
@@ -505,6 +518,20 @@ function readNode(
         `node "${id}" is a ${type ?? '(untyped)'} node, which Archipelago does not draw. It was skipped; anything nested in it was kept.`,
       )
       return undefined
+  }
+
+  // Archi writes a default-sized shape as -1 by -1, which its own XSD rejects (#13).
+  if (width <= 0 || height <= 0) {
+    tally.defaultSized += 1
+    const size = defaultNodeSize(
+      node.kind,
+      node.kind === 'element' ? context.elements.get(node.element)?.type : undefined,
+    )
+    node.bounds = {
+      ...node.bounds,
+      width: width > 0 ? width : size.width,
+      height: height > 0 ? height : size.height,
+    }
   }
 
   const appearance = literal(id)
@@ -691,7 +718,11 @@ function isDefault(colour: Colour, fallback: Rgb | undefined): boolean {
   )
 }
 
-/** `#rrggbb`, or `#rrggbbaa` below full opacity. Percent ↔ byte round-trips exactly. */
+/**
+ * `#rrggbb`, or `#rrggbbaa` below full opacity. A byte made from a percent comes
+ * back as that percent; any other byte (Archi's own 0–255 alpha, read from a
+ * `.archimate` file) moves to the nearest whole percent on the way out (#13).
+ */
 function hex({ rgb, alpha }: Colour): string {
   const byte = (n: number) => n.toString(16).padStart(2, '0')
   const base = `#${rgb.map(byte).join('')}`

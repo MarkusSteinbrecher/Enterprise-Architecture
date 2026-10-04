@@ -23,6 +23,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
+import { importArchimate } from '../src/io/archimate-native'
 import { exportExchange, importExchangeXml } from '../src/io/exchange-format'
 import type { Workspace } from '../src/model'
 import { drawnWorkspace } from '../src/test/fixtures'
@@ -215,6 +216,21 @@ targets.push({ label: 'declared currency/date/time/number types, re-exported', p
   const attributesPath = join(work, 'relationship-attributes.xml')
   writeFileSync(attributesPath, exportExchange(attributes).xml)
   targets.push({ label: 'isDirected and modifier, re-exported', path: attributesPath })
+}
+
+// Archi's own .archimate files, read natively and written by us (#13). The
+// coverage model holds default-sized shapes, which Archi's export writes as
+// w="-1" and fails its own XSD on; ours must not.
+for (const name of ['claims-platform', 'archi-coverage']) {
+  const path = join('src', 'io', 'fixtures', `${name}.archimate`)
+  const { workspace } = importArchimate(readFileSync(path, 'utf8'), path)
+  if (!workspace) {
+    console.error(`✗ ${path} did not import, so nothing it covers was validated.`)
+    process.exit(1)
+  }
+  const nativePath = join(work, `${name}-from-archimate.xml`)
+  writeFileSync(nativePath, exportExchange(workspace).xml)
+  targets.push({ label: `${name}.archimate, read natively and exported`, path: nativePath })
 }
 
 let failures = 0

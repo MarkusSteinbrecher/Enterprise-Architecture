@@ -1,5 +1,40 @@
 # Session Log
 
+## 2026-10-04 — Session wrap-up (2026-10-03 → 04)
+
+**What was done**, one session across five PRs:
+- #89 (#84) reviewed after it had merged. The findings were fixed in #91 (#90): older schemas are upgraded on read, influence modifiers are trimmed on write, and `validate:xsd` fails on a fixture that won't import. Merged.
+- #92 (#88 + #31): undo and redo in the UI. Merged. Reviewed afterwards; the two bugs it found are fixed in **PR #93** (open).
+- #13 split. Excel/CSV moved to #94; `.archimate` import is in **PR #98** (open). Merging it completes M1 (#74).
+- Issues filed: #94, #95 (documentation fields), #96 (hide nesting-implied connections), #97 (zipped `.archimate`).
+- CLAUDE.md harvested one rule: when mutation-checking, remove one guard at a time.
+- HQ: the Archipelago page and three verification lessons, plus one agentic-workflow lesson, written back and pushed.
+
+**Still open:**
+- PRs #93 and #98 need review and merge. Both prepend to this file, so the second one to merge conflicts here only.
+- Two PRs (#89, #92) merged before `/review-pr` ran. Their post-merge reviews found real bugs both times.
+- Sponsor decision (#74): M2 diagram editor, or the #72 transformation core.
+- Backlog from this session: #94–#97.
+
+## 2026-10-03 (cont.) — #13 implemented (.archimate import)
+
+#13 split: Excel/CSV moved to **#94** (repository track T1), and #13 is now `.archimate` only, the last item of model-pillar M1 (#74). Built on `feat/13-archimate-import`.
+
+**`src/io/archimate-native.ts`** reads Archi's own file straight into the model. `readWorkspaceFile` picks the reader by the root's namespace, not the extension. Decisions carried forward:
+
+- **Archi's export is the oracle, not the spec.** Each fixture pair is one model saved by Archi 5.10 and exported by Archi 5.10. The test reads both and allows only the documented differences, which are all places where Archi's export loses data: text alignment, shape line width, a line's name, folder ids, and nesting-hidden connections.
+- **New fixture `archi-coverage.archimate`.** It covers every edge case, including all 24 viewpoints; the viewpoint map was taken from Archi's export, not guessed. Archi's export of it fails Archi's own XSD on purpose.
+- **Archi exports default-sized shapes as `w="-1"`**, which is invalid. The exchange reader stored `-1` and drew broken shapes, a bug that predates #13. Both readers now resolve sizes from `default-sizes.ts`.
+- **Bendpoints follow GEF's `RelativeBendpoint`**: integer centres, a weighted mean, floored. The `v-rounding` view's odd sizes are what tell integer centres from fractional ones; nothing else in the fixtures did.
+- The parser keeps namespace prefixes: a junction's `type` overwrote its `xsi:type` otherwise.
+- Specializations become the `Specialization` property, as Archi's export does.
+- Things with no place in the model are now reported, in both readers where it applies: relationship documentation and model documentation (filed as #95), sketches, canvases, images, router, folder properties. A zipped `.archimate` (a model with images) is refused with an explanation (#97).
+- The import dialog's copy said diagrams and folders are not imported. That has been untrue since #76; fixed.
+
+781 unit tests and 19 journeys pass, including new journey 9 (`archimate-import.spec.ts`). `validate:xsd` checks both native fixtures re-exported. Mutation-checked: 20 single changes, each caught, among them the bendpoint centre, both readers' defaults, the access default, the viewpoint map, the zip check, dispatch, and the parent offset (in the journey too).
+
+Open: #96 (the canvas should hide nesting-implied connections like Archi), #95, #97. M1 is done once this merges, and #74 needs your decision: M2 editor or the transformation core.
+
 ## 2026-10-03 (cont.) — #92 reviewed post-merge; two follow-ups fixed
 
 #92 (#88, #31) merged before review. The post-merge review's code pass found two low findings, both mine, and both fixed on `fix/92-review-followups`:

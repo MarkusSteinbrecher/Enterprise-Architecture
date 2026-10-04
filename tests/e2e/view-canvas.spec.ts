@@ -19,8 +19,12 @@ const LANDSCAPE = { nodes: 45, connections: 40, relationships: 38 } as const
 test('an imported Archi view draws every node and connection', async ({ page }, testInfo) => {
   await startEmpty(page)
   await importWorkspaceFile(page, FIXTURE)
-  // An import with nothing to report closes its own dialog.
-  await expect(page.getByRole('dialog', { name: 'Import' })).toBeHidden()
+  // Archi exports the model's purpose as its documentation, which has nowhere
+  // to go yet, so the report stays open to say so (#13).
+  const dialog = page.getByRole('dialog', { name: 'Import' })
+  await expect(dialog).toContainText('documentation was not imported')
+  await dialog.getByRole('button', { name: 'Done' }).click()
+  await expect(dialog).toBeHidden()
 
   const tree = page.getByRole('tree', { name: 'Model tree' })
   await tree.getByRole('treeitem', { name: 'Views', exact: true }).click()
