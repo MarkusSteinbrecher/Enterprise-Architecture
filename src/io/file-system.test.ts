@@ -21,7 +21,7 @@ describe('reading a file the user handed us', () => {
     expect(result.workspace?.relationships).toHaveLength(4)
   })
 
-  it('reads an Archi .archimate extension through the exchange reader', async () => {
+  it('reads an exchange file named .archimate with the exchange reader: the content decides', async () => {
     const result = await readWorkspaceFile(
       file('ArchiSurance.archimate', exportExchangeXml(smallWorkspace())),
     )

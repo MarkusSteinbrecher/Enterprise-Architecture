@@ -61,8 +61,8 @@ function ImportDialogBody() {
         <div className="dialog__title section-label">Import a model</div>
 
         <p className="dialog__help">
-          Canonical JSON from Archipelago, or ArchiMate Model Exchange Format XML from Archi and
-          other certified tools. Diagrams and folder structure are not imported.
+          An Archi model (.archimate), ArchiMate Model Exchange Format XML from Archi and other
+          certified tools, or canonical JSON from Archipelago. Views and folders come with it.
         </p>
 
         <div className="dialog__actions dialog__actions--start">
