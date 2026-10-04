@@ -66,6 +66,7 @@ import {
   relationshipProfileToProperties,
   stripProfileKeys,
 } from './profile-properties'
+import { xmlRoot } from './xml-root'
 
 /**
  * The Open Group ArchiMate Model Exchange File Format (concept §5.3 item 2).
@@ -86,6 +87,8 @@ import {
  */
 
 const NS = 'http://www.opengroup.org/xsd/archimate/3.0/'
+/** Every version of the format, 3.0 and 3.1 alike, lives under this. */
+const EXCHANGE_NAMESPACE_FAMILY = 'http://www.opengroup.org/xsd/archimate'
 const XSI = 'http://www.w3.org/2001/XMLSchema-instance'
 /**
  * The Diagram schema, which includes the Model schema and adds views — what
@@ -610,6 +613,20 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
         'error',
         'exchange.unparseable',
         `The file is not valid XML: ${error instanceof Error ? error.message : String(error)}`,
+        where,
+      ),
+    ])
+  }
+
+  // Archi's own file also has a root called `model`, and read here it came in
+  // empty, ok and silent. The exchange format is the Open Group's namespace (#99).
+  const root = xmlRoot(xml)
+  if (root?.local === 'model' && !root.namespace?.startsWith(EXCHANGE_NAMESPACE_FAMILY)) {
+    return failed([
+      problem(
+        'error',
+        'exchange.wrong-namespace',
+        `The root element <${root.local}> is ${root.namespace ? `in the namespace ${root.namespace}` : 'in no namespace'}, not the Open Group’s (${NS}), so this is not an ArchiMate Model Exchange Format file.`,
         where,
       ),
     ])
