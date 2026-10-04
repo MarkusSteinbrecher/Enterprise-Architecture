@@ -1,5 +1,11 @@
 # Session Log
 
+## 2026-10-04 (cont.) — #102 (#99) merged; reviewed post-merge
+
+#102 merged before review, the fourth in a row. The post-merge review (code pass by an independent agent) found that the new guard **fails open**: a `[` in a doctype's quoted system id makes `xmlRoot` return undefined, both `root?.`-guarded refusals are skipped, and #99's silent empty import is back. Also, exchange files with no `xmlns` or an `https` namespace are newly refused, and legacy Archi files (`bolton.ac.uk`) get a misleading error. All filed as **#103**. **Harvested** into CLAUDE.md on `fix/103-reader-choice-followups`: a guard that can't classify its input fails closed.
+
+Open: #103 (small; fix next on this branch), #100, #101; the #74 decision.
+
 ## 2026-10-04 (cont.) — #93 merged; #98 reviewed post-merge
 
 - **#93** (the #92 follow-ups): merged `main` into it, which conflicted only in this file. Reviewed and merged. Mutation-checked one guard at a time. The palette's `open` check is redundant with `isModalOpen()`, because the palette is `aria-modal`.
