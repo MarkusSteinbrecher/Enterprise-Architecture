@@ -33,6 +33,22 @@ describe('the root element’s namespace (#99)', () => {
     })
   })
 
+  // #103: a `[` in a quoted id was taken for the start of the internal subset,
+  // the scan found no root, and the readers' namespace guards were skipped.
+  it('reads past brackets and > in a doctype’s quoted ids and its subset’s comments and instructions', () => {
+    for (const doctype of [
+      '<!DOCTYPE model SYSTEM "a[b.dtd">',
+      '<!DOCTYPE model PUBLIC "-//x]>y//EN" \'c[d>.dtd\'>',
+      // One apostrophe each: two would pair up and hide a quote mis-tracked.
+      "<!DOCTYPE model [ <!-- don't ]> --> ]>",
+      "<!DOCTYPE model [ <?pi it's ]> ?> ]>",
+      '<!DOCTYPE model [ <!ENTITY a "x"> <!ENTITY e "]> <model xmlns=\'urn:fake\'>"> ]>',
+    ]) {
+      const text = `<?xml version="1.0"?>\n${doctype}\n<model xmlns="urn:real"><![CDATA[x]]></model>`
+      expect(xmlRoot(text), doctype).toEqual({ local: 'model', namespace: 'urn:real' })
+    }
+  })
+
   it('reads past a > inside an attribute value', () => {
     expect(xmlRoot('<model name="A > B" xmlns="urn:after">')).toEqual({
       local: 'model',

@@ -4,7 +4,16 @@
 
 #102 merged before review, the fourth in a row. The post-merge review (code pass by an independent agent) found that the new guard **fails open**: a `[` in a doctype's quoted system id makes `xmlRoot` return undefined, both `root?.`-guarded refusals are skipped, and #99's silent empty import is back. Also, exchange files with no `xmlns` or an `https` namespace are newly refused, and legacy Archi files (`bolton.ac.uk`) get a misleading error. All filed as **#103**. **Harvested** into CLAUDE.md on `fix/103-reader-choice-followups`: a guard that can't classify its input fails closed.
 
-Open: #103 (small; fix next on this branch), #100, #101; the #74 decision.
+- **#103 fixed** on the same branch:
+  - Both readers fail closed on a root the scan can't find (`*.root-unreadable`).
+  - The doctype skip is quote-aware.
+  - The exchange reader refuses only Archi's namespaces. No namespace, or a near miss, is read with an info note.
+  - Archi's legacy `bolton.ac.uk` namespace is read natively.
+  - Zip names are trimmed.
+
+  Mutation checks found two survivors. A subset-tracking flag was redundant with the outer loop, so it was deleted. A test with two apostrophes that cancelled out was split.
+
+Open: PR for #103 awaits `/review-pr` **before** merge. Then #100 and #101, and the #74 decision.
 
 ## 2026-10-04 (cont.) — #93 merged; #98 reviewed post-merge
 

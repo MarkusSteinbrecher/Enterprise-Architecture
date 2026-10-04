@@ -245,8 +245,14 @@ through the exchange format. `readWorkspaceFile` chooses it by the root's Archi
 namespace, not the extension. Both formats call their root `model`, so
 `xml-root.ts` resolves the root element's own prefix to its namespace; a
 mention of the URI in a comment or in documentation does not count. Each reader
-also refuses a `model` root in the other's namespace (`archimate.wrong-namespace`,
-`exchange.wrong-namespace`) rather than reading it as an empty model (#99). Archi's file is closer to the model than its
+also refuses the other's file rather than reading it as an empty model (#99):
+the native reader anything outside Archi's namespaces (`archimate.wrong-namespace`),
+the exchange reader only Archi's (`exchange.wrong-namespace`). An exchange file
+with no namespace, or a near miss, is read with an info note
+(`exchange.namespace-unexpected`). Archi's namespaces are its own and the
+`http://www.bolton.ac.uk/archimate` of Archi 1 and 2, which Archi still opens. A
+file that parses but whose root the scan cannot find is refused by both
+(`*.root-unreadable`): the guard fails closed (#103). Archi's file is closer to the model than its
 export is, and the export loses things, so the readers deliberately disagree in
 a few places. `archimate-native.test.ts` reads each checked-in pair (one model
 saved by Archi, and exported by Archi) and allows only these differences:
