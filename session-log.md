@@ -1,5 +1,21 @@
 # Session Log
 
+## 2026-10-04 — Session wrap-up (2026-10-03 → 04)
+
+**What was done**, one session across five PRs:
+- #89 (#84) reviewed after it had merged. The findings were fixed in #91 (#90): older schemas are upgraded on read, influence modifiers are trimmed on write, and `validate:xsd` fails on a fixture that won't import. Merged.
+- #92 (#88 + #31): undo and redo in the UI. Merged. Reviewed afterwards; the two bugs it found are fixed in **PR #93** (open).
+- #13 split. Excel/CSV moved to #94; `.archimate` import is in **PR #98** (open). Merging it completes M1 (#74).
+- Issues filed: #94, #95 (documentation fields), #96 (hide nesting-implied connections), #97 (zipped `.archimate`).
+- CLAUDE.md harvested one rule: when mutation-checking, remove one guard at a time.
+- HQ: the Archipelago page and three verification lessons, plus one agentic-workflow lesson, written back and pushed.
+
+**Still open:**
+- PRs #93 and #98 need review and merge. Both prepend to this file, so the second one to merge conflicts here only.
+- Two PRs (#89, #92) merged before `/review-pr` ran. Their post-merge reviews found real bugs both times.
+- Sponsor decision (#74): M2 diagram editor, or the #72 transformation core.
+- Backlog from this session: #94–#97.
+
 ## 2026-10-03 (cont.) — #13 implemented (.archimate import)
 
 #13 split: Excel/CSV moved to **#94** (repository track T1), and #13 is now `.archimate` only, the last item of model-pillar M1 (#74). Built on `feat/13-archimate-import`.
