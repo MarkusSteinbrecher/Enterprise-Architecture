@@ -35,6 +35,15 @@
 
 Open: #96 (the canvas should hide nesting-implied connections like Archi), #95, #97. M1 is done once this merges, and #74 needs your decision: M2 editor or the transformation core.
 
+## 2026-10-03 (cont.) — #92 reviewed post-merge; two follow-ups fixed
+
+#92 (#88, #31) merged before review. The post-merge review's code pass found two low findings, both mine, and both fixed on `fix/92-review-followups`:
+
+- **⌘Z in a lifecycle date field did nothing.** `hasNativeUndo` excused only `<select>`, but date-like inputs also commit on change, keep focus and have no text undo. Now `date`, `time`, `datetime-local`, `month` and `week` reach the model too.
+- **The modal-guard test never tested the modal guard.** It used the palette, whose own `open` flag returned first. It now uses the create-element dialog. My original mutation had removed both guards at once, which is why it looked covered. **Harvested** into CLAUDE.md: remove one guard at a time.
+
+Open: next is #13 (`.archimate` import), then the M2-vs-transformation decision (#74).
+
 ## 2026-10-03 (cont.) — #88 + #31 implemented (undo and redo in the UI)
 
 **Undo and redo reach the user** (`feat/88-undo-redo-ui`, closing #88 and the older #31). ⌘Z / Ctrl+Z undo and ⇧⌘Z / Ctrl+Shift+Z / Ctrl+Y redo. The header has **Undo** and **Redo** buttons, with tooltips that name the step from `describeCommand`, and the palette offers `Undo: …` / `Redo: …` when there is a step to take. Decisions carried forward:
