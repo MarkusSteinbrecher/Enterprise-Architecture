@@ -6,7 +6,12 @@ import attributesNative from './fixtures/relationship-attributes.archimate?raw'
 import attributesExchange from './fixtures/relationship-attributes.xml?raw'
 import coverageNative from './fixtures/archi-coverage.archimate?raw'
 import coverageExchange from './fixtures/archi-coverage.xml?raw'
-import { SPECIALIZATION_KEY, importArchimate, isArchiModel } from './archimate-native'
+import {
+  ARCHI_NAMESPACE,
+  SPECIALIZATION_KEY,
+  importArchimate,
+  isArchiModel,
+} from './archimate-native'
 import { fromCanonicalJson, toCanonicalJson } from './canonical-json'
 import { exportExchange, importExchangeXml } from './exchange-format'
 import { readWorkspaceFile } from './file-system'
@@ -332,6 +337,50 @@ describe('choosing the reader (#13)', () => {
     expect(asXml.workspace?.views).toHaveLength(3)
     const named = await readWorkspaceFile(file('model.archimate', claimsExchange))
     expect(named.problems.map((p) => p.code)).toEqual(['exchange.model-documentation-skipped'])
+  })
+
+  // #99: the choice was a substring search over the first 4 KB, so any of these
+  // sent the file to the wrong reader, which returned an empty workspace, ok,
+  // with nothing reported.
+  it('goes by the root’s namespace, not by where the namespace is mentioned', async () => {
+    const mentioned = claimsExchange.replace(
+      '<model ',
+      `<!-- converted from "${ARCHI_NAMESPACE}" by Archi --><model `,
+    )
+    expect(isArchiModel(mentioned)).toBe(false)
+    const read = await readWorkspaceFile(file('model.xml', mentioned))
+    expect(read.ok).toBe(true)
+    expect(read.workspace?.elements.length).toBe(exchange(claimsExchange).elements.length)
+
+    const singleQuoted = claimsNative.replace(
+      `xmlns:archimate="${ARCHI_NAMESPACE}"`,
+      `xmlns:archimate='${ARCHI_NAMESPACE}'`,
+    )
+    expect(singleQuoted).not.toBe(claimsNative)
+    const longPreamble = claimsNative.replace(
+      '<archimate:model',
+      `<!-- ${'x'.repeat(5000)} -->\n<archimate:model`,
+    )
+    for (const text of [singleQuoted, longPreamble]) {
+      const result = await readWorkspaceFile(file('model.archimate', text))
+      expect(result.workspace?.views).toHaveLength(3)
+    }
+  })
+
+  it('refuses the other format’s file in each reader, instead of reading it as empty', () => {
+    const asExchange = importExchangeXml(claimsNative)
+    expect(asExchange.ok).toBe(false)
+    expect(asExchange.problems.map((p) => p.code)).toEqual(['exchange.wrong-namespace'])
+    const asArchi = importArchimate(claimsExchange)
+    expect(asArchi.ok).toBe(false)
+    expect(asArchi.problems.map((p) => p.code)).toEqual(['archimate.wrong-namespace'])
+  })
+
+  it('does not call any other zip an Archi model', async () => {
+    const result = await readWorkspaceFile(file('report.docx', 'PK\u0003\u0004rest'))
+    expect(result.ok).toBe(false)
+    expect(result.problems.map((p) => p.code)).toEqual(['file.archive-unrecognised'])
+    expect(result.problems[0]!.message).not.toMatch(/Archi model saved/)
   })
 
   it('explains an Archi model saved as an archive with images', async () => {

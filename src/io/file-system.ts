@@ -154,7 +154,21 @@ export async function openWorkspaceFile(): Promise<OpenedFile | undefined> {
 export async function readWorkspaceFile(file: File): Promise<ImportResult> {
   const text = await file.text()
   // An Archi model with images in it is saved as a zip archive, not as XML. Its
-  // signature is four ASCII bytes, so the decoded text starts with them too.
+  // signature is four ASCII bytes, so the decoded text starts with them too. So
+  // does every other zip, and a .docx or .xlsx is not an Archi model (#99).
+  if (text.startsWith('PK\u0003\u0004') && !file.name.toLowerCase().endsWith('.archimate')) {
+    return {
+      ok: false,
+      problems: [
+        problem(
+          'error',
+          'file.archive-unrecognised',
+          `“${file.name}” is a compressed archive, not a model file. Archipelago opens canonical JSON, Archi models (.archimate) and ArchiMate exchange XML.`,
+          { file: file.name },
+        ),
+      ],
+    }
+  }
   if (text.startsWith('PK\u0003\u0004')) {
     return {
       ok: false,

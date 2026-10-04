@@ -242,7 +242,11 @@ organisation.
 
 `archimate-native.ts` reads a `.archimate` straight into the model rather than
 through the exchange format. `readWorkspaceFile` chooses it by the root's Archi
-namespace, not the extension. Archi's file is closer to the model than its
+namespace, not the extension. Both formats call their root `model`, so
+`xml-root.ts` resolves the root element's own prefix to its namespace; a
+mention of the URI in a comment or in documentation does not count. Each reader
+also refuses a `model` root in the other's namespace (`archimate.wrong-namespace`,
+`exchange.wrong-namespace`) rather than reading it as an empty model (#99). Archi's file is closer to the model than its
 export is, and the export loses things, so the readers deliberately disagree in
 a few places. `archimate-native.test.ts` reads each checked-in pair (one model
 saved by Archi, and exported by Archi) and allows only these differences:
@@ -275,4 +279,5 @@ images, a relationship that ends on a relationship, a connection that ends on a
 connection, display settings without a counterpart (gradient, …), connection
 routers, folder properties, relationship documentation, and the model's
 purpose. An Archi model saved with images is a zip archive, which is refused
-with an explanation (`archimate.archive-unsupported`).
+with an explanation (`archimate.archive-unsupported`). Any other zip, such as a
+`.docx`, is named as an archive, not as an Archi model (`file.archive-unrecognised`).

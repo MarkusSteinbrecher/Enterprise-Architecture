@@ -52,6 +52,7 @@ import {
   stripProfileKeys,
 } from './profile-properties'
 import { setKey } from './records'
+import { xmlRoot } from './xml-root'
 
 /**
  * Archi's native `.archimate` file (#13): how Archi users arrive.
@@ -71,10 +72,9 @@ import { setKey } from './records'
 
 export const ARCHI_NAMESPACE = 'http://www.archimatetool.com/archimate'
 
-/** Is this text an Archi model file rather than an exchange file? Decided by the root's namespace. */
+/** Is this text an Archi model file rather than an exchange file? Decided by the root's own namespace (#99). */
 export function isArchiModel(text: string): boolean {
-  const head = text.slice(0, 4096)
-  return head.includes(`"${ARCHI_NAMESPACE}"`) && /<([\w.-]+:)?model[\s>]/.test(head)
+  return xmlRoot(text)?.namespace === ARCHI_NAMESPACE
 }
 
 /** Archi's viewpoint ids, as the exchange format (and so the model) spells them. Taken from Archi 5.10's own export. */
@@ -222,6 +222,19 @@ export function importArchimate(xml: string, file?: string): ImportResult {
         'error',
         'archimate.unparseable',
         `The file is not valid XML: ${error instanceof Error ? error.message : String(error)}`,
+        where,
+      ),
+    ])
+  }
+  // Any root called `model` parses, so a file in another format would come in
+  // empty, ok and silent. The namespace is what makes it Archi's (#99).
+  const root = xmlRoot(xml)
+  if (root?.local === 'model' && root.namespace !== ARCHI_NAMESPACE) {
+    return failed([
+      problem(
+        'error',
+        'archimate.wrong-namespace',
+        `The root element <${root.local}> is ${root.namespace ? `in the namespace ${root.namespace}` : 'in no namespace'}, not Archi’s (${ARCHI_NAMESPACE}), so this is not an Archi model file.`,
         where,
       ),
     ])

@@ -1,5 +1,18 @@
 # Session Log
 
+## 2026-10-04 (cont.) — #93 merged; #98 reviewed post-merge
+
+- **#93** (the #92 follow-ups): merged `main` into it, which conflicted only in this file. Reviewed and merged. Mutation-checked one guard at a time. The palette's `open` check is redundant with `isModalOpen()`, because the palette is `aria-modal`.
+- **#98 (#13) reviewed after merge**, the third PR in a row merged before review. All four criteria are met, but the review found:
+  - **#99:** a file sent to the wrong reader imports as empty and `ok`, with no problem. Dispatch is a substring match.
+  - **#100:** nine silent drops in the native reader, plus notes and groups that Archi centres reading as left-aligned. Archi's `TEXT_ALIGNMENT_EDEFAULT` is 2, and the coverage fixture was hand-written.
+  - **#101 (harness):** readers should report any attribute or child they did not consume.
+- **Harvested** into CLAUDE.md on `fix/98-review-followups`: readers ignore by omission, and fixtures must come from the tool.
+
+- **#99 fixed** on `fix/98-review-followups`. The new `xml-root.ts` resolves the root element's own prefix to its namespace, skipping the prolog, comments, instructions and a doctype subset; it is quote-aware and decodes entities. Dispatch uses it. Each reader refuses a `model` root in the other's namespace (`*.wrong-namespace`) instead of reading it as empty. A non-`.archimate` zip is named as an archive (`file.archive-unrecognised`). Every guard was mutation-checked on its own: a redundant BOM skip was deleted, and a doctype test that could not fail was fixed.
+
+Open: #100 (silent drops and the alignment default; it needs `archi-coverage.archimate` re-saved by Archi), then #101; the #74 decision (M2 editor or transformation core) is still pending.
+
 ## 2026-10-04 — Session wrap-up (2026-10-03 → 04)
 
 **What was done**, one session across five PRs:
