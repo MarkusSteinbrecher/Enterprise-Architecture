@@ -1,5 +1,16 @@
 # Session Log
 
+## 2026-10-05 (cont.) — #108, #115 and #105, settled against Archi itself
+
+#113 and #114 were merged by the sponsor. Then three issues, each settled with evidence from Archi 5.10 rather than from memory:
+
+- **#108 → PR #116.** Archi's HTML report (`--html.createReport`) rendered a fixture Archi saved, `text-position.archimate`. An absent position (top) on a Group is the tab row, centred in a one-line tab, which is exactly where Archipelago's middle-of-the-tab puts it. Boxes and notes are top in both. So **no reader change**: `text-position.test.tsx` pins the evidence (5 of 5 mutations caught). `export-with-archi.sh` now finds Archi in `/Applications`, and a full run re-saved every fixture byte-identically.
+- **#115 (filed, then fixed) → PR #117, stacked on #116.** Archi places an explicit middle or bottom label on a Group or Grouping over the whole box and leaves the tab empty, which `javap` of `GroupFigure` confirms. `labelBox()` now does the same (6 of 6 mutations caught; the explicit-top test first could not fail and was rewritten).
+- **#105 → PR #119.** The fixture is Archi 2.0.0's own Open Day example, MIT (© Bolton University), vendored byte-for-byte with a NOTICE. `LEGACY_TYPES` is Archi's `ConverterExtendedMetadata.TYPE_MAP`. **Sponsor's call:** follow Archi and convert in any namespace, which replaces #105's 4th criterion; a comment on #105 records it. An OrJunction is kept as or and reported, because Archi 5.10 silently opens it as and. Open Day now reads 27/39/4/47 like Archi; before, it read 20 of 39 relationships and 0 views (7 of 7 mutations caught).
+- **Filed #118:** Archi's version-keyed compatibility handlers. The worst is that every model older than 4.4.0 has its group labels left-aligned in Archi, which affects Archi 4.x files in today's namespace too.
+
+**Still open:** review #116, #117 and #119 (merge #116 before #117); then #118 and #74 (the sponsor's decision). Merged remote branches to delete: `feat/111-model-language`, `chore/session-log-2026-10-05`.
+
 ## 2026-10-05 (cont.) — #114 (#111) reviewed; fixes pushed
 
 `/review-pr 114` ran in the author's session. The code pass was a separate background agent (9 candidates). Both criteria are met. **8 findings, all fixed in `5ab26f6`:**
