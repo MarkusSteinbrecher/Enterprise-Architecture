@@ -43,6 +43,8 @@ Where the diff touches them, verify the CLAUDE.md invariants:
 
 - **Uncontrolled inputs plus a route parameter is a data-loss bug.** Any `defaultValue`/`defaultChecked` on a screen routed by `/:id` — and any sibling state such as an `editing` flag — check what happens when the id changes without a remount. #27 carried one element's name and documentation onto the next and committed them on blur. The fix under review should be `key={id}`, not a reset effect.
 
+- **A parser option is a change to every value the parser returns.** When a PR changes the `XMLParser` options (`trimValues`, `removeNSPrefix`, `parseTagValue`, …), list how an *empty* element now arrives — `<x/>`, `<x> </x>`, `<x>\n</x>` — and grep every `!value`, `=== ''`, `list(…)` and `isRawNode` guard that relied on the old shape. #100 turned off trimming to stop silent text changes and, by the same stroke, made `<model> </model>` parse to `' '`: truthy, so an empty file imported as an ok model again, and `<bendpoint>\n</bendpoint>` fell through the very fix meant to keep it (#106 review).
+
 For architectural changes, check conformance with `design/decisions/` ADRs; a deliberate deviation needs a new/amended ADR in the same PR, not a silent drift.
 
 ## 3. Code review (the generic layer)
