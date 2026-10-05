@@ -2,6 +2,7 @@ import { memo } from 'react'
 import { type Appearance, type ElementType, type JunctionKind } from '@/model'
 import { ELEMENT_NOTATION, notationColours, type Body } from './element-notation'
 import { GLYPHS, type Box, type Paint } from './glyphs'
+import { labelBox } from './label-box'
 import { NotationText } from './NotationText'
 import { UI_FAMILY, measureText } from './text'
 
@@ -103,7 +104,7 @@ export const ElementShape = memo(function ElementShape({
   const tab = grouping ? groupingTab(width, name, appearance) : undefined
   const top = tab ? 0 : headerOffset(notation.body)
   const textBox: Box = tab
-    ? { x: PAD, y: 0, w: tab.w - PAD * 2, h: tab.h }
+    ? labelBox(appearance, { x: PAD, y: 0, w: tab.w - PAD * 2, h: tab.h }, width, height)
     : { x: PAD, y: PAD + top, w: width - PAD * 2, h: height - PAD * 2 - top }
   // Lines beside the icon stay clear of it on both sides, so centred names stay centred.
   const clear = icon

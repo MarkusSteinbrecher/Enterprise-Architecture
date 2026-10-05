@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import type { Appearance } from '@/model'
+import { labelBox } from './label-box'
 import { NotationText } from './NotationText'
 import { UI_FAMILY, measureText } from './text'
 
@@ -78,7 +79,7 @@ export const GroupShape = memo(function GroupShape({
       <path d={`M0,${tabH}H${w}V${h}H0Z`} {...p} />
       <NotationText
         name={name}
-        box={{ x: TAB_PAD, y: 0, w: tabW - TAB_PAD * 2, h: tabH }}
+        box={labelBox(appearance, { x: TAB_PAD, y: 0, w: tabW - TAB_PAD * 2, h: tabH }, w, h)}
         appearance={appearance}
         defaultAlignment="left"
         defaultPosition="middle"

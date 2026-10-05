@@ -28,7 +28,7 @@ import { ElementShape } from './ElementShape'
  * So top in Archi is the tab row, and the label is centred in a one-line tab,
  * which is what Archipelago's `middle`-of-the-tab draws. No reader change is
  * needed. Archi places an *explicit* middle or bottom over the whole box, even
- * on a group, where Archipelago keeps it in the tab: that is #115.
+ * on a group, and leaves the tab empty; Archipelago kept it in the tab until #115.
  *
  * Elements drawn as a figure (Archi's `type="1"`) are not drawn in imported
  * views; the reader reports the figure as undrawn, so their defaults are not
@@ -82,6 +82,12 @@ function drawn(id: string): { root: SVGSVGElement; appearance: Appearance | unde
   }
 }
 
+/** The tab's width, off the drawn path (`M0,0H<w>V…H0Z`). */
+function tabWidth(root: SVGSVGElement): number {
+  const d = root.querySelector('path')!.getAttribute('d')!
+  return Number(/^M0,0H([\d.]+)/.exec(d)![1])
+}
+
 /** The tab's height, off the drawn path (`M0,0H…V<h>H0Z`). */
 function tabHeight(root: SVGSVGElement): number {
   const d = root.querySelector('path')!.getAttribute('d')!
@@ -125,8 +131,35 @@ describe('an absent textPosition, read from a file Archi saved (#108)', () => {
   })
 
   // #115: Archi centres an explicit middle in the whole box (60), not the tab.
-  it.fails('draws a group’s explicit middle in the middle of the box, as Archi does (#115)', () => {
-    const { root, appearance } = drawn('o-group-1')
-    expect(Math.abs(firstLineCentre(root, appearance) - 60)).toBeLessThanOrEqual(3)
+  it.each(['group', 'grouping'])(
+    'draws a %s’s explicit middle and bottom over the whole box, with the tab empty (#115)',
+    (kind) => {
+      // Archi: 60 for middle and 108 for bottom, the tab left empty.
+      const middle = drawn(`o-${kind}-1`)
+      const bottom = drawn(`o-${kind}-2`)
+      expect(Math.abs(firstLineCentre(middle.root, middle.appearance) - 60)).toBeLessThanOrEqual(3)
+      expect(firstLineCentre(bottom.root, bottom.appearance)).toBeGreaterThan(100)
+      expect(firstLineCentre(bottom.root, bottom.appearance)).toBeLessThan(115)
+    },
+  )
+
+  it('keeps an explicit top in the tab row, like no position at all (#115)', () => {
+    const absent = drawn('o-group-absent')
+    const top = svg(
+      <GroupShape
+        width={180}
+        height={120}
+        name="Group absent"
+        appearance={{ textPosition: 'top', textAlignment: 'center' }}
+      />,
+    )
+    // Vertically, the tab row and the top of the box are 2 apart; a centred
+    // label tells them apart by where its centre is: the tab's, or the box's.
+    for (const root of [top, absent.root]) {
+      const centreX = Number(root.querySelector('tspan')!.getAttribute('x'))
+      expect(tabWidth(root)).toBeLessThan(150)
+      expect(Math.abs(centreX - tabWidth(root) / 2)).toBeLessThanOrEqual(1)
+      expect(firstLineCentre(root)).toBeLessThan(tabHeight(root))
+    }
   })
 })
