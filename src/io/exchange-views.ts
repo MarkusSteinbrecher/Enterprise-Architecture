@@ -5,6 +5,7 @@ import {
   TEXT_POSITIONS,
   absoluteBounds,
   defaultFolderRoot,
+  drawsRelationshipEnds,
   findElementType,
   type Appearance,
   type Element,
@@ -433,24 +434,6 @@ function readView(
   return view
 }
 
-/**
- * A connection draws its relationship between drawings of the relationship's own
- * two elements, in its direction, as `validate` requires. One that does not is
- * reported at import rather than left for validation to find (#100).
- */
-export function drawsEnds(
-  relationship: Relationship,
-  source: ViewNode | undefined,
-  target: ViewNode | undefined,
-): boolean {
-  return (
-    source?.kind === 'element' &&
-    target?.kind === 'element' &&
-    source.element === relationship.source &&
-    target.element === relationship.target
-  )
-}
-
 /** A node's id and absolute position: what its children are placed relative to. */
 interface Anchor {
   id: string
@@ -616,7 +599,7 @@ function readConnection(
       )
       return undefined
     }
-    if (!drawsEnds(drawn, nodesById.get(source), nodesById.get(target))) {
+    if (!drawsRelationshipEnds(drawn, nodesById.get(source), nodesById.get(target))) {
       skip(
         'exchange.connection-mismatch',
         `connection "${id}" draws ${drawn.type} relationship "${relationshipRef}" between nodes that do not show its source and target. It was skipped.`,

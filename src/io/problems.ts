@@ -1,4 +1,5 @@
 import type { Workspace } from '@/model'
+import { listed } from './exchange-xml'
 
 /**
  * Import problems are data, not exceptions.
@@ -100,6 +101,5 @@ export function propertyRepeated(
 
 /** The first few values, quoted, for a message that must stay one line. */
 function quotedList(values: readonly string[]): string {
-  const shown = values.slice(0, 3).map((value) => JSON.stringify(value))
-  return shown.join(', ') + (values.length > 3 ? ', …' : '')
+  return listed(values.map((value) => JSON.stringify(value)))
 }

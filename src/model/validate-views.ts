@@ -1,5 +1,6 @@
 import { findElementType } from './element-types'
 import type { Finding } from './validate'
+import { drawsRelationshipEnds } from './views'
 import {
   FOLDER_ROOT_LABELS,
   defaultFolderRoot,
@@ -145,11 +146,7 @@ function validateView(
       )
       continue
     }
-    // A connection is a drawing of its relationship, so it has to run between
-    // drawings of the relationship's own two elements, in the same direction.
-    const sourceElement = source.kind === 'element' ? source.element : undefined
-    const targetElement = target.kind === 'element' ? target.element : undefined
-    if (sourceElement !== relationship.source || targetElement !== relationship.target) {
+    if (!drawsRelationshipEnds(relationship, source, target)) {
       findings.push(
         viewFinding(
           'error',

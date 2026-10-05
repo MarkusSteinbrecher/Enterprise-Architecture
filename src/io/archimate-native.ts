@@ -4,6 +4,7 @@ import {
   DEFAULT_TAG_GROUP,
   FOLDER_ROOT_LABELS,
   SCHEMA_VERSION,
+  drawsRelationshipEnds,
   isElementType,
   isInfluenceModifier,
   isRelationshipType,
@@ -36,7 +37,7 @@ import {
   reportUnreadProfileKeys,
   type ProblemSink,
 } from './exchange-format'
-import { STYLE_KEY, applyCarriedStyle, drawsEnds, readCarriedStyle } from './exchange-views'
+import { STYLE_KEY, applyCarriedStyle, readCarriedStyle } from './exchange-views'
 import { asString, claimIdentifier, isRawNode, list, listed, type RawNode } from './exchange-xml'
 import {
   failed,
@@ -288,12 +289,11 @@ export function importArchimate(xml: string, file?: string): ImportResult {
   for (const member of members) {
     const kind = classify(member.type)
     if (kind !== 'element') continue
+    // A duplicate is skipped before it is read, so what it carries is not
+    // reported as well, for an object that was not imported (#106 review).
+    if (isDuplicate(member, elementIds, 'element', reader)) continue
     const element = readElement(member, reader)
     if (!element) continue
-    if (elementIds.has(element.id)) {
-      duplicate(reader, 'element', element.id)
-      continue
-    }
     elementIds.add(element.id)
     elements.push(element)
   }
@@ -302,12 +302,9 @@ export function importArchimate(xml: string, file?: string): ImportResult {
   const relationshipsById = new Map<string, Relationship>()
   for (const member of members) {
     if (classify(member.type) !== 'relationship') continue
+    if (isDuplicate(member, relationshipsById, 'relationship', reader)) continue
     const relationship = readRelationship(member, elementIds, reader)
     if (!relationship) continue
-    if (relationshipsById.has(relationship.id)) {
-      duplicate(reader, 'relationship', relationship.id)
-      continue
-    }
     relationshipsById.set(relationship.id, relationship)
     relationships.push(relationship)
     // Counted only once kept: a skipped relationship's documentation is not lost here (#100).
@@ -355,12 +352,9 @@ export function importArchimate(xml: string, file?: string): ImportResult {
   const views: View[] = []
   const seenViews = new Set<string>()
   for (const member of diagrams) {
+    if (isDuplicate(member, seenViews, 'view', reader)) continue
     const view = readView(member, context)
     if (!view) continue
-    if (seenViews.has(view.id)) {
-      duplicate(reader, 'view', view.id)
-      continue
-    }
     seenViews.add(view.id)
     views.push(view)
   }
@@ -429,7 +423,7 @@ function readFolders(model: RawNode, reader: Reader): { members: Member[]; folde
       if (documentation) folder.documentation = documentation
       if (parent) folder.parent = parent.id
       else folder.root = root
-      if (list(raw.property).length) folderProperties.push(folder.name || folder.id)
+      if (entries(raw.property).length) folderProperties.push(folder.name || folder.id)
       folders.push(folder)
       for (const element of list(raw.element)) {
         members.push({ raw: element, type: typeOf(element), folder: folder.id })
@@ -456,7 +450,7 @@ function readFolders(model: RawNode, reader: Reader): { members: Member[]; folde
     // neither documentation nor properties (#100).
     const name = asString(top['@name']) || FOLDER_ROOT_LABELS[root]
     if (textOf(top.documentation)) topDocumented.push(name)
-    if (list(top.property).length) folderProperties.push(name)
+    if (entries(top.property).length) folderProperties.push(name)
     for (const element of list(top.element)) members.push({ raw: element, type: typeOf(element) })
     walk(list(top.folder), undefined, root)
   }
@@ -693,7 +687,7 @@ function readConceptProperties(
       problem(
         'warning',
         'archimate.specialization-shadowed',
-        `"${id}" has the specialization “${names[0]}” and also its own “${SPECIALIZATION_KEY}” property, where a specialization is kept. The property was kept and the specialization was not imported.`,
+        `"${id}" has the specialization${names.length === 1 ? '' : 's'} “${names.join('”, “')}” and also its own “${SPECIALIZATION_KEY}” property, where a specialization is kept. The property was kept and ${names.length === 1 ? 'the specialization was' : 'the specializations were'} not imported.`,
         at,
       ),
     )
@@ -877,17 +871,20 @@ function readView(member: Member, context: ViewContext): View | undefined {
   const connectionIds = new Set(rawConnections.map((c) => asString(c['@id'])).filter(isString))
   const seen = new Set<string>()
   for (const rawConnection of rawConnections) {
-    countUnsupported(rawConnection, CONNECTION_ATTRIBUTES, reader)
-    const connection = readConnection(rawConnection, boxes, nodesById, connectionIds, context, skip)
-    if (!connection) continue
-    if (seen.has(connection.id)) {
+    // Only a connection that is kept has its values and content tallied: a
+    // skipped one was reported as skipped (#106 review).
+    const rawId = asString(rawConnection['@id'])
+    if (rawId !== undefined && seen.has(rawId)) {
       skip(
         'archimate.duplicate-connection-id',
-        `two connections share the id "${connection.id}"; the later one was skipped.`,
+        `two connections share the id "${rawId}"; the later one was skipped.`,
       )
       continue
     }
+    const connection = readConnection(rawConnection, boxes, nodesById, connectionIds, context, skip)
+    if (!connection) continue
     seen.add(connection.id)
+    countUnsupported(rawConnection, CONNECTION_ATTRIBUTES, reader)
     checkViewContent(rawConnection, connection, reader)
     view.connections.push(connection)
   }
@@ -999,8 +996,7 @@ function readConnection(
     return undefined
   }
 
-  const bendpoints = absoluteBendpoints(entries(raw.bendpoint), from, to, context.reader)
-  const base = { id, source, target, ...(bendpoints.length ? { bendpoints } : {}) }
+  const base = { id, source, target }
   // EMF writes no `xsi:type` when it is the reference's own type, which for a
   // shape's connections is the plain line. Only a re-save by Archi showed it (#100).
   const [, local] = splitType(typeOf(raw) || 'archimate:DiagramModelConnection')
@@ -1015,7 +1011,7 @@ function readConnection(
       )
       return undefined
     }
-    if (!drawsEnds(drawn, nodesById.get(source), nodesById.get(target))) {
+    if (!drawsRelationshipEnds(drawn, nodesById.get(source), nodesById.get(target))) {
       skip(
         'archimate.connection-mismatch',
         `connection "${id}" draws ${drawn.type} relationship "${relationship}" between shapes that do not show its source and target. It was skipped.`,
@@ -1034,6 +1030,10 @@ function readConnection(
     )
     return undefined
   }
+  // Read once the connection is known to be kept, so a malformed offset on a
+  // skipped one is not reported as drawn (#106 review).
+  const bendpoints = absoluteBendpoints(entries(raw.bendpoint), from, to, context.reader)
+  if (bendpoints.length) connection.bendpoints = bendpoints
   const appearance = readAppearance(raw, context.reader, { node: false, centred: false })
   if (appearance) connection.appearance = appearance
   return connection
@@ -1408,6 +1408,19 @@ function reportTally(reader: Reader): void {
   }
 }
 
+/** Is this member's id already taken by one kept earlier? If so, it is reported. */
+function isDuplicate(
+  member: Member,
+  kept: { has(id: string): boolean },
+  what: string,
+  reader: Reader,
+): boolean {
+  const id = asString(member.raw['@id'])
+  if (id === undefined || !kept.has(id)) return false
+  duplicate(reader, what, id)
+  return true
+}
+
 function duplicate(reader: Reader, what: string, id: string): void {
   reader.problems.push(
     problem(
@@ -1443,14 +1456,15 @@ function measured(raw: RawNode, key: string, reader: Reader): number | undefined
 }
 
 /**
- * Like `list`, but an element with neither attributes nor content is an empty
- * node rather than nothing. EMF writes a bendpoint at 0, 0 as `<bendpoint/>`,
- * which the parser hands over as `''`, and `list` dropped it (#100).
+ * Like `list`, but an element with no attributes and no content but whitespace
+ * is an empty node rather than nothing. EMF writes a bendpoint at 0, 0 as
+ * `<bendpoint/>`, which the parser hands over as `''`, and `list` dropped it
+ * (#100). Untrimmed, `<bendpoint>` and a line break is `'\n'` (#106 review).
  */
 function entries(value: unknown): RawNode[] {
   if (value === undefined || value === null) return []
   return (Array.isArray(value) ? value : [value])
-    .map((item: unknown) => (item === '' ? {} : item))
+    .map((item: unknown) => (typeof item === 'string' && item.trim() === '' ? {} : item))
     .filter(isRawNode)
 }
 
