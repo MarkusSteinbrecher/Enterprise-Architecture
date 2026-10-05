@@ -1,5 +1,21 @@
 # Session Log
 
+## 2026-10-05 (cont.) — #111 implemented: a model keeps its language
+
+On `feat/111-model-language`, PR #114. The work took option 2 from the issue, plus option 1's report.
+
+- `Workspace.language` holds the `xml:lang` that most of the kept texts carry. Absent means `en`, so existing files keep their bytes. The exchange writer labels every text with it.
+- `Ledger.text` counts the tag of each text it marks, so only texts that land in the model decide. `@lang` left the exchange reader's `IGNORED`, and no content-unread test changed.
+- A text in another language is reported as `exchange.language-relabelled`. Only an `xs:language` tag is ever held: the exchange reader, the JSON reader and the writer all guard it.
+- The fixture is Archi's own German export (`--xmlexchange.exportLang de`). Archi labels all 69 texts with one language, and the file is otherwise identical to the English one. It is in `export-with-archi.sh` and the XSD run.
+- 20 of 20 single mutations were caught. 888 tests pass, and `validate:xsd` is green.
+
+Note: on this machine Archi is at `/Applications/Archi.app`, not the script's default `~/Applications`; set `ARCHI` when re-running it.
+
+Also: the earlier wrap-up entry had been pushed to the #107 branch after #112 merged, so it never reached `main`. PR #113 carries it.
+
+**Still open:** review and merge #114, then #113. Also #108 (check Archi first), #105 (needs a genuine legacy file) and #74 (the sponsor's decision).
+
 ## 2026-10-05 — Session wrap-up (#101, #107)
 
 **What was done:**
@@ -21,7 +37,6 @@
 **Still open:**
 - #108: an absent `textPosition`; check it in Archi first.
 - #105: the Archi 2.x vocabulary.
-- #111: language tags.
 - #74: the sponsor's decision, M2 editor or transformation core.
 - Merged remote branches ready to delete: `fix/100-archimate-silent-drops`, `feat/101-reader-consumption` and `feat/107-exchange-malformed-values` from this session. Older merged branches also linger on the remote.
 
