@@ -1,5 +1,24 @@
 # Session Log
 
+## 2026-10-05 (cont.) — #110 (#101) reviewed before merge
+
+`/review-pr 110`. All four #101 criteria are met.
+
+**Method:** the independent code pass failed three times. Each background review agent stalled at the 600 s watchdog and returned nothing; the third failure was two parallel agents at once. At the sponsor's choice the code layer ran inline in the author's session, and the review says so. Every finding was reproduced, and Archi attribute claims were checked with `javap`, one class at a time.
+
+**Findings, all fixed on the branch with tests, each fix mutation-checked (6 of 6 caught):**
+1. A Label's `conceptRef` was marked read above the branch and reported only on the note branch, so a binding on a resolving view reference was dropped silently and certified by the ledger. It is now reported on both branches. The label is marked read on a reference only when it is the referenced view's name, which is what Archi writes.
+2. A connection's `textAlignment`, a real Archi setting on `DiagramModelConnection`, had gone from an info note to an unread-content warning. It is now listed as undrawn.
+3. A nit: features on a view, a folder or the model were reported as a bare `<feature>`. They are now named.
+
+**Already tracked:** malformed exchange values marked read and dropped (#107). `xml:lang` re-exported as `en`, which is pre-existing and now documented in `IGNORED`.
+
+**Harvested** (review skill §2):
+- A ledger mark hoisted above a branch certifies the drop in that branch.
+- Another tool's attribute list is checked per class against its model, not as a flat set of names.
+
+Open: merging #110, which is left to the sponsor.
+
 ## 2026-10-05 (cont.) — #101 implemented: readers report what they did not consume
 
 On `feat/101-reader-consumption`. Both XML readers now keep a `Ledger` (`src/io/consumption.ts`):

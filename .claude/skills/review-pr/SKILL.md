@@ -45,6 +45,10 @@ Where the diff touches them, verify the CLAUDE.md invariants:
 
 - **A parser option is a change to every value the parser returns.** When a PR changes the `XMLParser` options (`trimValues`, `removeNSPrefix`, `parseTagValue`, …), list how an *empty* element now arrives — `<x/>`, `<x> </x>`, `<x>\n</x>` — and grep every `!value`, `=== ''`, `list(…)` and `isRawNode` guard that relied on the old shape. #100 turned off trimming to stop silent text changes and, by the same stroke, made `<model> </model>` parse to `' '`: truthy, so an empty file imported as an ok model again, and `<bendpoint>\n</bendpoint>` fell through the very fix meant to keep it (#106 review).
 
+- **A ledger mark hoisted above a branch certifies the drop in the branch that neither keeps nor reports the value.** The readers' `Ledger` (#101) trusts every `use`/`text`/`whole` call, so for each mark in the diff, find the branches below it and check that *each* one stores the value or reports it. #110 marked a Label's `conceptRef` before an `if` whose reference branch kept nothing and reported nothing: the drop was silent, and the ledger now vouched for it. The same block marked the label read on a branch whose node holds no text.
+
+- **A list of another tool's attributes is checked class by class against that tool's model, not as a flat set of names.** `javap` each class the reader maps, and diff its properties against what the reader reads, lists as known-unsupported, or ignores. #110 built Archi's undrawn display attributes from one flat string dump and missed that `DiagramModelConnection` also has `textAlignment`, which turned a real Archi setting from an info note into an "unread content" warning.
+
 For architectural changes, check conformance with `design/decisions/` ADRs; a deliberate deviation needs a new/amended ADR in the same PR, not a silent drift.
 
 ## 3. Code review (the generic layer)

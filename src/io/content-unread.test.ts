@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { importArchimate } from './archimate-native'
 import { Ledger } from './consumption'
 import { importExchangeXml } from './exchange-format'
+import type { Workspace } from '@/model'
 import type { ImportResult } from './problems'
 
 /**
@@ -15,6 +16,11 @@ const unread = (result: ImportResult) =>
   result.problems
     .filter((p) => p.code === 'import.content-unread')
     .map((p) => ({ subject: p.subject, message: p.message }))
+
+function workspaceOf(result: ImportResult): Workspace {
+  if (!result.workspace) throw new Error(JSON.stringify(result.problems))
+  return result.workspace
+}
 
 const STRAY = 'stray="1"'
 const CHILD = '<stray/>'
@@ -288,5 +294,81 @@ describe('the losses the ledger found in files the readers already took', () => 
       expect.stringMatching(/^2 shapes \(sa, inner\) carry the attribute “stray”/),
     )
     expect(messages.join('\n')).not.toContain('img')
+  })
+})
+
+describe('the #110 review', () => {
+  it('reports a label’s concept binding on a view reference too, and keeps a label only where it is the view’s name', () => {
+    const result = importExchangeXml(
+      exchange.replace(
+        '</view></diagrams>',
+        `<node identifier="bound" xsi:type="Label" x="0" y="100" w="100" h="40" conceptRef="a"><label xml:lang="en">W</label><viewRef ref="w"/></node>
+    <node identifier="renamed" xsi:type="Label" x="0" y="200" w="100" h="40"><label xml:lang="en">Not W</label><viewRef ref="w"/></node>
+  </view><view identifier="w" xsi:type="Diagram"><name xml:lang="en">W</name></view></diagrams>`,
+      ),
+    )
+    expect(workspaceOf(result).views[0]?.nodes.map((n) => [n.id, n.kind])).toEqual(
+      expect.arrayContaining([
+        ['bound', 'view-ref'],
+        ['renamed', 'view-ref'],
+      ]),
+    )
+    expect(result.problems).toContainEqual(
+      expect.objectContaining({
+        code: 'exchange.label-binding-ignored',
+        message: expect.stringContaining('label "bound" is bound to concept "a"'),
+      }),
+    )
+    expect(unread(result)).toContainEqual({
+      subject: 'renamed',
+      message: expect.stringMatching(/^1 view node \(renamed\) carries <label>/),
+    })
+    // The label Archi writes, the view's own name, is not a loss.
+    expect(unread(result).map((u) => u.subject)).not.toContain('bound')
+  })
+
+  it('counts a connection’s text alignment as an Archi display setting, not as unread content', () => {
+    const result = importArchimate(
+      archi.replace(
+        'archimateRelationship="r" stray="1"',
+        'archimateRelationship="r" textAlignment="1"',
+      ),
+    )
+    expect(result.problems).toContainEqual(
+      expect.objectContaining({
+        code: 'archimate.appearance-unsupported',
+        message: expect.stringContaining('textAlignment'),
+      }),
+    )
+    expect(
+      unread(result)
+        .map((u) => u.message)
+        .join('\n'),
+    ).not.toContain('textAlignment')
+  })
+
+  it('names a feature on a view, a folder and the model', () => {
+    const result = importArchimate(
+      archi
+        .replace('name="V" id="v">', 'name="V" id="v"><feature name="onView" value="1"/>')
+        .replace(`id="f" ${STRAY}>`, `id="f" ${STRAY}><feature name="onFolder" value="1"/>`)
+        .replace('</archimate:model>', '<feature name="onModel" value="1"/></archimate:model>'),
+    )
+    expect(unread(result)).toEqual(
+      expect.arrayContaining([
+        {
+          subject: 'v',
+          message: expect.stringMatching(/^1 view \(v\) carries the feature “onView”/),
+        },
+        {
+          subject: 'f',
+          message: expect.stringMatching(/^1 folder \(f\) carries the feature “onFolder”/),
+        },
+        {
+          subject: 'm',
+          message: expect.stringMatching(/^The model carries the feature “onModel”/),
+        },
+      ]),
+    )
   })
 })

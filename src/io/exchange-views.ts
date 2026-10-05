@@ -272,7 +272,13 @@ export function readViews(model: RawNode, context: ViewReadContext): View[] {
   const raws = list((model.views as RawNode | undefined)?.diagrams).flatMap((diagrams) =>
     list(diagrams.view),
   )
-  const viewIds = new Set(raws.map((raw) => asString(raw['@identifier'])).filter(isString))
+  /** View id → its name: what a view reference may point at, and the label Archi gives it. */
+  const viewIds = new Map<string, string>()
+  for (const raw of raws) {
+    const viewId = asString(raw['@identifier'])
+    if (viewId !== undefined && !viewIds.has(viewId))
+      viewIds.set(viewId, langString(raw.name) ?? '')
+  }
   const font = dominantFont(raws)
   const tally: Tally = { attachments: 0, onConnections: 0, defaultSized: 0 }
   // A connection may end on another connection (the format allows it, Archi
@@ -342,7 +348,7 @@ export function readViews(model: RawNode, context: ViewReadContext): View[] {
 
 function readView(
   raw: RawNode,
-  viewIds: ReadonlySet<string>,
+  viewIds: ReadonlyMap<string, string>,
   fileConnectionIds: ReadonlySet<string>,
   font: FontKey | undefined,
   tally: Tally,
@@ -468,7 +474,7 @@ interface Anchor {
 function readNode(
   raw: RawNode,
   parent: Anchor | undefined,
-  viewIds: ReadonlySet<string>,
+  viewIds: ReadonlyMap<string, string>,
   font: FontKey | undefined,
   literal: (id: string) => boolean,
   tally: Tally,
@@ -521,14 +527,16 @@ function readNode(
     }
     case 'Label': {
       const viewRef = asString((list(raw.viewRef)[0] ?? {})['@ref'])
-      // Kept as a reference, or reported and kept as a note; the label is the
-      // note's text, and a binding is reported.
+      // Kept as a reference, or reported and kept as a note.
       context.ledger.first(raw, 'viewRef')
       for (const ref of list(raw.viewRef).slice(0, 1)) context.ledger.use(ref, '@ref')
-      context.ledger.text(raw, 'label')
-      context.ledger.use(raw, '@conceptRef')
-      if (viewRef !== undefined && viewIds.has(viewRef)) {
+      const referenced = viewRef === undefined ? undefined : viewIds.get(viewRef)
+      if (viewRef !== undefined && referenced !== undefined) {
         node = { ...base, kind: 'view-ref', view: viewRef }
+        // A reference draws the view's own name, which is what Archi writes as
+        // its label. Any other label is not kept, so it is left for the ledger
+        // (#110 review).
+        if (label === undefined || label === referenced) context.ledger.text(raw, 'label')
       } else {
         if (viewRef !== undefined) {
           skip(
@@ -537,12 +545,16 @@ function readNode(
           )
         }
         node = { ...base, kind: 'note', text: label ?? '' }
-        if (raw['@conceptRef'] !== undefined) {
-          skip(
-            'exchange.label-binding-ignored',
-            `label "${id}" is bound to concept "${asString(raw['@conceptRef']) ?? ''}", which Archipelago does not support; its current text was kept as a note.`,
-          )
-        }
+        context.ledger.text(raw, 'label')
+      }
+      // Reported on either branch, so marked with the report: marked above the
+      // branch, it certified the drop on the reference branch (#110 review).
+      if (raw['@conceptRef'] !== undefined) {
+        skip(
+          'exchange.label-binding-ignored',
+          `label "${id}" is bound to concept "${asString(raw['@conceptRef']) ?? ''}", which Archipelago does not support; it was kept as ${node.kind === 'note' ? 'a note with its current text' : 'a view reference'}.`,
+        )
+        context.ledger.use(raw, '@conceptRef')
       }
       break
     }

@@ -157,8 +157,15 @@ const UNDRAWN_NODE_ATTRIBUTES: ReadonlySet<string> = new Set([
   'imagePosition',
   'locked',
 ])
-/** A connection's `type` is its line decoration; its text position is where its label sits. */
-const UNDRAWN_CONNECTION_ATTRIBUTES: ReadonlySet<string> = new Set(['type', 'textPosition'])
+/**
+ * A connection's `type` is its line decoration; its text position and alignment
+ * place its label (`DiagramModelConnection`, checked class by class with javap).
+ */
+const UNDRAWN_CONNECTION_ATTRIBUTES: ReadonlySet<string> = new Set([
+  'type',
+  'textPosition',
+  'textAlignment',
+])
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -410,6 +417,7 @@ export function importArchimate(xml: string, file?: string): ImportResult {
   }
   reportTally(reader)
   ledger.use(model, '@id', '@name')
+  readUnheldFeatures(model, reader)
   problems.push(
     ...reportUnread(
       ledger.unread(model, 'model', {
@@ -472,6 +480,7 @@ function readFolders(model: RawNode, reader: Reader): { members: Member[]; folde
       reader.ledger.use(raw, '@id', '@name', 'element', 'folder')
       reader.ledger.text(raw, 'documentation')
       reader.ledger.whole(raw, 'property')
+      readUnheldFeatures(raw, reader)
       for (const element of list(raw.element)) {
         members.push({ raw: element, type: typeOf(element), folder: folder.id })
       }
@@ -502,6 +511,7 @@ function readFolders(model: RawNode, reader: Reader): { members: Member[]; folde
     // its documentation and properties are reported just above.
     reader.ledger.use(top, '@type', '@id', '@name', 'element', 'folder')
     reader.ledger.whole(top, 'documentation', 'property')
+    readUnheldFeatures(top, reader)
     for (const element of list(top.element)) members.push({ raw: element, type: typeOf(element) })
     walk(list(top.folder), undefined, root)
   }
@@ -606,7 +616,7 @@ function readElement(member: Member, reader: Reader): Element | undefined {
   } else if (isElementType(local)) type = local
   else return undefined
 
-  readConceptFeatures(raw, reader)
+  readUnheldFeatures(raw, reader)
   const properties = readConceptProperties(raw, id, reader)
   const { profile, unread } = readPortfolioProfile(properties)
   reportUnreadProfileKeys(id, unread, reader)
@@ -661,7 +671,7 @@ function readRelationship(
     return undefined
   }
 
-  readConceptFeatures(raw, reader)
+  readUnheldFeatures(raw, reader)
   const properties = readConceptProperties(raw, id, reader)
   const read = readRelationshipProfile(properties)
   reportUnreadProfileKeys(id, read.unread, reader)
@@ -882,6 +892,7 @@ function readView(member: Member, context: ViewContext): View | undefined {
     'child',
   )
   reader.ledger.text(raw, 'documentation')
+  readUnheldFeatures(raw, reader)
   const documentation = textOf(raw.documentation)
   if (documentation) view.documentation = documentation
   const viewpoint = asString(raw['@viewpoint'])
@@ -1351,11 +1362,11 @@ function checkViewContent(raw: RawNode, object: ViewNode | ViewConnection, reade
 }
 
 /**
- * Archi's features on an element or relationship: settings it added after its
- * first file format, stored as name and value. None is read on a concept, so
- * each is reported by its name (#100).
+ * Archi's features on an object that holds none here (an element, a relationship,
+ * a view, a folder, the model): settings Archi added after its first file format,
+ * stored as name and value. Each is reported by its name (#100, #110 review).
  */
-function readConceptFeatures(raw: RawNode, reader: Reader): void {
+function readUnheldFeatures(raw: RawNode, reader: Reader): void {
   for (const feature of list(raw.feature)) {
     reader.ledger.lose(raw, describeFeature(asString(feature['@name']) ?? ''))
   }
