@@ -222,8 +222,9 @@ targets.push({ label: 'declared currency/date/time/number types, re-exported', p
 
 // Archi's own .archimate files, read natively and written by us (#13). The
 // coverage model holds default-sized shapes, which Archi's export writes as
-// w="-1" and fails its own XSD on; ours must not.
-for (const name of ['claims-platform', 'archi-coverage']) {
+// w="-1" and fails its own XSD on; ours must not. The legacy model is Archi
+// 2.0.0's, in the old vocabulary, read as Archi 5.10 reads it (#105).
+for (const name of ['claims-platform', 'archi-coverage', 'archi-legacy-open-day']) {
   const path = join('src', 'io', 'fixtures', `${name}.archimate`)
   const { workspace } = importArchimate(readFileSync(path, 'utf8'), path)
   if (!workspace) {

@@ -293,7 +293,18 @@ with no namespace, or a near miss, is read with an info note
 (`exchange.namespace-unexpected`). Archi's namespaces are its own and the
 `http://www.bolton.ac.uk/archimate` of Archi 1 and 2, which Archi still opens. A
 file that parses but whose root the scan cannot find is refused by both
-(`*.root-unreadable`): the guard fails closed (#103). Archi's file is closer to the model than its
+(`*.root-unreadable`): the guard fails closed (#103). An older Archi's names are
+read as Archi 5.10 reads them, by Archi's own rename table
+(`ConverterExtendedMetadata.TYPE_MAP`, copied into `LEGACY_TYPES`): the
+ArchiMate 2.x types, the British spellings, `DiagramModel`, the two junction
+classes and `BusinessActivity`. A connection's old `relationship` attribute reads
+as `archimateRelationship`, and with both present the later one wins, as in Archi.
+Archi applies the table whatever the namespace, and so does this reader. What was
+converted is reported once (`archimate.legacy-names-converted`), counting only
+what was kept. The one deliberate difference: an `OrJunction` stays an
+or-junction, where Archi 5.10 maps the class and opens it as an and-junction
+(`archimate.legacy-or-junction`, #105). Archi's version-keyed compatibility
+handlers are not applied yet (#118). Archi's file is closer to the model than its
 export is, and the export loses things, so the readers deliberately disagree in
 a few places. `archimate-native.test.ts` reads each checked-in pair (one model
 saved by Archi, and exported by Archi) and allows only these differences:
