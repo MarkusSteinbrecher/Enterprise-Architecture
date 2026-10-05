@@ -1,5 +1,63 @@
 # Session Log
 
+## 2026-10-05 (cont.) — #114 (#111) reviewed; fixes pushed
+
+`/review-pr 114` ran in the author's session. The code pass was a separate background agent (9 candidates). Both criteria are met. **8 findings, all fixed in `5ab26f6`:**
+- Texts of skipped duplicates voted. Archipelago reads an object before it knows to skip it, and a probe turned a German model French. Fixed in the ledger: `skip` untags, and a new `forget` covers texts read and then not kept.
+- Dropped model properties and unused definition names outvoted kept texts. The candidate said this was silent; in fact it was reported, but the wrong language was chosen.
+- Untagged texts were relabelled silently. They now vote `en`, and they are reported when the model is not `en`.
+- Tags were compared case-sensitively, so `EN` was a second spelling of English.
+- An invalid majority tag crowned a stray minority tag; such a model now stays `en`.
+- Fixed folder labels voted.
+- The `xs:language` pattern was written out twice.
+- There was no ADR, so **ADR 0007** was added.
+
+After the fixes, 16 single mutations were caught, one equivalent mutant was removed, and 898 tests pass.
+
+**Harvested:** review-skill §2. A tally fed by ledger marks must survive later skips and dropped reads.
+
+**Open:** CI on `5ab26f6`, then merge #114 and then #113.
+
+## 2026-10-05 (cont.) — #111 implemented: a model keeps its language
+
+On `feat/111-model-language`, PR #114. The work took option 2 from the issue, plus option 1's report.
+
+- `Workspace.language` holds the `xml:lang` that most of the kept texts carry. Absent means `en`, so existing files keep their bytes. The exchange writer labels every text with it.
+- `Ledger.text` counts the tag of each text it marks, so only texts that land in the model decide. `@lang` left the exchange reader's `IGNORED`, and no content-unread test changed.
+- A text in another language is reported as `exchange.language-relabelled`. Only an `xs:language` tag is ever held: the exchange reader, the JSON reader and the writer all guard it.
+- The fixture is Archi's own German export (`--xmlexchange.exportLang de`). Archi labels all 69 texts with one language, and the file is otherwise identical to the English one. It is in `export-with-archi.sh` and the XSD run.
+- 20 of 20 single mutations were caught. 888 tests pass, and `validate:xsd` is green.
+
+Note: on this machine Archi is at `/Applications/Archi.app`, not the script's default `~/Applications`; set `ARCHI` when re-running it.
+
+Also: the earlier wrap-up entry had been pushed to the #107 branch after #112 merged, so it never reached `main`. PR #113 carries it.
+
+**Still open:** merge #114, then #113. Also #108 (check Archi first), #105 (needs a genuine legacy file) and #74 (the sponsor's decision).
+
+## 2026-10-05 — Session wrap-up (#101, #107)
+
+**What was done:**
+- **#101:** both XML readers report every attribute and child element they did not consume. The mechanism is the `Ledger` in `src/io/consumption.ts`, which reports leftovers as `import.content-unread`.
+  - Implemented and reviewed (#110). Three findings were fixed: a mark placed above a branch, a missed Archi `textAlignment`, and unnamed features.
+  - Merged by the sponsor (`5792be5`); #101 is closed.
+  - It found real silent drops: model `<metadata>`, unused specializations, a second language, a property with no value, a root group's documentation.
+- **#107:** the exchange reader reports malformed values (`exchange.value-malformed`) through one `measured()` shared with the native reader in `exchange-xml.ts`.
+  - Implemented and reviewed (#112). Two findings were fixed: colour ranges were clamped silently, and the message was untrue for a malformed opacity.
+  - Merged by the sponsor (`6ff2750`); #107 is closed.
+- Filed **#111**: the exchange round trip relabels every text as `xml:lang="en"`.
+- Harvested:
+  - The CLAUDE.md "never drops data silently" line now points to the ledger: mark where a value lands, not where it is fetched.
+  - Three review-skill §2 bullets: a hoisted ledger mark certifies a drop; another tool's attributes are checked class by class with javap; a tally's message must hold for every key, and "not allowed" means the schema's range.
+  - HQ lesson: importers account for what they consume.
+
+**Process note:** background review agents stalled at the 600 s watchdog three times running. Both reviews' code passes ran inline in the author's session at the sponsor's choice, and each review says so.
+
+**Still open:**
+- #108: an absent `textPosition`; check it in Archi first.
+- #105: the Archi 2.x vocabulary.
+- #74: the sponsor's decision, M2 editor or transformation core.
+- Merged remote branches ready to delete: `fix/100-archimate-silent-drops`, `feat/101-reader-consumption` and `feat/107-exchange-malformed-values` from this session. Older merged branches also linger on the remote.
+
 ## 2026-10-05 (cont.) — #112 (#107) reviewed before merge
 
 `/review-pr 112`. All three #107 criteria are met. The code pass ran inline, as for #110, because the background agents had stalled earlier.
