@@ -182,13 +182,14 @@ more than "string".
 
 **Language.** Every text in the format carries an `xml:lang`, and Archi labels
 all of them with the one language its export is given. The model holds one text
-per field, so it holds one language: `Workspace.language`, the tag most of the
-kept texts carry (absent is `en`), and the writer labels every text with it.
-`Ledger.text` counts the tag of each text it marks, so a text the reader drops or
-reports does not decide the language. A text in another language is relabelled by
-the next export, and `exchange.language-relabelled` says so on import (#111).
-Before, the reader ignored the tag and the writer wrote `en`, so a German model
-came back out claiming to be English.
+per field, so it holds one language: `Workspace.language` (absent is `en`), and
+the writer labels every text with it. ADR 0007 has the rule. In short, the texts
+the model keeps decide it by majority, with tags compared ignoring case and
+untagged texts voting `en`. `Ledger.text` records each text it marks, and
+`skip` and `forget` take back the ones the reader does not keep after all. A text
+the next export labels differently is reported as `exchange.language-relabelled`
+(#111, #114). Before, the reader ignored the tag and the writer wrote `en`, so a
+German model came back out claiming to be English.
 
 **Empty strings.** `<value xml:lang="en"></value>` parses to its attributes
 alone. That is the empty string, not "no value"; reading it as absent dropped the

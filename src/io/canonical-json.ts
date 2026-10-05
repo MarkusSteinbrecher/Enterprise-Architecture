@@ -69,7 +69,8 @@ export function toCanonicalJson(workspace: Workspace): string {
     tagGroups: [...workspace.tagGroups].sort(byId).map(canonicalTagGroup),
     propertyTypes: workspace.propertyTypes && emptyToUndefined(workspace.propertyTypes),
     // Absent is en: written out, the same model would have two spellings.
-    language: workspace.language === DEFAULT_LANGUAGE ? undefined : workspace.language,
+    language:
+      workspace.language?.toLowerCase() === DEFAULT_LANGUAGE ? undefined : workspace.language,
   }
   return `${JSON.stringify(canonical, sortKeys, CANONICAL_JSON_INDENT)}\n`
 }
@@ -699,7 +700,9 @@ function readLanguage(
   where: { file?: string },
 ): string | undefined {
   if (candidate === undefined) return undefined
-  if (isLanguageTag(candidate)) return candidate === DEFAULT_LANGUAGE ? undefined : candidate
+  if (isLanguageTag(candidate)) {
+    return candidate.toLowerCase() === DEFAULT_LANGUAGE ? undefined : candidate
+  }
   problems.push(
     problem(
       'warning',

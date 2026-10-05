@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Workspace } from '@/model'
 import { drawnWorkspace } from '@/test/fixtures'
 import { fromCanonicalJson, toCanonicalJson } from './canonical-json'
+import { Ledger } from './consumption'
 import { exportExchange, importExchangeXml } from './exchange-format'
 import type { ImportResult } from './problems'
 import claimsDe from './fixtures/claims-platform.de.xml?raw'
@@ -136,7 +137,7 @@ describe('a text in another language than the model’s (#111)', () => {
     const [report, ...more] = relabelled(result)
     expect(more).toEqual([])
     expect(report?.severity).toBe('info')
-    expect(report?.message).toContain('2 texts are labelled with a language other than de')
+    expect(report?.message).toContain('2 texts are not labelled de')
     expect(report?.message).toContain('en (1)')
     expect(report?.message).toContain('fr (1)')
     expect(report?.message).toContain('an export labels them de')
@@ -145,22 +146,25 @@ describe('a text in another language than the model’s (#111)', () => {
     expect(Object.keys(languages(xml))).toEqual(['de'])
   })
 
-  it('reports a tag the schema does not allow, and never holds it', () => {
-    // Most of the texts carry it, and still it cannot be the model's language:
-    // written back, every text would fail the schema.
+  it('stays en when the tag most texts carry is one the schema does not allow', () => {
+    // Written back, every text would fail the schema, so it cannot be held. A
+    // minority tag is no better a guess for the texts that carry it (#114 review).
     const result = importExchangeXml(
-      model({ model: 'de de', element: 'de de', relationship: 'de de', value: 'de de' }),
+      model({ model: 'en_GB', element: 'en_GB', relationship: 'en_GB', value: 'en_GB' }),
     )
-    expect(workspaceOf(result).language).toBe('de')
+    expect(
+      languages(model({ model: 'en_GB', element: 'en_GB', relationship: 'en_GB', value: 'en_GB' })),
+    ).toEqual({ en_GB: 4, de: 2 })
+    expect('language' in workspaceOf(result)).toBe(false)
     const [report] = relabelled(result)
-    expect(report?.message).toContain('“de de” (4)')
+    expect(report?.message).toContain('6 texts are not labelled en: “en_GB” (4), de (2)')
   })
 
   it('leaves the model in English when no tag can be held', () => {
     const xml = model({}).replaceAll('xml:lang="de"', 'xml:lang="x_y"')
     const result = importExchangeXml(xml)
     expect('language' in workspaceOf(result)).toBe(false)
-    expect(relabelled(result)[0]?.message).toContain('other than en: “x_y” (6)')
+    expect(relabelled(result)[0]?.message).toContain('not labelled en: “x_y” (6)')
   })
 
   it('settles a tie the same way whatever order the file is in', () => {
@@ -195,6 +199,135 @@ describe('a text in another language than the model’s (#111)', () => {
     )
     expect(codes(result)).toContain('import.content-unread')
     expect(relabelled(result)).toEqual([])
+  })
+})
+
+describe('only a text the model keeps decides its language (#114 review)', () => {
+  it('does not count the texts of an object skipped after it was read', () => {
+    // A duplicate id is found only once the element has been read, by which
+    // time its name was marked. The copy is skipped, so nothing relabels it.
+    const result = importExchangeXml(
+      model({}).replace(
+        '<element identifier="e2" xsi:type="ApplicationComponent"><name xml:lang="de">Kernsystem</name></element>',
+        '<element identifier="e2" xsi:type="ApplicationComponent"><name xml:lang="de">Kernsystem</name></element>' +
+          '<element identifier="e2" xsi:type="ApplicationComponent"><name xml:lang="en">Core</name></element>',
+      ),
+    )
+    expect(codes(result)).toContain('exchange.duplicate-id')
+    expect(workspaceOf(result).language).toBe('de')
+    expect(relabelled(result)).toEqual([])
+  })
+
+  it('still counts what a skipped shape keeps nested inside it', () => {
+    const ledger = new Ledger()
+    const nested = { label: { '#text': 'Innen', '@lang': 'fr' } }
+    const shape = { label: { '#text': 'Außen', '@lang': 'en' }, node: [nested] }
+    ledger.text(shape, 'label')
+    ledger.text(nested, 'label')
+    ledger.skip(shape, ['node'])
+    expect(ledger.languages()).toEqual({ tagged: new Map([['fr', 1]]), untagged: 0 })
+  })
+
+  it('does not let model properties it drops, or their definitions, outvote what it keeps', () => {
+    // Model-level properties from another tool are reported as not imported, so
+    // their values and their definitions' names are never written (code-review
+    // probe, #114: one kept German name against four dropped English texts).
+    const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" identifier="m">
+  <name xml:lang="de">Modell</name>
+  <properties>
+    <property propertyDefinitionRef="p1"><value xml:lang="en">a</value></property>
+    <property propertyDefinitionRef="p2"><value xml:lang="en">b</value></property>
+  </properties>
+  <propertyDefinitions>
+    <propertyDefinition identifier="p1" type="string"><name xml:lang="en">one</name></propertyDefinition>
+    <propertyDefinition identifier="p2" type="string"><name xml:lang="en">two</name></propertyDefinition>
+  </propertyDefinitions>
+</model>`
+    const result = importExchangeXml(xml)
+    expect(codes(result)).toContain('exchange.model-properties-skipped')
+    expect(workspaceOf(result).language).toBe('de')
+    expect(relabelled(result)).toEqual([])
+  })
+
+  it('counts a definition’s name once a kept property uses it', () => {
+    const result = importExchangeXml(
+      model({}).replace(
+        '<name xml:lang="de">Verantwortlich</name>',
+        '<name xml:lang="fr">Responsable</name>',
+      ),
+    )
+    expect(relabelled(result)[0]?.message).toContain('1 text is not labelled de: fr (1)')
+  })
+
+  it('does not count a fixed folder’s label, which Archipelago writes itself', () => {
+    const result = importExchangeXml(
+      model({}).replace(
+        '</relationships>',
+        '</relationships>\n  <organizations><item><label xml:lang="en">Application</label><item identifierRef="e1"/></item></organizations>',
+      ),
+    )
+    expect(workspaceOf(result).elements).toHaveLength(2)
+    expect(codes(result)).not.toContain('import.content-unread')
+    expect(relabelled(result)).toEqual([])
+  })
+
+  it('does not count an empty text, which says nothing in any language', () => {
+    // Empty documentation is not kept and not written, so it is not relabelled.
+    const result = importExchangeXml(
+      model({}).replace(
+        '<name xml:lang="de">Kernsystem</name>',
+        '<name xml:lang="de">Kernsystem</name><documentation xml:lang="fr"></documentation>',
+      ),
+    )
+    expect(workspaceOf(result).elements).toHaveLength(2)
+    expect(relabelled(result)).toEqual([])
+  })
+})
+
+describe('texts with no language, and tags in another case (#114 review)', () => {
+  it('lets untagged texts vote for en, which is how they were always written', () => {
+    // One tagged text among untagged ones does not make them all German.
+    const xml = model({ model: null, element: null, relationship: null, value: null })
+    expect(languages(xml)).toEqual({ de: 2 })
+    const result = importExchangeXml(xml)
+    expect('language' in workspaceOf(result)).toBe(false)
+    expect(relabelled(result)[0]?.message).toContain('2 texts are not labelled en: de (2)')
+  })
+
+  it('reports untagged texts an export will label in the model’s language', () => {
+    const result = importExchangeXml(model({ value: null }))
+    expect(workspaceOf(result).language).toBe('de')
+    expect(relabelled(result)[0]?.message).toContain('1 text is not labelled de: no language (1)')
+  })
+
+  it('compares tags ignoring case, as BCP 47 does', () => {
+    const upper = importExchangeXml(model({}).replaceAll('xml:lang="de"', 'xml:lang="EN"'))
+    expect('language' in workspaceOf(upper)).toBe(false)
+    expect(relabelled(upper)).toEqual([])
+
+    const mixed = importExchangeXml(model({ model: 'DE', element: 'De' }))
+    expect(workspaceOf(mixed).language).toBe('de')
+    expect(relabelled(mixed)).toEqual([])
+
+    // Counted apart, fr would win three to two. Together, de and DE tie it, and
+    // the spelling most of them use is kept.
+    const split = model({ model: 'DE', element: 'DE', relationship: 'fr', value: 'fr' }).replace(
+      '<name xml:lang="de">Kernsystem</name>',
+      '<name xml:lang="fr">Kernsystem</name>',
+    )
+    expect(languages(split)).toEqual({ DE: 2, de: 1, fr: 3 })
+    const grouped = importExchangeXml(split)
+    expect(workspaceOf(grouped).language).toBe('DE')
+    expect(relabelled(grouped)[0]?.message).toContain('3 texts are not labelled DE: fr (3)')
+  })
+
+  it('holds EN in canonical JSON as no language, like en', () => {
+    const base = drawnWorkspace()
+    expect(toCanonicalJson({ ...base, language: 'EN' })).toBe(toCanonicalJson(base))
+    const parsed = JSON.parse(toCanonicalJson(base))
+    expect(
+      fromCanonicalJson(JSON.stringify({ ...parsed, language: 'En' })).workspace,
+    ).not.toHaveProperty('language')
   })
 })
 

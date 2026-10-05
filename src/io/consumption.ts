@@ -66,25 +66,54 @@ export class Ledger {
   }
 
   /**
-   * The `xml:lang` of every text marked read, by tag, as written. A text marked
-   * here lands in the model, so its language is what an export relabels (#111).
+   * The `xml:lang` of each kept text, by the node and key holding it, `null` for
+   * a text with none (#111). Counted per text, not per node: a bare `<name>`
+   * parses to a string, which has no identity of its own. A text the reader
+   * marks and then does not keep after all is taken out again by `skip` or
+   * `forget` (#114 review), so only what an export writes decides.
    */
-  readonly languages = new Map<string, number>()
+  private readonly texts = new Map<RawNode, Map<string, string | null>>()
 
   /** The key's text was read (the first, if it repeats), whether bare or with attributes. */
   text(raw: RawNode, key: string): void {
     this.mark(raw, key, 'text')
     const value = raw[key]
     const head: unknown = Array.isArray(value) ? value[0] : value
-    if (!isRawNode(head)) return
-    this.mark(head, '#text', 'whole')
-    const language = head['@lang']
-    if (language === undefined) return
-    this.mark(head, '@lang', 'whole')
-    // `xml:lang=""` says the text has no language, which is what absent says.
-    if (typeof language === 'string' && language !== '') {
-      this.languages.set(language, (this.languages.get(language) ?? 0) + 1)
+    let language: unknown
+    if (isRawNode(head)) {
+      this.mark(head, '#text', 'whole')
+      language = head['@lang']
+      if (language !== undefined) this.mark(head, '@lang', 'whole')
     }
+    // An empty text says nothing in any language, and is not always written.
+    const content = isRawNode(head) ? head['#text'] : head
+    if (content === undefined || content === null || content === '') return
+    let texts = this.texts.get(raw)
+    if (!texts) this.texts.set(raw, (texts = new Map()))
+    // `xml:lang=""` says the text has no language, which is what absent says.
+    texts.set(key, typeof language === 'string' && language !== '' ? language : null)
+  }
+
+  /**
+   * A text read to decide something and then not kept: Archipelago writes its
+   * own in its place, or the reader dropped it and reported that. Its language
+   * is not the model's to take.
+   */
+  forget(raw: RawNode, key: string): void {
+    this.texts.get(raw)?.delete(key)
+  }
+
+  /** How many kept texts carry each `xml:lang`, as written, and how many carry none. */
+  languages(): { tagged: Map<string, number>; untagged: number } {
+    const tagged = new Map<string, number>()
+    let untagged = 0
+    for (const texts of this.texts.values()) {
+      for (const tag of texts.values()) {
+        if (tag === null) untagged++
+        else tagged.set(tag, (tagged.get(tag) ?? 0) + 1)
+      }
+    }
+    return { tagged, untagged }
   }
 
   /** The key and everything under it are accounted for: read whole, or reported whole. */
@@ -99,6 +128,7 @@ export class Ledger {
    */
   skip(raw: unknown, except: readonly string[] = []): void {
     if (!isRawNode(raw)) return
+    this.untag(raw, except)
     if (!except.length) {
       this.accounted.add(raw)
       return
@@ -167,6 +197,22 @@ export class Ledger {
     }
     visit(root, [rootName], undefined)
     return out
+  }
+
+  /**
+   * A skipped object's texts are not kept, so their language decides nothing.
+   * Its texts were marked before the reader knew it would skip it: a duplicate id
+   * is found only once the object has been read (#114 review).
+   */
+  private untag(raw: RawNode, except: readonly string[]): void {
+    const own = this.texts.get(raw)
+    for (const [key, value] of Object.entries(raw)) {
+      if (except.includes(key)) continue
+      own?.delete(key)
+      for (const item of Array.isArray(value) ? value : [value]) {
+        if (isRawNode(item)) this.untag(item, [])
+      }
+    }
   }
 
   private mark(raw: RawNode, key: string, mode: Mode): void {

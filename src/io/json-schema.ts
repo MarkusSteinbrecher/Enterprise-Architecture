@@ -6,6 +6,7 @@ import {
   FONT_STYLES,
   INFLUENCE_STRENGTHS,
   JUNCTION_KINDS,
+  LANGUAGE_TAG_PATTERN,
   LIFECYCLE_PHASES,
   RELATIONSHIP_TYPE_NAMES,
   SCHEMA_VERSION,
@@ -73,7 +74,7 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
         type: 'string',
         description:
           'The language the texts are written in, as an xml:lang tag. Absent means en. An exchange-format export labels every text with it.',
-        pattern: '^[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*$',
+        pattern: LANGUAGE_TAG_PATTERN,
       },
     },
     $defs: {

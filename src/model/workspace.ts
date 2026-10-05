@@ -335,8 +335,12 @@ export const DEFAULT_LANGUAGE = 'en'
  * would make every exported text schema-invalid, so it is never held.
  */
 export function isLanguageTag(value: unknown): value is string {
-  return typeof value === 'string' && /^[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*$/.test(value)
+  return typeof value === 'string' && LANGUAGE_TAG.test(value)
 }
+
+/** The pattern of `xs:language`, shared with the published JSON schema. */
+export const LANGUAGE_TAG_PATTERN = '^[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*$'
+const LANGUAGE_TAG = new RegExp(LANGUAGE_TAG_PATTERN)
 
 /** The default tag group and colours from the design handoff. */
 export const DEFAULT_TAG_GROUP: TagGroup = {

@@ -957,7 +957,9 @@ export function readOrganizations(
       if (root) {
         // One of the fixed groups, which Archipelago supplies itself: its label
         // decides which. Anything else it carries is left for the ledger (#101).
+        // The label is not kept, so its language decides nothing (#114 review).
         ledger.text(item, 'label')
+        ledger.forget(item, 'label')
         ledger.use(item, 'item')
         walk(list(item.item), { root, path: [label], top: false })
         continue

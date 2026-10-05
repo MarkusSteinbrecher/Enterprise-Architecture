@@ -576,6 +576,8 @@ function definitionType(seen: Set<string>): ExchangePropertyType {
 interface DeclaredProperty {
   key: string
   type: string
+  /** The `<propertyDefinition>`, whose name's language counts once a kept property uses it. */
+  raw: RawNode
 }
 
 /** Where a reader reports to: the problem list and the file it is reading. */
@@ -760,7 +762,7 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     ledger.whole(raw, 'documentation')
   }
 
-  const modelProperties = readProperties(model, reader)
+  const modelProperties = readProperties(model, reader, false)
   const reports =
     carried(modelProperties[REPORTS_KEY], isReportDefinition, 'saved reports', reader) ??
     carried(modelProperties[LEGACY_REPORTS_KEY], isReportDefinition, 'saved reports', reader)
@@ -801,7 +803,7 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     )
   }
 
-  const language = modelLanguage(ledger.languages, problems, where)
+  const language = modelLanguage(ledger.languages(), problems, where)
 
   problems.push(
     ...reportUnread(
@@ -833,38 +835,63 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
 }
 
 /**
- * The one language the model is held in: the one most of its texts carry (#111).
+ * The one language the model is held in: the one most of its kept texts carry
+ * (#111).
  *
  * Archi labels every text of an export with the one language its wizard asks
  * for, so a file in one language is the common case and this keeps it whole.
- * A text in any other language is relabelled by the next export, and that is
- * reported rather than done quietly. Only a tag `xs:language` allows can be
- * held; a tie goes to the tag that sorts first, so the choice does not depend
- * on the order of the file. Untagged texts claim no language and decide nothing.
+ * Tags are compared as BCP 47 compares them, ignoring case, and the spelling
+ * most texts use is kept. An untagged text claims no language and has always
+ * been written `en`, so it votes for `en`. A majority tag that `xs:language`
+ * does not allow cannot be held, and the model stays `en` rather than letting a
+ * stray minority decide. A tie goes to the tag that sorts first, so the result
+ * does not depend on the order of the file (#114 review).
+ *
+ * A text the export will label differently is reported, not relabelled quietly.
+ * Untagged texts are reported only when the model is not `en`: labelling them
+ * `en` is what every export before this one did.
  */
 function modelLanguage(
-  languages: ReadonlyMap<string, number>,
+  languages: { tagged: ReadonlyMap<string, number>; untagged: number },
   problems: ImportProblem[],
   where: { file?: string },
 ): string {
-  let language = DEFAULT_LANGUAGE
-  let most = 0
-  for (const [tag, n] of languages) {
-    if (!isLanguageTag(tag)) continue
-    if (n > most || (n === most && tag < language)) {
-      language = tag
-      most = n
-    }
+  const groups = new Map<string, { n: number; spellings: Map<string, number> }>()
+  const group = (key: string) => {
+    let found = groups.get(key)
+    if (!found) groups.set(key, (found = { n: 0, spellings: new Map() }))
+    return found
   }
-  const others = [...languages].filter(([tag]) => tag !== language)
-  if (others.length) {
-    const n = others.reduce((sum, [, count]) => sum + count, 0)
-    const tags = others.map(([tag, count]) => `${isLanguageTag(tag) ? tag : `“${tag}”`} (${count})`)
+  for (const [tag, n] of languages.tagged) {
+    const found = group(tag.toLowerCase())
+    found.n += n
+    found.spellings.set(tag, n)
+  }
+  if (languages.untagged) group(DEFAULT_LANGUAGE).n += languages.untagged
+
+  const [winner] = [...groups].sort(([a, x], [b, y]) => y.n - x.n || (a < b ? -1 : a > b ? 1 : 0))
+  let language = DEFAULT_LANGUAGE
+  if (winner && winner[0] !== DEFAULT_LANGUAGE) {
+    const [spelling] = [...winner[1].spellings].sort(
+      ([a, x], [b, y]) => y - x || (a < b ? -1 : a > b ? 1 : 0),
+    )
+    if (spelling && isLanguageTag(spelling[0])) language = spelling[0]
+  }
+
+  const held = language.toLowerCase()
+  const others = [...languages.tagged].filter(([tag]) => tag.toLowerCase() !== held)
+  const labels = others.map(([tag, n]) => `${isLanguageTag(tag) ? tag : `“${tag}”`} (${n})`)
+  let n = others.reduce((sum, [, count]) => sum + count, 0)
+  if (held !== DEFAULT_LANGUAGE && languages.untagged) {
+    labels.push(`no language (${languages.untagged})`)
+    n += languages.untagged
+  }
+  if (n) {
     problems.push(
       problem(
         'info',
         'exchange.language-relabelled',
-        `${n} text${n === 1 ? ' is' : 's are'} labelled with a language other than ${language}: ${listed(tags)}. Archipelago holds a model in one language, so an export labels ${n === 1 ? 'it' : 'them'} ${language}.`,
+        `${n} text${n === 1 ? ' is' : 's are'} not labelled ${language}: ${listed(labels)}. Archipelago holds a model in one language, so an export labels ${n === 1 ? 'it' : 'them'} ${language}.`,
         where,
       ),
     )
@@ -892,9 +919,12 @@ function readPropertyDefinitions(
     if (!id || !key) continue
     const type = asString(raw['@type']) ?? 'string'
     if (!isExchangePropertyType(type)) unknown.add(type)
-    definitions.set(id, { key, type })
+    definitions.set(id, { key, type, raw })
     ledger.use(raw, '@identifier', '@type')
     ledger.text(raw, 'name')
+    // Written only for a key a kept property uses, so only such a use counts its
+    // language, in `readProperties` (#114 review).
+    ledger.forget(raw, 'name')
   }
   if (unknown.size) {
     problems.push(
@@ -1153,7 +1183,12 @@ function readTypeSpecificAttributes(
   return out
 }
 
-function readProperties(raw: RawNode, reader: Reader): Record<string, PropertyValue> {
+/**
+ * `votes` is false for the model's own properties: those Archipelago reads are
+ * its own carried JSON, and the rest are dropped and reported, so none of them
+ * is a text of the model whose language it should take (#114 review).
+ */
+function readProperties(raw: RawNode, reader: Reader, votes = true): Record<string, PropertyValue> {
   const out: Record<string, PropertyValue> = {}
   const repeated = new Set<string>()
   const { ledger } = reader
@@ -1185,6 +1220,8 @@ function readProperties(raw: RawNode, reader: Reader): Record<string, PropertyVa
       setKey(out, definition.key, typedValue(value, definition.type))
       ledger.use(property, '@propertyDefinitionRef')
       ledger.text(property, 'value')
+      if (votes) ledger.text(definition.raw, 'name')
+      else ledger.forget(property, 'value')
     }
   }
   if (repeated.size) {
