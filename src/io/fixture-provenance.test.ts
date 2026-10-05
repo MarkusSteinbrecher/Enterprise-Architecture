@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import coverage from './fixtures/archi-coverage.archimate?raw'
-import claims from './fixtures/claims-platform.archimate?raw'
-import attributes from './fixtures/relationship-attributes.archimate?raw'
+import { xmlRoot, isArchiNamespace } from './xml-root'
+
+/**
+ * Every `.archimate` fixture, found rather than listed: a list had to be
+ * remembered for each new fixture, and one left off it would never be scanned
+ * (#116 review). Every one of them is Archi's own output.
+ */
+const FIXTURES = import.meta.glob<string>('./fixtures/*.archimate', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+})
 
 /**
  * A fixture that says it was saved by Archi must hold only what Archi writes
@@ -58,13 +67,20 @@ function notArchis(xml: string): string[] {
 }
 
 describe('fixtures said to be saved by Archi hold only what Archi writes (#100)', () => {
-  it.each([
-    ['archi-coverage.archimate', coverage],
-    ['claims-platform.archimate', claims],
-    ['relationship-attributes.archimate', attributes],
-  ])('%s', (_, xml) => {
-    // Something Archi does write is there, so an empty or unread file cannot pass.
-    expect(xml).toContain('xmlns:archimate="http://www.archimatetool.com/archimate"')
+  it('finds the fixtures', () => {
+    expect(Object.keys(FIXTURES)).toEqual(
+      expect.arrayContaining([
+        './fixtures/archi-coverage.archimate',
+        './fixtures/claims-platform.archimate',
+        './fixtures/relationship-attributes.archimate',
+        './fixtures/text-position.archimate',
+      ]),
+    )
+  })
+
+  it.each(Object.entries(FIXTURES))('%s', (_, xml) => {
+    // Archi's root, so an empty or unread file cannot pass.
+    expect(isArchiNamespace(xmlRoot(xml)?.namespace)).toBe(true)
     expect(notArchis(xml)).toEqual([])
   })
 
