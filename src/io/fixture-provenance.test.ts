@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import coverage from './fixtures/archi-coverage.archimate?raw'
 import claims from './fixtures/claims-platform.archimate?raw'
 import attributes from './fixtures/relationship-attributes.archimate?raw'
+import positions from './fixtures/text-position.archimate?raw'
 
 /**
  * A fixture that says it was saved by Archi must hold only what Archi writes
@@ -62,6 +63,7 @@ describe('fixtures said to be saved by Archi hold only what Archi writes (#100)'
     ['archi-coverage.archimate', coverage],
     ['claims-platform.archimate', claims],
     ['relationship-attributes.archimate', attributes],
+    ['text-position.archimate', positions],
   ])('%s', (_, xml) => {
     // Something Archi does write is there, so an empty or unread file cannot pass.
     expect(xml).toContain('xmlns:archimate="http://www.archimatetool.com/archimate"')
