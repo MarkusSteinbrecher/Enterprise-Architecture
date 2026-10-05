@@ -1,5 +1,31 @@
 # Session Log
 
+## 2026-10-05 — Session wrap-up (#101, #107)
+
+**What was done:**
+- **#101:** both XML readers report every attribute and child element they did not consume. The mechanism is the `Ledger` in `src/io/consumption.ts`, which reports leftovers as `import.content-unread`.
+  - Implemented and reviewed (#110). Three findings were fixed: a mark placed above a branch, a missed Archi `textAlignment`, and unnamed features.
+  - Merged by the sponsor (`5792be5`); #101 is closed.
+  - It found real silent drops: model `<metadata>`, unused specializations, a second language, a property with no value, a root group's documentation.
+- **#107:** the exchange reader reports malformed values (`exchange.value-malformed`) through one `measured()` shared with the native reader in `exchange-xml.ts`.
+  - Implemented and reviewed (#112). Two findings were fixed: colour ranges were clamped silently, and the message was untrue for a malformed opacity.
+  - **#112 is open and awaiting merge.** CI is green.
+- Filed **#111**: the exchange round trip relabels every text as `xml:lang="en"`.
+- Harvested:
+  - The CLAUDE.md "never drops data silently" line now points to the ledger: mark where a value lands, not where it is fetched.
+  - Three review-skill §2 bullets: a hoisted ledger mark certifies a drop; another tool's attributes are checked class by class with javap; a tally's message must hold for every key, and "not allowed" means the schema's range.
+  - HQ lesson: importers account for what they consume.
+
+**Process note:** background review agents stalled at the 600 s watchdog three times running. Both reviews' code passes ran inline in the author's session at the sponsor's choice, and each review says so.
+
+**Still open:**
+- Merge **#112** (closes #107).
+- #108: an absent `textPosition`; check it in Archi first.
+- #105: the Archi 2.x vocabulary.
+- #111: language tags.
+- #74: the sponsor's decision, M2 editor or transformation core.
+- Merged remote branches ready to delete: `fix/100-archimate-silent-drops` and `feat/101-reader-consumption` from this session, then `feat/107-exchange-malformed-values` once #112 merges. Older merged branches also linger on the remote.
+
 ## 2026-10-05 (cont.) — #112 (#107) reviewed before merge
 
 `/review-pr 112`. All three #107 criteria are met. The code pass ran inline, as for #110, because the background agents had stalled earlier.
