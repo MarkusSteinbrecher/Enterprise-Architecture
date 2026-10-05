@@ -1,4 +1,4 @@
-import type { Bounds, View, ViewConnection, ViewNode } from './workspace'
+import type { Bounds, Relationship, View, ViewConnection, ViewNode } from './workspace'
 
 /**
  * Pure operations on a hand-drawn view (#75). Each returns a new `View` and
@@ -137,5 +137,24 @@ function withoutDangling(
 ): ViewConnection[] {
   return connections.filter(
     (connection) => !removedNodes.has(connection.source) && !removedNodes.has(connection.target),
+  )
+}
+
+/**
+ * A connection is a drawing of its relationship, so it runs between drawings of
+ * the relationship's own two elements, in its direction. `validate` requires
+ * it, and both readers skip a connection that breaks it rather than importing
+ * what validation then rejects (#100). One rule, so the two cannot drift.
+ */
+export function drawsRelationshipEnds(
+  relationship: Pick<Relationship, 'source' | 'target'>,
+  source: ViewNode | undefined,
+  target: ViewNode | undefined,
+): boolean {
+  return (
+    source?.kind === 'element' &&
+    target?.kind === 'element' &&
+    source.element === relationship.source &&
+    target.element === relationship.target
   )
 }

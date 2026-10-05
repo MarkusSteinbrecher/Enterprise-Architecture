@@ -1,5 +1,27 @@
 # Session Log
 
+## 2026-10-05 (cont.) — #106 (#100) reviewed before merge
+
+`/review-pr 106`, the first PR in five reviewed **before** merge. All three #100 criteria are met. The code pass ran as an independent background agent, because the PR was this session's own work. It reported 10 findings; each was checked against the code.
+
+**Confirmed and fixed** (7521f76):
+- **Finding 1, a regression from item 11.** Untrimmed, `<model> </model>` parsed to `' '`, so an empty `.xml` imported as an ok, empty model. It is refused again.
+- `<bendpoint>` with a line break inside was still dropped.
+- A shadowed specialization named only the first of several.
+- A skipped duplicate, or a skipped connection, still fed the content and malformed tallies.
+- A folder's `<property/>` went unreported.
+- The connection-ends rule is now one function in `src/model`. Its new direct test exposed that removing the *target* half had passed every reader and validate test.
+
+Mutation-checked: each fix caught. The two survivors are equivalent mutations.
+
+**Filed:** #107 (the exchange reader reads malformed values silently, pre-existing) and #108 (an absent `textPosition` versus Archipelago's defaults; needs checking against Archi first).
+
+**Harvested:**
+- Mechanical: `fixture-provenance.test.ts` fails on any spelling Archi 5.10's serializer never writes. It fires on `main`'s old fixtures, 14 and 19 hits, and on a start tag wrapped over two lines. The CLAUDE.md fixture line now points to it.
+- Review skill: a parser option changes the shape of every value the parser returns.
+
+Open: merging #106, which is left to the user.
+
 ## 2026-10-05 — #100 implemented (reader silent drops and the alignment default)
 
 On `fix/100-archimate-silent-drops`. All 12 findings from the #98 review are handled. Items 1–8 are reported, because the model has no place for the data:

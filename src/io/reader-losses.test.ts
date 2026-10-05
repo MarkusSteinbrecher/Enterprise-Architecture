@@ -383,3 +383,81 @@ describe('the exchange reader reports what it cannot carry (#100)', () => {
     ])
   })
 })
+
+describe('the follow-ups from the #106 review', () => {
+  it('refuses a <model> holding only whitespace, which untrimmed is not empty', () => {
+    for (const xml of ['<?xml version="1.0"?>\n<model> </model>', '<model>\n</model>']) {
+      const result = importExchangeXml(xml)
+      expect(result.ok).toBe(false)
+      expect(result.problems.map((p) => p.code)).toEqual(['exchange.not-a-model'])
+    }
+  })
+
+  it('keeps a bendpoint at 0, 0 written with a line break inside, and a folder’s empty property', () => {
+    const result = importArchimate(
+      archiView(`
+        <child xsi:type="archimate:DiagramObject" id="sa" archimateElement="a"><bounds x="0" y="0" width="120" height="55"/>
+          <sourceConnection xsi:type="archimate:Connection" id="ok" source="sa" target="sb" archimateRelationship="r"><bendpoint>
+          </bendpoint></sourceConnection>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="sb" archimateElement="b"><bounds x="300" y="0" width="120" height="55"/></child>`),
+    )
+    // Midway between the two centres, 60,27 and 360,27.
+    expect(workspaceOf(result).views[0]!.connections[0]!.bendpoints).toEqual([{ x: 210, y: 27 }])
+
+    const folder = importArchimate(
+      archi(`<folder name="F" id="f"><property>\n</property></folder>`),
+    )
+    expect(found(folder, 'archimate.folder-properties-skipped')).toMatchObject([
+      { message: expect.stringContaining('(F)') },
+    ])
+  })
+
+  it('names every specialization an own Specialization property shadows', () => {
+    const result = importArchimate(
+      archi(
+        `<element xsi:type="archimate:Goal" name="G" id="g" profiles="p1 p2">
+          <property key="${SPECIALIZATION_KEY}" value="mine"/>
+        </element>`,
+        `<profile name="One" id="p1" conceptType="Goal"/><profile name="Two" id="p2" conceptType="Goal"/>`,
+      ),
+    )
+    expect(found(result, 'archimate.specialization-shadowed')[0]?.message).toContain('“One”, “Two”')
+  })
+
+  it('reports nothing else about a duplicate it skipped', () => {
+    const result = importArchimate(
+      archi(`<element xsi:type="archimate:Goal" name="G" id="g"><feature name="x" value="1"/></element>
+        <element xsi:type="archimate:Goal" name="G2" id="g" colour="red"><feature name="x" value="1"/>
+          <property key="k" value="1"/><property key="k" value="2"/></element>
+        <element xsi:type="archimate:AssignmentRelationship" id="r" source="a" target="b" stray="1"/>
+        <element xsi:type="archimate:ArchimateDiagramModel" name="V" id="v"/>
+        <element xsi:type="archimate:ArchimateDiagramModel" name="V2" id="v"><property key="k" value="1"/><property key="k" value="2"/></element>`),
+    )
+    expect(result.problems.map((p) => [p.code, p.subject]).sort()).toEqual([
+      ['archimate.content-unread', 'g'],
+      ['archimate.duplicate-id', 'g'],
+      ['archimate.duplicate-id', 'r'],
+      ['archimate.duplicate-id', 'v'],
+    ])
+    expect(found(result, 'archimate.content-unread')[0]?.message).toMatch(/^1 element \(g\)/)
+  })
+
+  it('tallies no value of a connection it skipped', () => {
+    const result = importArchimate(
+      archiView(`
+        <child xsi:type="archimate:DiagramObject" id="sa" archimateElement="a"><bounds x="0" y="0" width="120" height="55"/>
+          <sourceConnection xsi:type="archimate:Connection" id="ok" source="sa" target="sb" archimateRelationship="r"/>
+          <sourceConnection xsi:type="archimate:Connection" id="ok" source="sa" target="sb" archimateRelationship="r" lineColor="red" odd="1"/>
+          <sourceConnection xsi:type="archimate:Connection" id="gone" source="sa" target="sb" archimateRelationship="nowhere" fancy="1">
+            <bendpoint startX="1e"/>
+          </sourceConnection>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="sb" archimateElement="b"><bounds x="300" y="0" width="120" height="55"/></child>`),
+    )
+    expect(result.problems.map((p) => p.code).sort()).toEqual([
+      'archimate.dangling-view-connection',
+      'archimate.duplicate-connection-id',
+    ])
+  })
+})

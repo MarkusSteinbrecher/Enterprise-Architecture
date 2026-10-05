@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { absoluteBounds, removeNodes, type View } from '@/model'
+import {
+  absoluteBounds,
+  drawsRelationshipEnds,
+  removeNodes,
+  type View,
+  type ViewNode,
+} from '@/model'
 
 /** outer (100,100) ⊃ middle (+10,+10) ⊃ inner (+5,+5); a line from inner to loose. */
 function nested(): View {
@@ -74,5 +80,30 @@ describe('view operations (#75)', () => {
     const frozen = structuredClone(view)
     removeNodes(view, new Set(['middle']))
     expect(view).toEqual(frozen)
+  })
+})
+
+describe('drawsRelationshipEnds (#100, #106 review)', () => {
+  const bounds = { x: 0, y: 0, width: 120, height: 55 }
+  const shape = (element: string): ViewNode => ({
+    id: `s-${element}`,
+    kind: 'element',
+    element,
+    bounds,
+  })
+  const relationship = { source: 'a', target: 'b' }
+
+  it('holds only when each end draws its own element, in the relationship’s direction', () => {
+    expect(drawsRelationshipEnds(relationship, shape('a'), shape('b'))).toBe(true)
+    // Each half on its own: one right end does not make a connection right.
+    expect(drawsRelationshipEnds(relationship, shape('a'), shape('c'))).toBe(false)
+    expect(drawsRelationshipEnds(relationship, shape('c'), shape('b'))).toBe(false)
+    expect(drawsRelationshipEnds(relationship, shape('b'), shape('a'))).toBe(false)
+  })
+
+  it('does not hold for an end that is not an element’s shape, or no shape at all', () => {
+    const note: ViewNode = { id: 'n', kind: 'note', text: 'a', bounds }
+    expect(drawsRelationshipEnds(relationship, note, shape('b'))).toBe(false)
+    expect(drawsRelationshipEnds(relationship, shape('a'), undefined)).toBe(false)
   })
 })

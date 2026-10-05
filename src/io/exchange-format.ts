@@ -44,6 +44,7 @@ import {
   asString,
   attr,
   claimIdentifier,
+  isRawNode,
   langString,
   list,
   listed,
@@ -629,8 +630,10 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     )
   }
 
-  const model = parsed.model as RawNode | undefined
-  if (!model) {
+  // Untrimmed, `<model> </model>` parses to ' ', which is truthy and was read as
+  // an empty model, ok and silent (#106 review). Only an element is a model.
+  const model = parsed.model
+  if (!isRawNode(model)) {
     return failed([
       problem(
         'error',
