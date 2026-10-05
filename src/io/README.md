@@ -180,6 +180,17 @@ re-export declared them as `string`. The declaration is now kept on
 `Workspace.propertyTypes` and written back; the value decides whenever it can say
 more than "string".
 
+**Language.** Every text in the format carries an `xml:lang`, and Archi labels
+all of them with the one language its export is given. The model holds one text
+per field, so it holds one language: `Workspace.language` (absent is `en`), and
+the writer labels every text with it. ADR 0007 has the rule. In short, the texts
+the model keeps decide it by majority, with tags compared ignoring case and
+untagged texts voting `en`. `Ledger.text` records each text it marks, and
+`skip` and `forget` take back the ones the reader does not keep after all. A text
+the next export labels differently is reported as `exchange.language-relabelled`
+(#111, #114). Before, the reader ignored the tag and the writer wrote `en`, so a
+German model came back out claiming to be English.
+
 **Empty strings.** `<value xml:lang="en"></value>` parses to its attributes
 alone. That is the empty string, not "no value"; reading it as absent dropped the
 property and made the second export differ from the first.
@@ -245,8 +256,8 @@ still unread. A skipped object is marked whole, because it was reported as
 skipped. After the read, `unread` walks the parsed file and every key left
 unmarked becomes an `import.content-unread` warning, naming the object that
 carries it. Keys a reader deliberately ignores (namespace declarations, Archi's
-version, `xml:lang`, `targetConnections`) are listed in that reader's `IGNORED`,
-each with its reason.
+version, `targetConnections`) are listed in that reader's `IGNORED`, each with
+its reason.
 
 When a reader gains a field, it marks it. When a reader recognises something it
 cannot hold, it reports it under its own code and marks it, or names it with

@@ -317,7 +317,30 @@ export interface Workspace {
    * whose type the value itself carries (`boolean`, `number`).
    */
   propertyTypes?: Record<string, string>
+  /**
+   * The language the model's texts are written in, as an `xml:lang` tag. The
+   * exchange format labels every text with one; a file authored in German came
+   * back out claiming English, without a word (#111). The model holds one text
+   * per field, so it holds one language. Absent means `en`, so a workspace in
+   * English keeps the bytes it had before this field existed (ADR 0004).
+   */
+  language?: string
 }
+
+/** The language of a workspace that names none. */
+export const DEFAULT_LANGUAGE = 'en'
+
+/**
+ * `xs:language`, the type of `xml:lang` in the exchange schema. A tag outside it
+ * would make every exported text schema-invalid, so it is never held.
+ */
+export function isLanguageTag(value: unknown): value is string {
+  return typeof value === 'string' && LANGUAGE_TAG.test(value)
+}
+
+/** The pattern of `xs:language`, shared with the published JSON schema. */
+export const LANGUAGE_TAG_PATTERN = '^[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*$'
+const LANGUAGE_TAG = new RegExp(LANGUAGE_TAG_PATTERN)
 
 /** The default tag group and colours from the design handoff. */
 export const DEFAULT_TAG_GROUP: TagGroup = {

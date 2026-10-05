@@ -96,6 +96,7 @@ export class ModelStore {
   #reports: ReportDefinition[] = []
   #tagGroups: TagGroup[] = []
   #propertyTypes: Record<string, string> | undefined
+  #language: string | undefined
   #indexes: Indexes = emptyIndexes()
 
   #undo: CommandRecord[] = []
@@ -346,6 +347,7 @@ export class ModelStore {
       // key entirely, so a workspace without declared types keeps the bytes it
       // had before this field existed (ADR 0004).
       ...(this.#propertyTypes ? { propertyTypes: { ...this.#propertyTypes } } : {}),
+      ...(this.#language !== undefined ? { language: this.#language } : {}),
     }
   }
 
@@ -847,6 +849,7 @@ export class ModelStore {
     this.#folders = new Map(workspace.folders.map((folder) => [folder.id, folder]))
     this.#tagGroups = [...workspace.tagGroups]
     this.#propertyTypes = workspace.propertyTypes ? { ...workspace.propertyTypes } : undefined
+    this.#language = workspace.language
     this.#load(workspace)
   }
 

@@ -75,6 +75,11 @@
           "time"
         ]
       }
+    },
+    "language": {
+      "type": "string",
+      "description": "The language the texts are written in, as an xml:lang tag. Absent means en. An exchange-format export labels every text with it.",
+      "pattern": "^[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*$"
     }
   },
   "$defs": {

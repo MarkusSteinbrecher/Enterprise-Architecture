@@ -97,6 +97,8 @@ const sources = [
   { label: 'junction fixture', path: 'src/io/fixtures/junction-flow.xml' },
   // Views, nesting, bend-points, styles and folders, as Archi 5.10 exported them (#76).
   { label: 'Archi views and folders', path: 'src/io/fixtures/claims-platform.xml' },
+  // The same, labelled in German; the round trip writes the model's language (#111).
+  { label: 'Archi views and folders, in German', path: 'src/io/fixtures/claims-platform.de.xml' },
 ]
 
 /**
