@@ -1,5 +1,23 @@
 # Session Log
 
+## 2026-10-05 (cont.) — #116 and #117 reviewed
+
+- **#116 was merged by the sponsor while its review was running.** Its fixes went to a follow-up, **PR #121**. The posted review records 9 findings.
+  - The group test compared Archipelago's label with Archipelago's own tab, and a reviewer's mutation (tab +20) stayed green.
+  - The test now draws through `ViewDrawing` and holds every label to Archi's measured centre (±1.5).
+  - View references were added, with Archi's evidence.
+  - `fixture-provenance` now finds fixtures by glob.
+  - 7 of 7 mutations caught.
+- **#117 has 7 findings, all fixed on its branch** (which now carries #121).
+  - An explicit top sat 3 px off.
+  - An empty tab kept its name-sized width; it now takes Archi's width (÷2, ÷1.4, read with javap).
+  - A tiny box lost its label.
+  - The bounds were one-sided.
+  - 9 of 9 mutations caught; 921 tests pass.
+- **Harvested** (review-skill §2): assert the other tool's number through the screen's own path, and give a value that two code paths decide one owner.
+
+**Merge order:** #121, then #117, then #119 and #120.
+
 ## 2026-10-05 (cont.) — #108, #115 and #105, settled against Archi itself
 
 #113 and #114 were merged by the sponsor. Then three issues, each settled with evidence from Archi 5.10 rather than from memory:
@@ -9,7 +27,7 @@
 - **#105 → PR #119.** The fixture is Archi 2.0.0's own Open Day example, MIT (© Bolton University), vendored byte-for-byte with a NOTICE. `LEGACY_TYPES` is Archi's `ConverterExtendedMetadata.TYPE_MAP`. **Sponsor's call:** follow Archi and convert in any namespace, which replaces #105's 4th criterion; a comment on #105 records it. An OrJunction is kept as or and reported, because Archi 5.10 silently opens it as and. Open Day now reads 27/39/4/47 like Archi; before, it read 20 of 39 relationships and 0 views (7 of 7 mutations caught).
 - **Filed #118:** Archi's version-keyed compatibility handlers. The worst is that every model older than 4.4.0 has its group labels left-aligned in Archi, which affects Archi 4.x files in today's namespace too.
 
-**Still open:** review #116, #117 and #119 (merge #116 before #117); then #118 and #74 (the sponsor's decision). Merged remote branches to delete: `feat/111-model-language`, `chore/session-log-2026-10-05`.
+**Still open:** review #119; then #118 and #74 (the sponsor's decision). Merged remote branches to delete: `feat/111-model-language`, `chore/session-log-2026-10-05`.
 
 ## 2026-10-05 (cont.) — #114 (#111) reviewed; fixes pushed
 
