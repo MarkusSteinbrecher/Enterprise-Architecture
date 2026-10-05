@@ -227,17 +227,27 @@ const LEGACY_TYPES: ReadonlyMap<string, string> = new Map([
 
 /** A folder's element as a member, its type read as Archi 5.10 reads it. */
 function memberOf(raw: RawNode, folder?: string): Member {
-  const type = typeOf(raw)
-  const [prefix, local] = splitType(type)
-  const renamed = prefix === 'archimate' ? LEGACY_TYPES.get(local) : undefined
-  const member: Member = { raw, type: renamed ? `archimate:${renamed}` : type }
-  if (renamed) member.legacy = local
+  const member: Member = { raw, ...archiType(raw) }
   if (folder !== undefined) member.folder = folder
   return member
 }
 
+/**
+ * An element's type as Archi 5.10 reads it, and the legacy name it replaced.
+ * One place for both the reader and the labeller of unread content, which
+ * called a renamed relationship an element (#119 review). Archi maps every name
+ * in its own package, which here is anything but the canvas's, as `classify`
+ * has it; a literal `archimate:` prefix was a stand-in for that (#119 review).
+ */
+function archiType(raw: RawNode): { type: string; legacy?: string } {
+  const type = typeOf(raw)
+  const [prefix, local] = splitType(type)
+  const renamed = prefix === 'canvas' ? undefined : LEGACY_TYPES.get(local)
+  return renamed ? { type: `archimate:${renamed}`, legacy: local } : { type }
+}
+
 /** A legacy name is counted once its member is kept: a skipped one was reported already. */
-function kept(member: Member, reader: Reader): void {
+function countLegacyName(member: Member, reader: Reader): void {
   if (member.legacy) bump(reader.tally.renamed, member.legacy)
 }
 
@@ -387,7 +397,7 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     }
     elementIds.add(element.id)
     elements.push(element)
-    kept(member, reader)
+    countLegacyName(member, reader)
   }
 
   const relationships: Relationship[] = []
@@ -402,7 +412,7 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     }
     relationshipsById.set(relationship.id, relationship)
     relationships.push(relationship)
-    kept(member, reader)
+    countLegacyName(member, reader)
     // Counted only once kept: a skipped relationship's documentation is not lost here (#100).
     if (textOf(member.raw.documentation)) reader.tally.relationshipDocs.push(relationship.id)
     ledger.whole(member.raw, 'documentation')
@@ -459,7 +469,7 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     }
     seenViews.add(view.id)
     views.push(view)
-    kept(member, reader)
+    countLegacyName(member, reader)
   }
 
   const modelProperties = readProperties(model, reader)
@@ -1190,11 +1200,13 @@ function readConnection(
   let connection: ViewConnection
   if (local === 'Connection') {
     // Older Archi named the attribute `relationship`; Archi 5.10 reads it as the
-    // new one (`ConverterExtendedMetadata.getAttribute`, #105).
+    // new one (`ConverterExtendedMetadata.getAttribute`, #105). Both set one
+    // feature in document order, so with both present the later one wins, as
+    // Archi 5.10 showed either way round (#119 review); the other is unread.
     const key =
-      raw['@archimateRelationship'] === undefined && raw['@relationship'] !== undefined
-        ? '@relationship'
-        : '@archimateRelationship'
+      Object.keys(raw)
+        .filter((k) => k === '@archimateRelationship' || k === '@relationship')
+        .pop() ?? '@archimateRelationship'
     const relationship = asString(raw[key])
     const drawn = relationship === undefined ? undefined : context.relationships.get(relationship)
     if (!relationship || !drawn) {
@@ -1466,7 +1478,7 @@ function describe(path: readonly string[], node: RawNode): Noun {
         ? { one: 'top-level folder', many: 'top-level folders' }
         : { one: 'folder', many: 'folders' }
     case 'element': {
-      const kind = classify(typeOf(node))
+      const kind = classify(archiType(node).type)
       if (kind === 'relationship') return { one: 'relationship', many: 'relationships' }
       if (kind === 'diagram') return { one: 'view', many: 'views' }
       return { one: 'element', many: 'elements' }
@@ -1493,9 +1505,16 @@ function describe(path: readonly string[], node: RawNode): Noun {
 function reportTally(reader: Reader): void {
   const { tally, problems, where } = reader
   if (tally.renamed.size || tally.legacyConnections) {
-    const names = [...tally.renamed].map(
-      ([legacy, n]) => `${legacy} as ${LEGACY_TYPES.get(legacy) ?? legacy} (${n})`,
-    )
+    // An OrJunction is the one name not read as Archi reads it: Archi maps the
+    // class and loses the kind; the file's or is kept (#119 review).
+    const names = [...LEGACY_TYPES]
+      .filter(([legacy]) => tally.renamed.has(legacy))
+      .map(([legacy, now]) => {
+        const n = tally.renamed.get(legacy)
+        return legacy === 'OrJunction'
+          ? `OrJunction as an or-junction (${n})`
+          : `${legacy} as ${now} (${n})`
+      })
     if (tally.legacyConnections) {
       names.push(
         `the connection attribute relationship as archimateRelationship (${tally.legacyConnections})`,
@@ -1505,7 +1524,7 @@ function reportTally(reader: Reader): void {
       problem(
         'info',
         'archimate.legacy-names-converted',
-        `This file uses names an older Archi wrote, and they were read as Archi 5.10 reads them: ${names.join('; ')}.`,
+        `This file uses names an older Archi wrote, and they were read under the names Archi 5.10 uses: ${names.join('; ')}.`,
         where,
       ),
     )

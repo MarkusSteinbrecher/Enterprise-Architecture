@@ -141,6 +141,58 @@ describe('the rename table, name by name (#105)', () => {
     expect(codes(result)).not.toContain('archimate.legacy-names-converted')
   })
 
+  it('names a renamed carrier of unread content by what it now is', () => {
+    const result = importArchimate(
+      model(
+        LEGACY,
+        `    <element xsi:type="archimate:BusinessActor" name="A" id="a"/>
+    <element xsi:type="archimate:BusinessRole" name="B" id="b"/>
+    <element xsi:type="archimate:UsedByRelationship" id="r1" source="a" target="b" stray="1"/>`,
+      ),
+    )
+    expect(result.problems.find((p) => p.code === 'import.content-unread')?.message).toMatch(
+      /^1 relationship \(r1\) carries the attribute “stray”/,
+    )
+  })
+
+  it('reads a legacy name under any prefix but the canvas’s, as classify does', () => {
+    const result = importArchimate(
+      model(
+        CURRENT,
+        `    <element xsi:type="archimate:BusinessActor" name="A" id="a"/>
+    <element xsi:type="archimate:BusinessRole" name="B" id="b"/>
+    <element xsi:type="UsedByRelationship" id="r1" source="a" target="b"/>`,
+      ),
+    )
+    expect(typeOf(workspaceOf(result), 'r1')).toBe('Serving')
+  })
+
+  it('counts a relationship or view only once it is kept', () => {
+    // r2 dangles and the second view repeats an id: both are skipped and
+    // reported, so neither is a name this import converted.
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="${LEGACY}" name="M" id="m" version="2.6.0">
+  <folder name="Business" id="fb" type="business">
+    <element xsi:type="archimate:BusinessActor" name="A" id="a"/>
+    <element xsi:type="archimate:BusinessRole" name="B" id="b"/>
+  </folder>
+  <folder name="Relations" id="fr" type="relations">
+    <element xsi:type="archimate:UsedByRelationship" id="r1" source="a" target="b"/>
+    <element xsi:type="archimate:UsedByRelationship" id="r2" source="a" target="gone"/>
+  </folder>
+  <folder name="Views" id="fv" type="diagrams">
+    <element xsi:type="archimate:DiagramModel" name="V" id="v"/>
+    <element xsi:type="archimate:DiagramModel" name="V again" id="v"/>
+  </folder>
+</archimate:model>`
+    const result = importArchimate(xml)
+    expect(workspaceOf(result).relationships).toHaveLength(1)
+    expect(workspaceOf(result).views).toHaveLength(1)
+    const said = message(result, 'archimate.legacy-names-converted')
+    expect(said).toContain('UsedByRelationship as ServingRelationship (1)')
+    expect(said).toContain('DiagramModel as ArchimateDiagramModel (1)')
+  })
+
   it('counts only what it kept', () => {
     // The second e1 is a duplicate, skipped and reported as one.
     const result = importArchimate(
@@ -181,6 +233,11 @@ describe('legacy junctions (#105)', () => {
     const workspace = workspaceOf(result)
     expect(workspace.elements.find((e) => e.id === 'j-or')?.junctionKind).toBe('or')
     expect(workspace.elements.find((e) => e.id === 'j-and')?.junctionKind).toBeUndefined()
+    // The conversion note must not claim the or-junction was read as Archi reads it.
+    const converted = message(result, 'archimate.legacy-names-converted')
+    expect(converted).toContain('OrJunction as an or-junction (1)')
+    expect(converted).toContain('AndJunction as Junction (1)')
+    expect(converted).not.toContain('as Archi 5.10 reads')
     const said = result.problems.find((p) => p.code === 'archimate.legacy-or-junction')
     expect(said?.subject).toBe('j-or')
     expect(said?.message).toContain('Archi 5.10 opens it as an And-junction')
@@ -197,6 +254,7 @@ describe('the legacy connection attribute (#105)', () => {
   </folder>
   <folder name="Relations" id="fr" type="relations">
     <element xsi:type="archimate:AssignmentRelationship" id="r" source="a" target="b"/>
+    <element xsi:type="archimate:AssignmentRelationship" id="r2" source="a" target="b"/>
   </folder>
   <folder name="Views" id="fv" type="diagrams">
     <element xsi:type="archimate:DiagramModel" name="V" id="v">
@@ -221,16 +279,17 @@ describe('the legacy connection attribute (#105)', () => {
     )
   })
 
-  it('prefers archimateRelationship and reports a stray relationship as unread', () => {
-    const result = importArchimate(view('archimateRelationship="r" relationship="x"'))
+  it.each([
+    ['archimateRelationship="r" relationship="r2"', 'r2', 'archimateRelationship'],
+    ['relationship="r2" archimateRelationship="r"', 'r', 'relationship'],
+  ])('reads the later of the two, as Archi 5.10 does: %s', (attributes, drawn, unread) => {
+    // Both set one feature in document order; Archi 5.10 re-saved each order
+    // with the later value (scratch model, its command line, 2026-10-05).
+    const result = importArchimate(view(attributes))
     const [connection] = workspaceOf(result).views[0]!.connections
-    expect(connection).toMatchObject({ relationship: 'r' })
+    expect(connection).toMatchObject({ kind: 'relationship', relationship: drawn })
     expect(result.problems.find((p) => p.code === 'import.content-unread')?.message).toContain(
-      'the attribute “relationship”',
-    )
-    // The view is a legacy DiagramModel, so the note is there, without the attribute.
-    expect(message(result, 'archimate.legacy-names-converted')).not.toContain(
-      'archimateRelationship',
+      `the attribute “${unread}”`,
     )
   })
 })
