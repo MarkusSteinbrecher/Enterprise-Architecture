@@ -22,6 +22,7 @@ import {
   type ViewNode,
 } from '@/model'
 import { isExchangeSafeId } from '@/store/ids'
+import type { Ledger } from './consumption'
 import { problem, type ImportProblem } from './problems'
 import { defaultNodeSize } from './default-sizes'
 import {
@@ -252,6 +253,7 @@ export interface ViewReadContext {
   readProperties: (raw: RawNode) => Record<string, PropertyValue>
   problems: ImportProblem[]
   where: { file?: string }
+  ledger: Ledger
 }
 
 /** Counted across the file and reported once each, so a big file says it in one line. */
@@ -262,10 +264,21 @@ interface Tally {
 }
 
 export function readViews(model: RawNode, context: ViewReadContext): View[] {
+  const { ledger } = context
+  for (const views of list(model.views)) {
+    ledger.use(views, 'diagrams')
+    for (const diagrams of list(views.diagrams)) ledger.use(diagrams, 'view')
+  }
   const raws = list((model.views as RawNode | undefined)?.diagrams).flatMap((diagrams) =>
     list(diagrams.view),
   )
-  const viewIds = new Set(raws.map((raw) => asString(raw['@identifier'])).filter(isString))
+  /** View id → its name: what a view reference may point at, and the label Archi gives it. */
+  const viewIds = new Map<string, string>()
+  for (const raw of raws) {
+    const viewId = asString(raw['@identifier'])
+    if (viewId !== undefined && !viewIds.has(viewId))
+      viewIds.set(viewId, langString(raw.name) ?? '')
+  }
   const font = dominantFont(raws)
   const tally: Tally = { attachments: 0, onConnections: 0, defaultSized: 0 }
   // A connection may end on another connection (the format allows it, Archi
@@ -280,8 +293,12 @@ export function readViews(model: RawNode, context: ViewReadContext): View[] {
   const seen = new Set<string>()
   for (const raw of raws) {
     const view = readView(raw, viewIds, connectionIds, font, tally, context)
-    if (!view) continue
+    if (!view) {
+      ledger.skip(raw)
+      continue
+    }
     if (seen.has(view.id)) {
+      ledger.skip(raw)
       context.problems.push(
         problem(
           'warning',
@@ -331,7 +348,7 @@ export function readViews(model: RawNode, context: ViewReadContext): View[] {
 
 function readView(
   raw: RawNode,
-  viewIds: ReadonlySet<string>,
+  viewIds: ReadonlyMap<string, string>,
   fileConnectionIds: ReadonlySet<string>,
   font: FontKey | undefined,
   tally: Tally,
@@ -379,6 +396,10 @@ function readView(
   if (documentation) view.documentation = documentation
   const viewpoint = asString(raw['@viewpoint'])
   if (viewpoint) view.viewpoint = viewpoint
+  const { ledger } = context
+  ledger.use(raw, '@identifier', '@type', '@viewpoint', 'node', 'connection')
+  ledger.text(raw, 'name')
+  ledger.text(raw, 'documentation')
 
   const nodesById = new Map<string, ViewNode>()
   const connectionIds = new Set<string>()
@@ -398,11 +419,13 @@ function readView(
           'exchange.duplicate-node-id',
           `two nodes share the identifier "${node.id}"; the later one was skipped.`,
         )
+        ledger.skip(rawNode, ['node'])
       } else if (node) {
         nodesById.set(node.id, node)
         view.nodes.push(node)
         anchor = { id: node.id, x: num(rawNode['@x']) ?? 0, y: num(rawNode['@y']) ?? 0 }
-      }
+        ledger.use(rawNode, '@identifier', '@type', '@x', '@y', '@w', '@h', 'node')
+      } else ledger.skip(rawNode, ['node'])
       walk(list(rawNode.node), anchor)
     }
   }
@@ -419,8 +442,12 @@ function readView(
       context,
       skip,
     )
-    if (!connection) continue
+    if (!connection) {
+      ledger.skip(rawConnection)
+      continue
+    }
     if (connectionIds.has(connection.id)) {
+      ledger.skip(rawConnection)
       skip(
         'exchange.duplicate-connection-id',
         `two connections share the identifier "${connection.id}"; the later one was skipped.`,
@@ -429,6 +456,9 @@ function readView(
     }
     connectionIds.add(connection.id)
     view.connections.push(connection)
+    ledger.use(rawConnection, '@identifier', '@type', '@source', '@target', 'bendpoint')
+    // Tallied above, as drawn at the outline instead.
+    ledger.whole(rawConnection, 'sourceAttachment', 'targetAttachment')
   }
   applyCarriedStyle(view, carried, problems, at)
   return view
@@ -444,7 +474,7 @@ interface Anchor {
 function readNode(
   raw: RawNode,
   parent: Anchor | undefined,
-  viewIds: ReadonlySet<string>,
+  viewIds: ReadonlyMap<string, string>,
   font: FontKey | undefined,
   literal: (id: string) => boolean,
   tally: Tally,
@@ -484,18 +514,29 @@ function readNode(
         return undefined
       }
       node = { ...base, kind: 'element', element: elementRef }
+      context.ledger.use(raw, '@elementRef')
       break
     }
     case 'Container': {
       node = { ...base, kind: 'group', name: label ?? '' }
       const documentation = langString(raw.documentation)
       if (documentation) node.documentation = documentation
+      context.ledger.text(raw, 'label')
+      context.ledger.text(raw, 'documentation')
       break
     }
     case 'Label': {
       const viewRef = asString((list(raw.viewRef)[0] ?? {})['@ref'])
-      if (viewRef !== undefined && viewIds.has(viewRef)) {
+      // Kept as a reference, or reported and kept as a note.
+      context.ledger.first(raw, 'viewRef')
+      for (const ref of list(raw.viewRef).slice(0, 1)) context.ledger.use(ref, '@ref')
+      const referenced = viewRef === undefined ? undefined : viewIds.get(viewRef)
+      if (viewRef !== undefined && referenced !== undefined) {
         node = { ...base, kind: 'view-ref', view: viewRef }
+        // A reference draws the view's own name, which is what Archi writes as
+        // its label. Any other label is not kept, so it is left for the ledger
+        // (#110 review).
+        if (label === undefined || label === referenced) context.ledger.text(raw, 'label')
       } else {
         if (viewRef !== undefined) {
           skip(
@@ -504,12 +545,16 @@ function readNode(
           )
         }
         node = { ...base, kind: 'note', text: label ?? '' }
-        if (raw['@conceptRef'] !== undefined) {
-          skip(
-            'exchange.label-binding-ignored',
-            `label "${id}" is bound to concept "${asString(raw['@conceptRef']) ?? ''}", which Archipelago does not support; its current text was kept as a note.`,
-          )
-        }
+        context.ledger.text(raw, 'label')
+      }
+      // Reported on either branch, so marked with the report: marked above the
+      // branch, it certified the drop on the reference branch (#110 review).
+      if (raw['@conceptRef'] !== undefined) {
+        skip(
+          'exchange.label-binding-ignored',
+          `label "${id}" is bound to concept "${asString(raw['@conceptRef']) ?? ''}", which Archipelago does not support; it was kept as ${node.kind === 'note' ? 'a note with its current text' : 'a view reference'}.`,
+        )
+        context.ledger.use(raw, '@conceptRef')
       }
       break
     }
@@ -536,8 +581,8 @@ function readNode(
   }
 
   const appearance = literal(id)
-    ? readStyle(raw.style, NO_DEFAULTS, undefined)
-    : readStyle(raw.style, nodeDefaults(node, context.elements), font)
+    ? readStyle(raw, NO_DEFAULTS, undefined, context.ledger)
+    : readStyle(raw, nodeDefaults(node, context.elements), font, context.ledger)
   if (appearance) node.appearance = appearance
   return node
 }
@@ -580,7 +625,10 @@ function readConnection(
   for (const point of list(raw.bendpoint)) {
     const x = num(point['@x'])
     const y = num(point['@y'])
-    if (x !== undefined && y !== undefined) bendpoints.push({ x, y })
+    if (x !== undefined && y !== undefined) {
+      bendpoints.push({ x, y })
+      context.ledger.use(point, '@x', '@y')
+    }
   }
   if (raw.sourceAttachment !== undefined) tally.attachments += 1
   if (raw.targetAttachment !== undefined) tally.attachments += 1
@@ -607,10 +655,12 @@ function readConnection(
       return undefined
     }
     connection = { ...base, kind: 'relationship', relationship: relationshipRef }
+    context.ledger.use(raw, '@relationshipRef')
   } else if (type === 'Line') {
     connection = { ...base, kind: 'line' }
     const name = langString(raw.label)
     if (name) connection.name = name
+    context.ledger.text(raw, 'label')
   } else {
     skip(
       'exchange.connection-type-unsupported',
@@ -619,8 +669,8 @@ function readConnection(
     return undefined
   }
   const appearance = literal(id)
-    ? readStyle(raw.style, NO_DEFAULTS, undefined)
-    : readStyle(raw.style, CONNECTION_DEFAULTS, font)
+    ? readStyle(raw, NO_DEFAULTS, undefined, context.ledger)
+    : readStyle(raw, CONNECTION_DEFAULTS, font, context.ledger)
   if (appearance) connection.appearance = appearance
   return connection
 }
@@ -665,24 +715,36 @@ function fontKey(font: RawNode): FontKey {
   return JSON.stringify([asString(font['@name']) ?? '', asString(font['@size']) ?? ''])
 }
 
+/**
+ * A node's or connection's `<style>`. A colour or font equal to the default is
+ * read, as no override; that is still a read (#101).
+ */
 function readStyle(
-  raw: unknown,
+  owner: RawNode,
   defaults: StyleDefaults,
   font: FontKey | undefined,
+  ledger: Ledger,
 ): Appearance | undefined {
-  const style = list(raw)[0]
+  ledger.first(owner, 'style')
+  const style = list(owner.style)[0]
   if (!style) return undefined
   const appearance: Appearance = {}
+  ledger.first(style, 'fillColor')
+  ledger.first(style, 'lineColor')
+  ledger.first(style, 'font')
+  ledger.use(style, '@lineWidth')
 
-  const fill = readColour(list(style.fillColor)[0])
+  const fill = readColour(list(style.fillColor)[0], ledger)
   if (fill && !isDefault(fill, defaults.fill)) appearance.fillColor = hex(fill)
-  const line = readColour(list(style.lineColor)[0])
+  const line = readColour(list(style.lineColor)[0], ledger)
   if (line && !isDefault(line, defaults.line)) appearance.lineColor = hex(line)
   const lineWidth = num(style['@lineWidth'])
   if (lineWidth !== undefined && lineWidth !== 1 && lineWidth > 0) appearance.lineWidth = lineWidth
 
   const rawFont = list(style.font)[0]
   if (rawFont) {
+    ledger.use(rawFont, '@name', '@size', '@style')
+    ledger.first(rawFont, 'color')
     if (fontKey(rawFont) !== font) {
       const name = asString(rawFont['@name'])
       const size = num(rawFont['@size'])
@@ -693,7 +755,7 @@ function readStyle(
       .split(/\s+/)
       .filter((s): s is FontStyle => s === 'bold' || s === 'italic' || s === 'underline')
     if (styles.length) appearance.fontStyle = styles
-    const colour = readColour(list(rawFont.color)[0])
+    const colour = readColour(list(rawFont.color)[0], ledger)
     if (colour && !isDefault(colour, defaults.font)) appearance.fontColor = hex(colour)
   }
   return Object.keys(appearance).length ? appearance : undefined
@@ -705,13 +767,15 @@ interface Colour {
   alpha: number
 }
 
-function readColour(raw: RawNode | undefined): Colour | undefined {
+function readColour(raw: RawNode | undefined, ledger: Ledger): Colour | undefined {
   if (!raw) return undefined
   const r = num(raw['@r'])
   const g = num(raw['@g'])
   const b = num(raw['@b'])
   if (r === undefined || g === undefined || b === undefined) return undefined
   const a = num(raw['@a'])
+  ledger.use(raw, '@r', '@g', '@b')
+  if (a !== undefined) ledger.use(raw, '@a')
   return {
     rgb: [clampByte(r), clampByte(g), clampByte(b)],
     alpha: a === undefined ? 100 : Math.min(100, Math.max(0, a)),
@@ -786,6 +850,7 @@ export function readOrganizations(
   members: ReadonlyMap<string, FolderRoot>,
   problems: ImportProblem[],
   where: { file?: string },
+  ledger: Ledger,
 ): OrganizationsResult {
   const folders: Folder[] = []
   const membership = new Map<string, string>()
@@ -822,6 +887,8 @@ export function readOrganizations(
     for (const item of items) {
       const ref = asString(item['@identifierRef'])
       if (ref !== undefined) {
+        // Filed, or reported as unknown or a duplicate below.
+        ledger.use(item, '@identifierRef', 'item')
         if (!members.has(ref)) unknownRefs.push(ref)
         else if (membership.has(ref) || placedInGroup.has(ref)) duplicateRefs.push(ref)
         else if (context.folder) membership.set(ref, context.folder.id)
@@ -834,6 +901,10 @@ export function readOrganizations(
         ? ROOT_NAMES.get(label.toLowerCase().replace(/[^a-z]/g, ''))
         : undefined
       if (root) {
+        // One of the fixed groups, which Archipelago supplies itself: its label
+        // decides which. Anything else it carries is left for the ledger (#101).
+        ledger.text(item, 'label')
+        ledger.use(item, 'item')
         walk(list(item.item), { root, path: [label], top: false })
         continue
       }
@@ -845,10 +916,14 @@ export function readOrganizations(
       else if (context.root) folder.root = context.root
       else unplaced.push(folder)
       folders.push(folder)
+      ledger.use(item, '@identifier', 'item')
+      ledger.text(item, 'label')
+      ledger.text(item, 'documentation')
       walk(list(item.item), { root: context.root, folder, path, top: false })
     }
   }
   for (const organizations of list(model.organizations)) {
+    ledger.use(organizations, 'item')
     walk(list(organizations.item), { path: [], top: true })
   }
 

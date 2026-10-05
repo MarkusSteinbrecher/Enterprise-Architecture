@@ -174,10 +174,14 @@ describe('the .archimate reader reports what it cannot carry (#100)', () => {
       'properties on a line (1)',
       'properties on a note (1)',
       'properties on a group (1)',
-      '<mystery> on a group (1)',
     ]) {
       expect(report?.message).toContain(what)
     }
+    // Something Archi would not write is not a known loss: the ledger reports it (#101).
+    expect(report?.message).not.toContain('mystery')
+    expect(found(result, 'import.content-unread')).toMatchObject([
+      { subject: 'group', message: expect.stringContaining('1 shape (group) carries <mystery>') },
+    ])
     // What a group does hold is kept, and is not reported.
     const group = workspaceOf(result).views[0]!.nodes.find((n) => n.id === 'group')
     expect(group).toMatchObject({ documentation: 'kept' })
@@ -252,7 +256,7 @@ describe('the .archimate reader reports what it cannot carry (#100)', () => {
         </element>`),
     )
     const messages = result.problems
-      .filter((p) => p.code === 'archimate.content-unread')
+      .filter((p) => p.code === 'import.content-unread')
       .map((p) => [p.subject, p.message])
     expect(messages).toEqual([
       ['g', expect.stringContaining('the feature “weight”')],
@@ -435,12 +439,12 @@ describe('the follow-ups from the #106 review', () => {
         <element xsi:type="archimate:ArchimateDiagramModel" name="V2" id="v"><property key="k" value="1"/><property key="k" value="2"/></element>`),
     )
     expect(result.problems.map((p) => [p.code, p.subject]).sort()).toEqual([
-      ['archimate.content-unread', 'g'],
       ['archimate.duplicate-id', 'g'],
       ['archimate.duplicate-id', 'r'],
       ['archimate.duplicate-id', 'v'],
+      ['import.content-unread', 'g'],
     ])
-    expect(found(result, 'archimate.content-unread')[0]?.message).toMatch(/^1 element \(g\)/)
+    expect(found(result, 'import.content-unread')[0]?.message).toMatch(/^1 element \(g\)/)
   })
 
   it('tallies no value of a connection it skipped', () => {

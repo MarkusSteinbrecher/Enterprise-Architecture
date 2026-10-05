@@ -30,6 +30,7 @@ import {
   isReportDefinition,
   isTagGroup,
 } from './canonical-json'
+import { Ledger, reportUnread, type Ignored, type Noun } from './consumption'
 import {
   failed,
   problem,
@@ -563,7 +564,28 @@ interface Reader {
   unresolved: Set<string>
   problems: ImportProblem[]
   where: { file?: string }
+  /** What was read, so that what was not is reported (#101). */
+  ledger: Ledger
 }
+
+/**
+ * What this reader deliberately does not read, and why (#101). Anything else it
+ * does not mark as read is reported as `import.content-unread`. The parser drops
+ * namespace declarations itself (`removeNSPrefix`).
+ */
+const IGNORED: readonly Ignored[] = [
+  {
+    at: 'model',
+    key: '@schemaLocation',
+    reason: 'Where to fetch the schema. The writer names its own.',
+  },
+  {
+    at: '*',
+    key: '@lang',
+    reason:
+      'The language of a text. Archipelago holds one text per field and writes it as en; a second language is reported as a second element.',
+  },
+]
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -644,20 +666,31 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     ])
   }
 
+  const ledger = new Ledger()
+  ledger.use(model, '@identifier', 'elements', 'relationships', 'views', 'organizations')
+  ledger.text(model, 'name')
+  // Reported below when it holds anything; empty, nothing is lost.
+  ledger.whole(model, 'documentation')
   const reader: Reader = {
-    definitions: readPropertyDefinitions(model, problems, where),
+    definitions: readPropertyDefinitions(model, problems, where, ledger),
     unresolved: new Set<string>(),
     problems,
     where,
+    ledger,
   }
 
   const elements: Element[] = []
   const seenIds = new Set<string>()
 
+  for (const elementsNode of list(model.elements)) ledger.use(elementsNode, 'element')
   for (const raw of list((model.elements as RawNode | undefined)?.element)) {
     const element = readElement(raw, reader)
-    if (!element) continue
+    if (!element) {
+      ledger.skip(raw)
+      continue
+    }
     if (seenIds.has(element.id)) {
+      ledger.skip(raw)
       problems.push(
         problem(
           'warning',
@@ -678,10 +711,17 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   const relationships: Relationship[] = []
   const seenRelationshipIds = new Set<string>()
   const documented: string[] = []
+  for (const relationshipsNode of list(model.relationships)) {
+    ledger.use(relationshipsNode, 'relationship')
+  }
   for (const raw of list((model.relationships as RawNode | undefined)?.relationship)) {
     const relationship = readRelationship(raw, seenIds, reader)
-    if (!relationship) continue
+    if (!relationship) {
+      ledger.skip(raw)
+      continue
+    }
     if (seenRelationshipIds.has(relationship.id)) {
+      ledger.skip(raw)
       problems.push(
         problem(
           'warning',
@@ -696,6 +736,7 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     relationships.push(relationship)
     // Counted only once kept: a skipped relationship was reported already (#100).
     if (langString(raw.documentation)) documented.push(relationship.id)
+    ledger.whole(raw, 'documentation')
   }
 
   const modelProperties = readProperties(model, reader)
@@ -712,12 +753,14 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     readProperties: (raw) => readProperties(raw, reader),
     problems,
     where,
+    ledger,
   })
   const { folders, membership } = readOrganizations(
     model,
     memberGroups(elements, relationships, views),
     problems,
     where,
+    ledger,
   )
   const fileIn = <T extends { id: string; folder?: string }>(item: T): T => {
     const folder = membership.get(item.id)
@@ -736,6 +779,17 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
       ),
     )
   }
+
+  problems.push(
+    ...reportUnread(
+      ledger.unread(model, 'model', {
+        ignored: IGNORED,
+        subjectOf,
+      }),
+      describe,
+      where,
+    ),
+  )
 
   const workspace: Workspace = {
     id: asString(model['@identifier']) || 'ws-imported',
@@ -758,17 +812,25 @@ function readPropertyDefinitions(
   model: RawNode,
   problems: ImportProblem[],
   where: { file?: string },
+  ledger: Ledger,
 ): Map<string, DeclaredProperty> {
   const definitions = new Map<string, DeclaredProperty>()
   const unknown = new Set<string>()
+  ledger.use(model, 'propertyDefinitions')
+  for (const container of list(model.propertyDefinitions))
+    ledger.use(container, 'propertyDefinition')
   const container = model.propertyDefinitions as RawNode | undefined
   for (const raw of list(container?.propertyDefinition)) {
     const id = asString(raw['@identifier'])
     const key = langString(raw.name)
+    // Without both there is nothing to look a value up by. Left unmarked, so the
+    // ledger reports what it held (#101).
     if (!id || !key) continue
     const type = asString(raw['@type']) ?? 'string'
     if (!isExchangePropertyType(type)) unknown.add(type)
     definitions.set(id, { key, type })
+    ledger.use(raw, '@identifier', '@type')
+    ledger.text(raw, 'name')
   }
   if (unknown.size) {
     problems.push(
@@ -859,6 +921,9 @@ function readElement(raw: RawNode, reader: Reader): Element | undefined {
   const documentation = langString(raw.documentation)
   if (documentation) element.documentation = documentation
   if (profile) element.profile = profile
+  reader.ledger.use(raw, '@identifier', '@type')
+  reader.ledger.text(raw, 'name')
+  reader.ledger.text(raw, 'documentation')
   return element
 }
 
@@ -951,6 +1016,8 @@ function readRelationship(
   }
   const name = langString(raw.name)
   if (name) relationship.name = name
+  reader.ledger.use(raw, '@identifier', '@type', '@source', '@target')
+  reader.ledger.text(raw, 'name')
 
   const profile = read.profile ?? {}
   const attributes = readTypeSpecificAttributes(raw, id, type, reader)
@@ -986,6 +1053,8 @@ function readTypeSpecificAttributes(
   for (const attribute of Object.keys(TYPE_SPECIFIC_ATTRIBUTES) as TypeSpecificAttribute[]) {
     const value = asString(raw[`@${attribute}`])
     if (value === undefined) continue
+    // Read, or reported as ignored: an empty modifier is no modifier.
+    reader.ledger.use(raw, `@${attribute}`)
     const owner = TYPE_SPECIFIC_ATTRIBUTES[attribute]
     if (type !== owner) {
       ignored(
@@ -1023,20 +1092,36 @@ function readTypeSpecificAttributes(
 function readProperties(raw: RawNode, reader: Reader): Record<string, PropertyValue> {
   const out: Record<string, PropertyValue> = {}
   const repeated = new Set<string>()
+  const { ledger } = reader
+  ledger.use(raw, 'properties')
+  for (const container of list(raw.properties)) ledger.use(container, 'property')
   const container = raw.properties as RawNode | undefined
   for (const property of list(container?.property)) {
     const ref = asString(property['@propertyDefinitionRef'])
     const definition = ref ? reader.definitions.get(ref) : undefined
     if (!definition) {
       reader.unresolved.add(ref ?? '(none)')
+      ledger.skip(property)
       continue
     }
     const value = langString(property.value)
-    if (value === undefined) continue
+    if (value === undefined) {
+      // The schema requires a value. An empty one is `<value/>`, read as the
+      // empty string; with none, there is no value to keep (#100, #101).
+      ledger.lose(raw, `a property with no <value> (“${definition.key}”)`)
+      ledger.skip(property)
+      continue
+    }
     // A name may repeat on one object; the model holds it once. The first is
     // kept and the rest are reported (#100).
-    if (Object.hasOwn(out, definition.key)) repeated.add(definition.key)
-    else setKey(out, definition.key, typedValue(value, definition.type))
+    if (Object.hasOwn(out, definition.key)) {
+      repeated.add(definition.key)
+      ledger.skip(property)
+    } else {
+      setKey(out, definition.key, typedValue(value, definition.type))
+      ledger.use(property, '@propertyDefinitionRef')
+      ledger.text(property, 'value')
+    }
   }
   if (repeated.size) {
     reader.problems.push(
@@ -1146,4 +1231,41 @@ function reportUnresolvedProperties(reader: Reader): void {
       reader.where,
     ),
   )
+}
+
+/** An object's id. A folder may have none, and then borrows none from the model. */
+function subjectOf(node: RawNode, at: string): string | undefined | null {
+  const id = asString(node['@identifier']) ?? asString(node['@identifierRef'])
+  return id ?? (at === 'item' ? null : undefined)
+}
+
+/** What to call the object carrying unread content, from where it sits in the file (#101). */
+function describe(path: readonly string[], node: RawNode): Noun {
+  const at = path[path.length - 1]
+  switch (at) {
+    case 'model':
+      return { one: 'the model', many: 'the model' }
+    case 'element':
+      return { one: 'element', many: 'elements' }
+    case 'relationship':
+      return { one: 'relationship', many: 'relationships' }
+    case 'view':
+      return { one: 'view', many: 'views' }
+    case 'node':
+      return { one: 'view node', many: 'view nodes' }
+    case 'connection':
+      return { one: 'connection', many: 'connections' }
+    case 'item':
+      return node['@identifierRef'] === undefined
+        ? { one: 'folder', many: 'folders' }
+        : { one: 'folder entry', many: 'folder entries' }
+    case 'propertyDefinition':
+      return { one: 'property definition', many: 'property definitions' }
+    case 'property':
+      return { one: 'property', many: 'properties' }
+    case 'bendpoint':
+      return { one: 'bendpoint', many: 'bendpoints' }
+    default:
+      return { one: `<${at ?? ''}>`, many: `<${at ?? ''}> elements` }
+  }
 }
