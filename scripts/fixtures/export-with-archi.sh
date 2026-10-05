@@ -4,11 +4,15 @@
 # writes (a hand edit once left one at Archi's default, which Archi omits; #100),
 # then write the Open Group exchange format with the folder structure.
 # claims-platform (#76, and in German for #111), relationship-attributes (#84) and archi-coverage (#13). ARCHI defaults to
-# ~/Applications/Archi.app; Archi 5.10.0 produced the checked-in files.
+# ~/Applications/Archi.app, then /Applications; Archi 5.10.0 produced the checked-in files.
 # archi-coverage fails Archi's own XSD check after export, on purpose: it holds
 # shapes left at their default size, which Archi exports as w="-1" (#13).
 set -eu
-ARCHI="${ARCHI:-$HOME/Applications/Archi.app/Contents/MacOS/Archi}"
+# Archi lives in ~/Applications on one machine and /Applications on another.
+if [ -z "${ARCHI:-}" ]; then
+  ARCHI="$HOME/Applications/Archi.app/Contents/MacOS/Archi"
+  [ -x "$ARCHI" ] || ARCHI="/Applications/Archi.app/Contents/MacOS/Archi"
+fi
 DIR="$(cd "$(dirname "$0")/../../src/io/fixtures" && pwd)"
 for model in claims-platform relationship-attributes archi-coverage; do
   "$ARCHI" -application com.archimatetool.commandline.app -consoleLog -nosplash \
@@ -25,3 +29,9 @@ done
   --xmlexchange.export "$DIR/claims-platform.de.xml" \
   --xmlexchange.exportFolders \
   --xmlexchange.exportLang de
+# Text positions on a group, a Grouping, a box and a note (#108): saved only, and
+# drawn with --html.createReport when the evidence in text-position.test.tsx is
+# re-measured.
+"$ARCHI" -application com.archimatetool.commandline.app -consoleLog -nosplash \
+  --loadModel "$DIR/text-position.archimate" \
+  --saveModel "$DIR/text-position.archimate"
