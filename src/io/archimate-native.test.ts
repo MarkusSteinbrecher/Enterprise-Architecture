@@ -7,6 +7,7 @@ import attributesExchange from './fixtures/relationship-attributes.xml?raw'
 import coverageNative from './fixtures/archi-coverage.archimate?raw'
 import coverageExchange from './fixtures/archi-coverage.xml?raw'
 import {
+  ARCHI_LEGACY_NAMESPACE,
   ARCHI_NAMESPACE,
   SPECIALIZATION_KEY,
   importArchimate,
@@ -494,5 +495,63 @@ describe('the exchange reader says what Archi’s export carried and it could no
     const found = importExchangeXml(coverageExchange).problems.map((p) => p.code)
     expect(found).toContain('import.relationship-documentation-skipped')
     expect(found).toContain('exchange.model-documentation-skipped')
+  })
+})
+
+describe('the follow-ups from the #102 review (#103)', () => {
+  const file = (name: string, contents: string) => new File([contents], name)
+
+  it('reads an Archi model whose doctype has a bracket in its system id', async () => {
+    const text = claimsNative.replace('?>', '?>\n<!DOCTYPE model SYSTEM "a[b.dtd">')
+    expect(text).not.toBe(claimsNative)
+    const result = await readWorkspaceFile(file('model.archimate', text))
+    expect(result.workspace?.elements.length).toBe(read(claimsNative).elements.length)
+  })
+
+  it('reads a model in Archi’s legacy namespace natively, and the exchange reader refuses it', async () => {
+    const legacy = claimsNative.replace(ARCHI_NAMESPACE, ARCHI_LEGACY_NAMESPACE)
+    expect(legacy).not.toBe(claimsNative)
+    const result = await readWorkspaceFile(file('old.archimate', legacy))
+    expect(result.workspace?.elements.length).toBe(read(claimsNative).elements.length)
+    expect(importExchangeXml(legacy).problems.map((p) => p.code)).toEqual([
+      'exchange.wrong-namespace',
+    ])
+  })
+
+  it('reads an exchange file with no namespace or a near miss, and says so', () => {
+    const expected = exchange(claimsExchange).elements.length
+    for (const namespace of ['', 'https://www.opengroup.org/xsd/archimate/3.0/']) {
+      const text = claimsExchange.replace(
+        'xmlns="http://www.opengroup.org/xsd/archimate/3.0/"',
+        namespace ? `xmlns="${namespace}"` : '',
+      )
+      expect(text).not.toBe(claimsExchange)
+      const result = importExchangeXml(text)
+      expect(result.workspace?.elements.length, namespace).toBe(expected)
+      expect(result.problems.map((p) => p.code)).toContain('exchange.namespace-unexpected')
+    }
+    expect(importExchangeXml(claimsExchange).problems.map((p) => p.code)).not.toContain(
+      'exchange.namespace-unexpected',
+    )
+  })
+
+  // #104: the fail-closed refusal sat ahead of not-a-model and told these files
+  // they parse as XML and should be reported.
+  it('calls a file with no element at all not a model, not an unreadable root', () => {
+    for (const text of ['', 'hello world', '<?xml version="1.0"?><!-- nothing -->']) {
+      expect(
+        importArchimate(text).problems.map((p) => p.code),
+        text,
+      ).toEqual(['archimate.not-a-model'])
+      expect(
+        importExchangeXml(text).problems.map((p) => p.code),
+        text,
+      ).toEqual(['exchange.not-a-model'])
+    }
+  })
+
+  it('knows an Archi zip whose name has trailing space', async () => {
+    const result = await readWorkspaceFile(file('m.archimate ', 'PK\u0003\u0004rest'))
+    expect(result.problems.map((p) => p.code)).toEqual(['archimate.archive-unsupported'])
   })
 })

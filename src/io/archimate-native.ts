@@ -52,7 +52,7 @@ import {
   stripProfileKeys,
 } from './profile-properties'
 import { setKey } from './records'
-import { xmlRoot } from './xml-root'
+import { ARCHI_NAMESPACE, isArchiNamespace, rootUnreadable, xmlRoot } from './xml-root'
 
 /**
  * Archi's native `.archimate` file (#13): how Archi users arrive.
@@ -70,11 +70,11 @@ import { xmlRoot } from './xml-root'
  * The differences it allows are the places where Archi's export is lossy.
  */
 
-export const ARCHI_NAMESPACE = 'http://www.archimatetool.com/archimate'
+export { ARCHI_NAMESPACE, ARCHI_LEGACY_NAMESPACE } from './xml-root'
 
 /** Is this text an Archi model file rather than an exchange file? Decided by the root's own namespace (#99). */
 export function isArchiModel(text: string): boolean {
-  return xmlRoot(text)?.namespace === ARCHI_NAMESPACE
+  return isArchiNamespace(xmlRoot(text)?.namespace)
 }
 
 /** Archi's viewpoint ids, as the exchange format (and so the model) spells them. Taken from Archi 5.10's own export. */
@@ -227,9 +227,14 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     ])
   }
   // Any root called `model` parses, so a file in another format would come in
-  // empty, ok and silent. The namespace is what makes it Archi's (#99).
+  // empty, ok and silent. The namespace is what makes it Archi's (#99). A root
+  // the scan cannot find is refused too: a guard that cannot classify its input
+  // must not wave it through (#103). With no root and no model either, the
+  // file is not a model at all, and the not-a-model check below says so (#104).
   const root = xmlRoot(xml)
-  if (root?.local === 'model' && root.namespace !== ARCHI_NAMESPACE) {
+  const rootKey = Object.keys(parsed).find((key) => /(^|:)model$/.test(key))
+  if (!root && rootKey) return failed([rootUnreadable('archimate', where)])
+  if (root?.local === 'model' && !isArchiNamespace(root.namespace)) {
     return failed([
       problem(
         'error',
@@ -239,7 +244,6 @@ export function importArchimate(xml: string, file?: string): ImportResult {
       ),
     ])
   }
-  const rootKey = Object.keys(parsed).find((key) => /(^|:)model$/.test(key))
   const model = rootKey ? parsed[rootKey] : undefined
   if (!isRawNode(model)) {
     return failed([

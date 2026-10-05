@@ -1,5 +1,24 @@
 # Session Log
 
+## 2026-10-04 (cont.) — #104 (#103) reviewed before merge
+
+`/review-pr 104`. All four #103 criteria are met. One blocking finding: the new fail-closed `*.root-unreadable` check sits ahead of `*.not-a-model`, so an empty, plain-text or element-less `.xml`/`.archimate` is now told that it "parses as XML… please report this file". Reproduced against `main`. The fix is to raise it only when the parser found a model and the scan did not. A nice-to-have: legacy-namespace files are routed natively, but their Archi 1/2 types (`UsedByRelationship`, `Infrastructure*`) come back as `unknown-type`. The review was posted as a comment, because GitHub refuses request-changes on your own PR. **Harvested:** sharpened the CLAUDE.md fail-closed line (a666a0a+): a closed branch inherits every input of the check it precedes. Finding 1 fixed on the branch (d727696): `root-unreadable` is raised only when the parser found a model and the scan did not, and a test reads `''`, plain text and a comment-only prolog through both readers. The test fails without the fix. Open: merging #104 into main, which is left to the user; mapping the legacy Archi 1/2 vocabulary (finding 2), not yet filed.
+
+## 2026-10-04 (cont.) — #102 (#99) merged; reviewed post-merge
+
+#102 merged before review, the fourth in a row. The post-merge review (code pass by an independent agent) found that the new guard **fails open**: a `[` in a doctype's quoted system id makes `xmlRoot` return undefined, both `root?.`-guarded refusals are skipped, and #99's silent empty import is back. Also, exchange files with no `xmlns` or an `https` namespace are newly refused, and legacy Archi files (`bolton.ac.uk`) get a misleading error. All filed as **#103**. **Harvested** into CLAUDE.md on `fix/103-reader-choice-followups`: a guard that can't classify its input fails closed.
+
+- **#103 fixed** on the same branch:
+  - Both readers fail closed on a root the scan can't find (`*.root-unreadable`).
+  - The doctype skip is quote-aware.
+  - The exchange reader refuses only Archi's namespaces. No namespace, or a near miss, is read with an info note.
+  - Archi's legacy `bolton.ac.uk` namespace is read natively.
+  - Zip names are trimmed.
+
+  Mutation checks found two survivors. A subset-tracking flag was redundant with the outer loop, so it was deleted. A test with two apostrophes that cancelled out was split.
+
+Open: PR for #103 awaits `/review-pr` **before** merge. Then #100 and #101, and the #74 decision.
+
 ## 2026-10-04 (cont.) — #93 merged; #98 reviewed post-merge
 
 - **#93** (the #92 follow-ups): merged `main` into it, which conflicted only in this file. Reviewed and merged. Mutation-checked one guard at a time. The palette's `open` check is redundant with `isModalOpen()`, because the palette is `aria-modal`.

@@ -156,7 +156,7 @@ export async function readWorkspaceFile(file: File): Promise<ImportResult> {
   // An Archi model with images in it is saved as a zip archive, not as XML. Its
   // signature is four ASCII bytes, so the decoded text starts with them too. So
   // does every other zip, and a .docx or .xlsx is not an Archi model (#99).
-  if (text.startsWith('PK\u0003\u0004') && !file.name.toLowerCase().endsWith('.archimate')) {
+  if (text.startsWith('PK\u0003\u0004') && !file.name.trim().toLowerCase().endsWith('.archimate')) {
     return {
       ok: false,
       problems: [

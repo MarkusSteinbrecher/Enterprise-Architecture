@@ -66,7 +66,7 @@ import {
   relationshipProfileToProperties,
   stripProfileKeys,
 } from './profile-properties'
-import { xmlRoot } from './xml-root'
+import { isArchiNamespace, rootUnreadable, xmlRoot } from './xml-root'
 
 /**
  * The Open Group ArchiMate Model Exchange File Format (concept §5.3 item 2).
@@ -619,17 +619,32 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   }
 
   // Archi's own file also has a root called `model`, and read here it came in
-  // empty, ok and silent. The exchange format is the Open Group's namespace (#99).
+  // empty, ok and silent (#99). Only Archi's namespaces are refused: a file with
+  // no namespace, or a near miss, is still read, and the mismatch noted (#103).
+  // A root the scan cannot find while the parser found a model is refused: the
+  // guard must fail closed. With neither, the file is not a model at all, and
+  // the not-a-model check below says so (#104).
   const root = xmlRoot(xml)
-  if (root?.local === 'model' && !root.namespace?.startsWith(EXCHANGE_NAMESPACE_FAMILY)) {
+  if (!root && parsed.model !== undefined) return failed([rootUnreadable('exchange', where)])
+  if (root?.local === 'model' && isArchiNamespace(root.namespace)) {
     return failed([
       problem(
         'error',
         'exchange.wrong-namespace',
-        `The root element <${root.local}> is ${root.namespace ? `in the namespace ${root.namespace}` : 'in no namespace'}, not the Open Group’s (${NS}), so this is not an ArchiMate Model Exchange Format file.`,
+        `The root element <model> is in Archi’s namespace (${root.namespace ?? ''}), so this is an Archi model file, not an ArchiMate Model Exchange Format file. Open it as an Archi model.`,
         where,
       ),
     ])
+  }
+  if (root?.local === 'model' && !root.namespace?.startsWith(EXCHANGE_NAMESPACE_FAMILY)) {
+    problems.push(
+      problem(
+        'info',
+        'exchange.namespace-unexpected',
+        `The root element <model> is ${root.namespace ? `in the namespace ${root.namespace}` : 'in no namespace'}, not the Open Group’s (${NS}). It was read as the exchange format anyway.`,
+        where,
+      ),
+    )
   }
 
   const model = parsed.model as RawNode | undefined

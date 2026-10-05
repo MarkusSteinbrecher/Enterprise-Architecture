@@ -1,3 +1,5 @@
+import { problem, type ImportProblem } from './problems'
+
 /**
  * The root element of an XML document: its local name and the namespace its
  * prefix resolves to.
@@ -14,6 +16,17 @@ export interface XmlRoot {
   local: string
   /** Undefined when the root is in no namespace. */
   namespace?: string
+}
+
+/**
+ * Archi's namespace, and the one Archi 1 and 2 wrote, which Archi 5.10 still
+ * registers as the same package and so still opens (#103).
+ */
+export const ARCHI_NAMESPACE = 'http://www.archimatetool.com/archimate'
+export const ARCHI_LEGACY_NAMESPACE = 'http://www.bolton.ac.uk/archimate'
+
+export function isArchiNamespace(namespace: string | undefined): boolean {
+  return namespace === ARCHI_NAMESPACE || namespace === ARCHI_LEGACY_NAMESPACE
 }
 
 const ATTRIBUTE = /([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g
@@ -54,14 +67,26 @@ function skipPast(text: string, from: number, end: string): number {
   return at < 0 ? -1 : at + end.length
 }
 
-/** A doctype may carry an internal subset in brackets, which can itself hold `>`. */
+/**
+ * Past one markup declaration: a doctype, or one declaration of its internal
+ * subset, which the caller's loop then meets one by one. Quoted ids and entity
+ * values may hold `[`, `]` and `>`, so only an unquoted `>` ends it (#103:
+ * `SYSTEM "a[b.dtd"` used to lose the root altogether). A comment or instruction
+ * met before that `>` is free text, where an apostrophe opens nothing.
+ */
 function skipDoctype(text: string, from: number): number {
-  const bracket = text.indexOf('[', from)
-  const close = text.indexOf('>', from)
-  if (close < 0) return -1
-  if (bracket < 0 || bracket > close) return close + 1
-  const end = text.indexOf(']', bracket)
-  return end < 0 ? -1 : skipPast(text, end, '>')
+  let quote: string | undefined
+  for (let at = from + 2; at < text.length; at++) {
+    const char = text[at]
+    if (quote) {
+      if (char === quote) quote = undefined
+    } else if (text.startsWith('<!--', at) || text.startsWith('<?', at)) {
+      at = skipPast(text, at, text.startsWith('<!--', at) ? '-->' : '?>') - 1
+      if (at < 0) return -1
+    } else if (char === '"' || char === "'") quote = char
+    else if (char === '>') return at + 1
+  }
+  return -1
 }
 
 /** The five predefined entities and numeric references, which a namespace URI may use. */
@@ -76,4 +101,17 @@ function decode(value: string): string {
     }
     return { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" }[lower] ?? whole
   })
+}
+
+/** The parser read the file but the root scan could not find its root: refuse rather than guess (#103). */
+export function rootUnreadable(
+  reader: 'archimate' | 'exchange',
+  where: { file?: string },
+): ImportProblem {
+  return problem(
+    'error',
+    `${reader}.root-unreadable`,
+    'The file parses as XML, but its root element could not be identified, so Archipelago cannot tell which format it is in. Please report this file.',
+    where,
+  )
 }
