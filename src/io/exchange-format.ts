@@ -2,6 +2,7 @@ import { XMLParser } from 'fast-xml-parser'
 import {
   ACCESS_TYPES,
   DEFAULT_JUNCTION_KIND,
+  DEFAULT_LANGUAGE,
   DEFAULT_TAG_GROUP,
   SCHEMA_VERSION,
   defaultFolderRoot,
@@ -10,6 +11,7 @@ import {
   isAccessType,
   isElementType,
   isInfluenceModifier,
+  isLanguageTag,
   isRelationshipType,
   misplacedAttributes,
   type AccessType,
@@ -212,17 +214,18 @@ export function exportExchange(
   const ids = exchangeIdentifiers(workspace, problems)
   const modelProperties = modelLevelProperties(workspace)
   const definitions = collectPropertyDefinitions(workspace, modelProperties, ids, problems)
+  const lang = writtenLanguage(workspace, problems)
   const lines: string[] = []
 
   lines.push('<?xml version="1.0" encoding="UTF-8"?>')
   lines.push(
     `<model xmlns="${NS}" xmlns:xsi="${XSI}" xsi:schemaLocation="${SCHEMA_LOCATION}" identifier="${attr(ids.model)}">`,
   )
-  lines.push(`  <name xml:lang="en">${text(workspace.name)}</name>`)
+  lines.push(`  <name xml:lang="${lang}">${text(workspace.name)}</name>`)
   if (options.documentation) {
-    lines.push(`  <documentation xml:lang="en">${text(options.documentation)}</documentation>`)
+    lines.push(`  <documentation xml:lang="${lang}">${text(options.documentation)}</documentation>`)
   }
-  lines.push(...propertyLines(modelProperties, definitions, 2))
+  lines.push(...propertyLines(modelProperties, definitions, lang, 2))
 
   if (workspace.elements.length) {
     lines.push('  <elements>')
@@ -231,13 +234,13 @@ export function exportExchange(
       lines.push(
         `    <element identifier="${attr(ids.of(element.id))}" xsi:type="${attr(exchangeType(element))}">`,
       )
-      lines.push(`      <name xml:lang="en">${text(element.name)}</name>`)
+      lines.push(`      <name xml:lang="${lang}">${text(element.name)}</name>`)
       if (element.documentation) {
         lines.push(
-          `      <documentation xml:lang="en">${text(element.documentation)}</documentation>`,
+          `      <documentation xml:lang="${lang}">${text(element.documentation)}</documentation>`,
         )
       }
-      lines.push(...propertyLines(properties, definitions, 6))
+      lines.push(...propertyLines(properties, definitions, lang, 6))
       lines.push('    </element>')
     }
     lines.push('  </elements>')
@@ -268,9 +271,9 @@ export function exportExchange(
         `    <relationship identifier="${attr(ids.of(relationship.id))}" source="${attr(ids.of(relationship.source))}" target="${attr(ids.of(relationship.target))}"${typeSpecificAttributes(relationship, problems)} xsi:type="${attr(relationship.type)}">`,
       )
       if (relationship.name) {
-        lines.push(`      <name xml:lang="en">${text(relationship.name)}</name>`)
+        lines.push(`      <name xml:lang="${lang}">${text(relationship.name)}</name>`)
       }
-      lines.push(...propertyLines(properties, definitions, 6))
+      lines.push(...propertyLines(properties, definitions, lang, 6))
       lines.push('    </relationship>')
     }
     lines.push('  </relationships>')
@@ -281,7 +284,12 @@ export function exportExchange(
     ...relationships.map((relationship) => relationship.id),
     ...workspace.views.map((view) => view.id),
   ])
-  const writing = { of: ids.of, written: (id: string) => written.has(id), claim: ids.claim }
+  const writing = {
+    of: ids.of,
+    written: (id: string) => written.has(id),
+    claim: ids.claim,
+    language: lang,
+  }
   lines.push(
     ...writeOrganizations(
       workspace.folders,
@@ -312,7 +320,7 @@ export function exportExchange(
       lines.push(
         `    <propertyDefinition identifier="${attr(definition.id)}" type="${definition.type}">`,
       )
-      lines.push(`      <name xml:lang="en">${text(key)}</name>`)
+      lines.push(`      <name xml:lang="${lang}">${text(key)}</name>`)
       lines.push('    </propertyDefinition>')
     }
     lines.push('  </propertyDefinitions>')
@@ -322,13 +330,31 @@ export function exportExchange(
     ...writeViews(workspace.views, {
       ...writing,
       elements: new Map(workspace.elements.map((element) => [element.id, element])),
-      propertyLines: (properties, indent) => propertyLines(properties, definitions, indent),
+      propertyLines: (properties, indent) => propertyLines(properties, definitions, lang, indent),
       problems,
     }),
   )
 
   lines.push('</model>')
   return { xml: `${lines.join('\n')}\n`, problems }
+}
+
+/**
+ * The `xml:lang` every text is written with: the workspace's own (#111). Both
+ * readers only ever hold a valid tag, so one that is not came from somewhere
+ * else, and it is reported rather than written into a file the schema rejects.
+ */
+function writtenLanguage(workspace: Workspace, problems: ImportProblem[]): string {
+  const { language } = workspace
+  if (language === undefined || isLanguageTag(language)) return language ?? DEFAULT_LANGUAGE
+  problems.push(
+    problem(
+      'warning',
+      'exchange.language-invalid',
+      `The model's language "${language}" is not a language tag the exchange format allows, so its texts were labelled ${DEFAULT_LANGUAGE}.`,
+    ),
+  )
+  return DEFAULT_LANGUAGE
 }
 
 /**
@@ -453,6 +479,7 @@ interface PropertyDefinition {
 function propertyLines(
   properties: Record<string, PropertyValue>,
   definitions: Map<string, PropertyDefinition>,
+  language: string,
   indent: number,
 ): string[] {
   const keys = Object.keys(properties)
@@ -463,7 +490,7 @@ function propertyLines(
     const definition = definitions.get(key)
     if (!definition) continue
     out.push(`${pad}  <property propertyDefinitionRef="${attr(definition.id)}">`)
-    out.push(`${pad}    <value xml:lang="en">${text(String(properties[key]))}</value>`)
+    out.push(`${pad}    <value xml:lang="${language}">${text(String(properties[key]))}</value>`)
     out.push(`${pad}  </property>`)
   }
   out.push(`${pad}</properties>`)
@@ -578,12 +605,6 @@ const IGNORED: readonly Ignored[] = [
     at: 'model',
     key: '@schemaLocation',
     reason: 'Where to fetch the schema. The writer names its own.',
-  },
-  {
-    at: '*',
-    key: '@lang',
-    reason:
-      'The language of a text. Archipelago holds one text per field and writes it as en; a second language is reported as a second element.',
   },
 ]
 
@@ -780,6 +801,8 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     )
   }
 
+  const language = modelLanguage(ledger.languages, problems, where)
+
   problems.push(
     ...reportUnread(
       ledger.unread(model, 'model', {
@@ -804,8 +827,49 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   }
   const propertyTypes = declaredPropertyTypes(reader.definitions)
   if (propertyTypes) workspace.propertyTypes = propertyTypes
+  if (language !== DEFAULT_LANGUAGE) workspace.language = language
 
   return succeeded(workspace, problems)
+}
+
+/**
+ * The one language the model is held in: the one most of its texts carry (#111).
+ *
+ * Archi labels every text of an export with the one language its wizard asks
+ * for, so a file in one language is the common case and this keeps it whole.
+ * A text in any other language is relabelled by the next export, and that is
+ * reported rather than done quietly. Only a tag `xs:language` allows can be
+ * held; a tie goes to the tag that sorts first, so the choice does not depend
+ * on the order of the file. Untagged texts claim no language and decide nothing.
+ */
+function modelLanguage(
+  languages: ReadonlyMap<string, number>,
+  problems: ImportProblem[],
+  where: { file?: string },
+): string {
+  let language = DEFAULT_LANGUAGE
+  let most = 0
+  for (const [tag, n] of languages) {
+    if (!isLanguageTag(tag)) continue
+    if (n > most || (n === most && tag < language)) {
+      language = tag
+      most = n
+    }
+  }
+  const others = [...languages].filter(([tag]) => tag !== language)
+  if (others.length) {
+    const n = others.reduce((sum, [, count]) => sum + count, 0)
+    const tags = others.map(([tag, count]) => `${isLanguageTag(tag) ? tag : `“${tag}”`} (${count})`)
+    problems.push(
+      problem(
+        'info',
+        'exchange.language-relabelled',
+        `${n} text${n === 1 ? ' is' : 's are'} labelled with a language other than ${language}: ${listed(tags)}. Archipelago holds a model in one language, so an export labels ${n === 1 ? 'it' : 'them'} ${language}.`,
+        where,
+      ),
+    )
+  }
+  return language
 }
 
 function readPropertyDefinitions(

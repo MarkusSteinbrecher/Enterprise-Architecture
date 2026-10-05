@@ -1,6 +1,7 @@
 import {
   DEFAULT_JUNCTION_KIND,
   LIFECYCLE_PHASES,
+  DEFAULT_LANGUAGE,
   SCHEMA_VERSION,
   TYPE_SPECIFIC_ATTRIBUTES,
   isAccessType,
@@ -8,6 +9,7 @@ import {
   isFitLevel,
   isInfluenceModifier,
   isJunctionKind,
+  isLanguageTag,
   isRelationshipType,
   isTimeClassification,
   misplacedAttributes,
@@ -66,6 +68,8 @@ export function toCanonicalJson(workspace: Workspace): string {
     reports: [...workspace.reports].sort(byId).map(canonicalReport),
     tagGroups: [...workspace.tagGroups].sort(byId).map(canonicalTagGroup),
     propertyTypes: workspace.propertyTypes && emptyToUndefined(workspace.propertyTypes),
+    // Absent is en: written out, the same model would have two spellings.
+    language: workspace.language === DEFAULT_LANGUAGE ? undefined : workspace.language,
   }
   return `${JSON.stringify(canonical, sortKeys, CANONICAL_JSON_INDENT)}\n`
 }
@@ -252,6 +256,8 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
   }
   const propertyTypes = readPropertyTypes(raw.propertyTypes, problems, where)
   if (propertyTypes) workspace.propertyTypes = propertyTypes
+  const language = readLanguage(raw.language, problems, where)
+  if (language !== undefined) workspace.language = language
 
   return succeeded(workspace, problems)
 }
@@ -684,6 +690,25 @@ function readPropertyTypes(
     )
   }
   return Object.keys(out).length ? out : undefined
+}
+
+/** The workspace's language, held only as a tag the exchange format allows (#111). */
+function readLanguage(
+  candidate: unknown,
+  problems: ImportProblem[],
+  where: { file?: string },
+): string | undefined {
+  if (candidate === undefined) return undefined
+  if (isLanguageTag(candidate)) return candidate === DEFAULT_LANGUAGE ? undefined : candidate
+  problems.push(
+    problem(
+      'warning',
+      'json.invalid-language',
+      `language ${JSON.stringify(candidate)} is not a language tag, so it was dropped. The model's texts are unaffected; an export labels them ${DEFAULT_LANGUAGE}.`,
+      where,
+    ),
+  )
+  return undefined
 }
 
 function message(error: unknown): string {

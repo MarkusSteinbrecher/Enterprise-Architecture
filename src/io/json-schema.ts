@@ -69,6 +69,12 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           'Exchange-format types declared for property keys held here as text (currency, date, time), so a model that arrives typed leaves typed. Keys whose type the value itself carries (boolean, number) are not listed.',
         additionalProperties: { enum: ['boolean', 'currency', 'date', 'number', 'time'] },
       },
+      language: {
+        type: 'string',
+        description:
+          'The language the texts are written in, as an xml:lang tag. Absent means en. An exchange-format export labels every text with it.',
+        pattern: '^[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*$',
+      },
     },
     $defs: {
       element: {

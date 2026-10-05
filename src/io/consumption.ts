@@ -65,12 +65,26 @@ export class Ledger {
     this.mark(raw, key, 'first')
   }
 
+  /**
+   * The `xml:lang` of every text marked read, by tag, as written. A text marked
+   * here lands in the model, so its language is what an export relabels (#111).
+   */
+  readonly languages = new Map<string, number>()
+
   /** The key's text was read (the first, if it repeats), whether bare or with attributes. */
   text(raw: RawNode, key: string): void {
     this.mark(raw, key, 'text')
     const value = raw[key]
     const head: unknown = Array.isArray(value) ? value[0] : value
-    if (isRawNode(head)) this.mark(head, '#text', 'whole')
+    if (!isRawNode(head)) return
+    this.mark(head, '#text', 'whole')
+    const language = head['@lang']
+    if (language === undefined) return
+    this.mark(head, '@lang', 'whole')
+    // `xml:lang=""` says the text has no language, which is what absent says.
+    if (typeof language === 'string' && language !== '') {
+      this.languages.set(language, (this.languages.get(language) ?? 0) + 1)
+    }
   }
 
   /** The key and everything under it are accounted for: read whole, or reported whole. */

@@ -1074,6 +1074,8 @@ export interface ViewWriteContext {
   written: (id: string) => boolean
   /** A fresh xs:ID close to `base`. */
   claim: (base: string) => string
+  /** The `xml:lang` of every text (#111). */
+  language: string
   elements: ReadonlyMap<string, Element>
   propertyLines: (properties: Record<string, PropertyValue>, indent: number) => string[]
   problems: ImportProblem[]
@@ -1101,9 +1103,11 @@ function writeView(
   lines.push(
     `      <view identifier="${attr(context.of(view.id))}" xsi:type="Diagram"${viewpoint}>`,
   )
-  lines.push(`        <name xml:lang="en">${text(view.name)}</name>`)
+  lines.push(`        <name xml:lang="${context.language}">${text(view.name)}</name>`)
   if (view.documentation) {
-    lines.push(`        <documentation xml:lang="en">${text(view.documentation)}</documentation>`)
+    lines.push(
+      `        <documentation xml:lang="${context.language}">${text(view.documentation)}</documentation>`,
+    )
   }
   // Drawings of what did not make it into the file cannot be referenced.
   const dropped = new Set<string>()
@@ -1229,22 +1233,24 @@ function writeView(
         break
       case 'group':
         lines.push(`${pad}<node ${head} xsi:type="Container">`)
-        lines.push(`${pad}  <label xml:lang="en">${text(node.name)}</label>`)
+        lines.push(`${pad}  <label xml:lang="${context.language}">${text(node.name)}</label>`)
         if (node.documentation) {
           lines.push(
-            `${pad}  <documentation xml:lang="en">${text(node.documentation)}</documentation>`,
+            `${pad}  <documentation xml:lang="${context.language}">${text(node.documentation)}</documentation>`,
           )
         }
         lines.push(...writeStyle(node.appearance, pad))
         break
       case 'note':
         lines.push(`${pad}<node ${head} xsi:type="Label">`)
-        lines.push(`${pad}  <label xml:lang="en">${text(node.text)}</label>`)
+        lines.push(`${pad}  <label xml:lang="${context.language}">${text(node.text)}</label>`)
         lines.push(...writeStyle(node.appearance, pad))
         break
       case 'view-ref':
         lines.push(`${pad}<node ${head} xsi:type="Label">`)
-        lines.push(`${pad}  <label xml:lang="en">${text(names.get(node.view) ?? '')}</label>`)
+        lines.push(
+          `${pad}  <label xml:lang="${context.language}">${text(names.get(node.view) ?? '')}</label>`,
+        )
         lines.push(...writeStyle(node.appearance, pad))
         if (names.has(node.view))
           lines.push(`${pad}  <viewRef ref="${attr(context.of(node.view))}" />`)
@@ -1267,7 +1273,7 @@ function writeView(
         `${pad}<connection identifier="${attr(idOf(connection.id))}" xsi:type="Line" ${ends}>`,
       )
       if (connection.name)
-        lines.push(`${pad}  <label xml:lang="en">${text(connection.name)}</label>`)
+        lines.push(`${pad}  <label xml:lang="${context.language}">${text(connection.name)}</label>`)
     }
     lines.push(...writeStyle(connection.appearance, pad))
     for (const point of connection.bendpoints ?? []) {
@@ -1350,6 +1356,8 @@ export interface OrganizationWriteContext {
   of: (id: string) => string
   written: (id: string) => boolean
   claim: (base: string) => string
+  /** The `xml:lang` of every label (#111). */
+  language: string
 }
 
 /**
@@ -1382,10 +1390,10 @@ export function writeOrganizations(
   const writeFolder = (folder: Folder, depth: number) => {
     const pad = ' '.repeat(4 + depth * 2)
     lines.push(`${pad}<item identifier="${attr(context.claim(folder.id))}">`)
-    lines.push(`${pad}  <label xml:lang="en">${text(folder.name)}</label>`)
+    lines.push(`${pad}  <label xml:lang="${context.language}">${text(folder.name)}</label>`)
     if (folder.documentation) {
       lines.push(
-        `${pad}  <documentation xml:lang="en">${text(folder.documentation)}</documentation>`,
+        `${pad}  <documentation xml:lang="${context.language}">${text(folder.documentation)}</documentation>`,
       )
     }
     for (const child of subfolders.get(folder.id) ?? []) writeFolder(child, depth + 1)
@@ -1401,7 +1409,10 @@ export function writeOrganizations(
         member.root === root && (member.folder === undefined || !folderIds.has(member.folder)),
     )
     if (!top.length && !loose.length) continue
-    lines.push('    <item>', `      <label xml:lang="en">${text(FOLDER_ROOT_LABELS[root])}</label>`)
+    lines.push(
+      '    <item>',
+      `      <label xml:lang="${context.language}">${text(FOLDER_ROOT_LABELS[root])}</label>`,
+    )
     for (const folder of top) writeFolder(folder, 1)
     for (const member of loose)
       lines.push(`      <item identifierRef="${attr(context.of(member.id))}" />`)
