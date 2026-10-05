@@ -57,6 +57,16 @@
         <bounds x="420" y="470" width="180" height="120"/>
         <content>Note 2</content>
       </child>
+      <child xsi:type="archimate:DiagramModelReference" id="o-viewref-absent" model="v-referenced">
+        <bounds x="20" y="620" width="180" height="120"/>
+      </child>
+      <child xsi:type="archimate:DiagramModelReference" id="o-viewref-1" textPosition="1" model="v-referenced">
+        <bounds x="220" y="620" width="180" height="120"/>
+      </child>
+      <child xsi:type="archimate:DiagramModelReference" id="o-viewref-2" textPosition="2" model="v-referenced">
+        <bounds x="420" y="620" width="180" height="120"/>
+      </child>
     </element>
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Referenced" id="v-referenced"/>
   </folder>
 </archimate:model>

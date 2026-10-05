@@ -3,7 +3,8 @@
 # .archimate model, save it back in place, so its attributes are the ones Archi
 # writes (a hand edit once left one at Archi's default, which Archi omits; #100),
 # then write the Open Group exchange format with the folder structure.
-# claims-platform (#76, and in German for #111), relationship-attributes (#84) and archi-coverage (#13). ARCHI defaults to
+# claims-platform (#76, and in German for #111), relationship-attributes (#84),
+# archi-coverage (#13) and text-position (#108, saved only). ARCHI defaults to
 # ~/Applications/Archi.app, then /Applications; Archi 5.10.0 produced the checked-in files.
 # archi-coverage fails Archi's own XSD check after export, on purpose: it holds
 # shapes left at their default size, which Archi exports as w="-1" (#13).
