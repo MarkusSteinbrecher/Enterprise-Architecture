@@ -28,12 +28,17 @@ import { defaultNodeSize } from './default-sizes'
 import {
   asString,
   attr,
+  bump,
   claimIdentifier,
+  entries,
   langString,
   list,
   listed,
+  measured,
+  num,
   text,
   type RawNode,
+  type ValueSink,
 } from './exchange-xml'
 
 /**
@@ -261,6 +266,8 @@ interface Tally {
   attachments: number
   onConnections: number
   defaultSized: number
+  /** Attribute name → how many objects carried a value that is not one the schema allows (#107). */
+  malformed: Map<string, number>
 }
 
 export function readViews(model: RawNode, context: ViewReadContext): View[] {
@@ -280,7 +287,7 @@ export function readViews(model: RawNode, context: ViewReadContext): View[] {
       viewIds.set(viewId, langString(raw.name) ?? '')
   }
   const font = dominantFont(raws)
-  const tally: Tally = { attachments: 0, onConnections: 0, defaultSized: 0 }
+  const tally: Tally = { attachments: 0, onConnections: 0, defaultSized: 0, malformed: new Map() }
   // A connection may end on another connection (the format allows it, Archi
   // draws it). The IDREF does not say which it points at, so collect them.
   const connectionIds = new Set(
@@ -329,6 +336,17 @@ export function readViews(model: RawNode, context: ViewReadContext): View[] {
         'info',
         'exchange.default-size',
         `${tally.defaultSized} shape${tally.defaultSized === 1 ? ' has' : 's have'} no size in the file (Archi exports a shape left at its default size as -1). ${tally.defaultSized === 1 ? 'It was' : 'They were'} drawn at Archi's standard defaults (120 × 55 for an element).`,
+        context.where,
+      ),
+    )
+  }
+  if (tally.malformed.size) {
+    const names = [...tally.malformed.keys()].sort()
+    context.problems.push(
+      problem(
+        'warning',
+        'exchange.value-malformed',
+        `Some nodes and connections hold values the exchange format does not allow (${names.join(', ')}). A malformed position was read as 0 and a size as Archi's default; a bendpoint without two numbers was dropped; a colour, line width, font size or font style was read as not set.`,
         context.where,
       ),
     )
@@ -486,17 +504,15 @@ function readNode(
     skip('exchange.node-no-id', 'a node has no identifier and was skipped.')
     return undefined
   }
-  const x = num(raw['@x'])
-  const y = num(raw['@y'])
-  const width = num(raw['@w'])
-  const height = num(raw['@h'])
-  if (x === undefined || y === undefined || width === undefined || height === undefined) {
+  // The schema requires all four. One that is there but malformed is read
+  // below and counted as malformed (#107); one that is missing leaves nothing to read.
+  if (['x', 'y', 'w', 'h'].some((key) => raw[`@${key}`] === undefined)) {
     skip('exchange.node-no-bounds', `node "${id}" has no position or size and was skipped.`)
     return undefined
   }
   const base = {
     id,
-    bounds: { x: x - (parent?.x ?? 0), y: y - (parent?.y ?? 0), width, height },
+    bounds: { x: 0, y: 0, width: 0, height: 0 },
     ...(parent ? { parent: parent.id } : {}),
   }
   const label = langString(raw.label)
@@ -566,23 +582,31 @@ function readNode(
       return undefined
   }
 
-  // Archi writes a default-sized shape as -1 by -1, which its own XSD rejects (#13).
-  if (width <= 0 || height <= 0) {
+  // Measured only once kept: a skipped node was reported as skipped (#106 review).
+  const sink: ValueSink = { ledger: context.ledger, tally }
+  const x = measured(raw, 'x', sink) ?? 0
+  const y = measured(raw, 'y', sink) ?? 0
+  const width = measured(raw, 'w', sink)
+  const height = measured(raw, 'h', sink)
+  // Archi writes a default-sized shape as -1 by -1, which its own XSD rejects
+  // (#13). A malformed size is not that: it was counted as malformed (#107).
+  if ((width !== undefined && width <= 0) || (height !== undefined && height <= 0)) {
     tally.defaultSized += 1
-    const size = defaultNodeSize(
-      node.kind,
-      node.kind === 'element' ? context.elements.get(node.element)?.type : undefined,
-    )
-    node.bounds = {
-      ...node.bounds,
-      width: width > 0 ? width : size.width,
-      height: height > 0 ? height : size.height,
-    }
+  }
+  const size = defaultNodeSize(
+    node.kind,
+    node.kind === 'element' ? context.elements.get(node.element)?.type : undefined,
+  )
+  node.bounds = {
+    x: x - (parent?.x ?? 0),
+    y: y - (parent?.y ?? 0),
+    width: width !== undefined && width > 0 ? width : size.width,
+    height: height !== undefined && height > 0 ? height : size.height,
   }
 
   const appearance = literal(id)
-    ? readStyle(raw, NO_DEFAULTS, undefined, context.ledger)
-    : readStyle(raw, nodeDefaults(node, context.elements), font, context.ledger)
+    ? readStyle(raw, NO_DEFAULTS, undefined, sink)
+    : readStyle(raw, nodeDefaults(node, context.elements), font, sink)
   if (appearance) node.appearance = appearance
   return node
 }
@@ -621,19 +645,10 @@ function readConnection(
     return undefined
   }
 
-  const bendpoints: Point[] = []
-  for (const point of list(raw.bendpoint)) {
-    const x = num(point['@x'])
-    const y = num(point['@y'])
-    if (x !== undefined && y !== undefined) {
-      bendpoints.push({ x, y })
-      context.ledger.use(point, '@x', '@y')
-    }
-  }
   if (raw.sourceAttachment !== undefined) tally.attachments += 1
   if (raw.targetAttachment !== undefined) tally.attachments += 1
 
-  const base = { id, source, target, ...(bendpoints.length ? { bendpoints } : {}) }
+  const base = { id, source, target }
   let connection: ViewConnection
   const type = asString(raw['@type'])
   if (type === 'Relationship' || type === 'NestingRelationship') {
@@ -668,9 +683,25 @@ function readConnection(
     )
     return undefined
   }
+  // Read once the connection is known to be kept, so a malformed bendpoint on a
+  // skipped one is not counted (#106 review). Bendpoints are absolute here, so a
+  // malformed one is dropped rather than drawn at 0, 0 (#107).
+  const sink: ValueSink = { ledger: context.ledger, tally }
+  const bendpoints: Point[] = []
+  for (const point of entries(raw.bendpoint)) {
+    const x = measured(point, 'x', sink)
+    const y = measured(point, 'y', sink)
+    if (x !== undefined && y !== undefined) bendpoints.push({ x, y })
+    else {
+      for (const key of ['x', 'y'] as const) {
+        if (point[`@${key}`] === undefined) bump(tally.malformed, key)
+      }
+    }
+  }
+  if (bendpoints.length) connection.bendpoints = bendpoints
   const appearance = literal(id)
-    ? readStyle(raw, NO_DEFAULTS, undefined, context.ledger)
-    : readStyle(raw, CONNECTION_DEFAULTS, font, context.ledger)
+    ? readStyle(raw, NO_DEFAULTS, undefined, sink)
+    : readStyle(raw, CONNECTION_DEFAULTS, font, sink)
   if (appearance) connection.appearance = appearance
   return connection
 }
@@ -723,8 +754,9 @@ function readStyle(
   owner: RawNode,
   defaults: StyleDefaults,
   font: FontKey | undefined,
-  ledger: Ledger,
+  sink: ValueSink,
 ): Appearance | undefined {
+  const { ledger } = sink
   ledger.first(owner, 'style')
   const style = list(owner.style)[0]
   if (!style) return undefined
@@ -732,30 +764,35 @@ function readStyle(
   ledger.first(style, 'fillColor')
   ledger.first(style, 'lineColor')
   ledger.first(style, 'font')
-  ledger.use(style, '@lineWidth')
 
-  const fill = readColour(list(style.fillColor)[0], ledger)
+  const fill = readColour(list(style.fillColor)[0], sink)
   if (fill && !isDefault(fill, defaults.fill)) appearance.fillColor = hex(fill)
-  const line = readColour(list(style.lineColor)[0], ledger)
+  const line = readColour(list(style.lineColor)[0], sink)
   if (line && !isDefault(line, defaults.line)) appearance.lineColor = hex(line)
-  const lineWidth = num(style['@lineWidth'])
+  const lineWidth = measured(style, 'lineWidth', sink)
+  // The schema's lineWidth is a positive integer; 0 or less is not one (#107).
+  if (lineWidth !== undefined && lineWidth <= 0) bump(sink.tally.malformed, 'lineWidth')
   if (lineWidth !== undefined && lineWidth !== 1 && lineWidth > 0) appearance.lineWidth = lineWidth
 
   const rawFont = list(style.font)[0]
   if (rawFont) {
+    // The file's dominant font is its tool's default, read as no override.
     ledger.use(rawFont, '@name', '@size', '@style')
     ledger.first(rawFont, 'color')
     if (fontKey(rawFont) !== font) {
       const name = asString(rawFont['@name'])
-      const size = num(rawFont['@size'])
+      const size = measured(rawFont, 'size', sink)
       if (name) appearance.fontName = name
       if (size !== undefined && size > 0) appearance.fontSize = size
     }
-    const styles = (asString(rawFont['@style']) ?? '')
-      .split(/\s+/)
-      .filter((s): s is FontStyle => s === 'bold' || s === 'italic' || s === 'underline')
+    const styles: FontStyle[] = []
+    for (const token of (asString(rawFont['@style']) ?? '').split(/\s+/).filter(Boolean)) {
+      if (token === 'bold' || token === 'italic' || token === 'underline') styles.push(token)
+      // `plain` is the schema's word for none; anything else it does not allow (#107).
+      else if (token !== 'plain') bump(sink.tally.malformed, 'style')
+    }
     if (styles.length) appearance.fontStyle = styles
-    const colour = readColour(list(rawFont.color)[0], ledger)
+    const colour = readColour(list(rawFont.color)[0], sink)
     if (colour && !isDefault(colour, defaults.font)) appearance.fontColor = hex(colour)
   }
   return Object.keys(appearance).length ? appearance : undefined
@@ -767,15 +804,22 @@ interface Colour {
   alpha: number
 }
 
-function readColour(raw: RawNode | undefined, ledger: Ledger): Colour | undefined {
+/**
+ * A colour needs all of r, g and b. One that is missing or malformed leaves no
+ * colour to read, which is counted rather than passed over (#107).
+ */
+function readColour(raw: RawNode | undefined, sink: ValueSink): Colour | undefined {
   if (!raw) return undefined
-  const r = num(raw['@r'])
-  const g = num(raw['@g'])
-  const b = num(raw['@b'])
-  if (r === undefined || g === undefined || b === undefined) return undefined
-  const a = num(raw['@a'])
-  ledger.use(raw, '@r', '@g', '@b')
-  if (a !== undefined) ledger.use(raw, '@a')
+  const r = measured(raw, 'r', sink)
+  const g = measured(raw, 'g', sink)
+  const b = measured(raw, 'b', sink)
+  const a = measured(raw, 'a', sink)
+  if (r === undefined || g === undefined || b === undefined) {
+    for (const key of ['r', 'g', 'b'] as const) {
+      if (raw[`@${key}`] === undefined) bump(sink.tally.malformed, key)
+    }
+    return undefined
+  }
   return {
     rgb: [clampByte(r), clampByte(g), clampByte(b)],
     alpha: a === undefined ? 100 : Math.min(100, Math.max(0, a)),
@@ -1358,13 +1402,6 @@ export function writeOrganizations(
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function num(value: unknown): number | undefined {
-  const s = asString(value)
-  if (s === undefined || s.trim() === '') return undefined
-  const n = Number(s)
-  return Number.isFinite(n) ? n : undefined
-}
 
 function clampByte(n: number): number {
   return Math.min(255, Math.max(0, Math.round(n)))

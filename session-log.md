@@ -1,5 +1,31 @@
 # Session Log
 
+## 2026-10-05 (cont.) — #107 implemented: the exchange reader reports malformed values
+
+On `feat/107-exchange-malformed-values`.
+
+**Shared helpers:** `measured`, `num`, `bump` and `entries` moved from the native reader to `exchange-xml.ts`. `measured` takes a `ValueSink`, a `ledger` and a `tally.malformed`. The native `Reader` already has that shape, so its call sites are unchanged.
+
+**What the exchange reader now does:**
+- It counts malformed values and reports `exchange.value-malformed` once, naming every attribute.
+- A malformed node position is read as 0, and a malformed size as the default. Not as Archi's -1, so it is not counted as `default-size` either.
+- A node *missing* a position is still skipped. The issue said such a node was placed at 0; in fact it was skipped as "no position or size", which was wrong for a value that was there but malformed.
+- A bendpoint without two numbers is dropped. Exchange bendpoints are absolute, so 0,0 would be the canvas origin. `<bendpoint/>` is now counted rather than silently dropped by `list()`.
+
+**Beyond the issue, the same class of drop:**
+- A colour missing or garbling r, g or b.
+- A `lineWidth` that is not a positive integer, per the XSD.
+- A font `size` that is not a number.
+- A font `style` token outside the XSD's `plain`, `bold`, `italic` and `underline`.
+
+Since #101 these had been marked read and dropped. Bounds and bendpoints are now read only once the node or connection is known to be kept (the #106 rule).
+
+**Verification:**
+- Every checked-in exchange fixture reports none of this.
+- 12 mutations, one guard at a time; all were caught once the one survivor (`plain` counted as malformed) got its own test. The "one shared helper" test fires on a local copy put back into the native reader.
+
+Open: the PR for #107 awaits `/review-pr`.
+
 ## 2026-10-05 — Session wrap-up (#101)
 
 **What was done:**
