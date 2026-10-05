@@ -1,5 +1,19 @@
 # Session Log
 
+## 2026-10-05 (cont.) — #112 (#107) reviewed before merge
+
+`/review-pr 112`. All three #107 criteria are met. The code pass ran inline, as for #110, because the background agents had stalled earlier.
+
+**Two should-fix findings, both fixed on the branch** (4 of 4 mutations caught):
+1. The `exchange.value-malformed` message said every colour value "was read as not set". A malformed opacity keeps its colour, read as opaque.
+2. Out-of-range colour values were clamped silently: `r="300"` came in as 255 and `a="150"` as opaque. The XSD's ranges are 0–255 and 0–100. They are now counted, and the message says what was done with each.
+
+The first version of the fix's test could not separate the `a` range check from the malformed `a`, because both named `a`. It was split before the mutation run.
+
+**Harvested** (review skill §2): a summary message over a tally must be true for every key that can reach it, and "not allowed" means the schema's range, not just "not a number".
+
+Open: merging #112, which is left to the sponsor.
+
 ## 2026-10-05 (cont.) — #107 implemented: the exchange reader reports malformed values
 
 On `feat/107-exchange-malformed-values`.

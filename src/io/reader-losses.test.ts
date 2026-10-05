@@ -546,6 +546,26 @@ describe('the exchange reader reports malformed values (#107)', () => {
     expect(found(result, 'import.content-unread')).toEqual([])
   })
 
+  it('counts a colour out of the schema’s range, and says what it did with each (#112 review)', () => {
+    const styled = (style: string) =>
+      read(node('x="0" y="0" w="120" h="55"').replace('/>', `><style>${style}</style></node>`))
+    const clamped = styled('<fillColor r="300" g="0" b="0" a="150"/>')
+    // Clamped and kept: 300 is 255, an opacity of 150 is opaque.
+    expect(view(clamped).nodes.find((n) => n.id === 'sa')?.appearance).toEqual({
+      fillColor: '#ff0000',
+    })
+    expect(malformed(clamped)).toContain('(a, r)')
+    expect(malformed(clamped)).toContain('a colour component out of range was clamped')
+
+    // A malformed opacity keeps its colour, opaque, and the message says so.
+    const opaque = styled('<lineColor r="1" g="2" b="3" a="half"/>')
+    expect(view(opaque).nodes.find((n) => n.id === 'sa')?.appearance).toEqual({
+      lineColor: '#010203',
+    })
+    expect(malformed(opaque)).toContain('(a)')
+    expect(malformed(opaque)).toContain('a malformed opacity read as opaque')
+  })
+
   it('reads plain as no font style: it is the schema’s word for none, not a malformed one', () => {
     const result = read(
       node('x="0" y="0" w="120" h="55"').replace(

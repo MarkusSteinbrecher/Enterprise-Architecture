@@ -346,7 +346,7 @@ export function readViews(model: RawNode, context: ViewReadContext): View[] {
       problem(
         'warning',
         'exchange.value-malformed',
-        `Some nodes and connections hold values the exchange format does not allow (${names.join(', ')}). A malformed position was read as 0 and a size as Archi's default; a bendpoint without two numbers was dropped; a colour, line width, font size or font style was read as not set.`,
+        `Some nodes and connections hold values the exchange format does not allow (${names.join(', ')}). A malformed position was read as 0 and a size as Archi's default; a bendpoint without two numbers was dropped; a colour component out of range was clamped and a malformed opacity read as opaque; any other colour, and a line width, font size or font style, was read as not set.`,
         context.where,
       ),
     )
@@ -819,6 +819,16 @@ function readColour(raw: RawNode | undefined, sink: ValueSink): Colour | undefin
       if (raw[`@${key}`] === undefined) bump(sink.tally.malformed, key)
     }
     return undefined
+  }
+  // The schema's ranges: 0–255 for a component, 0–100 for opacity. Outside
+  // them the value is clamped, and counted, not clamped quietly (#112 review).
+  for (const [key, n, max] of [
+    ['r', r, 255],
+    ['g', g, 255],
+    ['b', b, 255],
+    ['a', a, 100],
+  ] as const) {
+    if (n !== undefined && (n < 0 || n > max)) bump(sink.tally.malformed, key)
   }
   return {
     rgb: [clampByte(r), clampByte(g), clampByte(b)],

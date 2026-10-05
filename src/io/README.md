@@ -111,7 +111,9 @@ The mapping decisions:
   not a number is read as 0, and a size as Archi's default; a node *missing* a
   position is still skipped (`exchange.node-no-bounds`). A bendpoint without two
   numbers is dropped, because exchange bendpoints are absolute and 0, 0 is the
-  canvas origin. A colour missing or garbling r, g or b, a line width that is not
+  canvas origin. A colour component outside the schema's 0–255, or an opacity
+  outside 0–100, is clamped and counted; a malformed opacity is read as opaque.
+  A colour missing or garbling r, g or b, a line width that is not
   a positive integer, a font size that is not a number, and a font style token
   other than `plain`, `bold`, `italic` and `underline` are read as not set. Both
   readers count these with the one `measured()` in `exchange-xml.ts`.

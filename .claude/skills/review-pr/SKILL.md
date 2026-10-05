@@ -49,6 +49,8 @@ Where the diff touches them, verify the CLAUDE.md invariants:
 
 - **A list of another tool's attributes is checked class by class against that tool's model, not as a flat set of names.** `javap` each class the reader maps, and diff its properties against what the reader reads, lists as known-unsupported, or ignores. #110 built Archi's undrawn display attributes from one flat string dump and missed that `DiagramModelConnection` also has `textAlignment`, which turned a real Archi setting from an info note into an "unread content" warning.
 
+- **A summary message over a tally must be true for every key that can reach it, and "a value the format does not allow" means the schema's range, not just "not a number".** List the keys a tally can receive, then read the sentence against each. #112's `exchange.value-malformed` said every colour value "was read as not set", but a malformed opacity keeps its colour, opaque. The same message claimed values the format does not allow, while `r="300"` and `a="150"` were clamped silently: the guard checked parseability, and the XSD's ranges were never consulted.
+
 For architectural changes, check conformance with `design/decisions/` ADRs; a deliberate deviation needs a new/amended ADR in the same PR, not a silent drift.
 
 ## 3. Code review (the generic layer)
