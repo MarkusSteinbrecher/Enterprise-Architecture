@@ -535,6 +535,21 @@ describe('the follow-ups from the #102 review (#103)', () => {
     )
   })
 
+  // #104: the fail-closed refusal sat ahead of not-a-model and told these files
+  // they parse as XML and should be reported.
+  it('calls a file with no element at all not a model, not an unreadable root', () => {
+    for (const text of ['', 'hello world', '<?xml version="1.0"?><!-- nothing -->']) {
+      expect(
+        importArchimate(text).problems.map((p) => p.code),
+        text,
+      ).toEqual(['archimate.not-a-model'])
+      expect(
+        importExchangeXml(text).problems.map((p) => p.code),
+        text,
+      ).toEqual(['exchange.not-a-model'])
+    }
+  })
+
   it('knows an Archi zip whose name has trailing space', async () => {
     const result = await readWorkspaceFile(file('m.archimate ', 'PK\u0003\u0004rest'))
     expect(result.problems.map((p) => p.code)).toEqual(['archimate.archive-unsupported'])

@@ -621,10 +621,12 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   // Archi's own file also has a root called `model`, and read here it came in
   // empty, ok and silent (#99). Only Archi's namespaces are refused: a file with
   // no namespace, or a near miss, is still read, and the mismatch noted (#103).
-  // A root the scan cannot find is refused: the guard must fail closed.
+  // A root the scan cannot find while the parser found a model is refused: the
+  // guard must fail closed. With neither, the file is not a model at all, and
+  // the not-a-model check below says so (#104).
   const root = xmlRoot(xml)
-  if (!root) return failed([rootUnreadable('exchange', where)])
-  if (root.local === 'model' && isArchiNamespace(root.namespace)) {
+  if (!root && parsed.model !== undefined) return failed([rootUnreadable('exchange', where)])
+  if (root?.local === 'model' && isArchiNamespace(root.namespace)) {
     return failed([
       problem(
         'error',
@@ -634,7 +636,7 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
       ),
     ])
   }
-  if (root.local === 'model' && !root.namespace?.startsWith(EXCHANGE_NAMESPACE_FAMILY)) {
+  if (root?.local === 'model' && !root.namespace?.startsWith(EXCHANGE_NAMESPACE_FAMILY)) {
     problems.push(
       problem(
         'info',

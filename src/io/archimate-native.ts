@@ -229,10 +229,12 @@ export function importArchimate(xml: string, file?: string): ImportResult {
   // Any root called `model` parses, so a file in another format would come in
   // empty, ok and silent. The namespace is what makes it Archi's (#99). A root
   // the scan cannot find is refused too: a guard that cannot classify its input
-  // must not wave it through (#103).
+  // must not wave it through (#103). With no root and no model either, the
+  // file is not a model at all, and the not-a-model check below says so (#104).
   const root = xmlRoot(xml)
-  if (!root) return failed([rootUnreadable('archimate', where)])
-  if (root.local === 'model' && !isArchiNamespace(root.namespace)) {
+  const rootKey = Object.keys(parsed).find((key) => /(^|:)model$/.test(key))
+  if (!root && rootKey) return failed([rootUnreadable('archimate', where)])
+  if (root?.local === 'model' && !isArchiNamespace(root.namespace)) {
     return failed([
       problem(
         'error',
@@ -242,7 +244,6 @@ export function importArchimate(xml: string, file?: string): ImportResult {
       ),
     ])
   }
-  const rootKey = Object.keys(parsed).find((key) => /(^|:)model$/.test(key))
   const model = rootKey ? parsed[rootKey] : undefined
   if (!isRawNode(model)) {
     return failed([
