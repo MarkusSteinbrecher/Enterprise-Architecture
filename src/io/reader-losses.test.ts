@@ -465,3 +465,124 @@ describe('the follow-ups from the #106 review', () => {
     ])
   })
 })
+
+describe('the exchange reader reports malformed values (#107)', () => {
+  const malformed = (result: ImportResult) => {
+    const [report, ...rest] = found(result, 'exchange.value-malformed')
+    expect(rest).toEqual([])
+    return report?.message ?? ''
+  }
+  const view = (result: ImportResult) => workspaceOf(result).views[0]!
+  const read = (views: string) => importExchangeXml(exchange({ views }))
+  const node = (attributes: string) =>
+    `<node identifier="sa" elementRef="a" xsi:type="Element" ${attributes}/>
+     <node identifier="sb" elementRef="b" xsi:type="Element" x="300" y="0" w="120" h="55"/>`
+
+  it('reads a malformed position as 0 and keeps the node, naming the attribute', () => {
+    const result = read(node('x="abc" y="20" w="120" h="55"'))
+    expect(view(result).nodes.find((n) => n.id === 'sa')?.bounds).toEqual({
+      x: 0,
+      y: 20,
+      width: 120,
+      height: 55,
+    })
+    expect(malformed(result)).toContain('(x)')
+    expect(found(result, 'exchange.node-no-bounds')).toEqual([])
+  })
+
+  it('reads a malformed size as the default, not as Archi’s -1, naming the attribute', () => {
+    const result = read(node('x="0" y="0" w="wide" h="55"'))
+    expect(view(result).nodes.find((n) => n.id === 'sa')?.bounds).toEqual({
+      x: 0,
+      y: 0,
+      width: 120,
+      height: 55,
+    })
+    expect(malformed(result)).toContain('(w)')
+    expect(found(result, 'exchange.default-size')).toEqual([])
+  })
+
+  it('still skips a node with no position at all', () => {
+    const result = read(node('y="0" w="120" h="55"'))
+    expect(view(result).nodes.map((n) => n.id)).toEqual(['sb'])
+    expect(found(result, 'exchange.node-no-bounds')).toHaveLength(1)
+    expect(found(result, 'exchange.value-malformed')).toEqual([])
+  })
+
+  it('drops a bendpoint without two numbers, and an empty one, naming what was wrong', () => {
+    const result = read(`${node('x="0" y="0" w="120" h="55"')}
+      <connection identifier="ok" relationshipRef="r" xsi:type="Relationship" source="sa" target="sb">
+        <bendpoint x="1e" y="5"/><bendpoint x="150" y="100"/><bendpoint/>
+      </connection>`)
+    expect(view(result).connections[0]?.bendpoints).toEqual([{ x: 150, y: 100 }])
+    expect(malformed(result)).toContain('(x, y)')
+  })
+
+  it('counts nothing on a connection it skipped', () => {
+    const result = read(`${node('x="0" y="0" w="120" h="55"')}
+      <connection identifier="gone" relationshipRef="nowhere" xsi:type="Relationship" source="sa" target="sb">
+        <bendpoint x="1e" y="5"/>
+      </connection>`)
+    expect(found(result, 'exchange.dangling-view-connection')).toHaveLength(1)
+    expect(found(result, 'exchange.value-malformed')).toEqual([])
+  })
+
+  it('reads a colour, line width, font size or font style it cannot read as not set, naming each', () => {
+    const result = read(
+      `${node(`x="0" y="0" w="120" h="55"`).replace(
+        '/>',
+        `><style lineWidth="0">
+          <fillColor r="10" g="red" b="30"/><lineColor r="10" g="20"/>
+          <font name="Serif" size="big" style="bold blink"><color r="1" g="2" b="3"/></font>
+        </style></node>`,
+      )}`,
+    )
+    const appearance = view(result).nodes.find((n) => n.id === 'sa')?.appearance
+    expect(appearance).toEqual({ fontName: 'Serif', fontStyle: ['bold'], fontColor: '#010203' })
+    // `g` is malformed on the fill; `b` is missing from the line colour.
+    for (const name of ['b', 'g', 'lineWidth', 'size', 'style']) {
+      expect(malformed(result)).toMatch(new RegExp(`[(, ]${name}[,)]`))
+    }
+    expect(found(result, 'import.content-unread')).toEqual([])
+  })
+
+  it('counts a colour out of the schema’s range, and says what it did with each (#112 review)', () => {
+    const styled = (style: string) =>
+      read(node('x="0" y="0" w="120" h="55"').replace('/>', `><style>${style}</style></node>`))
+    const clamped = styled('<fillColor r="300" g="0" b="0" a="150"/>')
+    // Clamped and kept: 300 is 255, an opacity of 150 is opaque.
+    expect(view(clamped).nodes.find((n) => n.id === 'sa')?.appearance).toEqual({
+      fillColor: '#ff0000',
+    })
+    expect(malformed(clamped)).toContain('(a, r)')
+    expect(malformed(clamped)).toContain('a colour component out of range was clamped')
+
+    // A malformed opacity keeps its colour, opaque, and the message says so.
+    const opaque = styled('<lineColor r="1" g="2" b="3" a="half"/>')
+    expect(view(opaque).nodes.find((n) => n.id === 'sa')?.appearance).toEqual({
+      lineColor: '#010203',
+    })
+    expect(malformed(opaque)).toContain('(a)')
+    expect(malformed(opaque)).toContain('a malformed opacity read as opaque')
+  })
+
+  it('reads plain as no font style: it is the schema’s word for none, not a malformed one', () => {
+    const result = read(
+      node('x="0" y="0" w="120" h="55"').replace(
+        '/>',
+        '><style><font name="Serif" style="plain italic"/></style></node>',
+      ),
+    )
+    // Present first, so the absence below is about this file.
+    expect(view(result).nodes.find((n) => n.id === 'sa')?.appearance?.fontStyle).toEqual(['italic'])
+    expect(found(result, 'exchange.value-malformed')).toEqual([])
+  })
+
+  it('shares one measured() with the native reader', async () => {
+    const native = await import('./archimate-native?raw')
+    const views = await import('./exchange-views?raw')
+    for (const source of [native.default, views.default]) {
+      expect(source).not.toMatch(/^function (measured|num|bump|entries)\(/m)
+    }
+  })
+})

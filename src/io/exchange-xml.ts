@@ -3,6 +3,8 @@
  * and its views and organizations (#76). Internal to `io/`.
  */
 
+import type { Ledger } from './consumption'
+
 export interface RawNode {
   [key: string]: unknown
 }
@@ -55,6 +57,19 @@ export function list(value: unknown): RawNode[] {
   return isRawNode(value) ? [value] : []
 }
 
+/**
+ * Like `list`, but an element with no attributes and no content but whitespace
+ * is an empty node rather than nothing. EMF writes a bendpoint at 0, 0 as
+ * `<bendpoint/>`, which the parser hands over as `''`, and `list` dropped it
+ * (#100). Untrimmed, `<bendpoint>` and a line break is `'\n'` (#106 review).
+ */
+export function entries(value: unknown): RawNode[] {
+  if (value === undefined || value === null) return []
+  return (Array.isArray(value) ? value : [value])
+    .map((item: unknown) => (typeof item === 'string' && item.trim() === '' ? {} : item))
+    .filter(isRawNode)
+}
+
 export function isRawNode(value: unknown): value is RawNode {
   return typeof value === 'object' && value !== null
 }
@@ -81,4 +96,40 @@ export function langString(value: unknown): string | undefined {
     return ''
   }
   return undefined
+}
+
+/**
+ * Where a reader accounts for a value it read: marked in its ledger (#101), and
+ * counted among the values it could not read, if it could not (#100, #107).
+ */
+export interface ValueSink {
+  ledger: Ledger
+  tally: { malformed: Map<string, number> }
+}
+
+/**
+ * A number attribute. Present but not a number is counted as malformed rather
+ * than read as absent: `x="1e"` came in at 0 without a word (#100), and the
+ * exchange reader skipped the node as having no position at all (#107). Either
+ * way the attribute is accounted for, so the ledger does not report it again.
+ */
+export function measured(raw: RawNode, key: string, sink: ValueSink): number | undefined {
+  const value = raw[`@${key}`]
+  if (value === undefined) return undefined
+  sink.ledger.use(raw, `@${key}`)
+  const n = num(value)
+  if (n === undefined) bump(sink.tally.malformed, key)
+  return n
+}
+
+/** A finite number, or `undefined`. Blank is not zero: `Number('')` is. */
+export function num(value: unknown): number | undefined {
+  const text = asString(value)
+  if (text === undefined || text.trim() === '') return undefined
+  const n = Number(text)
+  return Number.isFinite(n) ? n : undefined
+}
+
+export function bump(counts: Map<string, number>, key: string): void {
+  counts.set(key, (counts.get(key) ?? 0) + 1)
 }

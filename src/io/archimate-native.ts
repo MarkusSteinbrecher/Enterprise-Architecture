@@ -39,7 +39,18 @@ import {
   type ProblemSink,
 } from './exchange-format'
 import { STYLE_KEY, applyCarriedStyle, readCarriedStyle } from './exchange-views'
-import { asString, claimIdentifier, isRawNode, list, listed, type RawNode } from './exchange-xml'
+import {
+  asString,
+  bump,
+  claimIdentifier,
+  entries,
+  isRawNode,
+  list,
+  listed,
+  measured,
+  num,
+  type RawNode,
+} from './exchange-xml'
 import {
   failed,
   problem,
@@ -1526,44 +1537,6 @@ function textOf(value: unknown): string | undefined {
   if (Array.isArray(value)) return textOf(value[0])
   if (isRawNode(value)) return textOf(value['#text'])
   return undefined
-}
-
-/**
- * A number attribute. Present but not a number is tallied as malformed rather
- * than read as absent: `x="1e"` came in at 0 without a word (#100).
- */
-function measured(raw: RawNode, key: string, reader: Reader): number | undefined {
-  const value = raw[`@${key}`]
-  if (value === undefined) return undefined
-  // Read, or tallied as malformed: either way it is accounted for.
-  reader.ledger.use(raw, `@${key}`)
-  const n = num(value)
-  if (n === undefined) bump(reader.tally.malformed, key)
-  return n
-}
-
-/**
- * Like `list`, but an element with no attributes and no content but whitespace
- * is an empty node rather than nothing. EMF writes a bendpoint at 0, 0 as
- * `<bendpoint/>`, which the parser hands over as `''`, and `list` dropped it
- * (#100). Untrimmed, `<bendpoint>` and a line break is `'\n'` (#106 review).
- */
-function entries(value: unknown): RawNode[] {
-  if (value === undefined || value === null) return []
-  return (Array.isArray(value) ? value : [value])
-    .map((item: unknown) => (typeof item === 'string' && item.trim() === '' ? {} : item))
-    .filter(isRawNode)
-}
-
-function bump(counts: Map<string, number>, key: string): void {
-  counts.set(key, (counts.get(key) ?? 0) + 1)
-}
-
-function num(value: unknown): number | undefined {
-  const text = asString(value)
-  if (text === undefined || text.trim() === '') return undefined
-  const n = Number(text)
-  return Number.isFinite(n) ? n : undefined
 }
 
 function isString(value: string | undefined): value is string {
