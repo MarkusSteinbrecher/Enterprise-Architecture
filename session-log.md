@@ -1,5 +1,24 @@
 # Session Log
 
+## 2026-10-05 (cont.) — #119 (#105) reviewed
+
+`/review-pr 119`. All criteria are met; criterion 4 was replaced by the sponsor's call. I merged `main` in, and the legacy fixture passes #121's globbed provenance check. **7 findings, all fixed on the branch (`84289e3`):**
+- The conversion message was untrue for an OrJunction.
+- The unread-content labeller classified the raw legacy type, calling a renamed relationship an element.
+- With both connection attributes present, the wrong one won. Archi 5.10 showed that the later attribute wins either way round, so the reader now follows that.
+- The rename table applied only under a literal `archimate:` prefix, which disagreed with `classify`.
+- Counting only kept members was tested for elements alone.
+- A dead fallback and a name that shadowed a parameter.
+- The README was missing the table, the attribute rule and the Or-junction divergence.
+
+7 of 7 mutations caught; 934 tests pass.
+
+**Harvested:** a second case in review-skill §2's "one value decided in two places" bullet: apply a conversion once, at the source.
+
+**Also merged by the sponsor today:** #116, #117, #120 and #121.
+
+**Still open:** merge #119 and then this PR; #118 (Archi's version handlers); #74 (the sponsor's decision). Merged remote branches to delete: `feat/111-model-language`, `chore/session-log-2026-10-05`, `chore/session-log-2026-10-05b`, `feat/108-text-position-evidence`, `feat/115-group-text-position`.
+
 ## 2026-10-05 (cont.) — #116 and #117 reviewed
 
 - **#116 was merged by the sponsor while its review was running.** Its fixes went to a follow-up, **PR #121**. The posted review records 9 findings.
