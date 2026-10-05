@@ -1,5 +1,24 @@
 # Session Log
 
+## 2026-10-05 — Session wrap-up
+
+**What was done:**
+- #100 implemented (#106) and reviewed. #106 was merged mid-review, so the review's fixes went to `main` through follow-up **#109**. #100 is closed.
+- The fixtures were re-saved with Archi 5.10.0, now installed in `/Applications`; run the script with `ARCHI=/Applications/Archi.app/Contents/MacOS/Archi`. The re-save exposed three reader bugs, all fixed.
+- Harvested:
+  - `fixture-provenance.test.ts` and its CLAUDE.md line;
+  - a review-skill bullet: a parser option changes every value;
+  - HQ lessons (`c59c530`).
+- Filed #107 and #108.
+
+**Still open:**
+- **#101** (recommended next): both readers report every attribute and child they don't consume. It also covers the two drops noted under #100 (an exchange `<property>` with no `<value>`, an empty Influence `strength`).
+- #105: the Archi 2.x vocabulary.
+- #107: malformed values in the exchange reader.
+- #108: an absent `textPosition`; check it in Archi first.
+- #74: the sponsor's decision, M2 editor or the transformation core.
+- Remote branch `fix/100-archimate-silent-drops` is merged and ready to delete.
+
 ## 2026-10-05 (cont.) — #106 (#100) reviewed before merge
 
 `/review-pr 106`, the first PR in five reviewed **before** merge. All three #100 criteria are met. The code pass ran as an independent background agent, because the PR was this session's own work. It reported 10 findings; each was checked against the code.
