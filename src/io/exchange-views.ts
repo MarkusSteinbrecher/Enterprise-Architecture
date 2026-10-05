@@ -379,7 +379,7 @@ function readView(
   const viewpoint = asString(raw['@viewpoint'])
   if (viewpoint) view.viewpoint = viewpoint
 
-  const nodeIds = new Set<string>()
+  const nodesById = new Map<string, ViewNode>()
   const connectionIds = new Set<string>()
   const skip = (code: string, message: string) =>
     problems.push(problem('warning', code, `View "${view.name || id}": ${message}`, at))
@@ -392,13 +392,13 @@ function readView(
     for (const rawNode of raws) {
       let anchor = parent
       const node = readNode(rawNode, parent, viewIds, font, literal, tally, context, skip)
-      if (node && nodeIds.has(node.id)) {
+      if (node && nodesById.has(node.id)) {
         skip(
           'exchange.duplicate-node-id',
           `two nodes share the identifier "${node.id}"; the later one was skipped.`,
         )
       } else if (node) {
-        nodeIds.add(node.id)
+        nodesById.set(node.id, node)
         view.nodes.push(node)
         anchor = { id: node.id, x: num(rawNode['@x']) ?? 0, y: num(rawNode['@y']) ?? 0 }
       }
@@ -410,7 +410,7 @@ function readView(
   for (const rawConnection of list(raw.connection)) {
     const connection = readConnection(
       rawConnection,
-      nodeIds,
+      nodesById,
       fileConnectionIds,
       font,
       literal,
@@ -431,6 +431,24 @@ function readView(
   }
   applyCarriedStyle(view, carried, problems, at)
   return view
+}
+
+/**
+ * A connection draws its relationship between drawings of the relationship's own
+ * two elements, in its direction, as `validate` requires. One that does not is
+ * reported at import rather than left for validation to find (#100).
+ */
+export function drawsEnds(
+  relationship: Relationship,
+  source: ViewNode | undefined,
+  target: ViewNode | undefined,
+): boolean {
+  return (
+    source?.kind === 'element' &&
+    target?.kind === 'element' &&
+    source.element === relationship.source &&
+    target.element === relationship.target
+  )
 }
 
 /** A node's id and absolute position: what its children are placed relative to. */
@@ -543,7 +561,7 @@ function readNode(
 
 function readConnection(
   raw: RawNode,
-  nodeIds: ReadonlySet<string>,
+  nodesById: ReadonlyMap<string, ViewNode>,
   fileConnectionIds: ReadonlySet<string>,
   font: FontKey | undefined,
   literal: (id: string) => boolean,
@@ -561,10 +579,10 @@ function readConnection(
     )
     return undefined
   }
-  if (!nodeIds.has(source) || !nodeIds.has(target)) {
+  if (!nodesById.has(source) || !nodesById.has(target)) {
     // Ending on another connection is a known gap; ending on a node that was
     // skipped, or on nothing at all, is a different problem.
-    const unknown = [source, target].filter((end) => !nodeIds.has(end))
+    const unknown = [source, target].filter((end) => !nodesById.has(end))
     if (unknown.every((end) => fileConnectionIds.has(end))) tally.onConnections += 1
     else {
       skip(
@@ -589,10 +607,19 @@ function readConnection(
   const type = asString(raw['@type'])
   if (type === 'Relationship' || type === 'NestingRelationship') {
     const relationshipRef = asString(raw['@relationshipRef'])
-    if (!relationshipRef || !context.relationships.has(relationshipRef)) {
+    const drawn =
+      relationshipRef === undefined ? undefined : context.relationships.get(relationshipRef)
+    if (!relationshipRef || !drawn) {
       skip(
         'exchange.dangling-view-connection',
         `connection "${id}" draws relationship "${relationshipRef ?? '(none)'}", which is not in the file. It was skipped.`,
+      )
+      return undefined
+    }
+    if (!drawsEnds(drawn, nodesById.get(source), nodesById.get(target))) {
+      skip(
+        'exchange.connection-mismatch',
+        `connection "${id}" draws ${drawn.type} relationship "${relationshipRef}" between nodes that do not show its source and target. It was skipped.`,
       )
       return undefined
     }

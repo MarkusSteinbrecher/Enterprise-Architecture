@@ -33,6 +33,7 @@ import {
 import {
   failed,
   problem,
+  propertyRepeated,
   relationshipDocumentationSkipped,
   succeeded,
   type ImportProblem,
@@ -181,33 +182,12 @@ function typeSpecificAttributes(relationship: Relationship, problems: ImportProb
     out += ` accessType="${attr(relationship.profile.accessType)}"`
   }
   if (relationship.isDirected && written('isDirected')) out += ' isDirected="true"'
-  if (relationship.modifier !== undefined && written('modifier')) {
-    out += modifierAttribute(relationship, problems)
+  // Written as it is: the reader keeps surrounding spaces since #100, so the
+  // trimming #90 did here is no longer needed to read back what was written.
+  if (relationship.modifier && written('modifier')) {
+    out += ` modifier="${attr(relationship.modifier)}"`
   }
   return out
-}
-
-/**
- * The reader trims attribute values (`trimValues` cannot spare attributes), so a
- * modifier with surrounding spaces would come back changed, and one of only
- * spaces would come back as none. Write what will be read, and say so (#90).
- */
-function modifierAttribute(relationship: Relationship, problems: ImportProblem[]): string {
-  const modifier = relationship.modifier ?? ''
-  const trimmed = modifier.trim()
-  if (trimmed !== modifier) {
-    problems.push(
-      problem(
-        'warning',
-        'exchange.relationship-modifier-trimmed',
-        trimmed
-          ? `Influence "${relationship.id}" has modifier ${JSON.stringify(modifier)}; it was written as ${JSON.stringify(trimmed)}, without the surrounding spaces.`
-          : `Influence "${relationship.id}" has a modifier of only spaces, which reads back as none, so it was left out.`,
-        { subject: relationship.id },
-      ),
-    )
-  }
-  return trimmed ? ` modifier="${attr(trimmed)}"` : ''
 }
 
 /**
@@ -592,7 +572,9 @@ const parser = new XMLParser({
   removeNSPrefix: true,
   parseAttributeValue: false,
   parseTagValue: false,
-  trimValues: true,
+  // Names, keys, values and documentation are read as written. Trimming them
+  // changed them without a word, and could merge two property names (#100).
+  trimValues: false,
   // Decode numeric character references. Off, `&#xD;&#xA;` — how Archi writes a
   // line break in documentation or a note — arrived as those literal characters,
   // and `&#233;` as six characters instead of an é (#76). `&amp;#65;` still reads
@@ -692,6 +674,7 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
 
   const relationships: Relationship[] = []
   const seenRelationshipIds = new Set<string>()
+  const documented: string[] = []
   for (const raw of list((model.relationships as RawNode | undefined)?.relationship)) {
     const relationship = readRelationship(raw, seenIds, reader)
     if (!relationship) continue
@@ -708,6 +691,8 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     }
     seenRelationshipIds.add(relationship.id)
     relationships.push(relationship)
+    // Counted only once kept: a skipped relationship was reported already (#100).
+    if (langString(raw.documentation)) documented.push(relationship.id)
   }
 
   const modelProperties = readProperties(model, reader)
@@ -737,10 +722,7 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   }
   // Property values were read on the way; an unresolved definition can be on a view.
   reportUnresolvedProperties(reader)
-  const documented = list((model.relationships as RawNode | undefined)?.relationship).filter(
-    (raw) => langString(raw.documentation),
-  ).length
-  if (documented) problems.push(relationshipDocumentationSkipped(documented, where))
+  if (documented.length) problems.push(relationshipDocumentationSkipped(documented, where))
   if (langString(model.documentation)) {
     problems.push(
       problem(
@@ -1037,6 +1019,7 @@ function readTypeSpecificAttributes(
 
 function readProperties(raw: RawNode, reader: Reader): Record<string, PropertyValue> {
   const out: Record<string, PropertyValue> = {}
+  const repeated = new Set<string>()
   const container = raw.properties as RawNode | undefined
   for (const property of list(container?.property)) {
     const ref = asString(property['@propertyDefinitionRef'])
@@ -1046,7 +1029,16 @@ function readProperties(raw: RawNode, reader: Reader): Record<string, PropertyVa
       continue
     }
     const value = langString(property.value)
-    if (value !== undefined) setKey(out, definition.key, typedValue(value, definition.type))
+    if (value === undefined) continue
+    // A name may repeat on one object; the model holds it once. The first is
+    // kept and the rest are reported (#100).
+    if (Object.hasOwn(out, definition.key)) repeated.add(definition.key)
+    else setKey(out, definition.key, typedValue(value, definition.type))
+  }
+  if (repeated.size) {
+    reader.problems.push(
+      propertyRepeated(asString(raw['@identifier']), [...repeated], reader.where),
+    )
   }
   return out
 }

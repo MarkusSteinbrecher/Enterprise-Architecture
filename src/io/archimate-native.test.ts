@@ -82,10 +82,27 @@ describe('the same model as Archi exports it (#13)', () => {
     expect(crm.appearance?.fillColor).toBe('#e0e0e0a1')
     crm.appearance!.fillColor = '#e0e0e0a0'
     // Archi's exchange export has no text alignment, so the exchange reader
-    // cannot see that Handle Claim's label sits at the top left.
+    // cannot see that Handle Claim's label sits on the left. (It sits at the
+    // top too, which is Archi's default, so Archi's file does not say so.)
     const handle = landscape(native).nodes.find((n) => n.id === 'o-handle')!
-    expect(handle.appearance).toEqual({ textAlignment: 'left', textPosition: 'top' })
+    expect(handle.appearance).toEqual({ textAlignment: 'left' })
     delete handle.appearance
+    // Nor that Archi centres a note's, a group's and a Grouping's label when the
+    // file gives none, where Archipelago's own default is left (#100).
+    const centred = native.views.flatMap((view) =>
+      view.nodes.filter((node) => node.appearance?.textAlignment === 'center'),
+    )
+    expect(centred.map((node) => node.id).sort()).toEqual([
+      'o-g-apps',
+      'o-g-business',
+      'o-g-platform',
+      'o-note-biz',
+      'o-note-ref',
+    ])
+    for (const node of centred) {
+      delete node.appearance!.textAlignment
+      if (!Object.keys(node.appearance!).length) delete node.appearance
+    }
 
     // Archi hides a connection between a shape and one nested in it when the
     // nesting already says it, and its export leaves the connection out. The
