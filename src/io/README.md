@@ -224,6 +224,25 @@ Refusing a 4,000-element file over any of those would be useless. An import
 returns what it could build plus a structured list of what it could not, and the
 UI shows both.
 
+### Readers account for what they consume (#101)
+
+A reader ignores by omission: an attribute it never looks at leaves nothing for a
+test to see. So both XML readers keep a `Ledger` (`consumption.ts`). Each
+attribute and child element is marked where its value lands in the model or in a
+problem, not where it is fetched, so a value that is read and then discarded is
+still unread. A skipped object is marked whole, because it was reported as
+skipped. After the read, `unread` walks the parsed file and every key left
+unmarked becomes an `import.content-unread` warning, naming the object that
+carries it. Keys a reader deliberately ignores (namespace declarations, Archi's
+version, `xml:lang`, `targetConnections`) are listed in that reader's `IGNORED`,
+each with its reason.
+
+When a reader gains a field, it marks it. When a reader recognises something it
+cannot hold, it reports it under its own code and marks it, or names it with
+`ledger.lose`. `content-unread.test.ts` puts an unknown attribute and an unknown
+child at each level of both formats, and requires every checked-in file to report
+nothing unread.
+
 ## The demo workspace
 
 `demo/archisurance.xml` ships as exchange-format XML rather than as a JavaScript
@@ -313,9 +332,10 @@ a specialization the file does not define or that the object's own
 `Specialization` property shadows, a view without an id, a value Archi would not
 write (`x="1e"`, a colour that is not `#rrggbb`), anything a shape or a line
 carries that it has no place for here (properties, a line's documentation, a
-label expression), an attribute or child element an element or relationship
-carries that is not read, and, in both readers, a connection whose shapes do not
+label expression), and, in both readers, a connection whose shapes do not
 draw its relationship's two ends (`*.connection-mismatch`, skipped rather than
-left for `validate` to find). An Archi model saved with images is a zip archive, which is refused
+left for `validate` to find). Anything else the file holds that the reader did not
+read is `import.content-unread` (#101), including model `<metadata>` and a
+specialization no imported concept uses. An Archi model saved with images is a zip archive, which is refused
 with an explanation (`archimate.archive-unsupported`). Any other zip, such as a
 `.docx`, is named as an archive, not as an Archi model (`file.archive-unrecognised`).

@@ -1,5 +1,36 @@
 # Session Log
 
+## 2026-10-05 (cont.) — #101 implemented: readers report what they did not consume
+
+On `feat/101-reader-consumption`. Both XML readers now keep a `Ledger` (`src/io/consumption.ts`):
+- Each attribute and child element is marked where its value lands in the model or in a problem, **not where it is fetched**. A value that is read and then discarded stays unread; that is the nearest bypass, and it has a test.
+- A skipped object is marked whole, because it was reported as skipped. A skipped shape still has its nested shapes walked.
+- After the read, `unread` walks the parsed file. Every key left unmarked becomes one `import.content-unread` warning per kind of carrier and kind of content, naming the carriers by id.
+- Each reader lists the keys it ignores on purpose in `IGNORED`, each with its reason: namespaces, Archi's `version`, `targetConnections`, `schemaLocation` and `xml:lang`. A second language is reported as "a second <name>".
+
+**Replaced:** the native reader's generic checks (`checkConceptContent`, the any-other-attribute arm of `countUnsupported`, and `unreadChildren`'s `<x>` fallback) are gone. What remains is knowledge-based:
+- Archi's own display attributes, taken from Archi 5.10's model jar (`type`, `borderType`, `borderColor`, `imagePath`, `imagePosition`, `locked`; on a line also `textPosition`), are still `appearance-unsupported`.
+- Properties, documentation and features on view objects are still `view-content-skipped`.
+- Features on a concept are named through `ledger.lose`.
+- An unknown attribute or child anywhere is the ledger's. `archimate.content-unread` became `import.content-unread`.
+
+**Losses it found that were silent before:**
+- Archi model `<metadata>`.
+- A specialization no imported concept uses, and a duplicate or nameless one.
+- An exchange `<property>` with no `<value>`, noted under #100.
+- A second language.
+- A root group's documentation or id in `<organizations>`.
+- A nameless property definition.
+- Text where an element was expected.
+
+The empty Influence `strength`, also noted under #100, is read as no modifier, as in the exchange reader.
+
+**AC 4:** every checked-in fixture and the demo report nothing unread. A glob test now holds that for any fixture added later. A stray attribute injected into every element of every fixture was reported at every level, so the zero is not a walk that stops early.
+
+**Tests:** `content-unread.test.ts` covers an unknown attribute and child at the element, relationship, shape/node, connection and folder levels in both readers, the bypass, and each newly found loss. Mutation-checked one guard at a time: 26 mutations (14 ledger and report guards, 12 sampled read-marks in both readers), all caught. The one survivor, text under a marked element, got its own test before the final run. 859 unit tests, 19 journeys, `validate:xsd`, lint, typecheck, format and build are green. CLAUDE.md's fixture line now points to the ledger.
+
+Open: the PR for #101 awaits `/review-pr`. Still open from before: #105, #107 and #108; #107's malformed exchange values now surface as unread attributes rather than silently, until #107 gives them a proper message. And #74.
+
 ## 2026-10-05 — Session wrap-up
 
 **What was done:**

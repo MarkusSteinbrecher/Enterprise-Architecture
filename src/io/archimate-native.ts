@@ -27,6 +27,7 @@ import {
   type Workspace,
 } from '@/model'
 import { isReportDefinition, isTagGroup } from './canonical-json'
+import { Ledger, reportUnread, type Ignored, type Noun } from './consumption'
 import { defaultNodeSize } from './default-sizes'
 import {
   LEGACY_REPORTS_KEY,
@@ -143,37 +144,21 @@ const TEXT_POSITION_CODES = new Map<string, TextPosition>([
 /** What Archi calls a specialization's property when it exports one. */
 export const SPECIALIZATION_KEY = 'Specialization'
 
-/** Attributes a shape may carry that are read. Anything else is counted and reported. */
-const NODE_ATTRIBUTES = new Set([
-  'xsi:type',
-  'id',
-  'name',
-  'archimateElement',
-  'targetConnections',
-  'model',
-  'fillColor',
-  'alpha',
-  'lineColor',
-  'lineWidth',
-  'font',
-  'fontColor',
-  'textAlignment',
-  'textPosition',
+/**
+ * Archi's display settings that Archipelago does not draw (`IDiagramModelObject`,
+ * `IBorderObject`, `IIconic`, `ILockable` and their kin in Archi 5.10's model):
+ * counted and reported as one line. Any other attribute is unread content (#101).
+ */
+const UNDRAWN_NODE_ATTRIBUTES: ReadonlySet<string> = new Set([
+  'type',
+  'borderType',
+  'borderColor',
+  'imagePath',
+  'imagePosition',
+  'locked',
 ])
-
-const CONNECTION_ATTRIBUTES = new Set([
-  'xsi:type',
-  'id',
-  'name',
-  'source',
-  'target',
-  'archimateRelationship',
-  'targetConnections',
-  'lineColor',
-  'lineWidth',
-  'font',
-  'fontColor',
-])
+/** A connection's `type` is its line decoration; its text position is where its label sits. */
+const UNDRAWN_CONNECTION_ATTRIBUTES: ReadonlySet<string> = new Set(['type', 'textPosition'])
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -204,8 +189,6 @@ interface Tally {
   malformed: Map<string, number>
   /** What a view object carried that it cannot hold here → how many times. */
   viewContent: Map<string, number>
-  /** Concept kind → what it carried that was not read → the concepts carrying it. */
-  conceptContent: Map<'element' | 'relationship', Map<string, string[]>>
   routers: number
   specializations: number
   /** Ids of imported relationships that have documentation. */
@@ -213,10 +196,43 @@ interface Tally {
 }
 
 interface Reader extends ProblemSink {
-  /** Specialization id → its name. */
-  profiles: Map<string, string>
+  /** Specialization id → it, by name. */
+  profiles: Map<string, { name: string; raw: RawNode }>
   tally: Tally
+  /** What was read, so that what was not is reported (#101). */
+  ledger: Ledger
 }
+
+/**
+ * What this reader deliberately does not read, and why (#101). Anything else it
+ * does not mark as read is reported as `import.content-unread`.
+ */
+const IGNORED: readonly Ignored[] = [
+  {
+    at: 'model',
+    key: '@xmlns*',
+    reason:
+      'Namespace declarations decide how the file is read (`xml-root.ts`); they hold no model content.',
+  },
+  {
+    at: 'model',
+    key: '@version',
+    reason:
+      'The version of Archi that saved the file. Every version this reader opens is read the same way.',
+  },
+  {
+    at: 'child',
+    key: '@targetConnections',
+    reason:
+      'Archi’s back-reference to the connections ending on a shape, derived from their own source and target.',
+  },
+  {
+    at: 'sourceConnection',
+    key: '@targetConnections',
+    reason:
+      'Archi’s back-reference to the connections ending on a connection, derived from their own source and target.',
+  },
+]
 
 export function importArchimate(xml: string, file?: string): ImportResult {
   const problems: ImportProblem[] = []
@@ -265,9 +281,12 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     ])
   }
 
+  const ledger = new Ledger()
+  ledger.use(model, 'folder')
   const reader: Reader = {
     problems,
     where,
+    ledger,
     profiles: readProfiles(model),
     tally: {
       defaultSized: 0,
@@ -275,7 +294,6 @@ export function importArchimate(xml: string, file?: string): ImportResult {
       unsupported: new Map(),
       malformed: new Map(),
       viewContent: new Map(),
-      conceptContent: new Map(),
       routers: 0,
       specializations: 0,
       relationshipDocs: [],
@@ -293,7 +311,10 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     // reported as well, for an object that was not imported (#106 review).
     if (isDuplicate(member, elementIds, 'element', reader)) continue
     const element = readElement(member, reader)
-    if (!element) continue
+    if (!element) {
+      ledger.skip(member.raw)
+      continue
+    }
     elementIds.add(element.id)
     elements.push(element)
   }
@@ -304,11 +325,15 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     if (classify(member.type) !== 'relationship') continue
     if (isDuplicate(member, relationshipsById, 'relationship', reader)) continue
     const relationship = readRelationship(member, elementIds, reader)
-    if (!relationship) continue
+    if (!relationship) {
+      ledger.skip(member.raw)
+      continue
+    }
     relationshipsById.set(relationship.id, relationship)
     relationships.push(relationship)
     // Counted only once kept: a skipped relationship's documentation is not lost here (#100).
     if (textOf(member.raw.documentation)) reader.tally.relationshipDocs.push(relationship.id)
+    ledger.whole(member.raw, 'documentation')
   }
 
   const diagrams = members.filter((member) => classify(member.type) === 'diagram')
@@ -320,6 +345,7 @@ export function importArchimate(xml: string, file?: string): ImportResult {
   )
   for (const member of members) {
     if (classify(member.type) !== 'unsupported-view') continue
+    ledger.skip(member.raw)
     problems.push(
       problem(
         'warning',
@@ -331,6 +357,7 @@ export function importArchimate(xml: string, file?: string): ImportResult {
   }
   for (const member of members) {
     if (classify(member.type) !== 'unknown') continue
+    ledger.skip(member.raw)
     problems.push(
       problem(
         'error',
@@ -354,7 +381,10 @@ export function importArchimate(xml: string, file?: string): ImportResult {
   for (const member of diagrams) {
     if (isDuplicate(member, seenViews, 'view', reader)) continue
     const view = readView(member, context)
-    if (!view) continue
+    if (!view) {
+      ledger.skip(member.raw)
+      continue
+    }
     seenViews.add(view.id)
     views.push(view)
   }
@@ -365,6 +395,9 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     carried(modelProperties[LEGACY_REPORTS_KEY], isReportDefinition, 'saved reports', reader)
   const tagGroups = carried(modelProperties[TAG_GROUPS_KEY], isTagGroup, 'tag groups', reader)
   reportForeignModelProperties(modelProperties, problems, where)
+  reportUnusedProfiles(model, reader)
+  // An empty purpose is no purpose: nothing is lost.
+  ledger.whole(model, 'purpose')
   if (textOf(model.purpose)) {
     problems.push(
       problem(
@@ -376,6 +409,17 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     )
   }
   reportTally(reader)
+  ledger.use(model, '@id', '@name')
+  problems.push(
+    ...reportUnread(
+      ledger.unread(model, 'model', {
+        ignored: IGNORED,
+        subjectOf: (node) => asString(node['@id']),
+      }),
+      describe,
+      where,
+    ),
+  )
 
   const workspace: Workspace = {
     id: asString(model['@id']) || 'ws-imported',
@@ -425,6 +469,9 @@ function readFolders(model: RawNode, reader: Reader): { members: Member[]; folde
       else folder.root = root
       if (entries(raw.property).length) folderProperties.push(folder.name || folder.id)
       folders.push(folder)
+      reader.ledger.use(raw, '@id', '@name', 'element', 'folder')
+      reader.ledger.text(raw, 'documentation')
+      reader.ledger.whole(raw, 'property')
       for (const element of list(raw.element)) {
         members.push({ raw: element, type: typeOf(element), folder: folder.id })
       }
@@ -451,6 +498,10 @@ function readFolders(model: RawNode, reader: Reader): { members: Member[]; folde
     const name = asString(top['@name']) || FOLDER_ROOT_LABELS[root]
     if (textOf(top.documentation)) topDocumented.push(name)
     if (entries(top.property).length) folderProperties.push(name)
+    // Its id and name are the fixed group's, which Archipelago supplies itself;
+    // its documentation and properties are reported just above.
+    reader.ledger.use(top, '@type', '@id', '@name', 'element', 'folder')
+    reader.ledger.whole(top, 'documentation', 'property')
     for (const element of list(top.element)) members.push({ raw: element, type: typeOf(element) })
     walk(list(top.folder), undefined, root)
   }
@@ -540,6 +591,7 @@ function readElement(member: Member, reader: Reader): Element | undefined {
     type = 'Junction'
     // Archi writes `type="or"` and leaves an and-junction without one.
     const kind = asString(raw['@type'])
+    reader.ledger.use(raw, '@type')
     if (kind === 'or') junctionKind = 'or'
     else if (kind !== undefined && kind !== DEFAULT_JUNCTION_KIND) {
       reader.problems.push(
@@ -554,13 +606,7 @@ function readElement(member: Member, reader: Reader): Element | undefined {
   } else if (isElementType(local)) type = local
   else return undefined
 
-  checkConceptContent(
-    raw,
-    id,
-    'element',
-    local === 'Junction' ? JUNCTION_ATTRIBUTES : ELEMENT_ATTRIBUTES,
-    reader,
-  )
+  readConceptFeatures(raw, reader)
   const properties = readConceptProperties(raw, id, reader)
   const { profile, unread } = readPortfolioProfile(properties)
   reportUnreadProfileKeys(id, unread, reader)
@@ -575,6 +621,8 @@ function readElement(member: Member, reader: Reader): Element | undefined {
   if (documentation) element.documentation = documentation
   if (profile) element.profile = profile
   if (member.folder) element.folder = member.folder
+  reader.ledger.use(raw, '@xsi:type', '@id', '@name')
+  reader.ledger.text(raw, 'documentation')
   return element
 }
 
@@ -613,7 +661,7 @@ function readRelationship(
     return undefined
   }
 
-  checkConceptContent(raw, id, 'relationship', relationshipAttributes(type), reader)
+  readConceptFeatures(raw, reader)
   const properties = readConceptProperties(raw, id, reader)
   const read = readRelationshipProfile(properties)
   reportUnreadProfileKeys(id, read.unread, reader)
@@ -626,9 +674,11 @@ function readRelationship(
   }
   const name = asString(raw['@name'])
   if (name) relationship.name = name
+  reader.ledger.use(raw, '@xsi:type', '@id', '@name', '@source', '@target')
   const profile = read.profile ?? {}
 
   if (type === 'Access') {
+    reader.ledger.use(raw, '@accessType')
     const code = asString(raw['@accessType']) ?? '0'
     const accessType = ACCESS_CODES.get(code)
     if (accessType) profile.accessType = accessType
@@ -643,11 +693,15 @@ function readRelationship(
       )
     }
   }
-  if (type === 'Association' && asString(raw['@directed']) === 'true')
-    relationship.isDirected = true
+  if (type === 'Association') {
+    if (asString(raw['@directed']) === 'true') relationship.isDirected = true
+    reader.ledger.use(raw, '@directed')
+  }
   if (type === 'Influence') {
     const strength = asString(raw['@strength'])
     if (isInfluenceModifier(strength)) relationship.modifier = strength
+    // An empty strength is no strength, as in the exchange reader: nothing is lost.
+    reader.ledger.use(raw, '@strength')
   }
   if (Object.keys(profile).length) relationship.profile = profile
   if (member.folder) relationship.folder = member.folder
@@ -663,12 +717,18 @@ function readConceptProperties(
   const properties = readProperties(raw, reader)
   const at = { ...reader.where, subject: id }
   const profileIds = (asString(raw['@profiles']) ?? '').split(/\s+/).filter(Boolean)
+  // Every specialization named here is kept or reported below.
+  reader.ledger.use(raw, '@profiles')
   const names: string[] = []
   const unknown: string[] = []
   for (const profileId of profileIds) {
-    const name = reader.profiles.get(profileId)
-    if (name === undefined) unknown.push(profileId)
-    else names.push(name)
+    const profile = reader.profiles.get(profileId)
+    if (profile === undefined) unknown.push(profileId)
+    else {
+      names.push(profile.name)
+      // Its concept type is the concept's own, which the model holds already.
+      reader.ledger.use(profile.raw, '@id', '@name', '@conceptType')
+    }
   }
   if (unknown.length) {
     reader.problems.push(
@@ -713,16 +773,23 @@ function readProperties(raw: RawNode, reader: Reader): Record<string, PropertyVa
   const out: Record<string, PropertyValue> = {}
   let keyless = 0
   const repeated = new Set<string>()
+  reader.ledger.use(raw, 'property')
   for (const property of entries(raw.property)) {
     const key = asString(property['@key'])
     if (key === undefined) {
       keyless += 1
+      reader.ledger.skip(property)
       continue
     }
     // Archi allows a key twice; a record holds it once. The first is kept and
     // the rest are reported (#100).
-    if (Object.hasOwn(out, key)) repeated.add(key)
-    else setKey(out, key, asString(property['@value']) ?? '')
+    if (Object.hasOwn(out, key)) {
+      repeated.add(key)
+      reader.ledger.skip(property)
+    } else {
+      setKey(out, key, asString(property['@value']) ?? '')
+      reader.ledger.use(property, '@key', '@value')
+    }
   }
   const subject = asString(raw['@id'])
   if (repeated.size) reader.problems.push(propertyRepeated(subject, [...repeated], reader.where))
@@ -739,14 +806,28 @@ function readProperties(raw: RawNode, reader: Reader): Record<string, PropertyVa
   return out
 }
 
-function readProfiles(model: RawNode): Map<string, string> {
-  const out = new Map<string, string>()
+/**
+ * Archi's specializations. Each is marked read only when a concept uses it, so an
+ * unused one is reported rather than lost (#101).
+ */
+function readProfiles(model: RawNode): Map<string, { name: string; raw: RawNode }> {
+  const out = new Map<string, { name: string; raw: RawNode }>()
   for (const profile of list(model.profile)) {
     const id = asString(profile['@id'])
     const name = asString(profile['@name'])
-    if (id && name) out.set(id, name)
+    if (id && name && !out.has(id)) out.set(id, { name, raw: profile })
   }
   return out
+}
+
+/** A specialization no imported concept uses has nowhere to go: Archipelago has none (#101). */
+function reportUnusedProfiles(model: RawNode, reader: Reader): void {
+  reader.ledger.use(model, 'profile')
+  for (const { name, raw } of reader.profiles.values()) {
+    if (reader.ledger.isUsed(raw, '@id')) continue
+    reader.ledger.lose(model, `an unused specialization (“${name}”)`)
+    reader.ledger.skip(raw)
+  }
 }
 
 // ── Views ────────────────────────────────────────────────────────────────────
@@ -791,6 +872,16 @@ function readView(member: Member, context: ViewContext): View | undefined {
 
   const { [STYLE_KEY]: carriedRaw, ...properties } = readProperties(raw, reader)
   const view: View = { id, name, properties, nodes: [], connections: [] }
+  reader.ledger.use(
+    raw,
+    '@xsi:type',
+    '@id',
+    '@name',
+    '@viewpoint',
+    '@connectionRouterType',
+    'child',
+  )
+  reader.ledger.text(raw, 'documentation')
   const documentation = textOf(raw.documentation)
   if (documentation) view.documentation = documentation
   const viewpoint = asString(raw['@viewpoint'])
@@ -819,7 +910,8 @@ function readView(member: Member, context: ViewContext): View | undefined {
   const walk = (raws: RawNode[], parent: { id: string; box: Box } | undefined, origin: Point) => {
     for (const child of raws) {
       owners.push(child)
-      countUnsupported(child, NODE_ATTRIBUTES, reader)
+      countUnsupported(child, UNDRAWN_NODE_ATTRIBUTES, reader)
+      reader.ledger.first(child, 'bounds')
       const bounds = entries(child.bounds)[0] ?? {}
       const x = origin.x + (measured(bounds, 'x', reader) ?? 0)
       const y = origin.y + (measured(bounds, 'y', reader) ?? 0)
@@ -854,14 +946,16 @@ function readView(member: Member, context: ViewContext): View | undefined {
             'archimate.duplicate-node-id',
             `two shapes share the id "${node.id}"; the later one was skipped.`,
           )
+          reader.ledger.skip(child, NESTED)
         } else {
           checkViewContent(child, node, reader)
+          reader.ledger.use(child, '@xsi:type', '@id', ...NESTED)
           boxes.set(node.id, box)
           nodesById.set(node.id, node)
           view.nodes.push(node)
           next = { id: node.id, box }
         }
-      }
+      } else reader.ledger.skip(child, NESTED)
       walk(list(child.child), next, { x, y })
     }
   }
@@ -879,13 +973,18 @@ function readView(member: Member, context: ViewContext): View | undefined {
         'archimate.duplicate-connection-id',
         `two connections share the id "${rawId}"; the later one was skipped.`,
       )
+      reader.ledger.skip(rawConnection)
       continue
     }
     const connection = readConnection(rawConnection, boxes, nodesById, connectionIds, context, skip)
-    if (!connection) continue
+    if (!connection) {
+      reader.ledger.skip(rawConnection)
+      continue
+    }
     seen.add(connection.id)
-    countUnsupported(rawConnection, CONNECTION_ATTRIBUTES, reader)
+    countUnsupported(rawConnection, UNDRAWN_CONNECTION_ATTRIBUTES, reader)
     checkViewContent(rawConnection, connection, reader)
+    reader.ledger.use(rawConnection, '@xsi:type', '@id', '@source', '@target', 'bendpoint')
     view.connections.push(connection)
   }
 
@@ -920,19 +1019,25 @@ function readNode(
         return undefined
       }
       node = { ...base, kind: 'element', element }
+      context.reader.ledger.use(raw, '@archimateElement')
       break
     }
     case 'Group': {
       node = { ...base, kind: 'group', name: asString(raw['@name']) ?? '' }
       const documentation = textOf(raw.documentation)
       if (documentation) node.documentation = documentation
+      context.reader.ledger.use(raw, '@name')
+      context.reader.ledger.text(raw, 'documentation')
       break
     }
     case 'Note':
       node = { ...base, kind: 'note', text: textOf(raw.content) ?? '' }
+      context.reader.ledger.text(raw, 'content')
       break
     case 'DiagramModelReference': {
       const ref = asString(raw['@model'])
+      // Kept as a reference, or reported and kept as a note.
+      context.reader.ledger.use(raw, '@model')
       if (ref !== undefined && context.viewIds.has(ref)) {
         node = { ...base, kind: 'view-ref', view: ref }
       } else {
@@ -1019,10 +1124,12 @@ function readConnection(
       return undefined
     }
     connection = { ...base, kind: 'relationship', relationship }
+    context.reader.ledger.use(raw, '@archimateRelationship')
   } else if (local === 'DiagramModelConnection') {
     connection = { ...base, kind: 'line' }
     const name = asString(raw['@name'])
     if (name) connection.name = name
+    context.reader.ledger.use(raw, '@name')
   } else {
     skip(
       'archimate.connection-type-unsupported',
@@ -1087,6 +1194,7 @@ function readAppearance(
   const lineWidth = measured(raw, 'lineWidth', reader)
   if (lineWidth !== undefined && lineWidth !== 1 && lineWidth > 0) appearance.lineWidth = lineWidth
   const font = readFont(asString(raw['@font']))
+  reader.ledger.use(raw, '@font')
   if (font.name) appearance.fontName = font.name
   if (font.size) appearance.fontSize = font.size
   if (font.style.length) appearance.fontStyle = font.style
@@ -1117,6 +1225,7 @@ function colour(
   reader: Reader,
 ): string | undefined {
   const value = raw[`@${key}`]
+  reader.ledger.use(raw, `@${key}`)
   if (value === undefined) {
     if (alphaKey !== undefined && a !== undefined && a < 255) {
       bump(reader.tally.unsupported, `${alphaKey} without ${key}`)
@@ -1142,6 +1251,7 @@ function coded<T>(
 ): T | undefined {
   const value = raw[`@${key}`]
   if (value === undefined) return undefined
+  reader.ledger.use(raw, `@${key}`)
   const mapped = codes.get(asString(value) ?? '')
   if (mapped === undefined) bump(reader.tally.malformed, key)
   return mapped
@@ -1195,12 +1305,11 @@ function featureNumber(raw: RawNode, name: string, reader: Reader): number | und
   return n
 }
 
-function countUnsupported(raw: RawNode, known: ReadonlySet<string>, reader: Reader): void {
-  for (const key of Object.keys(raw)) {
-    if (!key.startsWith('@')) continue
-    const name = key.slice(1)
-    if (known.has(name) || name.startsWith('xmlns')) continue
+function countUnsupported(raw: RawNode, undrawn: ReadonlySet<string>, reader: Reader): void {
+  for (const name of undrawn) {
+    if (raw[`@${name}`] === undefined) continue
     bump(reader.tally.unsupported, name)
+    reader.ledger.use(raw, `@${name}`)
   }
   for (const feature of list(raw.feature)) {
     const name = asString(feature['@name']) ?? ''
@@ -1208,14 +1317,8 @@ function countUnsupported(raw: RawNode, known: ReadonlySet<string>, reader: Read
   }
 }
 
-/** What each kind of view object reads among its child elements. */
-const NODE_CHILDREN: Record<ViewNode['kind'], ReadonlySet<string>> = {
-  element: new Set(['bounds', 'child', 'sourceConnection']),
-  group: new Set(['bounds', 'child', 'sourceConnection', 'documentation']),
-  note: new Set(['bounds', 'child', 'sourceConnection', 'content']),
-  'view-ref': new Set(['bounds', 'child', 'sourceConnection']),
-}
-const CONNECTION_CHILDREN: ReadonlySet<string> = new Set(['bendpoint'])
+/** The child elements a shape's nested shapes and connections hang from: walked, not consumed whole. */
+const NESTED = ['child', 'sourceConnection']
 
 const VIEW_OBJECT_LABELS: Record<ViewNode['kind'] | ViewConnection['kind'], string> = {
   element: 'an element’s shape',
@@ -1227,90 +1330,73 @@ const VIEW_OBJECT_LABELS: Record<ViewNode['kind'] | ViewConnection['kind'], stri
 }
 
 /**
- * The child elements of a shape or connection that it has no place for here:
- * properties on a note or a line, a line's documentation, a label expression
- * (#100). Attributes are `countUnsupported`'s.
+ * What Archi lets a shape or connection carry that it has no place for here:
+ * properties, documentation anywhere but on a group, a label expression or
+ * another feature (#100). Anything Archi would not write is left for the
+ * ledger to report (#101).
  */
 function checkViewContent(raw: RawNode, object: ViewNode | ViewConnection, reader: Reader): void {
-  const known =
-    object.kind === 'relationship' || object.kind === 'line'
-      ? CONNECTION_CHILDREN
-      : NODE_CHILDREN[object.kind]
-  for (const what of unreadChildren(raw, known, isAppearanceFeature)) {
-    bump(reader.tally.viewContent, `${what} on ${VIEW_OBJECT_LABELS[object.kind]}`)
+  const on = VIEW_OBJECT_LABELS[object.kind]
+  if (raw.property !== undefined) bump(reader.tally.viewContent, `properties on ${on}`)
+  if (raw.documentation !== undefined && object.kind !== 'group') {
+    bump(reader.tally.viewContent, `documentation on ${on}`)
   }
-}
-
-/** Attributes an element or relationship carries that are read; anything else is reported. */
-const CONCEPT_ATTRIBUTES = ['xsi:type', 'id', 'name', 'profiles']
-const ELEMENT_ATTRIBUTES: ReadonlySet<string> = new Set(CONCEPT_ATTRIBUTES)
-const JUNCTION_ATTRIBUTES: ReadonlySet<string> = new Set([...CONCEPT_ATTRIBUTES, 'type'])
-const RELATIONSHIP_ATTRIBUTES = [...CONCEPT_ATTRIBUTES, 'source', 'target']
-const TYPED_RELATIONSHIP_ATTRIBUTES = new Map<string, ReadonlySet<string>>([
-  ['Access', new Set([...RELATIONSHIP_ATTRIBUTES, 'accessType'])],
-  ['Association', new Set([...RELATIONSHIP_ATTRIBUTES, 'directed'])],
-  ['Influence', new Set([...RELATIONSHIP_ATTRIBUTES, 'strength'])],
-])
-const PLAIN_RELATIONSHIP_ATTRIBUTES: ReadonlySet<string> = new Set(RELATIONSHIP_ATTRIBUTES)
-
-function relationshipAttributes(type: string): ReadonlySet<string> {
-  return TYPED_RELATIONSHIP_ATTRIBUTES.get(type) ?? PLAIN_RELATIONSHIP_ATTRIBUTES
-}
-const CONCEPT_CHILDREN: ReadonlySet<string> = new Set(['documentation', 'property'])
-
-/** What an element or relationship carries that is not read: an unknown attribute or child (#100). */
-function checkConceptContent(
-  raw: RawNode,
-  id: string,
-  kind: 'element' | 'relationship',
-  attributes: ReadonlySet<string>,
-  reader: Reader,
-): void {
-  const unread = unreadChildren(raw, CONCEPT_CHILDREN, () => false)
-  for (const key of Object.keys(raw)) {
-    if (!key.startsWith('@')) continue
-    const name = key.slice(1)
-    if (!attributes.has(name) && !name.startsWith('xmlns')) unread.push(`the attribute “${name}”`)
+  for (const feature of list(raw.feature)) {
+    const name = asString(feature['@name']) ?? ''
+    if (!isAppearanceFeature(name))
+      bump(reader.tally.viewContent, `${describeFeature(name)} on ${on}`)
   }
-  if (!unread.length) return
-  let byWhat = reader.tally.conceptContent.get(kind)
-  if (!byWhat) reader.tally.conceptContent.set(kind, (byWhat = new Map()))
-  for (const what of unread) {
-    const ids = byWhat.get(what)
-    if (ids) ids.push(id)
-    else byWhat.set(what, [id])
-  }
+  reader.ledger.whole(raw, 'property', 'feature')
+  if (object.kind !== 'group') reader.ledger.whole(raw, 'documentation')
 }
 
 /**
- * Describe each child element of `raw` not in `known`, one entry per child. A
- * `<feature>` is named by its own name, the way Archi stores label expressions
- * and other settings it added after its first file format; `accounted` says
- * which features are read or reported elsewhere.
+ * Archi's features on an element or relationship: settings it added after its
+ * first file format, stored as name and value. None is read on a concept, so
+ * each is reported by its name (#100).
  */
-function unreadChildren(
-  raw: RawNode,
-  known: ReadonlySet<string>,
-  accounted: (feature: string) => boolean,
-): string[] {
-  const out: string[] = []
-  for (const [key, value] of Object.entries(raw)) {
-    if (key.startsWith('@') || known.has(key)) continue
-    if (key === '#text') {
-      // Indentation between child elements, now that values are not trimmed.
-      if (typeof value === 'string' && value.trim() === '') continue
-      out.push('text')
-    } else if (key === 'feature') {
-      for (const feature of list(value)) {
-        const name = asString(feature['@name']) ?? ''
-        if (accounted(name)) continue
-        out.push(name === 'labelExpression' ? 'a label expression' : `the feature “${name}”`)
-      }
-    } else if (key === 'property') out.push('properties')
-    else if (key === 'documentation') out.push('documentation')
-    else out.push(`<${key}>`)
+function readConceptFeatures(raw: RawNode, reader: Reader): void {
+  for (const feature of list(raw.feature)) {
+    reader.ledger.lose(raw, describeFeature(asString(feature['@name']) ?? ''))
   }
-  return out
+  reader.ledger.whole(raw, 'feature')
+}
+
+function describeFeature(name: string): string {
+  return name === 'labelExpression' ? 'a label expression' : `the feature “${name}”`
+}
+
+/** What to call the object carrying unread content, from where it sits in the file (#101). */
+function describe(path: readonly string[], node: RawNode): Noun {
+  const at = path[path.length - 1]
+  switch (at) {
+    case 'model':
+      return { one: 'the model', many: 'the model' }
+    case 'folder':
+      return path.length === 2
+        ? { one: 'top-level folder', many: 'top-level folders' }
+        : { one: 'folder', many: 'folders' }
+    case 'element': {
+      const kind = classify(typeOf(node))
+      if (kind === 'relationship') return { one: 'relationship', many: 'relationships' }
+      if (kind === 'diagram') return { one: 'view', many: 'views' }
+      return { one: 'element', many: 'elements' }
+    }
+    case 'child':
+      return { one: 'shape', many: 'shapes' }
+    case 'sourceConnection':
+      return { one: 'connection', many: 'connections' }
+    case 'bounds':
+      return { one: 'shape’s bounds', many: 'shapes’ bounds' }
+    case 'bendpoint':
+      return { one: 'bendpoint', many: 'bendpoints' }
+    case 'property':
+      return { one: 'property', many: 'properties' }
+    case 'profile':
+      return { one: 'specialization', many: 'specializations' }
+    default:
+      return { one: `<${at ?? ''}>`, many: `<${at ?? ''}> elements` }
+  }
 }
 
 // ── Reporting ────────────────────────────────────────────────────────────────
@@ -1370,19 +1456,6 @@ function reportTally(reader: Reader): void {
       ),
     )
   }
-  for (const [kind, byWhat] of tally.conceptContent) {
-    for (const [what, ids] of byWhat) {
-      const n = ids.length
-      problems.push(
-        problem(
-          'warning',
-          'archimate.content-unread',
-          `${n} ${kind}${n === 1 ? '' : 's'} (${listed(ids)}) carr${n === 1 ? 'ies' : 'y'} ${what}, which Archipelago does not read. It was not imported.`,
-          n === 1 && ids[0] !== undefined ? { ...where, subject: ids[0] } : where,
-        ),
-      )
-    }
-  }
   if (tally.routers) {
     problems.push(
       problem(
@@ -1418,6 +1491,7 @@ function isDuplicate(
   const id = asString(member.raw['@id'])
   if (id === undefined || !kept.has(id)) return false
   duplicate(reader, what, id)
+  reader.ledger.skip(member.raw)
   return true
 }
 
@@ -1450,6 +1524,8 @@ function textOf(value: unknown): string | undefined {
 function measured(raw: RawNode, key: string, reader: Reader): number | undefined {
   const value = raw[`@${key}`]
   if (value === undefined) return undefined
+  // Read, or tallied as malformed: either way it is accounted for.
+  reader.ledger.use(raw, `@${key}`)
   const n = num(value)
   if (n === undefined) bump(reader.tally.malformed, key)
   return n
