@@ -1,5 +1,33 @@
 # Session Log
 
+## 2026-10-05 — #100 implemented (reader silent drops and the alignment default)
+
+On `fix/100-archimate-silent-drops`. All 12 findings from the #98 review are handled. Items 1–8 are reported, because the model has no place for the data:
+- a repeated property key (the first value is kept, in **both** readers);
+- a specialization shadowed by the object's own `Specialization` property, or one the file does not define;
+- a top-level folder's documentation and properties;
+- what a shape or a line carries that it cannot hold here (properties, a line's documentation, label expressions and other `<feature>`s);
+- an alpha with no colour;
+- a view with no id;
+- a malformed value, which no longer counts as a default size;
+- an unknown attribute or child on an element or relationship.
+
+Item 9: an absent `textAlignment` on a note, group or Grouping reads as `center`. Item 10: a connection whose shapes don't draw its relationship's ends is skipped with `*.connection-mismatch` in both readers. Item 11: both parsers use `trimValues: false`, so text is read exactly. That made #90's trimming of the modifier on write unnecessary, so it was removed. Item 12: both readers name the documented relationships they *imported*. The native reader had counted a duplicate; the exchange reader had counted a dangling one.
+
+New `reader-losses.test.ts`, one test per finding. Mutation-checked one guard at a time: 27 mutations, all caught. 815 unit tests, 19 journeys and `validate:xsd` are green.
+
+**Fixtures re-saved with Archi 5.10.0** (installed in `/Applications`; run with `ARCHI=…`). `export-with-archi.sh` now passes `--saveModel`. The re-save showed the hand-written fixtures had hidden three real reader bugs, which are now fixed:
+- **A plain line's `<sourceConnection>` has no `xsi:type`.** EMF omits the declared type, so every line in a real Archi file was skipped as untyped.
+- **A bendpoint at 0,0 is `<bendpoint/>`.** It parses as `''`, which `list()` dropped.
+- **`lineAlpha` and `gradient` on shapes are `<feature>`s, not attributes.** This was confirmed with `javap` on Archi's jar and by a probe re-save. Archi had silently discarded the fixture's invented attributes, and its export then wrote the line at 100%. It now writes 78%, the feature's 200.
+
+`o-note`'s `textAlignment="2"` is gone, and Archi also omits `textPosition="0"` and `-1` sizes. A further 6 mutations were added, 33 in all, every one caught.
+
+Open:
+- This is more evidence for the CLAUDE.md "fixture must be written by the tool" rule: three bugs sat behind one hand-written fixture. The review may want to sharpen that line.
+- An absent `textPosition` means Archi's top. For a figure-drawn element, Archipelago's default is middle. It is not handled, and is unverified against Archi's rendering.
+- Found and left for #101: the exchange reader drops a `<property>` with no `<value>` without a report, and the native reader drops an empty Influence `strength`.
+
 ## 2026-10-04 (cont.) — #104 (#103) reviewed before merge
 
 `/review-pr 104`. All four #103 criteria are met. One blocking finding: the new fail-closed `*.root-unreadable` check sits ahead of `*.not-a-model`, so an empty, plain-text or element-less `.xml`/`.archimate` is now told that it "parses as XML… please report this file". Reproduced against `main`. The fix is to raise it only when the parser found a model and the scan did not. A nice-to-have: legacy-namespace files are routed natively, but their Archi 1/2 types (`UsedByRelationship`, `Infrastructure*`) come back as `unknown-type`. The review was posted as a comment, because GitHub refuses request-changes on your own PR. **Harvested:** sharpened the CLAUDE.md fail-closed line (a666a0a+): a closed branch inherits every input of the check it precedes. Finding 1 fixed on the branch (d727696): `root-unreadable` is raised only when the parser found a model and the scan did not, and a test reads `''`, plain text and a comment-only prolog through both readers. The test fails without the fix. Open: merging #104 into main, which is left to the user; mapping the legacy Archi 1/2 vocabulary (finding 2), not yet filed.

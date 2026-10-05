@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="Claims platform" id="m-claims" version="5.0.0">
-  <purpose>An original test model for Archipelago (MIT). Not ArchiSurance.</purpose>
-  <folder name="Strategy" id="f-top-strategy" type="strategy">
-  </folder>
+  <folder name="Strategy" id="f-top-strategy" type="strategy"/>
   <folder name="Business" id="f-top-business" type="business">
     <folder name="Customer-facing" id="f-customer">
       <element xsi:type="archimate:BusinessActor" name="Customer" id="ba-customer">
@@ -90,7 +88,7 @@
     <element xsi:type="archimate:TriggeringRelationship" id="r-register-accept" source="bp-register" target="bp-accept"/>
     <element xsi:type="archimate:TriggeringRelationship" id="r-accept-split" source="bp-accept" target="j-split"/>
     <element xsi:type="archimate:TriggeringRelationship" id="r-split-valuate" source="j-split" target="bp-valuate"/>
-    <element xsi:type="archimate:TriggeringRelationship" id="r-split-pay" name="fast track" source="j-split" target="bp-pay"/>
+    <element xsi:type="archimate:TriggeringRelationship" name="fast track" id="r-split-pay" source="j-split" target="bp-pay"/>
     <element xsi:type="archimate:TriggeringRelationship" id="r-valuate-pay" source="bp-valuate" target="bp-pay"/>
     <element xsi:type="archimate:TriggeringRelationship" id="r-damage-register" source="be-damage" target="bp-register"/>
     <element xsi:type="archimate:AccessRelationship" id="r-handle-claim" source="bp-handle" target="bo-claim" accessType="3"/>
@@ -100,7 +98,7 @@
     <element xsi:type="archimate:RealizationRelationship" id="r-calc-pay" source="af-calc" target="as-payment"/>
     <element xsi:type="archimate:RealizationRelationship" id="r-cust-as" source="ac-customer" target="as-customer"/>
     <element xsi:type="archimate:CompositionRelationship" id="r-portal-ai" source="ac-portal" target="ai-portal"/>
-    <element xsi:type="archimate:FlowRelationship" id="r-portal-engine" name="claim intake" source="ac-portal" target="ac-engine"/>
+    <element xsi:type="archimate:FlowRelationship" name="claim intake" id="r-portal-engine" source="ac-portal" target="ac-engine"/>
     <element xsi:type="archimate:AccessRelationship" id="r-engine-claim" source="ac-engine" target="do-claim" accessType="3"/>
     <element xsi:type="archimate:AccessRelationship" id="r-cust-file" source="ac-customer" target="do-customer" accessType="1"/>
     <element xsi:type="archimate:FlowRelationship" id="r-crm-cust" source="ac-crm" target="ac-customer"/>
@@ -121,7 +119,6 @@
   <folder name="Views" id="f-top-diagrams" type="diagrams">
     <folder name="Landscapes" id="f-landscapes">
       <element xsi:type="archimate:ArchimateDiagramModel" name="Claims landscape" id="v-landscape" viewpoint="layered">
-        <documentation>Business, application and platform layers of the claims platform.</documentation>
         <child xsi:type="archimate:Group" id="o-g-business" name="Business" fillColor="#fff5d6">
           <bounds x="20" y="20" width="1180" height="300"/>
           <child xsi:type="archimate:DiagramObject" id="o-customer" archimateElement="ba-customer">
@@ -138,14 +135,14 @@
           <child xsi:type="archimate:DiagramObject" id="o-info-svc" archimateElement="bs-information">
             <bounds x="640" y="40" width="150" height="55"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-info-ins" source="o-info-svc" target="o-insurant" archimateRelationship="r-ins-info">
-              <bendpoint startX="0" startY="-47" endX="420" endY="-47"/>
-              <bendpoint startX="-420" startY="-47" endX="0" endY="-47"/>
+              <bendpoint startY="-47" endX="420" endY="-47"/>
+              <bendpoint startX="-420" startY="-47" endY="-47"/>
             </sourceConnection>
           </child>
           <child xsi:type="archimate:DiagramObject" id="o-pay-svc" targetConnections="c-handle-pay" archimateElement="bs-payment">
             <bounds x="840" y="40" width="150" height="55"/>
-            <sourceConnection xsi:type="archimate:Connection" id="c-pay-ins" source="o-pay-svc" target="o-insurant" archimateRelationship="r-ins-pay" lineColor="#7a7a7a">
-              <bendpoint startX="0" startY="-57" endX="620" endY="-57"/>
+            <sourceConnection xsi:type="archimate:Connection" id="c-pay-ins" lineColor="#7a7a7a" source="o-pay-svc" target="o-insurant" archimateRelationship="r-ins-pay">
+              <bendpoint startY="-57" endX="620" endY="-57"/>
               <bendpoint startX="-635" startY="-57" endX="-15" endY="-57"/>
             </sourceConnection>
           </child>
@@ -153,7 +150,7 @@
             <bounds x="20" y="160" width="120" height="55"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-damage-register" source="o-damage" target="o-register" archimateRelationship="r-damage-register"/>
           </child>
-          <child xsi:type="archimate:DiagramObject" id="o-handle" targetConnections="c-as-handle c-asc-handle" archimateElement="bp-handle" textAlignment="1" textPosition="0">
+          <child xsi:type="archimate:DiagramObject" id="o-handle" targetConnections="c-as-handle c-asc-handle" textAlignment="1" archimateElement="bp-handle">
             <bounds x="180" y="130" width="760" height="140"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-handle-reg" source="o-handle" target="o-reg-svc" archimateRelationship="r-handle-reg"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-handle-pay" source="o-handle" target="o-pay-svc" archimateRelationship="r-handle-pay"/>
@@ -170,8 +167,8 @@
               <bounds x="340" y="70" width="15" height="15"/>
               <sourceConnection xsi:type="archimate:Connection" id="c-split-valuate" source="o-split" target="o-valuate" archimateRelationship="r-split-valuate"/>
               <sourceConnection xsi:type="archimate:Connection" id="c-split-pay" source="o-split" target="o-pay" archimateRelationship="r-split-pay">
-                <bendpoint startX="0" startY="43" endX="-313" endY="43"/>
-                <bendpoint startX="313" startY="43" endX="0" endY="43"/>
+                <bendpoint startY="43" endX="-313" endY="43"/>
+                <bendpoint startX="313" startY="43" endY="43"/>
               </sourceConnection>
             </child>
             <child xsi:type="archimate:DiagramObject" id="o-valuate" targetConnections="c-split-valuate" archimateElement="bp-valuate">
@@ -187,8 +184,9 @@
           </child>
           <child xsi:type="archimate:Note" id="o-note-biz">
             <bounds x="980" y="40" width="170" height="70"/>
-            <content>Fast track skips valuation&#xD;&#xA;for claims under 500.</content>
-            <sourceConnection xsi:type="archimate:DiagramModelConnection" id="c-note-split" source="o-note-biz" target="o-split" lineColor="#999999"/>
+            <sourceConnection id="c-note-split" lineColor="#999999" source="o-note-biz" target="o-split"/>
+            <content>Fast track skips valuation&#xD;
+for claims under 500.</content>
           </child>
         </child>
         <child xsi:type="archimate:Group" id="o-g-apps" name="Applications">
@@ -213,11 +211,11 @@
           <child xsi:type="archimate:DiagramObject" id="o-ai-portal" targetConnections="c-portal-ai" archimateElement="ai-portal">
             <bounds x="20" y="240" width="150" height="50"/>
           </child>
-          <child xsi:type="archimate:DiagramObject" id="o-engine" targetConnections="c-portal-engine c-hosting-engine c-wp-engine" archimateElement="ac-engine" fillColor="#c9e7f7" lineColor="#1d5c8c" lineWidth="2" fontColor="#0b2e4a" font="1|Arial|11.0|1|COCOA|1|Arial-BoldMT">
+          <child xsi:type="archimate:DiagramObject" id="o-engine" targetConnections="c-portal-engine c-hosting-engine c-wp-engine" font="1|Arial|11.0|1|COCOA|1|Arial-BoldMT" fontColor="#0b2e4a" lineWidth="2" lineColor="#1d5c8c" fillColor="#c9e7f7" archimateElement="ac-engine">
             <bounds x="200" y="120" width="400" height="160"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-engine-as" source="o-engine" target="o-as-claims" archimateRelationship="r-engine-as"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-engine-claim" source="o-engine" target="o-do-claim" archimateRelationship="r-engine-claim">
-              <bendpoint startX="220" startY="75" endX="-95" endY="0"/>
+              <bendpoint startX="220" startY="75" endX="-95"/>
             </sourceConnection>
             <sourceConnection xsi:type="archimate:Connection" id="c-engine-req" source="o-engine" target="o-req" archimateRelationship="r-engine-req"/>
             <child xsi:type="archimate:DiagramObject" id="o-rules" archimateElement="af-rules">
@@ -226,8 +224,8 @@
             <child xsi:type="archimate:DiagramObject" id="o-calc" archimateElement="af-calc">
               <bounds x="220" y="80" width="160" height="55"/>
               <sourceConnection xsi:type="archimate:Connection" id="c-calc-pay" source="o-calc" target="o-as-payment" archimateRelationship="r-calc-pay">
-                <bendpoint startX="0" startY="-117" endX="-355" endY="53"/>
-                <bendpoint startX="355" startY="-117" endX="0" endY="53"/>
+                <bendpoint startY="-117" endX="-355" endY="53"/>
+                <bendpoint startX="355" startY="-117" endY="53"/>
               </sourceConnection>
             </child>
           </child>
@@ -236,7 +234,7 @@
             <sourceConnection xsi:type="archimate:Connection" id="c-cust-as" source="o-customer-hub" target="o-as-customer" archimateRelationship="r-cust-as"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-cust-file" source="o-customer-hub" target="o-do-customer" archimateRelationship="r-cust-file"/>
           </child>
-          <child xsi:type="archimate:DiagramObject" id="o-crm" targetConnections="c-host-crm" archimateElement="ac-crm" fillColor="#e0e0e0" alpha="160">
+          <child xsi:type="archimate:DiagramObject" id="o-crm" targetConnections="c-host-crm" fillColor="#e0e0e0" alpha="160" archimateElement="ac-crm">
             <bounds x="840" y="140" width="150" height="55"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-crm-cust" source="o-crm" target="o-customer-hub" archimateRelationship="r-crm-cust"/>
           </child>
@@ -256,12 +254,12 @@
           <child xsi:type="archimate:DiagramObject" id="o-hosting" targetConnections="c-k8s-hosting" archimateElement="ts-hosting">
             <bounds x="180" y="30" width="150" height="55"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-hosting-engine" source="o-hosting" target="o-engine" archimateRelationship="r-hosting-engine">
-              <bendpoint startX="0" startY="-77" endX="-145" endY="140"/>
-              <bendpoint startX="145" startY="-77" endX="0" endY="140"/>
+              <bendpoint startY="-77" endX="-145" endY="140"/>
+              <bendpoint startX="145" startY="-77" endY="140"/>
             </sourceConnection>
             <sourceConnection xsi:type="archimate:Connection" id="c-hosting-portal" source="o-hosting" target="o-portal" archimateRelationship="r-hosting-portal">
-              <bendpoint startX="-95" startY="0" endX="65" endY="250"/>
-              <bendpoint startX="-160" startY="0" endX="0" endY="250"/>
+              <bendpoint startX="-95" endX="65" endY="250"/>
+              <bendpoint startX="-160" endY="250"/>
             </sourceConnection>
           </child>
           <child xsi:type="archimate:DiagramObject" id="o-database" targetConnections="c-pg-db" archimateElement="ts-database">
@@ -291,8 +289,8 @@
             <bounds x="20" y="240" width="120" height="45"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-net-k8s" source="o-backbone" target="o-k8s" archimateRelationship="r-net-k8s"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-net-mf" source="o-backbone" target="o-mainframe" archimateRelationship="r-net-mf">
-              <bendpoint startX="0" startY="28" endX="-910" endY="105"/>
-              <bendpoint startX="910" startY="28" endX="0" endY="105"/>
+              <bendpoint startY="28" endX="-910" endY="105"/>
+              <bendpoint startX="910" startY="28" endY="105"/>
             </sourceConnection>
           </child>
           <child xsi:type="archimate:DiagramObject" id="o-scanner" archimateElement="eq-scanner">
@@ -320,20 +318,20 @@
         </child>
         <child xsi:type="archimate:Note" id="o-note-ref">
           <bounds x="1240" y="380" width="170" height="70"/>
+          <sourceConnection id="c-note-ref" source="o-note-ref" target="o-ref-data"/>
           <content>Data ownership: see the Claim data view.</content>
-          <sourceConnection xsi:type="archimate:DiagramModelConnection" id="c-note-ref" source="o-note-ref" target="o-ref-data"/>
         </child>
+        <documentation>Business, application and platform layers of the claims platform.</documentation>
       </element>
-      <element xsi:type="archimate:ArchimateDiagramModel" name="Target state (to do)" id="v-empty">
-      </element>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="Target state (to do)" id="v-empty"/>
     </folder>
     <element xsi:type="archimate:ArchimateDiagramModel" name="Claim data" id="v-data">
       <child xsi:type="archimate:DiagramObject" id="d-engine" archimateElement="ac-engine">
         <bounds x="40" y="40" width="150" height="55"/>
         <sourceConnection xsi:type="archimate:Connection" id="dc-engine-claim" source="d-engine" target="d-claim" archimateRelationship="r-engine-claim"/>
         <sourceConnection xsi:type="archimate:Connection" id="dc-engine-claim-2" source="d-engine" target="d-claim-2" archimateRelationship="r-engine-claim">
-          <bendpoint startX="0" startY="-47" endX="-520" endY="-47"/>
-          <bendpoint startX="520" startY="-47" endX="0" endY="-47"/>
+          <bendpoint startY="-47" endX="-520" endY="-47"/>
+          <bendpoint startX="520" startY="-47" endY="-47"/>
         </sourceConnection>
       </child>
       <child xsi:type="archimate:DiagramObject" id="d-claim" targetConnections="dc-engine-claim" archimateElement="do-claim">
@@ -355,4 +353,5 @@
       </child>
     </element>
   </folder>
+  <purpose>An original test model for Archipelago (MIT). Not ArchiSurance.</purpose>
 </archimate:model>

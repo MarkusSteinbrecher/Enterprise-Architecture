@@ -278,12 +278,44 @@ Archi codes are mapped: access `0`–`3` (absent is `0`, Write), text alignment
 `1`/`2`/`4`, text position `0`/`1`/`2`, viewpoint ids to the exchange names
 (taken from Archi's export of all 24), and an SWT font string to name, size and
 bold/italic. A specialization becomes the `Specialization` property, as Archi's
-export does.
+export does. **Absent means Archi's default**, because EMF writes no attribute
+at it: an absent text alignment is centre (`TEXT_ALIGNMENT_EDEFAULT = 2`), so a
+note, a group or a Grouping, which Archipelago draws left-aligned by default, is
+given `center` explicitly (#100). A fixture attribute at Archi's default is a
+sign of a hand edit, which is why `export-with-archi.sh` re-saves each model.
+
+Re-saving the fixtures with Archi 5.10 (#100) showed three more things only
+Archi's own serializer does, each of which the reader had got wrong:
+
+- **A plain line has no `xsi:type`.** EMF omits it when it is the reference's
+  declared type, `DiagramModelConnection`; read as untyped, every line in a real
+  file was skipped.
+- **A bendpoint at 0, 0 is `<bendpoint/>`.** Zero offsets are defaults too, and an
+  element with nothing in it parses as `''`, which `list` dropped. `entries`
+  keeps it.
+- **Newer display settings are `<feature name value>` children, not attributes**
+  (`IDiagramModelObject.FEATURE_*`): `lineAlpha` is read from its feature, and
+  `gradient`, `iconColor`, `lineStyle` and the like are reported as display
+  settings. A `lineAlpha` _attribute_ is not Archi's and is reported, not read.
+
+Both readers keep names, keys, values and documentation **exactly as written**
+(`trimValues: false`). Trimming changed them in silence and could merge two
+property keys into one (#100).
 
 Each of these is reported, never silently dropped: sketches and canvases,
 images, a relationship that ends on a relationship, a connection that ends on a
-connection, display settings without a counterpart (gradient, …), connection
-routers, folder properties, relationship documentation, and the model's
-purpose. An Archi model saved with images is a zip archive, which is refused
+connection, display settings without a counterpart (gradient, an alpha with no
+colour to apply it to, …), connection routers, folder properties, a top-level
+folder's documentation, relationship documentation (naming the imported
+relationships that had it), and the model's purpose. So are, since #100: a
+property key repeated on one object (the first value is kept, in both readers),
+a specialization the file does not define or that the object's own
+`Specialization` property shadows, a view without an id, a value Archi would not
+write (`x="1e"`, a colour that is not `#rrggbb`), anything a shape or a line
+carries that it has no place for here (properties, a line's documentation, a
+label expression), an attribute or child element an element or relationship
+carries that is not read, and, in both readers, a connection whose shapes do not
+draw its relationship's two ends (`*.connection-mismatch`, skipped rather than
+left for `validate` to find). An Archi model saved with images is a zip archive, which is refused
 with an explanation (`archimate.archive-unsupported`). Any other zip, such as a
 `.docx`, is named as an archive, not as an Archi model (`file.archive-unrecognised`).

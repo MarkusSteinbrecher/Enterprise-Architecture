@@ -63,17 +63,43 @@ export function summariseProblems(problems: readonly ImportProblem[]): string {
 }
 
 /**
- * Relationships have no documentation field yet, so both readers say how many
- * descriptions they could not keep rather than losing them quietly (#13).
+ * Relationships have no documentation field yet, so both readers say which
+ * descriptions they could not keep rather than losing them quietly (#13). Only
+ * relationships that were imported are named: a skipped one was reported as
+ * skipped already (#100).
  */
 export function relationshipDocumentationSkipped(
-  count: number,
+  ids: readonly string[],
+  where: { file?: string },
+): ImportProblem {
+  const count = ids.length
+  return problem(
+    'warning',
+    'import.relationship-documentation-skipped',
+    `${count} relationship${count === 1 ? ' has' : 's have'} documentation (${quotedList(ids)}), which Archipelago cannot hold on a relationship yet. It was not imported.`,
+    count === 1 && ids[0] !== undefined ? { ...where, subject: ids[0] } : where,
+  )
+}
+
+/**
+ * A property key that appears twice on one object. Both formats allow it and
+ * the model holds a key once, so the first value is kept and this says so (#100).
+ */
+export function propertyRepeated(
+  subject: string | undefined,
+  keys: readonly string[],
   where: { file?: string },
 ): ImportProblem {
   return problem(
     'warning',
-    'import.relationship-documentation-skipped',
-    `${count} relationship${count === 1 ? ' has' : 's have'} documentation, which Archipelago cannot hold on a relationship yet. It was not imported.`,
-    where,
+    'import.property-repeated',
+    `${subject === undefined ? 'An object' : `"${subject}"`} has the propert${keys.length === 1 ? 'y' : 'ies'} ${quotedList(keys)} more than once. Only the first value of each was imported.`,
+    subject === undefined ? where : { ...where, subject },
   )
+}
+
+/** The first few values, quoted, for a message that must stay one line. */
+function quotedList(values: readonly string[]): string {
+  const shown = values.slice(0, 3).map((value) => JSON.stringify(value))
+  return shown.join(', ') + (values.length > 3 ? ', …' : '')
 }

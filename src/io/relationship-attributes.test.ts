@@ -143,19 +143,19 @@ describe('an attribute on the wrong type, or with a value the schema forbids (#8
     }
   })
 
+  // #90 trimmed these on write, because the reader trimmed them on read. The
+  // reader keeps them as written since #100, so they round-trip as they are.
   it.each([
-    ['surrounding spaces', ' ++ ', '++'],
-    ['only spaces', '   ', undefined],
-  ])('writes a modifier with %s as it will read back, and says so (#90)', (_, modifier, back) => {
+    ['surrounding spaces', ' ++ '],
+    ['only spaces', '   '],
+  ])('writes a modifier with %s and reads it back unchanged (#90, #100)', (_, modifier) => {
     const workspace = fromArchi()
     byId(workspace, 'r-satisfaction-faster').modifier = modifier
     const { xml, problems } = exportExchange(workspace)
-    expect(problems.map((p) => [p.code, p.subject])).toEqual([
-      ['exchange.relationship-modifier-trimmed', 'r-satisfaction-faster'],
-    ])
+    expect(problems).toEqual([])
     const reread = importExchangeXml(xml)
     expect(reread.problems).toEqual([])
-    expect(byId(reread.workspace!, 'r-satisfaction-faster').modifier).toBe(back)
+    expect(byId(reread.workspace!, 'r-satisfaction-faster').modifier).toBe(modifier)
   })
 
   it('does not write a misplaced attribute, and says so', () => {

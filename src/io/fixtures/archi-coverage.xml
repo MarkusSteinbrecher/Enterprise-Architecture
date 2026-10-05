@@ -278,7 +278,7 @@ Second line.</documentation>
         <node identifier="o-adjuster" elementRef="ba-adjuster" xsi:type="Element" x="40" y="40" w="-1" h="-1">
           <style>
             <fillColor r="255" g="224" b="160" a="50" />
-            <lineColor r="51" g="102" b="153" a="100" />
+            <lineColor r="51" g="102" b="153" a="78" />
             <font name="Helvetica" size="14" style="italic">
               <color r="128" g="32" b="32" />
             </font>

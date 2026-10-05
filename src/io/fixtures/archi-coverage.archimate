@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" xmlns:canvas="http://www.archimatetool.com/archimate/canvas" name="Archi coverage" id="m-coverage" version="5.0.0">
-  <purpose>Edge cases for the .archimate reader (#13). Original test model for Archipelago (MIT).</purpose>
   <folder name="Strategy" id="f-top-strategy" type="strategy">
     <element xsi:type="archimate:Capability" name="Claims management" id="cap-claims"/>
   </folder>
@@ -9,7 +8,8 @@
       <documentation>Who does the work.</documentation>
       <property key="owner" value="Business architecture"/>
       <element xsi:type="archimate:BusinessActor" name="Adjuster" id="ba-adjuster">
-        <documentation>Assesses a claim.&#xD;&#xA;Second line.</documentation>
+        <documentation>Assesses a claim.&#xD;
+Second line.</documentation>
         <property key="owner" value="Claims"/>
         <property key="headcount" value="42"/>
         <property key="empty"/>
@@ -44,7 +44,7 @@
       <element xsi:type="archimate:AccessRelationship" id="r-access" source="ba-adjuster" target="bo-claim" accessType="2"/>
       <element xsi:type="archimate:AccessRelationship" id="r-readwrite" source="ac-engine" target="bo-claim" accessType="3"/>
     </folder>
-    <element xsi:type="archimate:InfluenceRelationship" id="r-influence" name="Drives" source="d-cost" target="g-fast" strength="++">
+    <element xsi:type="archimate:InfluenceRelationship" name="Drives" id="r-influence" source="d-cost" target="g-fast" strength="++">
       <documentation>Cost pressure drives speed.</documentation>
       <property key="confidence" value="high"/>
     </element>
@@ -84,17 +84,17 @@
       <element xsi:type="archimate:ArchimateDiagramModel" name="vp value_stream" id="vp-value_stream" viewpoint="value_stream"/>
     </folder>
     <element xsi:type="archimate:ArchimateDiagramModel" name="Edge cases" id="v-edges" connectionRouterType="2">
-      <documentation>Defaults, appearance and the things a reader must report.</documentation>
-      <property key="audience" value="Architects"/>
-      <child xsi:type="archimate:DiagramObject" id="o-adjuster" archimateElement="ba-adjuster" textAlignment="1" textPosition="2" fillColor="#ffe0a0" alpha="128" lineColor="#336699" lineAlpha="200" font="1|Helvetica|14.0|2|COCOA|1|Helvetica-Oblique" fontColor="#802020">
-        <bounds x="40" y="40" width="-1" height="-1"/>
-        <sourceConnection xsi:type="archimate:Connection" id="c-directed" source="o-adjuster" target="o-engine" archimateRelationship="r-directed" lineWidth="3" lineColor="#008000">
-          <bendpoint startX="100" startY="0" endX="-100" endY="80"/>
+      <child xsi:type="archimate:DiagramObject" id="o-adjuster" font="1|Helvetica|14.0|2|COCOA|1|Helvetica-Oblique" fontColor="#802020" lineColor="#336699" textAlignment="1" fillColor="#ffe0a0" alpha="128" textPosition="2" archimateElement="ba-adjuster">
+        <bounds x="40" y="40"/>
+        <feature name="lineAlpha" value="200"/>
+        <sourceConnection xsi:type="archimate:Connection" id="c-directed" lineWidth="3" lineColor="#008000" source="o-adjuster" target="o-engine" archimateRelationship="r-directed">
+          <bendpoint startX="100" endX="-100" endY="80"/>
         </sourceConnection>
         <sourceConnection xsi:type="archimate:Connection" id="c-assign" source="o-adjuster" target="o-assess" archimateRelationship="r-assign"/>
       </child>
-      <child xsi:type="archimate:DiagramObject" id="o-engine" targetConnections="c-directed" archimateElement="ac-engine" gradient="1">
+      <child xsi:type="archimate:DiagramObject" id="o-engine" targetConnections="c-directed" archimateElement="ac-engine">
         <bounds x="300" y="120" width="160" height="70"/>
+        <feature name="gradient" value="1"/>
       </child>
       <child xsi:type="archimate:DiagramObject" id="o-assess" targetConnections="c-assign" archimateElement="bp-assess">
         <bounds x="40" y="240" width="120" height="55"/>
@@ -107,34 +107,36 @@
         <bounds x="600" y="200" width="120" height="55"/>
       </child>
       <child xsi:type="archimate:Group" id="o-group" name="Grouped" textAlignment="4">
-        <documentation>A visual group with documentation.</documentation>
-        <bounds x="40" y="360" width="-1" height="-1"/>
-        <child xsi:type="archimate:Note" id="o-note" textAlignment="2">
-          <bounds x="10" y="30" width="-1" height="-1"/>
+        <bounds x="40" y="360"/>
+        <child xsi:type="archimate:Note" id="o-note">
+          <bounds x="10" y="30"/>
+          <sourceConnection id="c-note-line" name="see" source="o-note" target="o-fast"/>
+          <sourceConnection id="c-note-conn" source="o-note" target="c-influence"/>
           <content>A note inside a group.</content>
-          <sourceConnection xsi:type="archimate:DiagramModelConnection" id="c-note-line" name="see" source="o-note" target="o-fast"/>
-          <sourceConnection xsi:type="archimate:DiagramModelConnection" id="c-note-conn" source="o-note" target="c-influence"/>
         </child>
+        <documentation>A visual group with documentation.</documentation>
       </child>
       <child xsi:type="archimate:DiagramModelReference" id="o-ref" model="vp-layered">
-        <bounds x="800" y="40" width="-1" height="-1"/>
+        <bounds x="800" y="40"/>
       </child>
       <child xsi:type="archimate:DiagramModelImage" id="o-image">
         <bounds x="800" y="200" width="100" height="100"/>
       </child>
       <child xsi:type="archimate:DiagramObject" id="o-and" archimateElement="j-and">
-        <bounds x="500" y="320" width="-1" height="-1"/>
+        <bounds x="500" y="320"/>
         <sourceConnection xsi:type="archimate:Connection" id="c-and-or" source="o-and" target="o-or" archimateRelationship="r-and-or"/>
       </child>
       <child xsi:type="archimate:DiagramObject" id="o-or" targetConnections="c-and-or" archimateElement="j-or">
-        <bounds x="600" y="320" width="-1" height="-1"/>
+        <bounds x="600" y="320"/>
       </child>
+      <documentation>Defaults, appearance and the things a reader must report.</documentation>
+      <property key="audience" value="Architects"/>
     </element>
     <element xsi:type="archimate:ArchimateDiagramModel" name="Rounding" id="v-rounding">
       <child xsi:type="archimate:DiagramObject" id="q-from" archimateElement="bp-assess">
-        <bounds x="0" y="0" width="15" height="15"/>
+        <bounds width="15" height="15"/>
         <sourceConnection xsi:type="archimate:Connection" id="q-half" source="q-from" target="q-to" archimateRelationship="r-assign-back">
-          <bendpoint startX="0" startY="0" endX="0" endY="0"/>
+          <bendpoint/>
         </sourceConnection>
         <sourceConnection xsi:type="archimate:Connection" id="q-thirds" source="q-from" target="q-to" archimateRelationship="r-assign-back">
           <bendpoint startX="3" startY="40" endX="-50" endY="41"/>
@@ -148,5 +150,6 @@
     <element xsi:type="archimate:SketchModel" name="A sketch" id="s-sketch"/>
     <element xsi:type="canvas:CanvasModel" name="A canvas" id="cv-canvas"/>
   </folder>
+  <purpose>Edge cases for the .archimate reader (#13). Original test model for Archipelago (MIT).</purpose>
   <profile name="Microservice" id="p-micro" conceptType="ApplicationComponent"/>
 </archimate:model>
