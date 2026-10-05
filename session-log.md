@@ -1,5 +1,19 @@
 # Session Log
 
+## 2026-10-05 — Session wrap-up (#101)
+
+**What was done:**
+- #101 implemented (#110) and reviewed before merge. The review's three findings were fixed on the branch, and the sponsor merged it (`5792be5`). #101 is closed.
+- Filed **#111**: the exchange round trip relabels every text as `xml:lang="en"`.
+
+**Still open:**
+- #107: malformed exchange values. Some now surface as unread attributes rather than silently.
+- #105: the Archi 2.x vocabulary.
+- #108: an absent `textPosition`; check it in Archi first.
+- #111: language tags.
+- #74: the sponsor's decision, M2 editor or transformation core.
+- Remote branches `fix/100-archimate-silent-drops` and `feat/101-reader-consumption` are merged and ready to delete.
+
 ## 2026-10-05 (cont.) — #110 (#101) reviewed before merge
 
 `/review-pr 110`. All four #101 criteria are met.
