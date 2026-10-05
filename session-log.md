@@ -1,5 +1,23 @@
 # Session Log
 
+## 2026-10-05 (cont.) — #114 (#111) reviewed; fixes pushed
+
+`/review-pr 114` ran in the author's session. The code pass was a separate background agent (9 candidates). Both criteria are met. **8 findings, all fixed in `5ab26f6`:**
+- Texts of skipped duplicates voted. Archipelago reads an object before it knows to skip it, and a probe turned a German model French. Fixed in the ledger: `skip` untags, and a new `forget` covers texts read and then not kept.
+- Dropped model properties and unused definition names outvoted kept texts. The candidate said this was silent; in fact it was reported, but the wrong language was chosen.
+- Untagged texts were relabelled silently. They now vote `en`, and they are reported when the model is not `en`.
+- Tags were compared case-sensitively, so `EN` was a second spelling of English.
+- An invalid majority tag crowned a stray minority tag; such a model now stays `en`.
+- Fixed folder labels voted.
+- The `xs:language` pattern was written out twice.
+- There was no ADR, so **ADR 0007** was added.
+
+After the fixes, 16 single mutations were caught, one equivalent mutant was removed, and 898 tests pass.
+
+**Harvested:** review-skill §2. A tally fed by ledger marks must survive later skips and dropped reads.
+
+**Open:** CI on `5ab26f6`, then merge #114 and then #113.
+
 ## 2026-10-05 (cont.) — #111 implemented: a model keeps its language
 
 On `feat/111-model-language`, PR #114. The work took option 2 from the issue, plus option 1's report.
@@ -14,7 +32,7 @@ Note: on this machine Archi is at `/Applications/Archi.app`, not the script's de
 
 Also: the earlier wrap-up entry had been pushed to the #107 branch after #112 merged, so it never reached `main`. PR #113 carries it.
 
-**Still open:** review and merge #114, then #113. Also #108 (check Archi first), #105 (needs a genuine legacy file) and #74 (the sponsor's decision).
+**Still open:** merge #114, then #113. Also #108 (check Archi first), #105 (needs a genuine legacy file) and #74 (the sponsor's decision).
 
 ## 2026-10-05 — Session wrap-up (#101, #107)
 
