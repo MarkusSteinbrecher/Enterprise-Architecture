@@ -1,5 +1,16 @@
 # Session Log
 
+## 2026-10-06 — #118 implemented → PR #123
+
+The handlers come from Archi's source (`handlers/*.java`, `ModelCompatibility`, `StringUtils.versionNumberAsInt`, and the `plugin.xml` order). Their effects were settled by Archi 5.10 itself: one model was saved under 12 versions around the thresholds, plus Open Day, and the older file must read as Archi's save does. **16 of 16 mutations caught; 1003 tests pass.**
+
+- **A file with no `version` gets every handler.** EMF's default is `""`, which compares as 0. Archi's re-save of the versionless model matched the 2.9.9 one.
+- **Archi saves a folder that `Archimate2To3Handler` moved as an `archimate:Folder` element**, and reopens it that way. It is now read as a folder; before, it was an unknown type and its contents were lost.
+- **`folder-type-unknown` now says which kind of folder it is.** The three kinds are an ordinary folder, an older Archi's `connectors` or `derived` (from Archi 3.3.2's `FolderType`), or a type Archi 5.10 does not define.
+- **The figure swap only changes reporting:** a swapped Grouping, Meaning or Value is now reported as undrawn.
+
+**Still open:** review #123; #74 (the sponsor's decision). #115 is fixed on `main` (by #117, through #121) but still open, because #117 merged into a non-default branch. Merged remote branches to delete: `feat/111-model-language`, `chore/session-log-2026-10-05`, `chore/session-log-2026-10-05b`, `feat/108-text-position-evidence`, `feat/115-group-text-position`, `feat/105-archi-legacy-vocabulary`, `chore/harvest-119`.
+
 ## 2026-10-05 (cont.) — #119 (#105) reviewed
 
 `/review-pr 119`. All criteria are met; criterion 4 was replaced by the sponsor's call. I merged `main` in, and the legacy fixture passes #121's globbed provenance check. **7 findings, all fixed on the branch (`84289e3`):**
