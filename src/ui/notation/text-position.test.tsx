@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { render } from '@testing-library/react'
+import type { ReactElement } from 'react'
+import type { Appearance } from '@/model'
 import { importArchimate } from '@/io/archimate-native'
 import fixture from '@/io/fixtures/text-position.archimate?raw'
 import { ViewDrawing } from '@/ui/views/ViewDrawing'
 import { absoluteIndex, childrenIndex } from '@/ui/views/geometry'
+import { GroupShape } from './DiagramObjectShapes'
+import { ElementShape } from './ElementShape'
 
 /**
  * Where a label sits when Archi wrote no `textPosition` (#108).
@@ -27,7 +31,7 @@ import { absoluteIndex, childrenIndex } from '@/ui/views/geometry'
  * So top in Archi is the tab row, and the label is centred in a one-line tab,
  * which is what Archipelago's `middle`-of-the-tab draws. No reader change is
  * needed. Archi places an *explicit* middle or bottom over the whole box, even
- * on a group, where Archipelago keeps it in the tab: that is #115.
+ * on a group, and leaves the tab empty; so does Archipelago since #115.
  *
  * The view is drawn the way the canvas and the export draw it, through
  * `ViewDrawing`, and each label is held to Archi's number within 1.5 (#116
@@ -105,15 +109,78 @@ describe('an absent textPosition, read from a file Archi saved (#108)', () => {
       expect(Math.abs(centre(`o-${kind}-2`) - ARCHI[kind]![2])).toBeLessThanOrEqual(NEAR)
     },
   )
+})
 
-  // #115: Archi draws a tabbed shape's explicit middle and bottom over the whole
-  // box (60 and 108). Archipelago keeps them in the tab until #115 lands, and this
-  // says so positively, so the case cannot pass for the wrong reason.
-  it.each(['group', 'grouping'])(
-    'still keeps a %s’s middle and bottom in the tab (#115)',
-    (kind) => {
-      expect(centre(`o-${kind}-1`)).toBeLessThan(20)
-      expect(centre(`o-${kind}-2`)).toBeLessThan(20)
+/** A node's tab, off its first path (`M0,0H<w>V<h>H0Z`), as the canvas draws it. */
+function tabOf(id: string): { w: number; h: number } {
+  const d = drawing().querySelector(`[data-node="${id}"] path`)!.getAttribute('d')!
+  const [, w, h] = /^M0,0H([\d.]+)V([\d.]+)/.exec(d)!
+  return { w: Number(w), h: Number(h) }
+}
+
+/** The first line's centre in a shape drawn on its own (`centre`'s metric). */
+function shapeCentre(shape: ReactElement): number {
+  const { container } = render(<svg>{shape}</svg>)
+  const tspan = container.querySelector('tspan')
+  if (!tspan) throw new Error('no label drawn')
+  return Number(tspan.getAttribute('y')) - 12 * 0.3
+}
+
+describe('an explicit textPosition on a tabbed shape (#115)', () => {
+  it.each(['group', 'grouping'])('draws a %s’s middle and bottom where Archi does', (kind) => {
+    expect(Math.abs(centre(`o-${kind}-1`) - ARCHI[kind]![1])).toBeLessThanOrEqual(NEAR)
+    expect(Math.abs(centre(`o-${kind}-2`) - ARCHI[kind]![2])).toBeLessThanOrEqual(NEAR)
+  })
+
+  it.each([
+    ['group', 90],
+    ['grouping', 128],
+  ] as const)('leaves a %s’s tab empty, at Archi’s width (%i of 180)', (kind, width) => {
+    // GroupFigure halves the box; GroupingFigure divides it by 1.4.
+    for (const id of [`o-${kind}-1`, `o-${kind}-2`]) expect(tabOf(id).w).toBe(width)
+    // In the tab, the tab is sized to the name instead.
+    expect(tabOf(`o-${kind}-absent`).w).not.toBe(width)
+  })
+
+  it.each([
+    [
+      'group',
+      (a?: Appearance) => <GroupShape width={180} height={120} name="Group" appearance={a} />,
+    ],
+    [
+      'grouping',
+      (a?: Appearance) => (
+        <ElementShape
+          type="Grouping"
+          width={180}
+          height={120}
+          name="Grouping"
+          {...(a ? { appearance: a } : {})}
+        />
+      ),
+    ],
+  ] as const)(
+    'draws a %s’s explicit top where an absent position goes, as Archi does',
+    (kind, shape) => {
+      // Archi never writes the default, so no saved file holds one; both read top.
+      const absent = shapeCentre(shape())
+      const top = shapeCentre(shape({ textPosition: 'top' }))
+      expect(Math.abs(top - absent)).toBeLessThan(0.01)
+      expect(Math.abs(top - ARCHI[kind]![0])).toBeLessThanOrEqual(NEAR)
     },
   )
+
+  it('keeps the label of a box too small to hold it in the tab, rather than lose it', () => {
+    const { container } = render(
+      <svg>
+        <GroupShape
+          width={180}
+          height={10}
+          name="Collapsed"
+          appearance={{ textPosition: 'middle' }}
+        />
+      </svg>,
+    )
+    expect(container.querySelector('tspan')?.textContent).toBe('Collapsed')
+  })
 })
