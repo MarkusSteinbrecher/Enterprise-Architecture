@@ -6,6 +6,7 @@ import archiSave from './fixtures/claims-edited.archi.archimate?raw'
 import archiSaveInput from './fixtures/claims-edited.archi.archimate.input-sha256?raw'
 import { exportExchange } from './exchange-format'
 import { importArchimate } from './archimate-native'
+import { validate, type Workspace } from '@/model'
 import { editedClaims } from '@/test/edited-claims'
 import {
   ALPHA_PERCENT,
@@ -78,6 +79,17 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
         'c-req-goal appearance.lineWidth',
         'c-note-ref missing',
         'c-fraud-valuate extra',
+        // Connected (#129): new relationships, a junction, a re-used relationship, a line.
+        'c-hub-payment extra',
+        'c-calc-customer extra',
+        'c-rollout-req extra',
+        'c-crm-req extra',
+        'o-intake extra',
+        'c-damage-intake extra',
+        'c-intake-register extra',
+        'c-intake-valuate extra',
+        'c-claim-bo extra',
+        'c-note-fraud extra',
       ]),
     )
     // o-k8s grew to the left, and its children stayed where they were drawn (#128).
@@ -95,6 +107,43 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
       expect.arrayContaining(view.connections.map((c) => c.id)),
     )
     expect(explained.filter((d) => d.why === undefined)).toEqual([])
+  })
+
+  it('keeps every relationship the connect menu made, and Archi’s rules reject none (#129)', () => {
+    const made = [
+      'r-hub-payment',
+      'r-calc-customer',
+      'r-rollout-req',
+      'r-crm-req',
+      'r-damage-intake',
+      'r-intake-register',
+      'r-intake-valuate',
+    ]
+    const ends = (w: Workspace, id: string) => {
+      const r = w.relationships.find((x) => x.id === id)
+      return r && `${r.type} ${r.source} → ${r.target}`
+    }
+    for (const id of made) expect(ends(archi, id), id).toBe(ends(ours, id))
+    expect(new Set(made.map((id) => ends(ours, id)?.split(' ')[0])).size).toBe(5)
+    // Re-used, not duplicated: one relationship from the data object to the business object.
+    const claim = (w: Workspace) =>
+      w.relationships.filter((r) => r.source === 'do-claim' && r.target === 'bo-claim')
+    expect(claim(archi).map((r) => r.id)).toEqual(['r-claim-bo'])
+
+    // Archi's command line cannot run its validator, so this is its check
+    // (InvalidRelationsChecker → ArchimateModelUtils.isValidRelationship), as
+    // validity.ts carries it: Archi's own matrix, and its junction rules.
+    const invalid = (w: Workspace) =>
+      validate(w).findings.filter((f) => f.code === 'relationship.invalid')
+    expect(invalid(archi)).toEqual([])
+    // It would see a junction joining two types, which no cell of the matrix shows.
+    const mixed = {
+      ...archi,
+      relationships: archi.relationships.map((r) =>
+        r.id === 'r-intake-valuate' ? { ...r, type: 'Flow' as const } : r,
+      ),
+    }
+    expect(invalid(mixed).map((f) => f.subjectId)).toContain('r-intake-valuate')
   })
 
   it('names each difference Archi accounts for, and only those', () => {

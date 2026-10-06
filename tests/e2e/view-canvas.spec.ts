@@ -141,3 +141,52 @@ test('a shape dragged in a real browser moves, and undo puts it back (#128)', as
   await expect.poll(() => drawnAt(shape)).toEqual(before)
   await expect(page.locator('.view-screen').getByRole('alert')).toHaveCount(0)
 })
+
+test('two shapes connected in a real browser, with only valid types offered, and undo takes it back (#129)', async ({
+  page,
+}) => {
+  await startEmpty(page)
+  await importWorkspaceFile(page, FIXTURE)
+  await page.getByRole('dialog', { name: 'Import' }).getByRole('button', { name: 'Done' }).click()
+  const tree = page.getByRole('tree', { name: 'Model tree' })
+  await tree.getByRole('treeitem', { name: 'Views', exact: true }).click()
+  await tree.getByRole('treeitem', { name: 'Landscapes' }).click()
+  await tree.getByRole('treeitem', { name: 'Claims landscape' }).click()
+
+  const canvas = page.getByTestId('view-canvas')
+  await expect(canvas.locator('[data-connection]')).toHaveCount(LANDSCAPE.connections)
+
+  // Selecting the source opens its panel, which narrows the canvas: every box
+  // is measured after that, where the pointer will really find it.
+  const source = canvas.locator('[data-node="o-customer-hub"]')
+  await source.click()
+  await expect(
+    page.getByRole('complementary', { name: /Selected: Customer Data Hub/ }),
+  ).toBeVisible()
+  const handle = (await page.getByTestId('connect-handle').boundingBox())!
+  const target = (await canvas.locator('[data-node="o-as-payment"]').boundingBox())!
+
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(target.x + 10, target.y + 10, { steps: 6 })
+  await expect(page.getByTestId('connect-target')).toBeVisible()
+  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 4 })
+  await page.mouse.up()
+
+  // Application Component → Application Service: Realization and Serving, not Composition.
+  const menu = page.getByRole('dialog', { name: /^Connect Customer Data Hub to / })
+  const offered = menu.getByRole('region', { name: 'New relationship' }).getByRole('button')
+  await expect(offered.filter({ hasText: 'Serving' })).toHaveCount(1)
+  await expect(offered.filter({ hasText: 'Composition' })).toHaveCount(0)
+  await offered.filter({ hasText: 'Serving' }).click()
+  await expect(menu).toBeHidden()
+
+  await expect(canvas.locator('[data-connection]')).toHaveCount(LANDSCAPE.connections + 1)
+  await expect(
+    page.getByRole('complementary', { name: /Selected: Serving relationship/ }),
+  ).toBeVisible()
+
+  await page.keyboard.press('ControlOrMeta+z')
+  await expect(canvas.locator('[data-connection]')).toHaveCount(LANDSCAPE.connections)
+  await expect(page.locator('.view-screen').getByRole('alert')).toHaveCount(0)
+})

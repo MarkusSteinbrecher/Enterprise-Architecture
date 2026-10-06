@@ -124,6 +124,9 @@
     <element identifier="j-split" xsi:type="OrJunction">
       <name xml:lang="en">Junction</name>
     </element>
+    <element identifier="j-intake" xsi:type="AndJunction">
+      <name xml:lang="en" />
+    </element>
   </elements>
   <relationships>
     <relationship identifier="r-cust-ins" source="ba-customer" target="br-insurant" xsi:type="Assignment" />
@@ -168,6 +171,13 @@
     <relationship identifier="r-req-goal" source="r-rules" target="g-settle" xsi:type="Realization" />
     <relationship identifier="r-wp-engine" source="wp-rollout" target="ac-engine" xsi:type="Realization" />
     <relationship identifier="r-fraud-valuate" source="ac-fraud" target="bp-valuate" xsi:type="Serving" />
+    <relationship identifier="r-hub-payment" source="ac-customer" target="as-payment" xsi:type="Serving" />
+    <relationship identifier="r-calc-customer" source="af-calc" target="do-customer" xsi:type="Access" accessType="Write" />
+    <relationship identifier="r-rollout-req" source="wp-rollout" target="r-rules" xsi:type="Realization" />
+    <relationship identifier="r-crm-req" source="ac-crm" target="r-rules" xsi:type="Influence" />
+    <relationship identifier="r-damage-intake" source="be-damage" target="j-intake" xsi:type="Triggering" />
+    <relationship identifier="r-intake-register" source="j-intake" target="bp-register" xsi:type="Triggering" />
+    <relationship identifier="r-intake-valuate" source="j-intake" target="bp-valuate" xsi:type="Triggering" />
     <relationship identifier="r-ins-reg" source="bs-registration" target="br-insurant" xsi:type="Serving" />
     <relationship identifier="r-ins-info" source="bs-information" target="br-insurant" xsi:type="Serving" />
     <relationship identifier="r-ins-pay" source="bs-payment" target="br-insurant" xsi:type="Serving" />
@@ -250,6 +260,7 @@
       <label xml:lang="en">Other</label>
       <item identifierRef="loc-zurich" />
       <item identifierRef="j-split" />
+      <item identifierRef="j-intake" />
     </item>
     <item>
       <label xml:lang="en">Relations</label>
@@ -305,6 +316,13 @@
       <item identifierRef="r-req-goal" />
       <item identifierRef="r-wp-engine" />
       <item identifierRef="r-fraud-valuate" />
+      <item identifierRef="r-hub-payment" />
+      <item identifierRef="r-calc-customer" />
+      <item identifierRef="r-rollout-req" />
+      <item identifierRef="r-crm-req" />
+      <item identifierRef="r-damage-intake" />
+      <item identifierRef="r-intake-register" />
+      <item identifierRef="r-intake-valuate" />
     </item>
     <item>
       <label xml:lang="en">Views</label>
@@ -756,6 +774,15 @@ for claims under 500.</label>
             </font>
           </style>
         </node>
+        <node identifier="o-intake" elementRef="j-intake" xsi:type="Element" x="1195" y="330" w="15" h="15">
+          <style>
+            <fillColor r="0" g="0" b="0" a="100" />
+            <lineColor r="0" g="0" b="0" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
         <connection identifier="c-cust-ins" relationshipRef="r-cust-ins" xsi:type="Relationship" source="o-customer" target="o-insurant">
           <style>
             <lineColor r="0" g="0" b="0" />
@@ -791,6 +818,14 @@ for claims under 500.</label>
           <bendpoint x="300" y="30" />
         </connection>
         <connection identifier="c-damage-register" relationshipRef="r-damage-register" xsi:type="Relationship" source="o-damage" target="o-register">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-damage-intake" relationshipRef="r-damage-intake" xsi:type="Relationship" source="o-damage" target="o-intake">
           <style>
             <lineColor r="0" g="0" b="0" />
             <font name="Lucida Grande" size="12">
@@ -938,6 +973,22 @@ for claims under 500.</label>
           <bendpoint x="520" y="480" />
           <bendpoint x="875" y="475" />
         </connection>
+        <connection identifier="c-calc-customer" relationshipRef="r-calc-customer" xsi:type="Relationship" source="o-calc" target="o-do-customer">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-claim-bo" relationshipRef="r-claim-bo" xsi:type="Relationship" source="o-do-claim" target="o-claim-bo">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
         <connection identifier="c-cust-as" relationshipRef="r-cust-as" xsi:type="Relationship" source="o-customer-hub" target="o-as-customer">
           <style>
             <lineColor r="0" g="0" b="0" />
@@ -955,7 +1006,23 @@ for claims under 500.</label>
             </font>
           </style>
         </connection>
+        <connection identifier="c-hub-payment" relationshipRef="r-hub-payment" xsi:type="Relationship" source="o-customer-hub" target="o-as-payment">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
         <connection identifier="c-crm-cust" relationshipRef="r-crm-cust" xsi:type="Relationship" source="o-crm" target="o-customer-hub">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-crm-req" relationshipRef="r-crm-req" xsi:type="Relationship" source="o-crm" target="o-req">
           <style>
             <lineColor r="0" g="0" b="0" />
             <font name="Lucida Grande" size="12">
@@ -1073,7 +1140,39 @@ for claims under 500.</label>
             </font>
           </style>
         </connection>
+        <connection identifier="c-rollout-req" relationshipRef="r-rollout-req" xsi:type="Relationship" source="o-rollout" target="o-req">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
         <connection identifier="c-scanner-net" relationshipRef="r-scanner-net" xsi:type="Relationship" source="o-scanner" target="o-backbone">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-note-fraud" xsi:type="Line" source="o-note-edited" target="o-fraud">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-intake-register" relationshipRef="r-intake-register" xsi:type="Relationship" source="o-intake" target="o-register">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-intake-valuate" relationshipRef="r-intake-valuate" xsi:type="Relationship" source="o-intake" target="o-valuate">
           <style>
             <lineColor r="0" g="0" b="0" />
             <font name="Lucida Grande" size="12">

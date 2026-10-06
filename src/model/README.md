@@ -12,7 +12,7 @@ UI reference: `design/specs/open-ea-repository-ui-spec.md` §3.1, §2.2.
 | `layers.ts` | layers, aspects, the six colour groups |
 | `element-types.ts` | the 61-element catalogue, two-letter codes |
 | `relationship-types.ts` | the 11 relationship types, notation, abbreviations |
-| `validity.ts` | the relationship validity matrix |
+| `validity.ts` | the relationship validity matrix: Archi's `archi/relationships.xml`, and its junction rules |
 | `profile.ts` | portfolio profile types, scales, TIME, tags |
 | `lifecycle.ts` | phase derivation from dates |
 | `completeness.ts` | completeness scoring and model health |
@@ -50,24 +50,23 @@ regardless of which layer it belongs to.
 
 ## Relationship validity
 
-The specification publishes its matrix as a generated table (Appendix B) that
-already includes derived relationships. Rather than transcribe ~4,000 cells that
-no reviewer can check, `validity.ts` expresses the structural rules the matrix is
-generated from, over the `(layer, aspect)` metadata, plus a short list of named
-exceptions from the spec text (Product aggregating services and contracts,
-Plateau aggregating core elements, Work Package assigned to Deliverable,
-Stakeholder assigned to Driver).
+The matrix is Archi's own `relationships.xml` (ADR 0009, #129), vendored
+unmodified in `archi/` under its MIT licence: the specification's Appendix B as
+Archi 5.10 enforces it. `validity.ts` parses it at load, and a test pins the
+file's SHA-256, so it cannot be edited by hand without the test failing.
 
-Realization and Serving use an abstraction rank — Technology/Physical 1,
-Application 2, Business 3, Strategy 4 — and run from the concrete to the
-abstract. Grouping and Location relate to anything; a Junction takes part in
-everything except Composition, Aggregation and Specialization.
+- `validateRelationship(source, type, target)` is the matrix alone, by element
+  type. A refusal names what is allowed instead, and the other direction when
+  that one is allowed.
+- `validateRelationshipBetween(model, source, type, target)` adds Archi's
+  junction rules, which need the model: every relationship on a junction is of
+  one type (a Grouping or Location containing it does not count), and each
+  element on the junction's far side must be a legal end for the type. The
+  connect menu, the fact sheet's relation picker and `validate()` all use it,
+  as Archi's connection tool and validator do.
 
-`validity.test.ts` is the specification of record: it pins down the cross-layer
-patterns that matter (Application Service —Serving→ Business Process, Node
-—Serving→ Application Component, Data Object —Realization→ Business Object, and
-the rest of an ArchiSurance-shaped landscape) along with the rejections that
-prove the rules are not vacuous.
+Until #129 this module derived the matrix from structural rules over the
+`(layer, aspect)` metadata. They disagreed with Archi on 5,437 cells.
 
 ## Lifecycle derivation
 

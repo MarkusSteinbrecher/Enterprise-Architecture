@@ -1,11 +1,12 @@
 import claimsArchimate from '@/io/fixtures/claims-platform.archimate?raw'
 import { importArchimate } from '@/io/archimate-native'
-import { absoluteBounds, type Bounds, type Workspace } from '@/model'
+import { absoluteBounds, type Bounds, type RelationshipType, type Workspace } from '@/model'
 import { ModelStore } from '@/store/model-store'
+import { connectChoice } from '@/ui/views/connect'
 import { moveSelection, resizeNode } from '@/ui/views/edit'
 
 /**
- * The claims landscape after an editing session (#127): the source of
+ * The claims landscape after an editing session (#127, #128, #129): the source of
  * `src/io/fixtures/claims-edited.xml`, which Archi 5.10 imports and saves as
  * `claims-edited.archi.archimate`. Every edit goes through the store, one
  * command each, and the geometry is the editor's own (`ui/views/edit.ts`,
@@ -118,6 +119,56 @@ export function editedClaims(): Workspace {
     kind: 'note',
     text: 'Edited in Archipelago (#127).',
     bounds: { x: 1240, y: 380, width: 170, height: 55 },
+  })
+
+  // Connecting (#129), as the connect menu does it: only a type the menu offers,
+  // and the relationship and its connection made as one command.
+  const connect = (id: string, from: string, to: string, type: RelationshipType) => {
+    const choice = connectChoice(store, store.view(view)!, from, to)
+    if (choice.kind !== 'relationship' || !choice.types.includes(type)) {
+      throw new Error(`the menu does not offer ${type} from ${from} to ${to}`)
+    }
+    store.addRelationshipInView(
+      view,
+      { id: `r-${id}`, type, source: choice.source.id, target: choice.target.id, properties: {} },
+      { id: `c-${id}`, kind: 'relationship', relationship: `r-${id}`, source: from, target: to },
+    )
+  }
+  connect('hub-payment', 'o-customer-hub', 'o-as-payment', 'Serving')
+  connect('calc-customer', 'o-calc', 'o-do-customer', 'Access')
+  connect('rollout-req', 'o-rollout', 'o-req', 'Realization')
+  connect('crm-req', 'o-crm', 'o-req', 'Influence')
+
+  // A new junction, and Triggerings through it: the menu holds both sides to one type.
+  store.addElement({ id: 'j-intake', type: 'Junction', name: '', properties: {} })
+  store.addNode(view, {
+    id: 'o-intake',
+    kind: 'element',
+    element: 'j-intake',
+    bounds: { x: 1195, y: 330, width: 15, height: 15 },
+  })
+  connect('damage-intake', 'o-damage', 'o-intake', 'Triggering')
+  connect('intake-register', 'o-intake', 'o-register', 'Triggering')
+  connect('intake-valuate', 'o-intake', 'o-valuate', 'Triggering')
+
+  // A relationship the model holds and this view did not draw: drawn, not duplicated.
+  const reused = connectChoice(store, store.view(view)!, 'o-do-claim', 'o-claim-bo')
+  if (reused.kind !== 'relationship' || reused.existing[0]?.id !== 'r-claim-bo') {
+    throw new Error('the menu does not offer r-claim-bo to re-use')
+  }
+  store.addConnection(view, {
+    id: 'c-claim-bo',
+    kind: 'relationship',
+    relationship: 'r-claim-bo',
+    source: 'o-do-claim',
+    target: 'o-claim-bo',
+  })
+  // A note connects with a plain line.
+  store.addConnection(view, {
+    id: 'c-note-fraud',
+    kind: 'line',
+    source: 'o-note-edited',
+    target: 'o-fraud',
   })
 
   return store.snapshot()

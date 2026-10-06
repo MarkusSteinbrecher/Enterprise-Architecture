@@ -1,8 +1,23 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { removeNodes, typeLabel, type Bounds, type Point, type View, type ViewNode } from '@/model'
+import {
+  removeNodes,
+  typeLabel,
+  type Bounds,
+  type Point,
+  type RelationshipType,
+  type View,
+  type ViewConnection,
+  type ViewNode,
+} from '@/model'
 import { downloadBlob, downloadText } from '@/io'
-import { useModelStore, useModelStoreContext, useModelVersion, type ModelStore } from '@/store'
+import {
+  newId,
+  useModelStore,
+  useModelStoreContext,
+  useModelVersion,
+  type ModelStore,
+} from '@/store'
 import { TypeCodeBadge } from '@/ui/common/TypeCodeBadge'
 import { ViewDrawing, type DrawingLookups } from './ViewDrawing'
 import { Minimap } from './Minimap'
@@ -10,6 +25,7 @@ import {
   absoluteIndex,
   centreOn,
   childrenIndex,
+  connectionRoute,
   drawingBounds,
   fitViewport,
   zoomAround,
@@ -28,6 +44,8 @@ import {
   withDescendants,
   type Handle,
 } from './edit'
+import { connectChoice, nodeAt } from './connect'
+import { ConnectMenu, DeleteRelationshipDialog } from './ConnectDialogs'
 import './views.css'
 
 /**
@@ -36,7 +54,10 @@ import './views.css'
  * SVG/PNG export. In the tab that holds the model, shapes can be selected,
  * moved, nested and un-nested, resized, nudged and removed from the view, each
  * as one command (ADR 0006). Delete removes a container with its contents, as
- * Archi does; Shift+Delete keeps the contents. A reader tab gets the read-only canvas.
+ * Archi does; Shift+Delete keeps the contents. Dragging from a selected shape's
+ * connect handle to another shape draws a connection, offering only the
+ * relationships ArchiMate allows (#129). A connection can be selected, removed
+ * from the view, or deleted from the model. A reader tab gets the read-only canvas.
  *
  * Keyed on the view id by the route (CLAUDE.md), so viewport and selection never
  * carry over from one view to the next.
@@ -61,6 +82,7 @@ export function ViewScreen() {
 
 /** Movement below this many pixels is a click, not a drag. */
 const CLICK_SLOP = 3
+const NONE: string[] = []
 const ZOOM_STEP = 1.2
 /** A drag this close to the canvas edge scrolls the view, faster the closer it gets. */
 const EDGE = 24
@@ -68,12 +90,20 @@ const EDGE_SPEED = 12
 
 /**
  * What a pointer press turned into. A press on a shape becomes a move, on a
- * resize handle a resize, on empty canvas a lasso; Space, the middle button,
- * or any press in a reader tab pans instead. The gesture lives here, in UI
+ * resize handle a resize, on the connect handle a connection, on empty canvas
+ * a lasso; Space, the middle button, or any press in a reader tab pans instead. The gesture lives here, in UI
  * state, and only its end reaches the store, as one command (ADR 0006).
  */
 type Gesture =
-  | { kind: 'pan'; start: Point; origin: Viewport; node: string | null; moved: boolean }
+  | {
+      kind: 'pan'
+      start: Point
+      origin: Viewport
+      node: string | null
+      line: string | null
+      moved: boolean
+    }
+  | { kind: 'connect'; start: Point; source: string; moved: boolean }
   | {
       kind: 'move'
       start: Point
@@ -114,12 +144,20 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const [size, setSize] = useState({ width: 0, height: 0 })
   const [viewport, setViewport] = useState<Viewport | null>(null)
   const requested = params.get('element')
-  const [selection, setSelection] = useState<string[]>(() => {
+  /**
+   * What is selected: shapes, or one connection, never both. One state rather
+   * than two, so no path can select a shape and leave a line selected beside
+   * it (#142 review: the model tree's `?element=` did, and Delete then removed
+   * the line).
+   */
+  const [picked, setPicked] = useState<{ nodes: string[] } | { line: string }>(() => {
     const node = requested
       ? view.nodes.find((n) => n.kind === 'element' && n.element === requested)
       : undefined
-    return node ? [node.id] : []
+    return { nodes: node ? [node.id] : [] }
   })
+  const selection = 'nodes' in picked ? picked.nodes : NONE
+  const line = 'line' in picked ? picked.line : null
   /**
    * A press that changed the selection is in progress. The selection panel
    * waits for it to end: a press selects at once, so the shape can be dragged,
@@ -131,12 +169,31 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const [pressing, setPressing] = useState(false)
   const [lasso, setLasso] = useState<Bounds | null>(null)
   const [dropInto, setDropInto] = useState<string | null>(null)
+  /** A connect gesture in progress: from the source's centre to the pointer, and the shape under it. */
+  const [rubber, setRubber] = useState<{ from: Point; to: Point; over: string | null } | null>(null)
+  /** A connect gesture that ended on another shape, waiting on the menu. */
+  const [pending, setPending] = useState<{ source: string; target: string } | null>(null)
+  /** The relationship whose deletion from the model is waiting on confirmation. */
+  const [deleting, setDeleting] = useState<string | null>(null)
+  /**
+   * Bumped by an action that removes the control holding focus: a panel's
+   * buttons go with the panel, and a dialog gives focus back to an opener that
+   * is gone, so focus would fall to `<body>` and the canvas would stop taking
+   * keys (#142 review). Focused in an effect, so it lands after the dialog's
+   * focus trap has let go.
+   */
+  const [refocus, setRefocus] = useState(0)
+  useEffect(() => {
+    if (refocus) canvas.current?.focus()
+  }, [refocus])
+  const release = () => setRefocus((n) => n + 1)
   const [exportError, setExportError] = useState<string | null>(null)
 
   // An undo can take away a selected shape; the selection holds only what is drawn.
   const present = useMemo(() => new Set(view.nodes.map((n) => n.id)), [view])
   const selected = selection.filter((id) => present.has(id))
   const single = selected.length === 1 ? selected[0]! : null
+  const selectedLine = line === null ? undefined : view.connections.find((c) => c.id === line)
 
   /**
    * The selection, with a single selected element mirrored into `?element=` so
@@ -145,7 +202,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
    */
   const choose = useCallback(
     (ids: string[]) => {
-      setSelection(ids)
+      setPicked({ nodes: ids })
       const node = ids.length === 1 ? view.nodes.find((n) => n.id === ids[0]) : undefined
       const element = node?.kind === 'element' ? node.element : null
       if (params.get('element') === element) return
@@ -218,7 +275,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     if (current?.kind === 'element' && current.element === requested) return
     const node = view.nodes.find((n) => n.kind === 'element' && n.element === requested)
     if (!node) return
-    setSelection([node.id])
+    setPicked({ nodes: [node.id] })
     const target = bounds.get(node.id)
     if (!target || !viewport || size.width === 0) return
     const left = target.x * viewport.zoom + viewport.x
@@ -327,6 +384,18 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         setLasso(spanned(g.from, toView(client)))
         return
       }
+      if (g.kind === 'connect') {
+        const b = bounds.get(g.source)
+        if (!b) return
+        const at = toView(client)
+        const over = nodeAt(view, at)
+        setRubber({
+          from: { x: b.x + b.width / 2, y: b.y + b.height / 2 },
+          to: at,
+          over: over !== undefined && over !== g.source ? over : null,
+        })
+        return
+      }
       setPreview(outcome(view, g, client))
       if (g.kind === 'move') {
         // Outlined only when the drop would change where the selection lives.
@@ -337,7 +406,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         setDropInto(into !== undefined && !(parents.size === 1 && parents.has(into)) ? into : null)
       }
     },
-    [view, toView, outcome, dropFor],
+    [view, bounds, toView, outcome, dropFor],
   )
 
   /** Scroll while a drag rests near the canvas edge, carrying the gesture along. */
@@ -382,6 +451,8 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     return {
       node: el?.closest('[data-node]')?.getAttribute('data-node') ?? null,
       handle: (el?.closest('[data-handle]')?.getAttribute('data-handle') ?? null) as Handle | null,
+      line: el?.closest('[data-line-hit]')?.getAttribute('data-line-hit') ?? null,
+      connect: el?.closest('[data-connect]') ? true : false,
     }
   }
 
@@ -392,6 +463,58 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     setPreview(null)
     setLasso(null)
     setDropInto(null)
+    setRubber(null)
+  }
+
+  /** Select one connection, and no shape. */
+  const chooseLine = (id: string) => {
+    choose([])
+    setPicked({ line: id })
+  }
+
+  /**
+   * A connect gesture ended on `target`. Between two element shapes the menu
+   * asks which relationship; anything else gets a plain line at once, as Archi
+   * draws one from a note or group.
+   */
+  const connect = (source: string, target: string) => {
+    if (connectChoice(store, view, source, target).kind !== 'line') {
+      setPending({ source, target })
+      return
+    }
+    const id = newId('conn')
+    if (store.addConnection(view.id, { id, kind: 'line', source, target })) chooseLine(id)
+  }
+
+  const create = (type: RelationshipType) => {
+    if (!pending) return
+    const choice = connectChoice(store, view, pending.source, pending.target)
+    setPending(null)
+    if (choice.kind !== 'relationship') return
+    const relationship = newId('rel')
+    const id = newId('conn')
+    const made = store.addRelationshipInView(
+      view.id,
+      {
+        id: relationship,
+        type,
+        source: choice.source.id,
+        target: choice.target.id,
+        properties: {},
+      },
+      { id, kind: 'relationship', relationship, source: pending.source, target: pending.target },
+    )
+    if (made) chooseLine(id)
+  }
+
+  const reuse = (relationship: string) => {
+    if (!pending) return
+    const { source, target } = pending
+    setPending(null)
+    const id = newId('conn')
+    if (store.addConnection(view.id, { id, kind: 'relationship', relationship, source, target })) {
+      chooseLine(id)
+    }
   }
 
   const endGesture = (client: Point) => {
@@ -401,9 +524,20 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     setPreview(null)
     setLasso(null)
     setDropInto(null)
+    setRubber(null)
     if (!g) return
     if (g.kind === 'pan') {
-      if (!g.moved) choose(g.node ? [g.node] : [])
+      if (!g.moved) {
+        if (g.node) choose([g.node])
+        else if (g.line) chooseLine(g.line)
+        else choose([])
+      }
+      return
+    }
+    if (g.kind === 'connect') {
+      if (!g.moved) return
+      const over = nodeAt(view, toView(client))
+      if (over !== undefined && over !== g.source) connect(g.source, over)
       return
     }
     if (g.kind === 'lasso') {
@@ -490,6 +624,11 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
 
   const selectedNode = single ? view.nodes.find((n) => n.id === single) : undefined
   const panelNode = pressing ? undefined : selectedNode
+  const panelLine = pressing || panelNode ? undefined : selectedLine
+  const route = (connection: ViewConnection) => connectionRoute(connection, bounds)
+  const pathOf = (points: Point[]) => `M${points.map((p) => `${p.x},${p.y}`).join('L')}`
+  const choice = pending ? connectChoice(store, view, pending.source, pending.target) : undefined
+  const deletingRelationship = deleting === null ? undefined : store.relationship(deleting)
   const singleBounds = single ? bounds.get(single) : undefined
   // Handles hide while shapes are being dragged, and come back where they land.
   const dragging = preview !== null && gesture.current?.kind === 'move'
@@ -559,7 +698,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         </p>
       )}
 
-      <div className={`view-screen__body${panelNode ? ' view-screen__body--panel' : ''}`}>
+      <div
+        className={`view-screen__body${panelNode || panelLine ? ' view-screen__body--panel' : ''}`}
+      >
         <div
           ref={canvas}
           className={`view-screen__canvas${editable ? ' view-screen__canvas--edit' : ''}`}
@@ -567,7 +708,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           aria-label={`View ${view.name}`}
           aria-description={
             editable
-              ? 'Drag shapes to move them, drag empty space to select, arrow keys to nudge. Delete removes from the view with everything inside; Shift+Delete keeps what is inside. Space and drag to pan.'
+              ? 'Drag shapes to move them, drag empty space to select, arrow keys to nudge. Drag from a selected shape’s connect handle to another shape to connect them. Delete removes from the view with everything inside; Shift+Delete keeps what is inside. Space and drag to pan.'
               : undefined
           }
           onKeyDown={(event) => {
@@ -591,6 +732,13 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               ArrowDown: [0, step],
             }
             const arrow = arrows[event.key]
+            if ((event.key === 'Delete' || event.key === 'Backspace') && selectedLine) {
+              // From the view only, as Archi's Delete; the model keeps the relationship.
+              event.preventDefault()
+              store.removeConnection(view.id, selectedLine.id)
+              setPicked({ nodes: [] })
+              return
+            }
             if (arrow && selected.length) {
               event.preventDefault()
               nudge(arrow[0], arrow[1])
@@ -617,13 +765,22 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             if (event.button !== 0 && event.button !== 1) return
             const start = { x: event.clientX, y: event.clientY }
             pointer.current = start
-            const { node, handle: grip } = target(event)
+            const { node, handle: grip, line: hit, connect: linking } = target(event)
             if (!editable || event.button === 1 || space.current) {
-              gesture.current = { kind: 'pan', start, origin: vp, node, moved: false }
+              gesture.current = { kind: 'pan', start, origin: vp, node, line: hit, moved: false }
               return
             }
             auto.current = false
             const from = toView(start)
+            if (linking && single) {
+              gesture.current = { kind: 'connect', start, source: single, moved: false }
+              return
+            }
+            if (hit && !node) {
+              // A press on a line selects it. Moving its bend-points is #133.
+              chooseLine(hit)
+              return
+            }
             if (grip && single) {
               gesture.current = {
                 kind: 'resize',
@@ -707,6 +864,34 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             <svg ref={drawingRef} className="view-screen__svg" data-testid="view-canvas">
               <g transform={`translate(${vp.x} ${vp.y}) scale(${vp.zoom})`}>
                 <ViewDrawing view={shown} bounds={bounds} children={children} lookups={lookups} />
+                {/* Lines are thin; a wider, invisible stroke over each is what a press finds. */}
+                <g data-testid="line-hits">
+                  {shown.connections.map((connection) => {
+                    const points = route(connection)
+                    return points ? (
+                      <path
+                        key={connection.id}
+                        className="view-screen__hit"
+                        data-line-hit={connection.id}
+                        d={pathOf(points)}
+                        strokeWidth={8 / vp.zoom}
+                      />
+                    ) : null
+                  })}
+                </g>
+                {selectedLine &&
+                  (() => {
+                    const points = route(selectedLine)
+                    return points ? (
+                      <path
+                        className="view-screen__selection-line"
+                        data-testid="selection"
+                        data-selected={selectedLine.id}
+                        d={pathOf(points)}
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    ) : null
+                  })()}
                 {dropInto && bounds.get(dropInto) && (
                   <rect
                     className="view-screen__drop"
@@ -747,6 +932,39 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
                     })}
                   </g>
                 )}
+                {editable && singleBounds && !dragging && !rubber && (
+                  <g
+                    className="view-screen__connect"
+                    data-connect={single}
+                    data-testid="connect-handle"
+                    transform={`translate(${singleBounds.x + singleBounds.width + 12 / vp.zoom} ${singleBounds.y - 12 / vp.zoom}) scale(${1 / vp.zoom})`}
+                  >
+                    <title>Drag to another shape to connect</title>
+                    <circle r={7} />
+                    <path d="M-3,0L3,0M0.5,-2.5L3,0L0.5,2.5" />
+                  </g>
+                )}
+                {rubber && (
+                  <>
+                    {rubber.over && bounds.get(rubber.over) && (
+                      <rect
+                        className="view-screen__drop"
+                        data-testid="connect-target"
+                        {...box(bounds.get(rubber.over)!, 0)}
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    )}
+                    <line
+                      className="view-screen__rubber"
+                      data-testid="rubber-band"
+                      x1={rubber.from.x}
+                      y1={rubber.from.y}
+                      x2={rubber.to.x}
+                      y2={rubber.to.y}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </>
+                )}
                 {lasso && (
                   <rect
                     className="view-screen__lasso"
@@ -768,8 +986,58 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             />
           )}
         </div>
-        {panelNode && <SelectionPanel node={panelNode} store={store} onClose={() => choose([])} />}
+        {panelNode && (
+          <SelectionPanel
+            node={panelNode}
+            store={store}
+            onClose={() => {
+              choose([])
+              release()
+            }}
+          />
+        )}
+        {panelLine && (
+          <LinePanel
+            connection={panelLine}
+            view={view}
+            store={store}
+            editable={editable}
+            onRemove={() => {
+              store.removeConnection(view.id, panelLine.id)
+              setPicked({ nodes: [] })
+              release()
+            }}
+            onDelete={(relationship) => setDeleting(relationship)}
+            onClose={() => {
+              setPicked({ nodes: [] })
+              release()
+            }}
+          />
+        )}
       </div>
+      {choice && choice.kind !== 'line' && (
+        <ConnectMenu
+          choice={choice}
+          onCreate={create}
+          onReuse={(relationship) => reuse(relationship.id)}
+          onCancel={() => setPending(null)}
+        />
+      )}
+      {deletingRelationship && (
+        <DeleteRelationshipDialog
+          relationship={deletingRelationship}
+          elsewhere={store
+            .viewsDrawingRelationship(deletingRelationship.id)
+            .filter((other) => other.id !== view.id)}
+          onConfirm={() => {
+            store.removeRelationship(deletingRelationship.id)
+            setDeleting(null)
+            setPicked({ nodes: [] })
+            release()
+          }}
+          onCancel={() => setDeleting(null)}
+        />
+      )}
     </div>
   )
 }
@@ -888,6 +1156,78 @@ function SelectionPanel({
         {node.kind === 'note' ? node.text : node.name}
       </p>
       <div className="view-panel__actions">{close}</div>
+    </aside>
+  )
+}
+
+/**
+ * A selected connection: what it draws, and Archi's two ways to remove it.
+ * Remove from view leaves the relationship in the model; Delete from model
+ * takes it out of every view, after saying which (#129).
+ */
+function LinePanel({
+  connection,
+  view,
+  store,
+  editable,
+  onRemove,
+  onDelete,
+  onClose,
+}: {
+  connection: ViewConnection
+  view: View
+  store: ModelStore
+  editable: boolean
+  onRemove: () => void
+  onDelete: (relationship: string) => void
+  onClose: () => void
+}) {
+  const nameOf = (nodeId: string) => {
+    const node = view.nodes.find((n) => n.id === nodeId)
+    if (!node) return nodeId
+    if (node.kind === 'element') return store.element(node.element)?.name ?? node.element
+    if (node.kind === 'note') return 'Note'
+    if (node.kind === 'group') return node.name
+    return store.view(node.view)?.name ?? 'View reference'
+  }
+  const relationship =
+    connection.kind === 'relationship' ? store.relationship(connection.relationship) : undefined
+  const views = relationship ? store.viewsDrawingRelationship(relationship.id).length : 0
+  return (
+    <aside
+      className="view-panel"
+      aria-label={relationship ? `Selected: ${relationship.type} relationship` : 'Selected line'}
+    >
+      <div className="view-panel__kind">{relationship ? 'Relationship' : 'Line'}</div>
+      {relationship && (
+        <div className="view-panel__name view-panel__name--mono">{relationship.type}</div>
+      )}
+      <p className="view-panel__text">
+        {nameOf(connection.source)} → {nameOf(connection.target)}
+      </p>
+      {relationship && (
+        <div className="view-panel__stats view-panel__stats--one">
+          <div className="view-panel__stat">
+            <div className="view-panel__stat-key">Views</div>
+            <div className="view-panel__stat-value">{views}</div>
+          </div>
+        </div>
+      )}
+      <div className="view-panel__actions view-panel__actions--wrap">
+        {editable && (
+          <button type="button" className="button" onClick={onRemove}>
+            Remove from view
+          </button>
+        )}
+        {editable && relationship && (
+          <button type="button" className="button" onClick={() => onDelete(relationship.id)}>
+            Delete from model…
+          </button>
+        )}
+        <button type="button" className="button" onClick={onClose}>
+          Close
+        </button>
+      </div>
     </aside>
   )
 }

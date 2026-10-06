@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   RELATIONSHIP_TYPE_NAMES,
   typeLabel,
-  validateRelationship,
+  validateRelationshipBetween,
   type Element,
+  type RelationshipContext,
   type RelationshipType,
 } from '@/model'
 import { useFocusTrap } from '@/ui/common/use-focus-trap'
@@ -18,6 +19,8 @@ import { useFocusTrap } from '@/ui/common/use-focus-trap'
  */
 
 export interface AddRelationDialogProps {
+  /** The model, for the junction rules: what a junction may join depends on what it joins. */
+  model: RelationshipContext
   source: Element
   candidates: Element[]
   /** Pre-selected relationship type, from the block the user clicked. */
@@ -27,6 +30,7 @@ export interface AddRelationDialogProps {
 }
 
 export function AddRelationDialog({
+  model,
   source,
   candidates,
   initialType,
@@ -57,10 +61,10 @@ export function AddRelationDialog({
         element: candidate,
         result:
           direction === 'outgoing'
-            ? validateRelationship(source.type, type, candidate.type)
-            : validateRelationship(candidate.type, type, source.type),
+            ? validateRelationshipBetween(model, source, type, candidate)
+            : validateRelationshipBetween(model, candidate, type, source),
       })),
-    [candidates, source.type, type, direction],
+    [model, candidates, source, type, direction],
   )
 
   const selected = checked.find((entry) => entry.element.id === targetId)

@@ -413,7 +413,12 @@ holds that for one edited view, and every editor slice extends it.
 - `src/test/edited-claims.ts` edits the claims landscape through the store,
   one command per edit: move, resize, re-parent both ways, bend-points added,
   moved and removed, appearance, a removed note, and a new element, relationship
-  and note.
+  and note. Connecting (#129) adds relationships of five types as the connect
+  menu makes them, three of them through a new junction, a relationship the
+  model held and the view did not draw, and a plain line from a note.
+- Archi's command line cannot run its validator. The test runs Archi's check
+  as `validity.ts` carries it (Archi's matrix and junction rules, ADR 0009)
+  over Archi's save, and requires no relationship to fail it.
 - `scripts/fixtures/build-edited-claims.ts` writes it with the exchange writer
   to `fixtures/claims-edited.xml`. A test fails when the writer's output has
   moved on from the checked-in file.

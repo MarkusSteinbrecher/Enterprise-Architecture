@@ -159,6 +159,49 @@
   pointer-events: none;
 }
 
+/* Connecting (#129). A press finds a line through a wider invisible stroke. */
+.view-screen__hit {
+  fill: none;
+  stroke: transparent;
+  pointer-events: stroke;
+}
+
+.view-screen__canvas--edit .view-screen__hit {
+  cursor: pointer;
+}
+
+.view-screen__selection-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+/* A drawn glyph, so round (CLAUDE.md: glyphs are exempt from zero radius). */
+.view-screen__connect {
+  cursor: crosshair;
+}
+
+.view-screen__connect circle {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+
+.view-screen__connect path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.2;
+  pointer-events: none;
+}
+
+.view-screen__rubber {
+  stroke: var(--accent2);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
+
 .view-screen__notice {
   margin: 24px;
   color: var(--ink2);
@@ -266,4 +309,87 @@
 .view-panel__actions {
   display: flex;
   gap: 8px;
+}
+
+.view-panel__name--mono {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.view-panel__stats--one {
+  grid-template-columns: 1fr;
+}
+
+.view-panel__actions--wrap {
+  flex-wrap: wrap;
+}
+
+/* ── Connect menu (#129) ─────────────────────────────────────────────────── */
+
+.connect-menu__ends {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font: 500 13px/1.3 var(--font-ui);
+}
+
+.connect-menu__arrow {
+  color: var(--ink3);
+}
+
+.connect-menu__group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.connect-menu__group .dialog__label {
+  margin-bottom: 6px;
+}
+
+.connect-menu__item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 8px;
+  border: 1px solid var(--bd);
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.connect-menu__item:hover,
+.connect-menu__item:focus-visible {
+  border-color: var(--accent);
+  outline: 0;
+}
+
+.connect-menu__abbr {
+  min-width: 4ch;
+  font: 500 10px/1 var(--font-mono);
+  color: var(--ink3);
+}
+
+.connect-menu__type {
+  font: 500 12px/1 var(--font-mono);
+}
+
+.connect-menu__note {
+  margin-left: auto;
+  font: 400 11.5px/1.2 var(--font-ui);
+  color: var(--ink3);
+}
+
+.connect-menu__text {
+  margin: 0;
+  font: 400 12.5px/1.5 var(--font-ui);
+  color: var(--ink2);
+}
+
+.connect-menu__views {
+  margin: 0;
+  padding-left: 18px;
+  font: 400 12.5px/1.5 var(--font-ui);
 }

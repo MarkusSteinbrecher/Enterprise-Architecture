@@ -398,6 +398,7 @@ export function ElementScreen() {
 
       {addingRelation && (
         <AddRelationDialog
+          model={store}
           source={element}
           candidates={view.candidates}
           initialType={addingRelation}

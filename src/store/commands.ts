@@ -137,10 +137,19 @@ export function describeCommand(command: Command): string {
       return `Deleted folder “${command.folder.name}”`
     case 'rename-workspace':
       return `Renamed workspace to “${command.after}”`
-    case 'batch':
-      return command.commands.length === 1 && command.commands[0]
-        ? describeCommand(command.commands[0])
-        : `${command.commands.length} changes`
+    case 'batch': {
+      const [first, second] = command.commands
+      if (command.commands.length === 1 && first) return describeCommand(first)
+      // A relationship drawn as it was made (#129): one step, so one sentence.
+      if (
+        command.commands.length === 2 &&
+        first?.kind === 'add-relationship' &&
+        second?.kind === 'update-view'
+      ) {
+        return `Added ${first.relationship.type} relation to “${second.after.name}”`
+      }
+      return `${command.commands.length} changes`
+    }
   }
 }
 

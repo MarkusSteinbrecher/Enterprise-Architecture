@@ -22,6 +22,7 @@ import {
   type RelationshipType,
   type ReportDefinition,
   type TagGroup,
+  type RelationshipConnection,
   type View,
   type ViewConnection,
   type ViewNode,
@@ -559,6 +560,29 @@ export class ModelStore {
     const view = this.#views.get(viewId)
     if (!view?.nodes.some((node) => node.id === nodeId)) return
     this.updateView(viewId, (draft) => removeNodes(draft, new Set([nodeId])))
+  }
+
+  /**
+   * Create a relationship and draw it in a view, as one command (#129): one undo
+   * takes both away. The connection must draw `relationship` between drawings
+   * of its two elements; nothing is dispatched if the view is not there.
+   */
+  addRelationshipInView(
+    viewId: string,
+    relationship: Relationship,
+    connection: RelationshipConnection,
+  ): boolean {
+    const before = this.#views.get(viewId)
+    if (!before) return false
+    const after: View = { ...before, connections: [...before.connections, connection] }
+    this.dispatch({
+      kind: 'batch',
+      commands: [
+        { kind: 'add-relationship', relationship },
+        { kind: 'update-view', before, after },
+      ],
+    })
+    return true
   }
 
   addConnection(viewId: string, connection: ViewConnection): ViewConnection | undefined {
