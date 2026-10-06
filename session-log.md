@@ -1,5 +1,25 @@
 # Session Log
 
+## 2026-10-06 (wrap-up) — #142 merged: M2's first slice is done
+
+**Merged:** #142 (#129, connecting, with validity from Archi's matrix, ADR 0009) after its review fixes. #129 is closed, and #74 has #127–#129 ticked, which is the whole first slice.
+
+**State:**
+- `main` is at `e89d429`.
+- Open: #130–#137 (rest of M2), #138, #96, #97.
+- The #142 review's five nice-to-haves were not filed as issues. They are on the PR:
+  - re-use for an element drawn twice
+  - one shared drawing-order walk for `nodeAt` and `dropTarget`
+  - memoised hit routes
+  - an explicit batch label
+  - a release outside the canvas (in principle only)
+- Merged branches the permission classifier will not let me delete: `feat/129-connect`, plus `feat/127-archi-roundtrip-check`, `feat/128-move-resize` and `chore/adr-0008-editor-next` from before.
+
+**Next session, started fresh:** #130 (create views, a palette filtered by viewpoint, add new and existing elements) on top of `main`.
+- New elements go through the store, as `edited-claims.ts` does.
+- Extend the Archi oracle with the slice's edits.
+- `validity.ts` is Archi's matrix now: any "only valid" palette or menu reads `validateRelationshipBetween`.
+
 ## 2026-10-06 (cont.) — #129 implemented: connecting shapes, and validity is now Archi's matrix
 
 **Connecting.** A selected shape has a connect handle. Dragging from it to another shape opens a menu.
