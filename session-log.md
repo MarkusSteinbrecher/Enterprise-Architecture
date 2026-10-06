@@ -1,5 +1,30 @@
 # Session Log
 
+## 2026-10-06 (cont.) — #128 implemented: the view editor's first slice
+
+The canvas edits now, in the tab that holds the model.
+- **Selection:** click, Shift/⌘-click, and a lasso that takes shapes wholly inside it.
+- **Moving:** drag (one command), arrow-key nudge (1 px, Shift for 10), and auto-scroll at the edge.
+- **Nesting:** dropping a shape into a group or an element nests it, and dropping it outside takes it out; it keeps its absolute position either way.
+- **Resizing:** eight handles.
+- **Removing:** Delete removes from the view only.
+
+A reader tab keeps the read-only canvas. Both Archi questions the issue left open were settled from Archi's code and noted on #128: bend-points follow GEF's `RelativeBendpoint` weights, and a container resized from its top or left keeps its children in place (`resizeBehaviour` 0).
+
+- **Performance (ADR 0006's main cost):**
+  - `updateView` no longer `structuredClone`s the view, so untouched nodes keep their identity. In dev and tests the view is deep-frozen first, so a mutating `change` throws.
+  - `ViewDrawing` draws nodes flat in tree order, each memoised. With nested `<g>`s, a parent that skipped would also have stopped a moved grandchild from updating.
+  - Moving 1 of 500 shapes redraws that shape and its 2 lines only.
+- **Two bugs found by tests:**
+  - **A default parameter.** `into = null` turned an explicit `undefined` (the top level) into "keep the parent", so nothing could be dragged out of a group. It is now an options object.
+  - **Found only in a real browser.** Selecting on press opened the selection panel, which narrowed the canvas and slid under the pointer, taking the rest of the drag. jsdom lays nothing out; the new e2e journey failed on its first run. The panel now waits for the press to end.
+- **Archi oracle:** `edited-claims.ts` now uses the editor's own operations, including a resize from the left and a line with one end moved, and Archi's re-save still holds with only the five explained differences.
+- 1093 tests, 20 e2e journeys; 25 guard mutations, each caught.
+
+**Open:**
+- ADR 0006 is still Proposed. Accepting it is the sponsor's call, now that the first slice is built on it.
+- Next: review this PR, then #129 (connecting).
+
 ## 2026-10-06 (cont.) — #127 implemented: Archi as the oracle for edited views
 
 `src/test/edited-claims.ts` edits the claims landscape through the store. Our exchange writer saves it, and Archi 5.10 imports it, saves it and exports it again (`scripts/fixtures/archi-roundtrip.sh`). `src/test/view-oracle.ts` then compares the two drawing for drawing. 19 helper and fixture tests pass, and 1041 in all; 19 guard mutations are each caught.

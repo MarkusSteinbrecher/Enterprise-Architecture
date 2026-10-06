@@ -464,7 +464,7 @@ for claims under 500.</label>
             </style>
             <node identifier="o-rules" x="240" y="560" w="160" h="55" xsi:type="Element" elementRef="af-rules">
             </node>
-            <node identifier="o-calc" x="440" y="560" w="160" h="55" xsi:type="Element" elementRef="af-calc">
+            <node identifier="o-calc" x="440" y="575" w="160" h="55" xsi:type="Element" elementRef="af-calc">
             </node>
             <node identifier="o-do-claim" x="450" y="490" w="150" h="50" xsi:type="Element" elementRef="do-claim">
             </node>
@@ -489,7 +489,7 @@ for claims under 500.</label>
           </node>
           <node identifier="o-database" x="660" y="750" w="150" h="55" xsi:type="Element" elementRef="ts-database">
           </node>
-          <node identifier="o-k8s" x="180" y="830" w="560" h="150" xsi:type="Element" elementRef="n-k8s">
+          <node identifier="o-k8s" x="160" y="830" w="580" h="150" xsi:type="Element" elementRef="n-k8s">
             <node identifier="o-runtime" x="220" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-runtime">
             </node>
             <node identifier="o-postgres" x="540" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-postgres">
@@ -583,8 +583,8 @@ for claims under 500.</label>
         <connection identifier="c-engine-req" xsi:type="Relationship" relationshipRef="r-engine-req" source="o-engine" target="o-req">
         </connection>
         <connection identifier="c-calc-pay" xsi:type="Relationship" relationshipRef="r-calc-pay" source="o-calc" target="o-as-payment">
-          <bendpoint x="520" y="470" />
-          <bendpoint x="875" y="470" />
+          <bendpoint x="520" y="480" />
+          <bendpoint x="875" y="475" />
         </connection>
         <connection identifier="c-cust-as" xsi:type="Relationship" relationshipRef="r-cust-as" source="o-customer-hub" target="o-as-customer">
           <bendpoint x="715" y="470" />

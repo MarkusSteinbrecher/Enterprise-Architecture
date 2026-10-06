@@ -60,6 +60,9 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
       expect.arrayContaining([
         'o-customer bounds',
         'o-claim-bo bounds',
+        'o-k8s bounds',
+        'o-calc bounds',
+        'c-calc-pay bendpoints',
         'o-scanner parent',
         'o-do-claim parent',
         'o-do-claim bounds',
@@ -77,6 +80,9 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
         'c-fraud-valuate extra',
       ]),
     )
+    // o-k8s grew to the left, and its children stayed where they were drawn (#128).
+    expect(edits).not.toContain('o-runtime bounds')
+    expect(edits).not.toContain('o-postgres bounds')
   })
 
   it('finds every drawing in Archi’s save, and nothing Archi did not explain', () => {

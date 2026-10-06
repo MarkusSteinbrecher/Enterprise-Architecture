@@ -1,14 +1,15 @@
 import claimsArchimate from '@/io/fixtures/claims-platform.archimate?raw'
 import { importArchimate } from '@/io/archimate-native'
-import { absoluteBounds, type Bounds, type ViewNode, type Workspace } from '@/model'
+import { absoluteBounds, type Bounds, type Workspace } from '@/model'
 import { ModelStore } from '@/store/model-store'
+import { moveSelection, resizeNode } from '@/ui/views/edit'
 
 /**
  * The claims landscape after an editing session (#127): the source of
  * `src/io/fixtures/claims-edited.xml`, which Archi 5.10 imports and saves as
- * `claims-edited.archi.archimate`. Every edit goes through the store's own
- * operations, one command each, as the editor's gestures will (#128 onwards),
- * so the file holds what an edited view really looks like to the writer.
+ * `claims-edited.archi.archimate`. Every edit goes through the store, one
+ * command each, and the geometry is the editor's own (`ui/views/edit.ts`,
+ * #128), so the file holds what an edited view really looks like to the writer.
  *
  * Ids are fixed, not generated, so the exported file is the same on every run
  * and the checked-in copy can be held to it.
@@ -27,39 +28,29 @@ export function editedClaims(): Workspace {
     if (!found) throw new Error(`no node ${id}`)
     return found
   }
-  const reparent = (id: string, parent: string | undefined, absolute: Bounds) => {
-    const origin = parent === undefined ? { x: 0, y: 0 } : bounds(parent)
-    store.updateNode(view, id, (node): ViewNode => {
-      const moved: ViewNode = {
-        ...node,
-        bounds: { ...absolute, x: absolute.x - origin.x, y: absolute.y - origin.y },
-      }
-      if (parent === undefined) delete moved.parent
-      else moved.parent = parent
-      return moved
+  // The editor's own operations (#128), each as one command, as its gestures commit them.
+  const move = (ids: string[], dx: number, dy: number, drop?: { into: string | undefined }) =>
+    store.updateView(view, (v) => moveSelection(v, new Set(ids), dx, dy, drop))
+  const resize = (id: string, change: (b: Bounds) => Bounds) =>
+    store.updateView(view, (v) => {
+      const node = v.nodes.find((n) => n.id === id)!
+      return resizeNode(v, id, change(node.bounds))
     })
-  }
 
-  // Move, and resize.
-  store.updateNode(view, 'o-customer', (node) => ({
-    ...node,
-    bounds: { ...node.bounds, x: node.bounds.x + 30, y: node.bounds.y + 10 },
-  }))
-  store.updateNode(view, 'o-claim-bo', (node) => ({
-    ...node,
-    bounds: { ...node.bounds, width: 170, height: 70 },
-  }))
+  // Move, and resize from the far corner.
+  move(['o-customer'], 30, 10)
+  resize('o-claim-bo', (b) => ({ ...b, width: 170, height: 70 }))
+  // Resized from the left edge: its children stay where they were drawn.
+  resize('o-k8s', (b) => ({ ...b, x: b.x - 20, width: b.width + 20 }))
+  // One end of a bent line moves, so its bend-points follow by their weights.
+  move(['o-calc'], 0, 15)
 
   // Out of its group to the top level, where it was drawn; and into a container
   // the relationship it draws already connects to.
-  reparent('o-scanner', undefined, bounds('o-scanner'))
+  move(['o-scanner'], 0, 0, { into: undefined })
   const engine = bounds('o-engine')
-  reparent('o-do-claim', 'o-engine', {
-    x: engine.x + 230,
-    y: engine.y + 10,
-    width: 150,
-    height: 50,
-  })
+  const claim = bounds('o-do-claim')
+  move(['o-do-claim'], engine.x + 230 - claim.x, engine.y + 10 - claim.y, { into: 'o-engine' })
 
   // Bend-points: one added, one route straightened, one corner moved.
   store.updateConnection(view, 'c-cust-as', (connection) => ({

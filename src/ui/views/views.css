@@ -107,6 +107,58 @@
   pointer-events: none;
 }
 
+/* Editing (#128): in the tab that holds the model a drag moves shapes and an
+   empty-canvas drag selects, so the pan cursor gives way; Space still pans. */
+.view-screen__canvas--edit,
+.view-screen__canvas--edit:active {
+  cursor: default;
+}
+
+.view-screen__canvas--edit [data-node] {
+  cursor: move;
+}
+
+.view-screen__handle {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+
+.view-screen__handle--n,
+.view-screen__handle--s {
+  cursor: ns-resize;
+}
+
+.view-screen__handle--e,
+.view-screen__handle--w {
+  cursor: ew-resize;
+}
+
+.view-screen__handle--ne,
+.view-screen__handle--sw {
+  cursor: nesw-resize;
+}
+
+.view-screen__handle--nw,
+.view-screen__handle--se {
+  cursor: nwse-resize;
+}
+
+.view-screen__lasso {
+  fill: none;
+  stroke: var(--accent2);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
+
+.view-screen__drop {
+  fill: none;
+  stroke: var(--accent2);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
 .view-screen__notice {
   margin: 24px;
   color: var(--ink2);

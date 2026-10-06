@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import type { Locator } from '@playwright/test'
 import { test, expect, importWorkspaceFile, startEmpty } from './support'
 
 /**
@@ -94,4 +95,49 @@ test('an imported Archi view draws every node and connection', async ({ page }, 
     .click()
   await expect(canvas.locator('[data-node]').first()).toBeVisible()
   await expect(page.getByTestId('selection')).toBeVisible()
+})
+
+/** The drawn position of a node: its `<g>` is translated to its absolute view coordinates. */
+async function drawnAt(node: Locator): Promise<{ x: number; y: number }> {
+  const transform = (await node.getAttribute('transform')) ?? ''
+  const match = /translate\(([-\d.e]+) ([-\d.e]+)\)/.exec(transform)
+  if (!match) throw new Error(`no translate in "${transform}"`)
+  return { x: Number(match[1]), y: Number(match[2]) }
+}
+
+test('a shape dragged in a real browser moves, and undo puts it back (#128)', async ({ page }) => {
+  await startEmpty(page)
+  await importWorkspaceFile(page, FIXTURE)
+  const dialog = page.getByRole('dialog', { name: 'Import' })
+  await dialog.getByRole('button', { name: 'Done' }).click()
+  const tree = page.getByRole('tree', { name: 'Model tree' })
+  await tree.getByRole('treeitem', { name: 'Views', exact: true }).click()
+  await tree.getByRole('treeitem', { name: 'Landscapes' }).click()
+  await tree.getByRole('treeitem', { name: 'Claims landscape' }).click()
+
+  const canvas = page.getByTestId('view-canvas')
+  await expect(canvas.locator('[data-node]')).toHaveCount(LANDSCAPE.nodes)
+  // A shape in the middle of the canvas: a drag near the edge would scroll the
+  // view as well, which is right, but not what this journey measures.
+  const shape = canvas.locator('[data-node="o-as-customer"]')
+  const before = await drawnAt(shape)
+  const scale = Number(
+    /scale\(([-\d.e]+)\)/.exec((await canvas.locator('g').first().getAttribute('transform'))!)![1],
+  )
+
+  const box = (await shape.boundingBox())!
+  const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+  await page.mouse.move(from.x, from.y)
+  await page.mouse.down()
+  await page.mouse.move(from.x + 20, from.y + 10, { steps: 4 })
+  await page.mouse.move(from.x + 40, from.y + 20, { steps: 4 })
+  await page.mouse.up()
+
+  const after = { x: before.x + Math.round(40 / scale), y: before.y + Math.round(20 / scale) }
+  await expect.poll(() => drawnAt(shape)).toEqual(after)
+  await expect(page.getByTestId('selection')).toBeVisible()
+
+  await page.keyboard.press('ControlOrMeta+z')
+  await expect.poll(() => drawnAt(shape)).toEqual(before)
+  await expect(page.locator('.view-screen').getByRole('alert')).toHaveCount(0)
 })

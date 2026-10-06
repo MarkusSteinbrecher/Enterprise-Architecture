@@ -497,11 +497,24 @@ export class ModelStore {
     return view
   }
 
-  /** Replace a view wholesale; `before` is captured for you. */
+  /**
+   * Replace a view; `before` is captured for you. `change` gets the view itself,
+   * not a copy, and must return a new one without mutating it (the pure
+   * operations in `model/views.ts` and `ui/views/edit.ts` do). Not copying is
+   * what keeps the identity of every node and connection an edit does not touch,
+   * so the canvas redraws only what changed (ADR 0006, Consequences). In
+   * development and tests the view is frozen first, so a `change` that mutates
+   * it throws instead of corrupting the undo history.
+   *
+   * A `change` that returns the view it was given changes nothing, and records
+   * no command.
+   */
   updateView(id: string, change: (view: View) => View): View | undefined {
     const before = this.#views.get(id)
     if (!before) return undefined
-    const after = change(structuredClone(before))
+    if (import.meta.env.DEV) deepFreeze(before)
+    const after = change(before)
+    if (after === before) return before
     this.dispatch({ kind: 'update-view', before, after })
     return after
   }
@@ -1041,4 +1054,11 @@ function removeFrom<K>(index: Map<K, Set<string>>, key: K, id: string): void {
   if (!bucket) return
   bucket.delete(id)
   if (bucket.size === 0) index.delete(key)
+}
+
+/** Freeze a value and everything it holds; already-frozen parts are skipped. */
+function deepFreeze(value: unknown): void {
+  if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return
+  Object.freeze(value)
+  for (const child of Object.values(value)) deepFreeze(child)
 }

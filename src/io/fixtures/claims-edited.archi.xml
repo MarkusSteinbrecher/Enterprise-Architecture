@@ -543,7 +543,7 @@ for claims under 500.</label>
                 </font>
               </style>
             </node>
-            <node identifier="o-calc" elementRef="af-calc" xsi:type="Element" x="440" y="560" w="160" h="55">
+            <node identifier="o-calc" elementRef="af-calc" xsi:type="Element" x="440" y="575" w="160" h="55">
               <style>
                 <fillColor r="181" g="255" b="255" a="100" />
                 <lineColor r="92" g="92" b="92" a="100" />
@@ -635,7 +635,7 @@ for claims under 500.</label>
               </font>
             </style>
           </node>
-          <node identifier="o-k8s" elementRef="n-k8s" xsi:type="Element" x="180" y="830" w="560" h="150">
+          <node identifier="o-k8s" elementRef="n-k8s" xsi:type="Element" x="160" y="830" w="580" h="150">
             <style>
               <fillColor r="201" g="231" b="183" a="100" />
               <lineColor r="92" g="92" b="92" a="100" />
@@ -935,8 +935,8 @@ for claims under 500.</label>
               <color r="0" g="0" b="0" />
             </font>
           </style>
-          <bendpoint x="520" y="470" />
-          <bendpoint x="875" y="470" />
+          <bendpoint x="520" y="480" />
+          <bendpoint x="875" y="475" />
         </connection>
         <connection identifier="c-cust-as" relationshipRef="r-cust-as" xsi:type="Relationship" source="o-customer-hub" target="o-as-customer">
           <style>
