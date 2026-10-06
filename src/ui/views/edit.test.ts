@@ -9,6 +9,7 @@ import {
   resizeNode,
   resized,
   topSelected,
+  withDescendants,
 } from './edit'
 
 const note = (id: string, x: number, y: number, w = 40, h = 20, parent?: string): ViewNode => ({
@@ -219,5 +220,19 @@ describe('nodesInside', () => {
     const v = sample()
     expect(nodesInside(v, { x: 90, y: 90, width: 400, height: 300 })).toEqual(['g', 'a', 'b'])
     expect(nodesInside(v, { x: 105, y: 105, width: 50, height: 30 })).toEqual(['a'])
+  })
+})
+
+describe('withDescendants', () => {
+  it('adds everything nested, at any depth, whatever order the nodes are listed in', () => {
+    const v = view([
+      note('deep', 0, 0, 10, 10, 'inner'),
+      group('inner', 0, 0, 50, 50, 'outer'),
+      group('outer', 0, 0, 100, 100),
+      note('apart', 200, 0),
+    ])
+    expect([...withDescendants(v, new Set(['outer']))].sort()).toEqual(['deep', 'inner', 'outer'])
+    expect([...withDescendants(v, new Set(['inner']))].sort()).toEqual(['deep', 'inner'])
+    expect([...withDescendants(v, new Set(['missing']))]).toEqual([])
   })
 })

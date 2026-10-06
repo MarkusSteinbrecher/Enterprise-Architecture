@@ -25,6 +25,7 @@ import {
   resized,
   spanned,
   topSelected,
+  withDescendants,
   type Handle,
 } from './edit'
 import './views.css'
@@ -34,7 +35,8 @@ import './views.css'
  * made, with zoom, pan, fit, an outline, selection with a summary panel, and
  * SVG/PNG export. In the tab that holds the model, shapes can be selected,
  * moved, nested and un-nested, resized, nudged and removed from the view, each
- * as one command (ADR 0006). A reader tab gets the read-only canvas.
+ * as one command (ADR 0006). Delete removes a container with its contents, as
+ * Archi does; Shift+Delete keeps the contents. A reader tab gets the read-only canvas.
  *
  * Keyed on the view id by the route (CLAUDE.md), so viewport and selection never
  * carry over from one view to the next.
@@ -509,7 +511,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           aria-label={`View ${view.name}`}
           aria-description={
             editable
-              ? 'Drag shapes to move them, drag empty space to select, arrow keys to nudge, Delete to remove from the view. Space and drag to pan.'
+              ? 'Drag shapes to move them, drag empty space to select, arrow keys to nudge. Delete removes from the view with everything inside; Shift+Delete keeps what is inside. Space and drag to pan.'
               : undefined
           }
           onKeyDown={(event) => {
@@ -535,8 +537,14 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               event.preventDefault()
               nudge(arrow[0], arrow[1])
             } else if ((event.key === 'Delete' || event.key === 'Backspace') && selected.length) {
+              // As Archi: Delete removes a container with everything in it; Shift+Delete
+              // is Archi's "Delete from View (keep children)" (DeleteContainerAction),
+              // which lifts the children out where they were drawn.
               event.preventDefault()
-              store.updateView(view.id, (v) => removeNodes(v, new Set(selected)))
+              const ids = new Set(selected)
+              store.updateView(view.id, (v) =>
+                removeNodes(v, event.shiftKey ? ids : withDescendants(v, ids)),
+              )
               choose([])
             }
           }}

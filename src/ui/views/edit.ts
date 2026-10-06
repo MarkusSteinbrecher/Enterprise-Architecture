@@ -36,6 +36,22 @@ export function topSelected(view: View, ids: ReadonlySet<string>): Set<string> {
   return top
 }
 
+/** The given nodes and everything nested in them, at any depth. */
+export function withDescendants(view: View, ids: ReadonlySet<string>): Set<string> {
+  const all = new Set([...ids].filter((id) => view.nodes.some((n) => n.id === id)))
+  // Parents can come after their children in `view.nodes`, so sweep until nothing is added.
+  for (let grew = true; grew;) {
+    grew = false
+    for (const node of view.nodes) {
+      if (node.parent !== undefined && all.has(node.parent) && !all.has(node.id)) {
+        all.add(node.id)
+        grew = true
+      }
+    }
+  }
+  return all
+}
+
 /**
  * Move the selection by (dx, dy) in view coordinates. With `drop`, re-parent it
  * into `drop.into`, where `undefined` is the top level; without, every node

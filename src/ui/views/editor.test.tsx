@@ -373,6 +373,57 @@ describe('removing from the view (#128)', () => {
   })
 })
 
+describe('removing a container (#128)', () => {
+  // o-k8s holds o-runtime and o-postgres.
+  const inside = ['o-runtime', 'o-postgres']
+  const touching = (view: View, ids: string[]) =>
+    view.connections
+      .filter((c) => ids.includes(c.source) || ids.includes(c.target))
+      .map((c) => c.id)
+
+  it('removes it with everything inside, as Archi’s Delete from View does', async () => {
+    const { dispatch, store, user, nodeEl, view, canvas } = setup()
+    const before = view()
+    const lines = touching(before, ['o-k8s', ...inside])
+    expect(lines.length).toBeGreaterThan(0)
+    await click(user, nodeEl('o-k8s'), { x: 190, y: 840 })
+    await user.keyboard('{Delete}')
+    expect(dispatch).toHaveBeenCalledTimes(1)
+    for (const id of ['o-k8s', ...inside]) {
+      expect(canvas.querySelector(`[data-node="${id}"]`), id).toBeNull()
+    }
+    for (const id of lines)
+      expect(
+        view().connections.some((c) => c.id === id),
+        id,
+      ).toBe(false)
+    expect(store.element('ss-runtime')).toBeDefined()
+    act(() => void store.undo())
+    expect(view()).toBe(before)
+  })
+
+  it('keeps what is inside on Shift+Delete, where it was drawn', async () => {
+    const { dispatch, user, nodeEl, view, canvas } = setup()
+    const before = view()
+    const at = Object.fromEntries(inside.map((id) => [id, absoluteBounds(before, id)]))
+    const kept = touching(before, inside).filter((id) => !touching(before, ['o-k8s']).includes(id))
+    await click(user, nodeEl('o-k8s'), { x: 190, y: 840 })
+    await user.keyboard('{Shift>}{Delete}{/Shift}')
+    expect(dispatch).toHaveBeenCalledTimes(1)
+    expect(canvas.querySelector('[data-node="o-k8s"]')).toBeNull()
+    for (const id of inside) {
+      expect(view().nodes.find((n) => n.id === id)?.parent, id).toBe('o-g-platform')
+      expect(absoluteBounds(view(), id), id).toEqual(at[id])
+      expect(drawnAt(nodeEl(id)), id).toEqual({ x: at[id]!.x, y: at[id]!.y })
+    }
+    for (const id of kept)
+      expect(
+        view().connections.some((c) => c.id === id),
+        id,
+      ).toBe(true)
+  })
+})
+
 describe('a reader tab (#128)', () => {
   it('pans instead of moving, offers no handles, and ignores Delete', async () => {
     const { dispatch, user, nodeEl, view } = setup('reader')
