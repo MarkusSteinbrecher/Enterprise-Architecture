@@ -9,7 +9,7 @@ The handlers come from Archi's source (`handlers/*.java`, `ModelCompatibility`, 
 - **`folder-type-unknown` now says which kind of folder it is.** The three kinds are an ordinary folder, an older Archi's `connectors` or `derived` (from Archi 3.3.2's `FolderType`), or a type Archi 5.10 does not define.
 - **The figure swap only changes reporting:** a swapped Grouping, Meaning or Value is now reported as undrawn.
 
-**Still open:** review #123; #74 (the sponsor's decision). #115 is fixed on `main` (by #117, through #121) but still open, because #117 merged into a non-default branch. Merged remote branches to delete: `feat/111-model-language`, `chore/session-log-2026-10-05`, `chore/session-log-2026-10-05b`, `feat/108-text-position-evidence`, `feat/115-group-text-position`, `feat/105-archi-legacy-vocabulary`, `chore/harvest-119`.
+**Still open:** review #123; #74 (the sponsor's decision). **#115's fix is not on `main`.** #121 merged `feat/108` into `main` at 15:26:57, and #117 (the #115 fix, reviewed) merged into `feat/108` 33 s later, so its two commits live only on `feat/108-text-position-evidence` and `feat/115-group-text-position`. Both branches are kept until a PR lands them on `main`. Five merged branches were deleted on 2026-10-06: `feat/111-model-language`, `chore/session-log-2026-10-05`, `chore/session-log-2026-10-05b`, `feat/105-archi-legacy-vocabulary` and `chore/harvest-119`.
 
 ## 2026-10-05 (cont.) — #119 (#105) reviewed
 
