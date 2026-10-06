@@ -173,17 +173,28 @@ function isContainment(sourceType: ElementType, relType: RelationshipType): bool
   )
 }
 
-/** The first relationship on `junction` of another type than `relType`, if any. */
+/**
+ * The relationship types a junction joins, in the order its relationships
+ * come: one, in a valid model. A Grouping or Location containing it does not
+ * count, as in Archi.
+ */
+export function junctionTypes(context: RelationshipContext, junction: string): RelationshipType[] {
+  const types: RelationshipType[] = []
+  for (const r of context.relationshipsOf(junction)) {
+    const from = context.element(r.source)
+    if (from && isContainment(from.type, r.type)) continue
+    if (!types.includes(r.type)) types.push(r.type)
+  }
+  return types
+}
+
+/** A type the junction joins other than `relType`, if any. */
 function otherTypeOn(
   context: RelationshipContext,
   junction: string,
   relType: RelationshipType,
-): RelationshipRef | undefined {
-  return context.relationshipsOf(junction).find((r) => {
-    if (r.type === relType) return false
-    const from = context.element(r.source)
-    return !(from && isContainment(from.type, r.type))
-  })
+): RelationshipType | undefined {
+  return junctionTypes(context, junction).find((type) => type !== relType)
 }
 
 /**
@@ -222,7 +233,7 @@ export function validateRelationshipBetween(
       }
     }
     const other = otherTypeOn(context, source.id, relType)
-    if (other) return invalid(oneType(other.type, relType))
+    if (other) return invalid(oneType(other))
   }
   if (target.type === 'Junction' && !isContainment(source.type, relType)) {
     for (const r of context.relationshipsOf(target.id)) {
@@ -235,13 +246,17 @@ export function validateRelationshipBetween(
       }
     }
     const other = otherTypeOn(context, target.id, relType)
-    if (other) return invalid(oneType(other.type, relType))
+    if (other) return invalid(oneType(other))
   }
   return validateRelationship(source.type, relType, target.type)
 }
 
-function oneType(joined: RelationshipType, relType: RelationshipType): string {
-  return `This junction already joins ${joined} relationships, and every relationship on a junction is of one type, so it cannot take ${relType}.`
+/**
+ * The same sentence for every type it refuses, so a list of refusals (the
+ * connect menu's, when nothing is left) says it once.
+ */
+export function oneType(joined: RelationshipType): string {
+  return `This junction already joins ${joined} relationships, and every relationship on a junction is of one type.`
 }
 
 /** Every relationship type `validateRelationshipBetween` allows, in catalogue order. */

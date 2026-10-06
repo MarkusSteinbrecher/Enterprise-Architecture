@@ -19,7 +19,17 @@
 
 **Found in a real browser:** a line drawn across a shape takes a press on that spot. That is Archi's behaviour (connections are drawn above shapes), so it is kept.
 
-**Open:** review this PR. Then #130 (create views, palette).
+**#142 reviewed (`/review-pr 142 high`, same session, so less independent than usual).** It found 4 blocking issues, now fixed on the branch:
+1. **Selection.** A model-tree selection left a selected line selected, and Delete removed the line. Selection is now one state, `{ nodes } | { line }`, so a shape and a line cannot be selected together.
+2. **Empty-menu message.** It blamed the ArchiMate matrix, but only a junction's rules can empty the menu. It now gives the junction's real reasons: the one-type rule once, then why the type the junction joins is refused here.
+3. **Focus.** After Remove from view, Delete from model or a panel's Close, focus fell to `<body>`, because the opener was unmounted. The canvas now takes focus back, through an effect that runs after the dialog's focus trap has let go.
+4. **Untested refusal.** The missing-element refusal now has a test, and so do the unreachable branches, driven directly.
+
+Each fix was mutation-checked. The selection test fails against the unfixed screen. 1140 tests and 21 e2e journeys pass. Five nice-to-haves are left on the review (#142).
+
+**Harvested:** three bullets in the review skill: one setter for exclusive state, refusal messages true on every path, and focus when the action removes the opener.
+
+**Open:** re-review #142, then #130 (create views, palette).
 
 ## 2026-10-06 (wrap-up) — #139 and #140 merged; a committed `node_modules` symlink removed
 

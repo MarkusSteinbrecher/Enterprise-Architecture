@@ -11,7 +11,8 @@ import {
   type View,
 } from '@/model'
 import type { ModelStore } from '@/store'
-import { click, setup, type User } from '@/test/view-editor'
+import { LANDSCAPE, click, setup, type User } from '@/test/view-editor'
+import { connectChoice } from './connect'
 
 /**
  * Connecting shapes on the canvas (#129), driven as a user drives it: select a
@@ -109,9 +110,15 @@ describe('connecting shapes (#129)', () => {
     // Through the junction, Accept would trigger a business object.
     const h = setup()
     await connect(h, 'o-split', 'o-claim-bo')
+    // The junction's rules, not the matrix, which allows Realization, Access and
+    // Association from a junction to a business object (#142 review).
     expect(within(menu()).getByRole('alert')).toHaveTextContent(
-      /ArchiMate allows no relationship from Junction .* to Business Object “Claim”\. Nothing was created\./,
+      'No relationship can join Junction “Junction” to Business Object “Claim”. ' +
+        'This junction already joins Triggering relationships, and every relationship on a junction is of one type. ' +
+        'Through this junction, Triggering would join Business Process to Business Object, which ArchiMate does not allow. ' +
+        'Nothing was created.',
     )
+    expect(allowedRelationships('Junction', 'BusinessObject')).toContain('Association')
     expect(offered()).toEqual([])
     await h.user.click(within(menu()).getByRole('button', { name: 'Cancel' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -241,6 +248,42 @@ describe('connecting shapes (#129)', () => {
     expect(h.dispatch).not.toHaveBeenCalled()
   })
 
+  it('refuses a shape whose element is not in the model, and creates nothing', async () => {
+    const h = setup('writer', {
+      prepare: (store) =>
+        void store.addNode(LANDSCAPE, {
+          id: 'o-ghost',
+          kind: 'element',
+          element: 'el-not-in-the-model',
+          bounds: { x: 1240, y: 1100, width: 120, height: 50 },
+        }),
+    })
+    await connect(h, 'o-ghost', 'o-goal')
+    expect(within(menu()).getByRole('alert')).toHaveTextContent(
+      'One of these shapes draws an element that is not in the model.',
+    )
+    expect(within(menu()).queryByRole('button', { name: /Serving|Association/ })).toBeNull()
+    await h.user.click(within(menu()).getByRole('button', { name: 'Cancel' }))
+    expect(h.dispatch).not.toHaveBeenCalled()
+  })
+
+  it('refuses a shape that has left the view, and the store makes nothing without its view', () => {
+    // Not reachable from the canvas: undo is blocked while the menu is open.
+    const h = setup()
+    expect(connectChoice(h.store, h.view(), 'o-gone', 'o-goal')).toEqual({
+      kind: 'refused',
+      reason: 'That shape is no longer in the view.',
+    })
+    const made = h.store.addRelationshipInView(
+      'v-not-here',
+      { id: 'r-x', type: 'Association', source: 'g-settle', target: 'r-rules', properties: {} },
+      { id: 'c-x', kind: 'relationship', relationship: 'r-x', source: 'o-goal', target: 'o-req' },
+    )
+    expect(made).toBe(false)
+    expect(h.store.relationship('r-x')).toBeUndefined()
+    expect(h.dispatch).not.toHaveBeenCalled()
+  })
+
   it('cannot connect in a reader tab', async () => {
     const h = setup('reader')
     await click(h.user, h.nodeEl('o-req'), centre(h.view(), 'o-req'))
@@ -253,6 +296,20 @@ describe('connecting shapes (#129)', () => {
 
 describe('removing a connection (#129)', () => {
   const lineHit = (h: Harness, id: string) => h.canvas.querySelector(`[data-line-hit="${id}"]`)!
+
+  it('lets a model-tree selection replace a selected line, so Delete removes the shape (#142 review)', async () => {
+    const h = setup()
+    await click(h.user, lineHit(h, 'c-cust-ins'), { x: 215, y: 87 })
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-selected', 'c-cust-ins')
+    // The tree selects the goal by rewriting ?element=.
+    h.go(`/view/${LANDSCAPE}?element=g-settle`)
+    expect(screen.getAllByTestId('selection').map((s) => s.getAttribute('data-selected'))).toEqual([
+      'o-goal',
+    ])
+    await h.user.keyboard('{Delete}')
+    expect(h.view().nodes.some((n) => n.id === 'o-goal')).toBe(false)
+    expect(h.view().connections.some((c) => c.id === 'c-cust-ins')).toBe(true)
+  })
 
   it('selects a line by a press on it', async () => {
     const h = setup()
@@ -306,6 +363,22 @@ describe('removing a connection (#129)', () => {
     await h.user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
     expect(h.store.relationship('r-cust-ins')).toBeDefined()
     expect(h.dispatch).not.toHaveBeenCalled()
+  })
+
+  it('gives the canvas back its focus after Remove from view, Delete from model and Close', async () => {
+    const h = setup()
+    const canvas = screen.getByRole('generic', { name: /^View / })
+    const removeWith = async (line: string, at: { x: number; y: number }, ...buttons: string[]) => {
+      await click(h.user, lineHit(h, line), at)
+      for (const name of buttons) await h.user.click(screen.getByRole('button', { name }))
+      // The control that held focus is gone; the canvas takes keys again.
+      expect(document.activeElement).toBe(canvas)
+      expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
+    }
+    await removeWith('c-cust-ins', { x: 215, y: 87 }, 'Remove from view')
+    await removeWith('c-reg-ins', { x: 425, y: 87 }, 'Delete from model…', 'Delete from model')
+    await removeWith('c-pay-ins', { x: 300, y: 100 }, 'Close')
+    expect(h.store.relationship('r-ins-reg')).toBeUndefined()
   })
 
   it('offers a reader tab neither removal', async () => {

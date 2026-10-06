@@ -82,6 +82,7 @@ export function ViewScreen() {
 
 /** Movement below this many pixels is a click, not a drag. */
 const CLICK_SLOP = 3
+const NONE: string[] = []
 const ZOOM_STEP = 1.2
 /** A drag this close to the canvas edge scrolls the view, faster the closer it gets. */
 const EDGE = 24
@@ -143,12 +144,20 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const [size, setSize] = useState({ width: 0, height: 0 })
   const [viewport, setViewport] = useState<Viewport | null>(null)
   const requested = params.get('element')
-  const [selection, setSelection] = useState<string[]>(() => {
+  /**
+   * What is selected: shapes, or one connection, never both. One state rather
+   * than two, so no path can select a shape and leave a line selected beside
+   * it (#142 review: the model tree's `?element=` did, and Delete then removed
+   * the line).
+   */
+  const [picked, setPicked] = useState<{ nodes: string[] } | { line: string }>(() => {
     const node = requested
       ? view.nodes.find((n) => n.kind === 'element' && n.element === requested)
       : undefined
-    return node ? [node.id] : []
+    return { nodes: node ? [node.id] : [] }
   })
+  const selection = 'nodes' in picked ? picked.nodes : NONE
+  const line = 'line' in picked ? picked.line : null
   /**
    * A press that changed the selection is in progress. The selection panel
    * waits for it to end: a press selects at once, so the shape can be dragged,
@@ -160,14 +169,24 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const [pressing, setPressing] = useState(false)
   const [lasso, setLasso] = useState<Bounds | null>(null)
   const [dropInto, setDropInto] = useState<string | null>(null)
-  /** The selected connection. Shapes and a connection are never selected together. */
-  const [line, setLine] = useState<string | null>(null)
   /** A connect gesture in progress: from the source's centre to the pointer, and the shape under it. */
   const [rubber, setRubber] = useState<{ from: Point; to: Point; over: string | null } | null>(null)
   /** A connect gesture that ended on another shape, waiting on the menu. */
   const [pending, setPending] = useState<{ source: string; target: string } | null>(null)
   /** The relationship whose deletion from the model is waiting on confirmation. */
   const [deleting, setDeleting] = useState<string | null>(null)
+  /**
+   * Bumped by an action that removes the control holding focus: a panel's
+   * buttons go with the panel, and a dialog gives focus back to an opener that
+   * is gone, so focus would fall to `<body>` and the canvas would stop taking
+   * keys (#142 review). Focused in an effect, so it lands after the dialog's
+   * focus trap has let go.
+   */
+  const [refocus, setRefocus] = useState(0)
+  useEffect(() => {
+    if (refocus) canvas.current?.focus()
+  }, [refocus])
+  const release = () => setRefocus((n) => n + 1)
   const [exportError, setExportError] = useState<string | null>(null)
 
   // An undo can take away a selected shape; the selection holds only what is drawn.
@@ -183,8 +202,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
    */
   const choose = useCallback(
     (ids: string[]) => {
-      setSelection(ids)
-      setLine(null)
+      setPicked({ nodes: ids })
       const node = ids.length === 1 ? view.nodes.find((n) => n.id === ids[0]) : undefined
       const element = node?.kind === 'element' ? node.element : null
       if (params.get('element') === element) return
@@ -257,7 +275,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     if (current?.kind === 'element' && current.element === requested) return
     const node = view.nodes.find((n) => n.kind === 'element' && n.element === requested)
     if (!node) return
-    setSelection([node.id])
+    setPicked({ nodes: [node.id] })
     const target = bounds.get(node.id)
     if (!target || !viewport || size.width === 0) return
     const left = target.x * viewport.zoom + viewport.x
@@ -451,7 +469,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   /** Select one connection, and no shape. */
   const chooseLine = (id: string) => {
     choose([])
-    setLine(id)
+    setPicked({ line: id })
   }
 
   /**
@@ -718,7 +736,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               // From the view only, as Archi's Delete; the model keeps the relationship.
               event.preventDefault()
               store.removeConnection(view.id, selectedLine.id)
-              setLine(null)
+              setPicked({ nodes: [] })
               return
             }
             if (arrow && selected.length) {
@@ -968,7 +986,16 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             />
           )}
         </div>
-        {panelNode && <SelectionPanel node={panelNode} store={store} onClose={() => choose([])} />}
+        {panelNode && (
+          <SelectionPanel
+            node={panelNode}
+            store={store}
+            onClose={() => {
+              choose([])
+              release()
+            }}
+          />
+        )}
         {panelLine && (
           <LinePanel
             connection={panelLine}
@@ -977,10 +1004,14 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             editable={editable}
             onRemove={() => {
               store.removeConnection(view.id, panelLine.id)
-              setLine(null)
+              setPicked({ nodes: [] })
+              release()
             }}
             onDelete={(relationship) => setDeleting(relationship)}
-            onClose={() => setLine(null)}
+            onClose={() => {
+              setPicked({ nodes: [] })
+              release()
+            }}
           />
         )}
       </div>
@@ -1001,7 +1032,8 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           onConfirm={() => {
             store.removeRelationship(deletingRelationship.id)
             setDeleting(null)
-            setLine(null)
+            setPicked({ nodes: [] })
+            release()
           }}
           onCancel={() => setDeleting(null)}
         />

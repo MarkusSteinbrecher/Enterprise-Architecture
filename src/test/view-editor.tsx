@@ -1,7 +1,7 @@
 import { afterEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useNavigate, type NavigateFunction } from 'react-router-dom'
 import claimsXml from '@/io/fixtures/claims-platform.xml?raw'
 import { importExchangeXml } from '@/io'
 import type { Point, View } from '@/model'
@@ -54,6 +54,7 @@ export function setup(
   prepare?.(store)
   const dispatch = vi.spyOn(store, 'dispatch')
   const value = { store, role, ready: true } as unknown as ModelStoreContextValue
+  const navigator: { current?: NavigateFunction } = {}
   render(
     <MemoryRouter
       initialEntries={[`/view/${LANDSCAPE}`]}
@@ -63,6 +64,7 @@ export function setup(
         <Routes>
           <Route path="/view/:id" element={<ViewScreen />} />
         </Routes>
+        <Navigator into={navigator} />
       </ModelStoreContext.Provider>
     </MemoryRouter>,
   )
@@ -70,7 +72,9 @@ export function setup(
   const canvas = screen.getByTestId('view-canvas')
   const nodeEl = (id: string) => canvas.querySelector(`[data-node="${id}"]`)!
   const view = (): View => store.view(LANDSCAPE)!
-  return { store, dispatch, user, canvas, nodeEl, view }
+  /** Go to a URL, as the model tree does when it selects an element (`?element=`). */
+  const go = (to: string) => act(() => void navigator.current?.(to))
+  return { store, dispatch, user, canvas, nodeEl, view, go }
 }
 
 /** Where a node is drawn: its `<g>` is translated to its absolute position. */
@@ -99,4 +103,12 @@ export async function click(user: User, target: Element, at: Point, keys?: strin
     { keys: '[/MouseLeft]', target, coords: { clientX: at.x, clientY: at.y } },
   ])
   if (keys) await user.keyboard(`{/${keys}}`)
+}
+
+/** Hands the router's `navigate` to the test, which renders outside any route. */
+// A test harness is never hot-reloaded, so fast refresh's one-kind-of-export rule does not apply.
+// eslint-disable-next-line react-refresh/only-export-components
+function Navigator({ into }: { into: { current?: NavigateFunction } }) {
+  into.current = useNavigate()
+  return null
 }

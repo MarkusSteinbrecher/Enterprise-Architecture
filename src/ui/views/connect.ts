@@ -1,6 +1,9 @@
 import {
   allowedRelationshipsBetween,
+  junctionTypes,
+  oneType,
   relationshipsInView,
+  validateRelationshipBetween,
   typeLabel,
   type Element,
   type Point,
@@ -41,6 +44,8 @@ export type ConnectChoice =
       types: RelationshipType[]
       /** Relationships from source to target the model holds and this view does not draw. */
       existing: Relationship[]
+      /** Why no type is offered, when none is: the reasons the rules gave. */
+      why?: string
     }
   | { kind: 'refused'; reason: string }
 
@@ -66,18 +71,42 @@ export function connectChoice(
   const existing = model
     .relationshipsOf(source.id)
     .filter((r) => r.source === source.id && r.target === target.id && !drawn.has(r.id))
+  const types = allowedRelationshipsBetween(model, source, target)
   return {
     kind: 'relationship',
     source,
     target,
-    types: allowedRelationshipsBetween(model, source, target),
+    types,
     existing,
+    ...(types.length ? {} : { why: nothingAllowed(model, source, target) }),
   }
 }
 
-/** What the menu says when ArchiMate allows no relationship from one element to the other. */
-export function nothingAllowed(source: Element, target: Element): string {
-  return `ArchiMate allows no relationship from ${typeLabel(source.type)} “${source.name}” to ${typeLabel(target.type)} “${target.name}”.`
+/**
+ * What the menu says when it offers no type. Association joins any two
+ * elements, so the matrix alone never empties the menu: only a junction's
+ * rules do, and the menu says which (#142 review). Archi checks "through" before
+ * "one type", so asking the rules type by type would give the "through" reason
+ * for nearly every type. Instead: the one-type rule once, then why the type the
+ * junction does join is refused here.
+ */
+export function nothingAllowed(model: ConnectModel, source: Element, target: Element): string {
+  const reasons: string[] = []
+  for (const end of [source, target]) {
+    if (end.type !== 'Junction') continue
+    for (const joined of junctionTypes(model, end.id)) {
+      reasons.push(oneType(joined))
+      const result = validateRelationshipBetween(model, source, joined, target)
+      if (!result.valid && result.reason) reasons.push(result.reason)
+    }
+  }
+  const lead = `No relationship can join ${named(source)} to ${named(target)}.`
+  return [lead, ...new Set(reasons)].join(' ')
+}
+
+/** An element as a sentence names it: its type, and its name when it has one. */
+function named(element: Element): string {
+  return element.name ? `${typeLabel(element.type)} “${element.name}”` : typeLabel(element.type)
 }
 
 /**

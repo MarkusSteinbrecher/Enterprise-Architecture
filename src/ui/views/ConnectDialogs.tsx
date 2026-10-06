@@ -8,7 +8,7 @@ import {
   type View,
 } from '@/model'
 import { useFocusTrap } from '@/ui/common/use-focus-trap'
-import { nothingAllowed, type ConnectChoice } from './connect'
+import type { ConnectChoice } from './connect'
 
 /**
  * The two dialogs of connecting (#129): the menu a connect gesture ends in, and
@@ -126,7 +126,7 @@ export function ConnectMenu({ choice, onCreate, onReuse, onCancel }: ConnectMenu
               </section>
             ) : (
               <p className="dialog__problem" role="alert">
-                {nothingAllowed(choice.source, choice.target)} Nothing was created.
+                {choice.why} Nothing was created.
               </p>
             )}
           </>
