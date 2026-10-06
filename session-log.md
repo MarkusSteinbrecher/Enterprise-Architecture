@@ -2,7 +2,9 @@
 
 ## 2026-10-06 (cont.) — #123 (#118) reviewed; #115 landed as PR #125
 
-`/review-pr 123` ran in the author's session. The code pass was a separate agent with none of the author's context, and it checked each candidate with Archi 5.10 itself. All four criteria are met in substance, but the size handler's "unset" was not Archi's. **Changes needed, not yet fixed:**
+**All seven findings are fixed in `dc9b6c3`; CI is green.** Archi 5.10 re-saved the extended evidence model, and 30 of 30 mutations are caught. #125 merged, and `feat/108` and `feat/115` were deleted.
+
+`/review-pr 123` ran in the author's session. The code pass was a separate agent with none of the author's context, and it checked each candidate with Archi 5.10 itself. All four criteria are met in substance, but the size handler's "unset" was not Archi's. **Changes needed:**
 - **Below 3.0.0, 0 or negative counted as unset.** Archi uses `== -1`, and it kept a 0-width group that Archipelago grew.
 - **Four new tallies count skipped duplicates.** `defaultSized` and `countUnsupported` already did the same.
 - **The size summary says "120 × 55 for any element".** A junction is 15 × 15.
