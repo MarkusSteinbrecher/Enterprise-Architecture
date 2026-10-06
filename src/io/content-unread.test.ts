@@ -122,7 +122,7 @@ describe('both readers report what they did not read, at every level (#101)', ()
 })
 
 /** Every checked-in model file, so a fixture added later is covered without a line here. */
-const FILES = import.meta.glob<string>(['./fixtures/*.{xml,archimate}', './demo/*.xml'], {
+const FILES = import.meta.glob<string>(['./fixtures/**/*.{xml,archimate}', './demo/*.xml'], {
   query: '?raw',
   import: 'default',
   eager: true,

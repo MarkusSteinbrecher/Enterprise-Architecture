@@ -36,3 +36,28 @@ done
 "$ARCHI" -application com.archimatetool.commandline.app -consoleLog -nosplash \
   --loadModel "$DIR/text-position.archimate" \
   --saveModel "$DIR/text-position.archimate"
+# Archi's version-keyed compatibility handlers (#118). The model is saved as it
+# is, then opened under each version just below and at a handler's threshold
+# (and with none, which Archi reads as "" and so as older than every one), and
+# saved again: each save is what Archi 5.10 made of that version. The test
+# derives each input the same way, by replacing the version this save writes.
+"$ARCHI" -application com.archimatetool.commandline.app -consoleLog -nosplash \
+  --loadModel "$DIR/archi-compatibility.archimate" \
+  --saveModel "$DIR/archi-compatibility.archimate"
+TMP="$(mktemp -d)"
+for version in none 2.9.9 3.0.0 3.9.9 4.0.0 4.0.1 4.0.2 4.3.9 4.4.0 4.4.1 4.4.0.1 4.9.9; do
+  if [ "$version" = none ]; then
+    sed 's/ version="5\.0\.0"//' "$DIR/archi-compatibility.archimate" >"$TMP/$version.archimate"
+  else
+    sed "s/version=\"5\.0\.0\"/version=\"$version\"/" "$DIR/archi-compatibility.archimate" >"$TMP/$version.archimate"
+  fi
+  "$ARCHI" -application com.archimatetool.commandline.app -consoleLog -nosplash \
+    --loadModel "$TMP/$version.archimate" \
+    --saveModel "$DIR/archi-compatibility/$version.archimate"
+done
+rm -r "$TMP"
+# Archi 2.0.0's Open Day (#105), model version 1.1.1, as Archi 5.10 saves it once
+# every handler has run: the evidence that a real older file reads as Archi reads it.
+"$ARCHI" -application com.archimatetool.commandline.app -consoleLog -nosplash \
+  --loadModel "$DIR/archi-legacy-open-day.archimate" \
+  --saveModel "$DIR/archi-compatibility/open-day.archimate"
