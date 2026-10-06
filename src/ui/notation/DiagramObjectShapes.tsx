@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import type { Appearance } from '@/model'
+import { emptyTabWidth, labelInTab, tabbedLabel } from './label-box'
 import { NotationText } from './NotationText'
 import { UI_FAMILY, measureText } from './text'
 
@@ -68,9 +69,16 @@ export const GroupShape = memo(function GroupShape({
   const p = paint(appearance, 'var(--panel)')
   const size = appearance?.fontSize ?? 12
   const tabH = Math.min(h, Math.round(size * 1.25) + 6)
-  const tabW = Math.min(
-    w,
-    Math.max(40, measureText(name, `${size}px ${UI_FAMILY}`) + TAB_PAD * 2 + 2),
+  const whole = { x: TAB_PAD, y: PAD, w: w - TAB_PAD * 2, h: h - PAD * 2 }
+  const inTab = labelInTab(appearance, whole)
+  const tabW = inTab
+    ? Math.min(w, Math.max(40, measureText(name, `${size}px ${UI_FAMILY}`) + TAB_PAD * 2 + 2))
+    : emptyTabWidth(w, 'group')
+  const label = tabbedLabel(
+    appearance,
+    inTab,
+    { x: TAB_PAD, y: 0, w: tabW - TAB_PAD * 2, h: tabH },
+    whole,
   )
   return (
     <g data-shape="group">
@@ -78,8 +86,8 @@ export const GroupShape = memo(function GroupShape({
       <path d={`M0,${tabH}H${w}V${h}H0Z`} {...p} />
       <NotationText
         name={name}
-        box={{ x: TAB_PAD, y: 0, w: tabW - TAB_PAD * 2, h: tabH }}
-        appearance={appearance}
+        box={label.box}
+        appearance={label.appearance}
         defaultAlignment="left"
         defaultPosition="middle"
       />

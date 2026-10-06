@@ -2,6 +2,7 @@ import { memo } from 'react'
 import { type Appearance, type ElementType, type JunctionKind } from '@/model'
 import { ELEMENT_NOTATION, notationColours, type Body } from './element-notation'
 import { GLYPHS, type Box, type Paint } from './glyphs'
+import { emptyTabWidth, labelInTab, tabbedLabel } from './label-box'
 import { NotationText } from './NotationText'
 import { UI_FAMILY, measureText } from './text'
 
@@ -100,11 +101,14 @@ export const ElementShape = memo(function ElementShape({
   const icon = notation.glyph ? GLYPHS[notation.glyph] : undefined
   const iconBox: Box = { x: width - ICON.w - ICON.inset, y: ICON.inset, w: ICON.w, h: ICON.h }
   const grouping = notation.body === 'grouping'
-  const tab = grouping ? groupingTab(width, name, appearance) : undefined
+  const whole: Box = { x: PAD, y: PAD, w: width - PAD * 2, h: height - PAD * 2 }
+  const inTab = labelInTab(appearance, whole)
+  const tab = grouping ? groupingTab(width, name, appearance, inTab) : undefined
   const top = tab ? 0 : headerOffset(notation.body)
-  const textBox: Box = tab
-    ? { x: PAD, y: 0, w: tab.w - PAD * 2, h: tab.h }
-    : { x: PAD, y: PAD + top, w: width - PAD * 2, h: height - PAD * 2 - top }
+  const label = tab
+    ? tabbedLabel(appearance, inTab, { x: PAD, y: 0, w: tab.w - PAD * 2, h: tab.h }, whole)
+    : { box: { ...whole, y: PAD + top, h: height - PAD * 2 - top }, appearance }
+  const textBox = label.box
   // Lines beside the icon stay clear of it on both sides, so centred names stay centred.
   const clear = icon
     ? {
@@ -120,7 +124,7 @@ export const ElementShape = memo(function ElementShape({
         name={name}
         box={textBox}
         clear={clear}
-        appearance={appearance}
+        appearance={label.appearance}
         defaultAlignment={grouping ? 'left' : 'center'}
         defaultPosition={grouping ? 'middle' : 'top'}
       />
@@ -144,11 +148,19 @@ const RADIUS = 8
 const CUT = 8
 const TAB_H = 18
 
-/** The grouping's label tab: as wide as its name, within the shape. */
-function groupingTab(width: number, name: string, appearance?: Appearance) {
+/** The grouping's label tab: as wide as its name, within the shape, or Archi's width when empty. */
+function groupingTab(
+  width: number,
+  name: string,
+  appearance: Appearance | undefined,
+  inTab: boolean,
+) {
   const size = appearance?.fontSize ?? DEFAULT_FONT_SIZE
   const text = measureText(name, `${size}px ${UI_FAMILY}`)
-  return { w: Math.min(width, Math.max(40, text + PAD * 2 + 2)), h: lineHeight(appearance) + 6 }
+  const w = inTab
+    ? Math.min(width, Math.max(40, text + PAD * 2 + 2))
+    : emptyTabWidth(width, 'grouping')
+  return { w, h: lineHeight(appearance) + 6 }
 }
 
 interface BodyProps {
