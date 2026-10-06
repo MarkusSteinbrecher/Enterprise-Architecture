@@ -148,6 +148,14 @@ export function describeCommand(command: Command): string {
       ) {
         return `Added ${first.relationship.type} relation to “${second.after.name}”`
       }
+      // An element placed from the palette (#130): made and drawn in one step.
+      if (
+        command.commands.length === 2 &&
+        first?.kind === 'add-element' &&
+        second?.kind === 'update-view'
+      ) {
+        return `Added ${typeLabel(first.element.type)} “${first.element.name}” to “${second.after.name}”`
+      }
       return `${command.commands.length} changes`
     }
   }

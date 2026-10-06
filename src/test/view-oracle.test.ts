@@ -295,6 +295,20 @@ describe('compareViews against Archi’s save (#127)', () => {
     ])
   })
 
+  it('finds a drawn element filed in another folder, and one taken out of its folder (#130)', () => {
+    const other = structuredClone(saved)
+    const engine = other.elements.find((e) => e.id === 'ac-engine')!
+    expect(engine.folder).toBeDefined()
+    delete engine.folder
+    // Same name, another place: compared by path, so a rename elsewhere does not hide it.
+    other.folders.push({ id: 'f-elsewhere', name: 'Elsewhere', root: 'business' })
+    other.elements.find((e) => e.id === 'as-intake')!.folder = 'f-elsewhere'
+    expect(unexplained(saved, other).sort()).toEqual([
+      'ac-engine element.folder',
+      'as-intake element.folder',
+    ])
+  })
+
   it('tells connections apart whose ids contain the old separators', () => {
     const tricky = (source: string, target: string) => {
       const copy = structuredClone(saved)

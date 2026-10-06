@@ -227,7 +227,7 @@ describe('the view screen', () => {
 
   it('says so when the view is empty, and offers nothing to export', async () => {
     renderApp(fixture(), { route: '/view/v-empty' })
-    expect(await screen.findByText('This view is empty.')).toBeInTheDocument()
+    expect(await screen.findByText(/^This view is empty./)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Export SVG' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Export PNG' })).toBeDisabled()
   })

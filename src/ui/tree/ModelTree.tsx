@@ -11,10 +11,12 @@ import {
 } from 'react'
 import { matchPath, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { findRelationshipType, type Folder, type FolderDestination } from '@/model'
-import { newId, useModelSelector, useModelStore } from '@/store'
+import { destinationRoot, findRelationshipType, type Folder, type FolderDestination } from '@/model'
+import { newId, useModelSelector, useModelStore, useModelStoreContext } from '@/store'
 import { TypeCodeBadge } from '@/ui/common/TypeCodeBadge'
 import { LIST_WINDOW } from '@/ui/inventory/list-window'
+import { ELEMENT_DRAG_TYPE } from '@/ui/views/create'
+import { useCreateView } from '@/ui/views/use-create-view'
 import {
   ancestorKeys,
   buildTree,
@@ -48,6 +50,9 @@ import './tree.css'
  * fact sheet — or, on a view that draws it, is selected on the canvas. A folder
  * opens or closes. A relationship has no screen of its own yet, so it does
  * nothing beyond becoming active.
+ *
+ * Views are made, renamed and deleted here too (#130), and an element row
+ * dragged onto an open view's canvas draws that element there.
  */
 
 const ROW_HEIGHT = 26
@@ -78,7 +83,10 @@ function useRouteSubject(): RouteSubject {
 
 export function ModelTree({ id }: { id?: string }) {
   const store = useModelStore()
+  const { role } = useModelStoreContext()
+  const writer = role === 'writer'
   const navigate = useNavigate()
+  const createView = useCreateView()
   const treeId = useId()
   const index = useModelSelector((s) =>
     buildTree({
@@ -238,6 +246,30 @@ export function ModelTree({ id }: { id?: string }) {
     setRenaming(key)
   }, [active, index, store])
 
+  /** A new view in the selected folder of Views, or directly under Views when the selection is elsewhere. */
+  const createViewHere = useCallback(() => {
+    const destination = active === undefined ? undefined : destinationOf(index, active)
+    const inViews =
+      destination !== undefined && destinationRoot(destination, index.foldersById) === 'views'
+    setQuery('')
+    createView(inViews && 'folder' in destination ? destination.folder : undefined)
+  }, [active, index, createView])
+
+  /** Delete a view; the store takes the references other views hold to it in the same step. */
+  const removeView = useCallback(
+    (row: TreeRow) => {
+      if (row.item.kind !== 'view') return
+      const { id, name } = row.item
+      store.removeView(id)
+      setActive(row.parentKey)
+      setStatus(`Deleted view “${name}”.`)
+      // The open view is gone: nothing is left to show beside the tree.
+      if (viewId === id) navigate('/inventory', { replace: true })
+      treeRef.current?.focus()
+    },
+    [store, viewId, navigate],
+  )
+
   const removeFolder = useCallback(
     (row: TreeRow) => {
       if (row.item.kind !== 'folder') return
@@ -257,6 +289,8 @@ export function ModelTree({ id }: { id?: string }) {
       const trimmed = name.trim()
       if (item?.kind === 'folder' && trimmed && trimmed !== item.name) {
         store.updateFolder(item.id, (folder) => ({ ...folder, name: trimmed }))
+      } else if (item?.kind === 'view' && trimmed && trimmed !== item.name) {
+        store.updateView(item.id, (view) => ({ ...view, name: trimmed }))
       }
       treeRef.current?.focus()
     },
@@ -305,11 +339,12 @@ export function ModelTree({ id }: { id?: string }) {
         activate(row)
         break
       case 'F2':
-        if (row.item.kind === 'folder') setRenaming(row.key)
+        if (renamable(row.item)) setRenaming(row.key)
         break
       case 'Delete':
       case 'Backspace':
         if (row.item.kind === 'folder') removeFolder(row)
+        else if (row.item.kind === 'view' && writer) removeView(row)
         else handled = false
         break
       case 'Escape':
@@ -356,9 +391,13 @@ export function ModelTree({ id }: { id?: string }) {
     draggable: row.item.kind !== 'root' && renaming === undefined,
     onDragStart: (event: DragEvent) => {
       dragKey.current = row.key
-      event.dataTransfer.effectAllowed = 'move'
       // Firefox starts no drag without data.
       event.dataTransfer.setData('text/plain', displayName(row.item))
+      if (row.item.kind === 'element') {
+        // Onto a view's canvas, it draws this element there (#130): a copy of the drawing, not a move.
+        event.dataTransfer.setData(ELEMENT_DRAG_TYPE, row.item.id)
+        event.dataTransfer.effectAllowed = 'copyMove'
+      } else event.dataTransfer.effectAllowed = 'move'
     },
     onDragOver: (event: DragEvent) => {
       const dragged = dragKey.current === undefined ? undefined : index.byKey.get(dragKey.current)
@@ -431,6 +470,7 @@ export function ModelTree({ id }: { id?: string }) {
         <RowGlyph item={item} />
         {renaming === row.key ? (
           <RenameInput
+            label={item.kind === 'view' ? 'View name' : 'Folder name'}
             initial={item.name}
             onCommit={(name) => commitRename(row.key, name)}
             onCancel={() => {
@@ -459,21 +499,36 @@ export function ModelTree({ id }: { id?: string }) {
           >
             + Folder
           </button>
+          {writer && (
+            <button
+              type="button"
+              className="model-tree__tool"
+              onClick={createViewHere}
+              title="New view in the selected folder of Views"
+            >
+              + View
+            </button>
+          )}
           <button
             type="button"
             className="model-tree__tool"
             onClick={() => activeRow && setRenaming(activeRow.key)}
-            disabled={activeRow?.item.kind !== 'folder'}
-            title="Rename folder (F2)"
+            disabled={!activeRow || !renamable(activeRow.item)}
+            title="Rename folder or view (F2)"
           >
             Rename
           </button>
           <button
             type="button"
             className="model-tree__tool"
-            onClick={() => activeRow && removeFolder(activeRow)}
-            disabled={activeRow?.item.kind !== 'folder'}
-            title="Delete folder (Delete); its contents move up a level"
+            onClick={() => {
+              if (activeRow?.item.kind === 'view') removeView(activeRow)
+              else if (activeRow) removeFolder(activeRow)
+            }}
+            disabled={
+              activeRow?.item.kind !== 'folder' && !(activeRow?.item.kind === 'view' && writer)
+            }
+            title="Delete folder or view (Delete). A folder’s contents move up a level."
           >
             Delete
           </button>
@@ -600,11 +655,18 @@ function RowGlyph({ item }: { item: TreeItem }) {
   }
 }
 
+/** Rows the tree renames in place: folders, and views (#130). */
+function renamable(item: TreeItem): boolean {
+  return item.kind === 'folder' || item.kind === 'view'
+}
+
 function RenameInput({
+  label,
   initial,
   onCommit,
   onCancel,
 }: {
+  label: string
   initial: string
   onCommit: (name: string) => void
   onCancel: () => void
@@ -619,7 +681,7 @@ function RenameInput({
     <input
       ref={ref}
       className="tree__rename"
-      aria-label="Folder name"
+      aria-label={label}
       defaultValue={initial}
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => {

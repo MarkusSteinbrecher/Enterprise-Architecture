@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
+  VIEWPOINTS,
+  findViewpoint,
   removeNodes,
   typeLabel,
   type Bounds,
+  type ElementNode,
   type Point,
   type RelationshipType,
   type View,
@@ -45,7 +48,21 @@ import {
   type Handle,
 } from './edit'
 import { connectChoice, nodeAt } from './connect'
-import { ConnectMenu, DeleteRelationshipDialog } from './ConnectDialogs'
+import { ConnectMenu, DeleteElementDialog, DeleteRelationshipDialog } from './ConnectDialogs'
+import {
+  ELEMENT_DRAG_TYPE,
+  newDrawingNode,
+  newElement,
+  placement,
+  toolSize,
+  type Tool,
+} from './create'
+import { ElementPalette } from './ElementPalette'
+import { InlineName } from './InlineName'
+import { useScreenActions } from '@/ui/palette/context'
+import type { PaletteAction } from '@/ui/palette/CommandPalette'
+import { defaultNodeSize } from '@/io/default-sizes'
+import type { ViewRouteState } from './use-create-view'
 import './views.css'
 
 /**
@@ -115,6 +132,7 @@ type Gesture =
     }
   | { kind: 'lasso'; start: Point; from: Point; additive: boolean; base: string[]; moved: boolean }
   | { kind: 'resize'; start: Point; from: Point; node: string; handle: Handle; moved: boolean }
+  | { kind: 'place'; start: Point; from: Point; tool: Tool; moved: boolean }
 
 function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const navigate = useNavigate()
@@ -134,9 +152,12 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       relationship: (relationshipId) => store.relationship(relationshipId),
       viewName: (viewId) => store.view(viewId)?.name,
     }),
-    // A new view object means the model changed; the lookups read the store live.
+    // Renewed on every model change, not only the view's: a rename on the canvas
+    // (#130) changes the element and leaves the view as it was, and the drawing
+    // would keep the old name. Each node still redraws only when the element it
+    // draws is a new object (`DrawnNode`), so this costs one walk of the drawing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [store, view],
+    [store, store.version],
   )
 
   const canvas = useRef<HTMLDivElement>(null)
@@ -188,6 +209,57 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   }, [refocus])
   const release = () => setRefocus((n) => n + 1)
   const [exportError, setExportError] = useState<string | null>(null)
+  /** The palette tool the next press on the canvas places (#130). */
+  const [tool, setTool] = useState<Tool | null>(null)
+  /** The node whose name is being typed on the canvas. */
+  const [editing, setEditing] = useState<string | null>(null)
+  /** The element whose deletion from the model is waiting on confirmation. */
+  const [deletingElement, setDeletingElement] = useState<string | null>(null)
+  const paletteFilter = useRef<HTMLInputElement>(null)
+  /**
+   * "New element in view…" in the command palette lands in the palette's type
+   * filter (#130). Focused in an effect, which runs after the command palette's
+   * unmount has given focus back to whatever opened it.
+   */
+  const [findType, setFindType] = useState(0)
+  useEffect(() => {
+    if (findType) paletteFilter.current?.focus()
+  }, [findType])
+  const screenActions = useMemo<PaletteAction[]>(
+    () =>
+      editable
+        ? [
+            {
+              id: 'new-element-in-view',
+              label: 'New element in view…',
+              glyph: 'NE',
+              run: () => setFindType((n) => n + 1),
+            },
+          ]
+        : [],
+    [editable],
+  )
+  useScreenActions(screenActions)
+  /**
+   * A view made a moment ago opens with its name field focused and selected
+   * (#130). Decided here, once, because this mounts once per view: the field
+   * itself remounts on every rename (`key={view.name}`), and a field that
+   * focused itself on mount took focus back after each one (#144 review). The
+   * route state is consumed, so going Back to the view does not do it again.
+   */
+  const location = useLocation()
+  const nameField = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if ((location.state as ViewRouteState | null)?.naming !== true) return
+    nameField.current?.focus()
+    nameField.current?.select()
+    navigate(
+      { pathname: location.pathname, search: location.search },
+      { replace: true, state: null },
+    )
+    // Only as the view opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // An undo can take away a selected shape; the selection holds only what is drawn.
   const present = useMemo(() => new Set(view.nodes.map((n) => n.id)), [view])
@@ -201,9 +273,10 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
    * on a shape is not a step Back should rewind.
    */
   const choose = useCallback(
-    (ids: string[]) => {
+    /** `within`: the view the ids are in, when it is newer than this render's (a shape just placed). */
+    (ids: string[], within: View = view) => {
       setPicked({ nodes: ids })
-      const node = ids.length === 1 ? view.nodes.find((n) => n.id === ids[0]) : undefined
+      const node = ids.length === 1 ? within.nodes.find((n) => n.id === ids[0]) : undefined
       const element = node?.kind === 'element' ? node.element : null
       if (params.get('element') === element) return
       setParams(
@@ -379,7 +452,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const track = useCallback(
     (client: Point) => {
       const g = gesture.current
-      if (!g || g.kind === 'pan') return
+      if (!g || g.kind === 'pan' || g.kind === 'place') return
       if (g.kind === 'lasso') {
         setLasso(spanned(g.from, toView(client)))
         return
@@ -415,7 +488,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     const tick = () => {
       const g = gesture.current
       const rect = canvas.current?.getBoundingClientRect()
-      if (!g || g.kind === 'pan' || !g.moved || !rect) {
+      if (!g || g.kind === 'pan' || g.kind === 'place' || !g.moved || !rect) {
         scrolling.current = null
         return
       }
@@ -517,6 +590,120 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     }
   }
 
+  /**
+   * Place what `chosen` makes with its top-left corner at `at` (view
+   * coordinates), inside whatever container is there (#130). An element is
+   * made and drawn as one command; a note or group is one node. The new shape
+   * is selected, and its name opens for typing, except a junction's, which has
+   * none to show.
+   */
+  const place = (chosen: Tool, at: Point) => {
+    // An edit hands the viewport to the user, so the auto-fit cannot make the
+    // view jump. Here, not at each entry point: the keyboard path missed it
+    // (#144 review).
+    auto.current = false
+    setTool(null)
+    const spot = placement(view, at, toolSize(chosen), isJunction)
+    if (chosen.kind === 'element') {
+      const element = newElement(chosen)
+      const node: ElementNode = { id: newId('node'), kind: 'element', element: element.id, ...spot }
+      if (!store.addElementInView(view.id, element, node)) return
+      choose([node.id], store.view(view.id))
+      if (chosen.type !== 'Junction') setEditing(node.id)
+      else release()
+      return
+    }
+    const node = newDrawingNode(chosen, spot)
+    if (!store.addNode(view.id, node)) return
+    choose([node.id], store.view(view.id))
+    setEditing(node.id)
+  }
+
+  /** The middle of the canvas on screen, in view coordinates: where the keyboard places. */
+  const visibleCentre = (): Point => {
+    const rect = canvas.current?.getBoundingClientRect()
+    return toView({
+      x: (rect?.left ?? 0) + (rect?.width ?? size.width) / 2,
+      y: (rect?.top ?? 0) + (rect?.height ?? size.height) / 2,
+    })
+  }
+
+  /** Place `chosen` centred in the visible canvas: the palette's keyboard path. */
+  const placeAtCentre = (chosen: Tool) => {
+    const centre = visibleCentre()
+    const { width, height } = toolSize(chosen)
+    place(chosen, { x: centre.x - width / 2, y: centre.y - height / 2 })
+  }
+
+  // Stable, so the memoised palette does not redraw with every canvas render.
+  const latestPlace = useRef(placeAtCentre)
+  latestPlace.current = placeAtCentre
+  const placeFromPalette = useCallback((chosen: Tool) => latestPlace.current(chosen), [])
+  const arm = useCallback((next: Tool | null) => {
+    setTool(next)
+    // The canvas takes the next press, and Escape there disarms.
+    if (next) canvas.current?.focus()
+  }, [])
+
+  /**
+   * Draw an element the model already holds, dragged in from the model tree:
+   * the same element, drawn again, never a copy. A view that draws it already
+   * draws it twice, as Archi does. One command.
+   */
+  const drawExisting = (elementId: string, at: Point) => {
+    const element = store.element(elementId)
+    if (!element) return
+    auto.current = false
+    const spot = placement(view, at, defaultNodeSize('element', element.type), isJunction)
+    const node: ElementNode = { id: newId('node'), kind: 'element', element: element.id, ...spot }
+    if (!store.addNode(view.id, node)) return
+    choose([node.id], store.view(view.id))
+    release()
+  }
+
+  /**
+   * Commit what was typed into the inline editor: one command, or none when
+   * nothing changed. Enter hands focus to the canvas, so the keyboard goes on
+   * editing. A blur does not: it is the user putting focus somewhere else, and
+   * taking it back made their next key edit the canvas (#144 review: Backspace
+   * in the type filter deleted the shape just placed).
+   */
+  const commitName = (nodeId: string, value: string, ended: 'key' | 'blur') => {
+    setEditing(null)
+    if (ended === 'key') release()
+    const node = view.nodes.find((n) => n.id === nodeId)
+    if (!node) return
+    if (node.kind === 'element') {
+      const name = value.trim()
+      const element = store.element(node.element)
+      // An empty name is a slip, not a choice: the element keeps the one it had.
+      if (element && name && name !== element.name) {
+        store.updateElement(element.id, (e) => ({ ...e, name }))
+      }
+      return
+    }
+    store.updateNode(view.id, nodeId, (n) => {
+      if (n.kind === 'note') return n.text === value ? n : { ...n, text: value }
+      if (n.kind === 'group') {
+        const name = value.trim()
+        return name && name !== n.name ? { ...n, name } : n
+      }
+      return n
+    })
+  }
+
+  /** What a node's inline editor starts from, or `undefined` for a node that has no name to type. */
+  const editableText = (node: ViewNode | undefined): string | undefined => {
+    if (!node) return undefined
+    if (node.kind === 'note') return node.text
+    if (node.kind === 'group') return node.name
+    if (node.kind === 'element') {
+      const element = store.element(node.element)
+      return element && element.type !== 'Junction' ? element.name : undefined
+    }
+    return undefined
+  }
+
   const endGesture = (client: Point) => {
     const g = gesture.current
     gesture.current = null
@@ -526,6 +713,11 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     setDropInto(null)
     setRubber(null)
     if (!g) return
+    if (g.kind === 'place') {
+      // Where the press was, as Archi places on a click; a drag does not size it yet.
+      place(g.tool, g.from)
+      return
+    }
     if (g.kind === 'pan') {
       if (!g.moved) {
         if (g.node) choose([g.node])
@@ -629,6 +821,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const pathOf = (points: Point[]) => `M${points.map((p) => `${p.x},${p.y}`).join('L')}`
   const choice = pending ? connectChoice(store, view, pending.source, pending.target) : undefined
   const deletingRelationship = deleting === null ? undefined : store.relationship(deleting)
+  const deletingElementValue = deletingElement === null ? undefined : store.element(deletingElement)
   const singleBounds = single ? bounds.get(single) : undefined
   // Handles hide while shapes are being dragged, and come back where they land.
   const dragging = preview !== null && gesture.current?.kind === 'move'
@@ -645,9 +838,56 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     <div className="view-screen">
       <header className="view-screen__bar">
         <div>
-          <h1 className="view-screen__title">{view.name}</h1>
+          {editable ? (
+            <h1 className="view-screen__title">
+              <ViewNameField
+                // Remounted when the stored name changes, so an undone rename shows.
+                key={view.name}
+                inputRef={nameField}
+                name={view.name}
+                onRename={(name) => store.updateView(view.id, (v) => ({ ...v, name }))}
+                onDone={release}
+              />
+            </h1>
+          ) : (
+            <h1 className="view-screen__title">{view.name}</h1>
+          )}
           <p className="view-screen__stats">{stats}</p>
         </div>
+        {editable && (
+          <label className="view-screen__viewpoint">
+            <span className="view-screen__viewpoint-label">Viewpoint</span>
+            <select
+              className="view-screen__select"
+              value={view.viewpoint ?? ''}
+              onChange={(event) => {
+                const name = event.target.value
+                // Through the guard, as every form value is: only a viewpoint we know, or none.
+                if (name !== '' && !findViewpoint(name)) return
+                store.updateView(view.id, (v) => {
+                  if ((v.viewpoint ?? '') === name) return v
+                  const next = { ...v }
+                  if (name === '') delete next.viewpoint
+                  else next.viewpoint = name
+                  return next
+                })
+              }}
+            >
+              <option value="">None</option>
+              {VIEWPOINTS.map((viewpoint) => (
+                <option key={viewpoint.id} value={viewpoint.name}>
+                  {viewpoint.name}
+                </option>
+              ))}
+              {/* One from a newer tool: shown as it is, so the select does not claim "None". */}
+              {view.viewpoint && !findViewpoint(view.viewpoint) && (
+                <option value={view.viewpoint} disabled>
+                  {view.viewpoint}
+                </option>
+              )}
+            </select>
+          </label>
+        )}
         <div className="view-screen__controls">
           <button type="button" className="button" onClick={fit} disabled={empty}>
             Fit
@@ -699,11 +939,20 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       )}
 
       <div
-        className={`view-screen__body${panelNode || panelLine ? ' view-screen__body--panel' : ''}`}
+        className={`view-screen__body${panelNode || panelLine ? ' view-screen__body--panel' : ''}${editable ? ' view-screen__body--palette' : ''}`}
       >
+        {editable && (
+          <ElementPalette
+            ref={paletteFilter}
+            viewpoint={view.viewpoint}
+            armed={tool}
+            onArm={arm}
+            onPlace={placeFromPalette}
+          />
+        )}
         <div
           ref={canvas}
-          className={`view-screen__canvas${editable ? ' view-screen__canvas--edit' : ''}`}
+          className={`view-screen__canvas${editable ? ' view-screen__canvas--edit' : ''}${tool ? ' view-screen__canvas--place' : ''}`}
           tabIndex={0}
           aria-label={`View ${view.name}`}
           aria-description={
@@ -718,12 +967,22 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               return
             }
             if (event.key === 'Escape') {
-              // As GEF does: Escape cancels a drag in progress, and only then the selection.
+              // As GEF does: Escape cancels a drag in progress, then an armed
+              // palette tool, and only then the selection.
               if (gesture.current) cancelGesture()
+              else if (tool) setTool(null)
               else choose([])
               return
             }
             if (!editable || gesture.current) return
+            if (event.key === 'F2' && single) {
+              // Archi's rename in place.
+              if (editableText(view.nodes.find((n) => n.id === single)) !== undefined) {
+                event.preventDefault()
+                setEditing(single)
+              }
+              return
+            }
             const step = event.shiftKey ? 10 : 1
             const arrows: Record<string, [number, number]> = {
               ArrowLeft: [-step, 0],
@@ -772,6 +1031,10 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             }
             auto.current = false
             const from = toView(start)
+            if (tool) {
+              gesture.current = { kind: 'place', start, from, tool, moved: false }
+              return
+            }
             if (linking && single) {
               gesture.current = { kind: 'connect', start, source: single, moved: false }
               return
@@ -846,7 +1109,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               })
               return
             }
-            if (g.kind === 'move' && g.ids.size === 0) return
+            if ((g.kind === 'move' && g.ids.size === 0) || g.kind === 'place') return
             track(client)
             autoScroll()
           }}
@@ -856,10 +1119,28 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             const node = view.nodes.find((n) => n.id === target(event).node)
             if (node?.kind === 'view-ref' && store.view(node.view))
               navigate(`/view/${encodeURIComponent(node.view)}`)
+            else if (editable && node && editableText(node) !== undefined) setEditing(node.id)
+          }}
+          onDragOver={(event) => {
+            // An element row from the model tree (#130); anything else is not ours to take.
+            if (!editable || !event.dataTransfer.types.includes(ELEMENT_DRAG_TYPE)) return
+            event.preventDefault()
+            event.dataTransfer.dropEffect = 'copy'
+          }}
+          onDrop={(event) => {
+            // No role check: a browser sends `drop` only where `dragover` accepted, and that refuses a reader.
+            const elementId = event.dataTransfer.getData(ELEMENT_DRAG_TYPE)
+            if (!elementId) return
+            event.preventDefault()
+            drawExisting(elementId, toView({ x: event.clientX, y: event.clientY }))
           }}
         >
           {empty ? (
-            <p className="view-screen__notice">This view is empty.</p>
+            <p className="view-screen__notice">
+              {editable
+                ? 'This view is empty. Pick a type in the palette and click here to place it, or drag an element in from the model tree.'
+                : 'This view is empty.'}
+            </p>
           ) : (
             <svg ref={drawingRef} className="view-screen__svg" data-testid="view-canvas">
               <g transform={`translate(${vp.x} ${vp.y}) scale(${vp.zoom})`}>
@@ -976,6 +1257,38 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               </g>
             </svg>
           )}
+          {editing &&
+            (() => {
+              const node = view.nodes.find((n) => n.id === editing)
+              const text = editableText(node)
+              const b = bounds.get(editing)
+              if (!node || text === undefined || !b) return null
+              return (
+                <InlineName
+                  key={editing}
+                  initial={text}
+                  multiline={node.kind === 'note'}
+                  label={
+                    node.kind === 'note'
+                      ? 'Note text'
+                      : node.kind === 'group'
+                        ? 'Group name'
+                        : 'Element name'
+                  }
+                  box={{
+                    left: b.x * vp.zoom + vp.x,
+                    top: b.y * vp.zoom + vp.y,
+                    width: b.width * vp.zoom,
+                    height: b.height * vp.zoom,
+                  }}
+                  onCommit={(value, ended) => commitName(editing, value, ended)}
+                  onCancel={() => {
+                    setEditing(null)
+                    release()
+                  }}
+                />
+              )
+            })()}
           {drawing && viewport && size.width > 0 && (
             <Minimap
               drawing={drawing}
@@ -990,6 +1303,15 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           <SelectionPanel
             node={panelNode}
             store={store}
+            editable={editable}
+            onRemove={() => {
+              // As the Delete key: from the view only, with what is nested in it.
+              const ids = new Set([panelNode.id])
+              store.updateView(view.id, (v) => removeNodes(v, withDescendants(v, ids)))
+              choose([])
+              release()
+            }}
+            onDelete={(element) => setDeletingElement(element)}
             onClose={() => {
               choose([])
               release()
@@ -1021,6 +1343,22 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           onCreate={create}
           onReuse={(relationship) => reuse(relationship.id)}
           onCancel={() => setPending(null)}
+        />
+      )}
+      {deletingElementValue && (
+        <DeleteElementDialog
+          element={deletingElementValue}
+          relations={store.relationshipsOf(deletingElementValue.id).length}
+          elsewhere={store
+            .viewsDrawing(deletingElementValue.id)
+            .filter((other) => other.id !== view.id)}
+          onConfirm={() => {
+            store.removeElement(deletingElementValue.id)
+            setDeletingElement(null)
+            choose([])
+            release()
+          }}
+          onCancel={() => setDeletingElement(null)}
         />
       )}
       {deletingRelationship && (
@@ -1058,10 +1396,16 @@ function handlePoint(b: Bounds, h: Handle): Point {
 function SelectionPanel({
   node,
   store,
+  editable,
+  onRemove,
+  onDelete,
   onClose,
 }: {
   node: ViewNode
   store: ModelStore
+  editable: boolean
+  onRemove: () => void
+  onDelete: (element: string) => void
   onClose: () => void
 }) {
   const navigate = useNavigate()
@@ -1113,7 +1457,7 @@ function SelectionPanel({
         ) : (
           <p className="view-panel__text view-panel__text--empty">No documentation.</p>
         )}
-        <div className="view-panel__actions">
+        <div className="view-panel__actions view-panel__actions--wrap">
           <button
             type="button"
             className="button button--primary"
@@ -1121,6 +1465,16 @@ function SelectionPanel({
           >
             Open fact sheet
           </button>
+          {editable && (
+            <button type="button" className="button" onClick={onRemove}>
+              Remove from view
+            </button>
+          )}
+          {editable && (
+            <button type="button" className="button" onClick={() => onDelete(element.id)}>
+              Delete from model…
+            </button>
+          )}
           {close}
         </div>
       </aside>
@@ -1229,5 +1583,50 @@ function LinePanel({
         </button>
       </div>
     </aside>
+  )
+}
+
+/**
+ * The view's name, typed where it is shown (#130). Enter or leaving the field
+ * renames, as one command; Escape puts the name back. An empty name is not
+ * taken. It never focuses itself: it remounts on every rename, so focus is
+ * given to it by the canvas, once, when a new view opens.
+ */
+function ViewNameField({
+  inputRef: ref,
+  name,
+  onRename,
+  onDone,
+}: {
+  inputRef: React.RefObject<HTMLInputElement>
+  name: string
+  onRename: (name: string) => void
+  onDone: () => void
+}) {
+  const commit = (value: string) => {
+    const trimmed = value.trim()
+    if (trimmed && trimmed !== name) onRename(trimmed)
+    else if (ref.current) ref.current.value = name
+  }
+  return (
+    <input
+      ref={ref}
+      className="view-screen__name"
+      aria-label="View name"
+      defaultValue={name}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          commit(event.currentTarget.value)
+          onDone()
+        } else if (event.key === 'Escape') {
+          event.preventDefault()
+          event.stopPropagation()
+          event.currentTarget.value = name
+          onDone()
+        }
+      }}
+      onBlur={(event) => commit(event.currentTarget.value)}
+    />
   )
 }

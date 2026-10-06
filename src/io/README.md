@@ -416,6 +416,11 @@ holds that for one edited view, and every editor slice extends it.
   and note. Connecting (#129) adds relationships of five types as the connect
   menu makes them, three of them through a new junction, a relationship the
   model held and the view did not draw, and a plain line from a note.
+- Creating views (#130) adds `v-scratch`, a view made from scratch in a new
+  folder of Views, with a viewpoint. Its shapes are placed where the palette's
+  `placement` puts them: a new element inside a group, so nested in it, another
+  new element, and elements the model held, one of them drawn twice. They are
+  connected through the connect menu.
 - Archi's command line cannot run its validator. The test runs Archi's check
   as `validity.ts` carries it (Archi's matrix and junction rules, ADR 0009)
   over Archi's save, and requires no relationship to fail it.
@@ -435,7 +440,8 @@ holds that for one edited view, and every editor slice extends it.
   - each parent's children in drawing order
   - drawing by drawing: absolute bounds, parent, what is drawn, source and
     target, bend-points and every appearance field
-  - the type, name and ends of every element and relationship a view draws
+  - the type, name and ends of every element and relationship a view draws,
+    and each element's folder, by path (#130)
 
   Drawings are matched by id, because Archi's exchange import keeps every
   `identifier`. A drawing Archi made up has an id of its own and is reported as

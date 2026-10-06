@@ -72,6 +72,7 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
         'o-rollout appearance.textAlignment',
         'o-note-ref missing',
         'o-fraud extra',
+        'v-scratch extra',
         'o-note-edited extra',
         'c-cust-as bendpoints',
         'c-info-ins bendpoints',
@@ -163,6 +164,8 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
         'o-req appearance.fontName: default font name',
         'o-rollout appearance.fontStyle: carried only',
         'o-rollout appearance.textAlignment: carried only',
+        // The view made from scratch (#130): a new group, read as the others are.
+        'o-s-group appearance.textAlignment: carried only',
       ].sort(),
     )
     // Archi's ids for the connections it added are its own, so they are named by what they draw.

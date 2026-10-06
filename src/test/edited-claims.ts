@@ -1,12 +1,30 @@
 import claimsArchimate from '@/io/fixtures/claims-platform.archimate?raw'
 import { importArchimate } from '@/io/archimate-native'
-import { absoluteBounds, type Bounds, type RelationshipType, type Workspace } from '@/model'
+import { defaultNodeSize } from '@/io/default-sizes'
+import {
+  absoluteBounds,
+  type Bounds,
+  type Element,
+  type Point,
+  type RelationshipType,
+  type ViewNode,
+  type Workspace,
+} from '@/model'
 import { ModelStore } from '@/store/model-store'
 import { connectChoice } from '@/ui/views/connect'
+import {
+  newDrawingNode,
+  newElement,
+  newView,
+  placement,
+  toolSize,
+  type Tool,
+} from '@/ui/views/create'
 import { moveSelection, resizeNode } from '@/ui/views/edit'
 
 /**
- * The claims landscape after an editing session (#127, #128, #129): the source of
+ * The claims landscape after an editing session (#127, #128, #129), and a view
+ * made from scratch beside it (#130): the source of
  * `src/io/fixtures/claims-edited.xml`, which Archi 5.10 imports and saves as
  * `claims-edited.archi.archimate`. Every edit goes through the store, one
  * command each, and the geometry is the editor's own (`ui/views/edit.ts`,
@@ -171,5 +189,87 @@ export function editedClaims(): Workspace {
     target: 'o-fraud',
   })
 
+  scratchView(store)
   return store.snapshot()
+}
+
+/**
+ * A view made from scratch (#130), as the editor makes one: in a new folder
+ * of Views, with a viewpoint, and shapes placed where the palette's
+ * `placement` puts them, so a shape placed inside a group is nested in it.
+ * New elements and elements the model already holds, drawn and connected.
+ */
+function scratchView(store: ModelStore) {
+  const id = 'v-scratch'
+  const isJunction = (elementId: string) => store.element(elementId)?.type === 'Junction'
+  const at = (point: Point, tool: Tool) =>
+    placement(store.view(id)!, point, toolSize(tool), isJunction)
+  const place = (
+    nodeId: string,
+    tool: Extract<Tool, { kind: 'element' }>,
+    element: Partial<Element>,
+    point: Point,
+  ) => {
+    const made = { ...newElement(tool), ...element } as Element
+    store.addElementInView(id, made, {
+      id: nodeId,
+      kind: 'element',
+      element: made.id,
+      ...at(point, tool),
+    })
+  }
+  const drawExisting = (nodeId: string, elementId: string, point: Point) => {
+    const type = store.element(elementId)!.type
+    store.addNode(id, {
+      id: nodeId,
+      kind: 'element',
+      element: elementId,
+      ...placement(store.view(id)!, point, defaultNodeSize('element', type), isJunction),
+    })
+  }
+
+  store.addFolder({ id: 'folder-views-drafts', name: 'Drafts', root: 'views' })
+  store.addView({ ...newView('folder-views-drafts'), id, name: 'Claim intake (draft)' })
+  store.updateView(id, (v) => ({ ...v, viewpoint: 'Business Process Cooperation' }))
+
+  // A group, then a new element placed inside it: nested, relative to the group.
+  const group: Tool = { kind: 'group' }
+  store.addNode(id, {
+    ...newDrawingNode(group, at({ x: 40, y: 40 }, group)),
+    id: 'o-s-group',
+  } as ViewNode)
+  store.updateNode(id, 'o-s-group', (n) => (n.kind === 'group' ? { ...n, name: 'Intake' } : n))
+  place(
+    'o-s-intake',
+    { kind: 'element', type: 'ApplicationService' },
+    { id: 'as-intake', name: 'Claim Intake' },
+    { x: 80, y: 90 },
+  )
+  place(
+    'o-s-event',
+    { kind: 'element', type: 'BusinessEvent' },
+    { id: 'be-claim-in', name: 'Claim received' },
+    { x: 520, y: 60 },
+  )
+
+  // Elements the model holds, drawn again: one of them twice, as Archi allows.
+  drawExisting('o-s-engine', 'ac-engine', { x: 80, y: 260 })
+  drawExisting('o-s-valuate', 'bp-valuate', { x: 520, y: 220 })
+  drawExisting('o-s-engine-2', 'ac-engine', { x: 300, y: 260 })
+
+  // Connected through the menu's own question, one command each.
+  const connect = (cid: string, from: string, to: string, type: RelationshipType) => {
+    const choice = connectChoice(store, store.view(id)!, from, to)
+    if (choice.kind !== 'relationship' || !choice.types.includes(type)) {
+      throw new Error(`the menu does not offer ${type} from ${from} to ${to}`)
+    }
+    store.addRelationshipInView(
+      id,
+      { id: `r-${cid}`, type, source: choice.source.id, target: choice.target.id, properties: {} },
+      { id: `c-${cid}`, kind: 'relationship', relationship: `r-${cid}`, source: from, target: to },
+    )
+  }
+  connect('s-engine-intake', 'o-s-engine', 'o-s-intake', 'Realization')
+  connect('s-intake-valuate', 'o-s-intake', 'o-s-valuate', 'Serving')
+  connect('s-event-valuate', 'o-s-event', 'o-s-valuate', 'Triggering')
 }

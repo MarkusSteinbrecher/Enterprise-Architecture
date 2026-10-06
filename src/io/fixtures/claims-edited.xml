@@ -127,6 +127,12 @@
     <element identifier="j-intake" xsi:type="AndJunction">
       <name xml:lang="en"></name>
     </element>
+    <element identifier="as-intake" xsi:type="ApplicationService">
+      <name xml:lang="en">Claim Intake</name>
+    </element>
+    <element identifier="be-claim-in" xsi:type="BusinessEvent">
+      <name xml:lang="en">Claim received</name>
+    </element>
   </elements>
   <relationships>
     <relationship identifier="r-cust-ins" source="ba-customer" target="br-insurant" xsi:type="Assignment">
@@ -243,6 +249,12 @@
     </relationship>
     <relationship identifier="r-intake-valuate" source="j-intake" target="bp-valuate" xsi:type="Triggering">
     </relationship>
+    <relationship identifier="r-s-engine-intake" source="ac-engine" target="as-intake" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="r-s-intake-valuate" source="as-intake" target="bp-valuate" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="r-s-event-valuate" source="be-claim-in" target="bp-valuate" xsi:type="Triggering">
+    </relationship>
   </relationships>
   <organizations>
     <item>
@@ -262,6 +274,7 @@
       <item identifierRef="bp-pay" />
       <item identifierRef="be-damage" />
       <item identifierRef="bo-claim" />
+      <item identifierRef="be-claim-in" />
     </item>
     <item>
       <label xml:lang="en">Application</label>
@@ -288,6 +301,7 @@
       <item identifierRef="do-claim" />
       <item identifierRef="do-customer" />
       <item identifierRef="ac-fraud" />
+      <item identifierRef="as-intake" />
     </item>
     <item>
       <label xml:lang="en">Technology &amp; Physical</label>
@@ -377,6 +391,9 @@
       <item identifierRef="r-damage-intake" />
       <item identifierRef="r-intake-register" />
       <item identifierRef="r-intake-valuate" />
+      <item identifierRef="r-s-engine-intake" />
+      <item identifierRef="r-s-intake-valuate" />
+      <item identifierRef="r-s-event-valuate" />
     </item>
     <item>
       <label xml:lang="en">Views</label>
@@ -384,6 +401,10 @@
         <label xml:lang="en">Landscapes</label>
         <item identifierRef="v-empty" />
         <item identifierRef="v-landscape" />
+      </item>
+      <item identifier="folder-views-drafts">
+        <label xml:lang="en">Drafts</label>
+        <item identifierRef="v-scratch" />
       </item>
       <item identifierRef="v-data" />
     </item>
@@ -676,6 +697,28 @@ for claims under 500.</label>
         <connection identifier="c-claim-bo" xsi:type="Relationship" relationshipRef="r-claim-bo" source="o-do-claim" target="o-claim-bo">
         </connection>
         <connection identifier="c-note-fraud" xsi:type="Line" source="o-note-edited" target="o-fraud">
+        </connection>
+      </view>
+      <view identifier="v-scratch" xsi:type="Diagram" viewpoint="Business Process Cooperation">
+        <name xml:lang="en">Claim intake (draft)</name>
+        <node identifier="o-s-group" x="40" y="40" w="400" h="140" xsi:type="Container">
+          <label xml:lang="en">Intake</label>
+          <node identifier="o-s-intake" x="80" y="90" w="120" h="55" xsi:type="Element" elementRef="as-intake">
+          </node>
+        </node>
+        <node identifier="o-s-event" x="520" y="60" w="120" h="55" xsi:type="Element" elementRef="be-claim-in">
+        </node>
+        <node identifier="o-s-engine" x="80" y="260" w="120" h="55" xsi:type="Element" elementRef="ac-engine">
+        </node>
+        <node identifier="o-s-valuate" x="520" y="220" w="120" h="55" xsi:type="Element" elementRef="bp-valuate">
+        </node>
+        <node identifier="o-s-engine-2" x="300" y="260" w="120" h="55" xsi:type="Element" elementRef="ac-engine">
+        </node>
+        <connection identifier="c-s-engine-intake" xsi:type="Relationship" relationshipRef="r-s-engine-intake" source="o-s-engine" target="o-s-intake">
+        </connection>
+        <connection identifier="c-s-intake-valuate" xsi:type="Relationship" relationshipRef="r-s-intake-valuate" source="o-s-intake" target="o-s-valuate">
+        </connection>
+        <connection identifier="c-s-event-valuate" xsi:type="Relationship" relationshipRef="r-s-event-valuate" source="o-s-event" target="o-s-valuate">
         </connection>
       </view>
     </diagrams>

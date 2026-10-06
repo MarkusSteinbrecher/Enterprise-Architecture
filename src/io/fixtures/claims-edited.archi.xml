@@ -23,6 +23,9 @@
     <element identifier="bo-claim" xsi:type="BusinessObject">
       <name xml:lang="en">Claim</name>
     </element>
+    <element identifier="be-claim-in" xsi:type="BusinessEvent">
+      <name xml:lang="en">Claim received</name>
+    </element>
     <element identifier="ba-customer" xsi:type="BusinessActor">
       <name xml:lang="en">Customer</name>
       <documentation xml:lang="en">A policy holder making a claim.</documentation>
@@ -56,6 +59,9 @@
     </element>
     <element identifier="ac-fraud" xsi:type="ApplicationComponent">
       <name xml:lang="en">Fraud Detection</name>
+    </element>
+    <element identifier="as-intake" xsi:type="ApplicationService">
+      <name xml:lang="en">Claim Intake</name>
     </element>
     <element identifier="ac-portal" xsi:type="ApplicationComponent">
       <name xml:lang="en">Claims Portal</name>
@@ -178,6 +184,9 @@
     <relationship identifier="r-damage-intake" source="be-damage" target="j-intake" xsi:type="Triggering" />
     <relationship identifier="r-intake-register" source="j-intake" target="bp-register" xsi:type="Triggering" />
     <relationship identifier="r-intake-valuate" source="j-intake" target="bp-valuate" xsi:type="Triggering" />
+    <relationship identifier="r-s-engine-intake" source="ac-engine" target="as-intake" xsi:type="Realization" />
+    <relationship identifier="r-s-intake-valuate" source="as-intake" target="bp-valuate" xsi:type="Serving" />
+    <relationship identifier="r-s-event-valuate" source="be-claim-in" target="bp-valuate" xsi:type="Triggering" />
     <relationship identifier="r-ins-reg" source="bs-registration" target="br-insurant" xsi:type="Serving" />
     <relationship identifier="r-ins-info" source="bs-information" target="br-insurant" xsi:type="Serving" />
     <relationship identifier="r-ins-pay" source="bs-payment" target="br-insurant" xsi:type="Serving" />
@@ -208,6 +217,7 @@
       <item identifierRef="bp-pay" />
       <item identifierRef="be-damage" />
       <item identifierRef="bo-claim" />
+      <item identifierRef="be-claim-in" />
     </item>
     <item>
       <label xml:lang="en">Application</label>
@@ -234,6 +244,7 @@
       <item identifierRef="do-claim" />
       <item identifierRef="do-customer" />
       <item identifierRef="ac-fraud" />
+      <item identifierRef="as-intake" />
     </item>
     <item>
       <label xml:lang="en">Technology &amp; Physical</label>
@@ -323,6 +334,9 @@
       <item identifierRef="r-damage-intake" />
       <item identifierRef="r-intake-register" />
       <item identifierRef="r-intake-valuate" />
+      <item identifierRef="r-s-engine-intake" />
+      <item identifierRef="r-s-intake-valuate" />
+      <item identifierRef="r-s-event-valuate" />
     </item>
     <item>
       <label xml:lang="en">Views</label>
@@ -330,6 +344,10 @@
         <label xml:lang="en">Landscapes</label>
         <item identifierRef="v-empty" />
         <item identifierRef="v-landscape" />
+      </item>
+      <item>
+        <label xml:lang="en">Drafts</label>
+        <item identifierRef="v-scratch" />
       </item>
       <item identifierRef="v-data" />
     </item>
@@ -1173,6 +1191,88 @@ for claims under 500.</label>
           </style>
         </connection>
         <connection identifier="c-intake-valuate" relationshipRef="r-intake-valuate" xsi:type="Relationship" source="o-intake" target="o-valuate">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+      </view>
+      <view identifier="v-scratch" xsi:type="Diagram" viewpoint="Business Process Cooperation">
+        <name xml:lang="en">Claim intake (draft)</name>
+        <node identifier="o-s-group" x="40" y="40" w="400" h="140" xsi:type="Container">
+          <label xml:lang="en">Intake</label>
+          <style>
+            <fillColor r="210" g="215" b="215" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <node identifier="o-s-intake" elementRef="as-intake" xsi:type="Element" x="80" y="90" w="120" h="55">
+            <style>
+              <fillColor r="181" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+        </node>
+        <node identifier="o-s-event" elementRef="be-claim-in" xsi:type="Element" x="520" y="60" w="120" h="55">
+          <style>
+            <fillColor r="255" g="255" b="181" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-s-engine" elementRef="ac-engine" xsi:type="Element" x="80" y="260" w="120" h="55">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-s-valuate" elementRef="bp-valuate" xsi:type="Element" x="520" y="220" w="120" h="55">
+          <style>
+            <fillColor r="255" g="255" b="181" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="o-s-engine-2" elementRef="ac-engine" xsi:type="Element" x="300" y="260" w="120" h="55">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <connection identifier="c-s-intake-valuate" relationshipRef="r-s-intake-valuate" xsi:type="Relationship" source="o-s-intake" target="o-s-valuate">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-s-event-valuate" relationshipRef="r-s-event-valuate" xsi:type="Relationship" source="o-s-event" target="o-s-valuate">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-s-engine-intake" relationshipRef="r-s-engine-intake" xsi:type="Relationship" source="o-s-engine" target="o-s-intake">
           <style>
             <lineColor r="0" g="0" b="0" />
             <font name="Lucida Grande" size="12">

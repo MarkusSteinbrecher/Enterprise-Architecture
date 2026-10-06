@@ -207,3 +207,76 @@ export function DeleteRelationshipDialog({
     </div>
   )
 }
+
+export interface DeleteElementDialogProps {
+  element: Element
+  /** How many relationships go with it. */
+  relations: number
+  /** The views drawing it other than this one. */
+  elsewhere: readonly View[]
+  onConfirm: () => void
+  onCancel: () => void
+}
+
+/**
+ * Archi's "Delete from Model" for a shape (#130): the element goes, with every
+ * relationship it has and every drawing of it, so the dialog says how many
+ * relationships and names the other views that lose a drawing.
+ */
+export function DeleteElementDialog({
+  element,
+  relations,
+  elsewhere,
+  onConfirm,
+  onCancel,
+}: DeleteElementDialogProps) {
+  const ref = useRef<HTMLDivElement>(null)
+  useFocusTrap(ref)
+  useEscape(onCancel)
+  return (
+    <div
+      className="dialog-overlay"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onCancel()
+      }}
+    >
+      <div
+        className="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Delete element from the model"
+        ref={ref}
+      >
+        <div className="dialog__title section-label">Delete from model</div>
+        <p className="connect-menu__text">
+          {typeLabel(element.type)} “{element.name}” leaves the model
+          {relations > 0
+            ? `, with its ${relations} relationship${relations === 1 ? '' : 's'},`
+            : ''}{' '}
+          and every view that draws it.
+        </p>
+        {elsewhere.length > 0 ? (
+          <div className="dialog__field">
+            <div className="dialog__label">Also drawn in</div>
+            <ul className="connect-menu__views">
+              {elsewhere.map((view) => (
+                <li key={view.id}>{view.name}</li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="connect-menu__text">No other view draws it.</p>
+        )}
+        <div className="dialog__actions">
+          <button type="button" className="button" onClick={onCancel}>
+            Cancel
+          </button>
+          <button type="button" className="button button--primary" onClick={onConfirm}>
+            Delete from model
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

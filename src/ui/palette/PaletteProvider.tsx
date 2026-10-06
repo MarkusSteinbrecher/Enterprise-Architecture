@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toggleTheme } from '@/app/theme'
+import { useModelStoreContext } from '@/store'
+import { useCreateView } from '@/ui/views/use-create-view'
 import { useSaveWorkspace } from '@/ui/shell/use-save-workspace'
 import { useUndoRedo } from '@/ui/shell/use-undo-redo'
 import { CommandPalette, type PaletteAction } from './CommandPalette'
@@ -26,6 +28,9 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const { saveFile } = useSaveWorkspace()
   const { undoLabel, redoLabel, undo, redo } = useUndoRedo()
+  const { role } = useModelStoreContext()
+  const createView = useCreateView()
+  const [screenActions, setScreenActions] = useState<PaletteAction[]>([])
 
   const openPalette = useCallback(() => setOpen(true), [])
   const closePalette = useCallback(() => setOpen(false), [])
@@ -44,8 +49,13 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
       // Present only when there is a step to take, named for what it would do.
       ...(undoLabel ? [{ id: 'undo', label: `Undo: ${undoLabel}`, glyph: 'UN', run: undo }] : []),
       ...(redoLabel ? [{ id: 'redo', label: `Redo: ${redoLabel}`, glyph: 'RE', run: redo }] : []),
+      // Only the tab that holds the model can make one (#130).
+      ...(role === 'writer'
+        ? [{ id: 'new-view', label: 'New view', glyph: 'VW', run: () => void createView() }]
+        : []),
+      ...screenActions,
     ],
-    [navigate, saveFile, undoLabel, redoLabel, undo, redo],
+    [navigate, saveFile, undoLabel, redoLabel, undo, redo, role, createView, screenActions],
   )
 
   useEffect(() => {
@@ -85,7 +95,7 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
   }, [open, navigate, undo, redo])
 
   const value = useMemo(
-    () => ({ open, openPalette, closePalette }),
+    () => ({ open, openPalette, closePalette, setScreenActions }),
     [open, openPalette, closePalette],
   )
 

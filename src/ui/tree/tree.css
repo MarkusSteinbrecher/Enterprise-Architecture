@@ -15,6 +15,7 @@
 
 .model-tree__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
@@ -28,6 +29,8 @@
 
 .model-tree__tool {
   height: 22px;
+  /* A tool that runs out of room goes to the next line whole (#130 added a fourth). */
+  white-space: nowrap;
   padding: 0 6px;
   background: transparent;
   border: 1px solid transparent;

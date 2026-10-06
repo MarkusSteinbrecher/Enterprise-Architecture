@@ -32,7 +32,7 @@ export const SCREEN = { width: 2000, height: 1500 }
 
 export function setup(
   role: TabRole = 'writer',
-  { prepare }: { prepare?: (store: ModelStore) => void } = {},
+  { prepare, viewId = LANDSCAPE }: { prepare?: (store: ModelStore) => void; viewId?: string } = {},
 ) {
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
     this: HTMLElement,
@@ -57,7 +57,7 @@ export function setup(
   const navigator: { current?: NavigateFunction } = {}
   render(
     <MemoryRouter
-      initialEntries={[`/view/${LANDSCAPE}`]}
+      initialEntries={[`/view/${viewId}`]}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
       <ModelStoreContext.Provider value={value}>
@@ -69,12 +69,15 @@ export function setup(
     </MemoryRouter>,
   )
   const user = userEvent.setup()
-  const canvas = screen.getByTestId('view-canvas')
-  const nodeEl = (id: string) => canvas.querySelector(`[data-node="${id}"]`)!
-  const view = (): View => store.view(LANDSCAPE)!
+  /** The canvas element that takes the gestures: there even when the view is empty and draws nothing. */
+  const surface = document.querySelector<HTMLElement>('.view-screen__canvas')!
+  // The drawing; an empty view has none, and its tests use `surface`.
+  const canvas = screen.queryByTestId('view-canvas') ?? surface
+  const nodeEl = (id: string) => surface.querySelector(`[data-node="${id}"]`)!
+  const view = (): View => store.view(viewId)!
   /** Go to a URL, as the model tree does when it selects an element (`?element=`). */
   const go = (to: string) => act(() => void navigator.current?.(to))
-  return { store, dispatch, user, canvas, nodeEl, view, go }
+  return { store, dispatch, user, canvas, surface, nodeEl, view, go }
 }
 
 /** Where a node is drawn: its `<g>` is translated to its absolute position. */

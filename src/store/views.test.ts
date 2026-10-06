@@ -367,3 +367,45 @@ describe('updateView keeps what an edit does not touch (#128)', () => {
     expect(s.canUndo).toBe(false)
   })
 })
+
+describe('placing a new element in a view (#130)', () => {
+  it('adds the element and its drawing as one command, named for both, and one undo takes both', () => {
+    const s = store()
+    const before = model(s)
+    const made = s.addElementInView(
+      'view-landscape',
+      { id: 'el-new', type: 'BusinessActor', name: 'Broker', properties: {} },
+      {
+        id: 'n-new',
+        kind: 'element',
+        element: 'el-new',
+        bounds: { x: 10, y: 20, width: 120, height: 55 },
+      },
+    )
+    expect(made).toBe(true)
+    expect(s.history).toHaveLength(1)
+    expect(s.history[0]!.label).toBe('Added Business Actor “Broker” to “Claims landscape”')
+    expect(s.element('el-new')).toBeDefined()
+    expect(s.viewsDrawing('el-new').map((v) => v.id)).toEqual(['view-landscape'])
+
+    s.undo()
+    expect(model(s)).toBe(before)
+  })
+
+  it('dispatches nothing for a view that is not there', () => {
+    const s = store()
+    const made = s.addElementInView(
+      'no-such-view',
+      { id: 'el-new', type: 'BusinessActor', name: 'Broker', properties: {} },
+      {
+        id: 'n-new',
+        kind: 'element',
+        element: 'el-new',
+        bounds: { x: 0, y: 0, width: 1, height: 1 },
+      },
+    )
+    expect(made).toBe(false)
+    expect(s.history).toHaveLength(0)
+    expect(s.element('el-new')).toBeUndefined()
+  })
+})
