@@ -412,7 +412,7 @@ describe('the branches only a damaged or unusual file reaches (#13)', () => {
   /** A minimal Archi model around `body`, which sits in the top-level Other folder. */
   const model = (body: string, extra = '') =>
     `<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="m">
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="m" version="5.0.0">
   <folder name="Business" id="top-b" type="business">
     <element xsi:type="archimate:BusinessActor" name="A" id="a"/>
     <element xsi:type="archimate:BusinessRole" name="B" id="b"/>

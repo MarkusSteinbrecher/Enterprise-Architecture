@@ -6,7 +6,7 @@ import { xmlRoot, isArchiNamespace } from './xml-root'
  * remembered for each new fixture, and one left off it would never be scanned
  * (#116 review). Every one of them is Archi's own output.
  */
-const FIXTURES = import.meta.glob<string>('./fixtures/*.archimate', {
+const FIXTURES = import.meta.glob<string>('./fixtures/**/*.archimate', {
   query: '?raw',
   import: 'default',
   eager: true,

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="Archi compatibility" id="m-compat" version="5.0.0">
+  <folder name="Strategy" id="id-2357be0d28b34daabefe2162ac5dbdcb" type="strategy"/>
+  <folder name="Business" id="f-business" type="business">
+    <folder name="Places" id="f-places">
+      <element xsi:type="archimate:BusinessRole" name="Role" id="e-role"/>
+    </folder>
+    <element xsi:type="archimate:BusinessActor" name="Actor" id="e-actor"/>
+  </folder>
+  <folder name="Application" id="id-024d13bbc6204f878080189ef84a6aac" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-b9461265d6aa46d7b5326d8141513041" type="technology"/>
+  <folder name="Motivation" id="id-ef4d34677c7c4f989655af712cfb87da" type="motivation">
+    <element xsi:type="archimate:Meaning" name="Meaning" id="e-meaning"/>
+    <element xsi:type="archimate:Value" name="Value" id="e-value"/>
+  </folder>
+  <folder name="Implementation &amp; Migration" id="id-2180cc92a66e47f49658bac998d9d7bd" type="implementation_migration"/>
+  <folder name="Other" id="f-other" type="other">
+    <element xsi:type="archimate:Grouping" name="Grouping absent" id="e-grouping-absent"/>
+    <element xsi:type="archimate:Grouping" name="Grouping centre" id="e-grouping-centre"/>
+    <element xsi:type="archimate:Grouping" name="Grouping right" id="e-grouping-right"/>
+    <element xsi:type="archimate:Junction" id="e-junction"/>
+    <element xsi:type="archimate:Folder" name="Old junctions" id="f-old-junctions">
+      <element xsi:type="archimate:Junction" id="e-junction-nested"/>
+    </element>
+    <element xsi:type="archimate:Junction" id="e-junction-connectors"/>
+    <element xsi:type="archimate:Location" name="Location" id="e-location"/>
+    <element xsi:type="archimate:Location" name="Location at the top" id="e-location-top"/>
+  </folder>
+  <folder name="Relations" id="f-relations" type="relations">
+    <element xsi:type="archimate:AssociationRelationship" id="r-assoc" source="e-actor" target="e-role"/>
+    <element xsi:type="archimate:Folder" name="Older derived" id="f-older-derived">
+      <element xsi:type="archimate:ServingRelationship" id="r-derived-nested" source="e-role" target="e-actor"/>
+    </element>
+    <element xsi:type="archimate:ServingRelationship" id="r-derived" source="e-actor" target="e-role"/>
+  </folder>
+  <folder name="Views" id="f-diagrams" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Compatibility" id="v-compat">
+      <child xsi:type="archimate:Group" id="o-group-grown" name="Group grown" textAlignment="1">
+        <bounds x="20" y="20"/>
+        <child xsi:type="archimate:DiagramObject" id="o-actor-sized" archimateElement="e-actor">
+          <bounds x="10" y="30" width="100" height="40"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="o-role-default" archimateElement="e-role">
+          <bounds x="300" y="40"/>
+        </child>
+        <child xsi:type="archimate:DiagramModelImage" id="o-image">
+          <bounds x="450" y="40"/>
+        </child>
+        <child xsi:type="archimate:Group" id="o-group-inner" name="Inner" textAlignment="1">
+          <bounds x="20" y="120"/>
+          <child xsi:type="archimate:Note" id="o-note-inner">
+            <bounds x="10" y="30"/>
+            <content>Inner note</content>
+          </child>
+        </child>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-role-container" archimateElement="e-role">
+        <bounds x="700" y="550"/>
+        <child xsi:type="archimate:Note" id="o-note-in-role">
+          <bounds x="10" y="60"/>
+          <content>In a role</content>
+        </child>
+      </child>
+      <child xsi:type="archimate:Group" id="o-group-centre" name="Group centre" textAlignment="1">
+        <bounds x="20" y="500" width="180" height="120"/>
+      </child>
+      <child xsi:type="archimate:Group" id="o-group-right" name="Group right" textAlignment="4">
+        <bounds x="220" y="500" width="180" height="120"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-grouping-absent" textAlignment="1" archimateElement="e-grouping-absent" type="1">
+        <bounds x="20" y="650"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-grouping-centre" textAlignment="1" archimateElement="e-grouping-centre" type="1">
+        <bounds x="440" y="650" width="180" height="120"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-grouping-right" textAlignment="4" archimateElement="e-grouping-right" type="1">
+        <bounds x="640" y="650" width="180" height="120"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-junction" archimateElement="e-junction">
+        <bounds x="700" y="20"/>
+      </child>
+      <child xsi:type="archimate:Note" id="o-note">
+        <bounds x="700" y="100"/>
+        <content>Note</content>
+      </child>
+      <child xsi:type="archimate:DiagramModelReference" id="o-viewref" model="v-other">
+        <bounds x="700" y="250"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-location-wide" archimateElement="e-location">
+        <bounds x="700" y="400" width="200"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-meaning-alpha" lineColor="#ff0000" alpha="100" archimateElement="e-meaning" type="1">
+        <bounds x="900" y="20" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-value-alpha" alpha="100" archimateElement="e-value" type="1">
+        <bounds x="900" y="100" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-location-line-alpha" lineColor="#00ff00" alpha="100" archimateElement="e-location-top">
+        <bounds x="900" y="180" width="120" height="55"/>
+        <feature name="lineAlpha" value="200"/>
+      </child>
+    </element>
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Other view" id="v-other"/>
+  </folder>
+</archimate:model>

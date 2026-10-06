@@ -303,8 +303,35 @@ Archi applies the table whatever the namespace, and so does this reader. What wa
 converted is reported once (`archimate.legacy-names-converted`), counting only
 what was kept. The one deliberate difference: an `OrJunction` stays an
 or-junction, where Archi 5.10 maps the class and opens it as an and-junction
-(`archimate.legacy-or-junction`, #105). Archi's version-keyed compatibility
-handlers are not applied yet (#118). Archi's file is closer to the model than its
+(`archimate.legacy-or-junction`, #105). 
+
+Archi 5.10 also runs **compatibility handlers** on every model it opens, keyed on
+the model's `version` attribute and not on its namespace, and this reader applies
+them by the same rules (`archi-compatibility.ts`, #118). Below 3.0.0, a shape
+with either side unset takes Archi's legacy default (120 × 55 for every element,
+a Grouping too), and a group or element shape grows to hold its children.
+Below 4.0.0, the top-level folders named Connectors and Derived Relations are
+emptied into Other and Relations, and a Location, Meaning or Value in a Business
+subfolder moves to the top of its own group. Below 4.0.0 Archi also saves such a
+moved subfolder as an `archimate:Folder` *element*, and it reads it back as a
+folder, so this reader does too, whatever the version. Below 4.4.0, a group's or
+Grouping's centred label (absent or written) is aligned left. At exactly 4.0.1
+or 4.4.0, every shape's outline opacity becomes its fill opacity. Below 5.0.0,
+thirteen element types swap their figure between 0 and 1. Figures are not drawn,
+so this only decides whether one is reported as undrawn. The version is compared
+as Archi compares it (`StringUtils.versionNumberAsInt`). **A missing version is
+EMF's default, `""`, which counts as older than every threshold**, so Archi
+applies every handler to a file without one, and so does this reader. What
+changed is reported once (`archimate.archi-compatibility`). The evidence is
+Archi's own: one model saved by Archi 5.10 under each version around each
+threshold (`fixtures/archi-compatibility/`), plus Open Day, and
+`archi-compatibility.test.ts` requires the older file to read as Archi's save
+does. A top-level folder that is none of the fixed groups is placed under Other
+(`archimate.folder-type-unknown`). The warning says which kind it is: an
+ordinary folder, an older Archi's `connectors` or `derived`, or a type Archi
+5.10 does not define.
+
+Archi's file is closer to the model than its
 export is, and the export loses things, so the readers deliberately disagree in
 a few places. `archimate-native.test.ts` reads each checked-in pair (one model
 saved by Archi, and exported by Archi) and allows only these differences:

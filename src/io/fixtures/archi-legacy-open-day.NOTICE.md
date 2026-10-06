@@ -4,6 +4,7 @@ A genuine model file in Archi's legacy namespace (`http://www.bolton.ac.uk/archi
 
 - **Source:** the "Open Day" example shipped with Archi 2.0.0. [archimatetool/archi](https://github.com/archimatetool/archi), tag `release_2.0.0` (commit `885da4057146ce9b71135edd27e247817262615e`), path `uk.ac.bolton.archimate.editor.build/examples/OpenDay.archimate`.
 - **Archi 5.10 opens it as:** 27 elements, 39 relationships, 4 views and 47 connections, with nothing dropped. This was measured by loading the file with Archi 5.10.0's command line and saving it (`--loadModel … --saveModel …`).
+- **Derived file:** `archi-compatibility/open-day.archimate` is the same model as Archi 5.10.0 saved it after its compatibility handlers ran (#118), written by `scripts/fixtures/export-with-archi.sh`. It is covered by the same notice.
 - **License:** MIT, as below. The text is the one in the same plugin at that tag (`uk.ac.bolton.archimate.editor.build/LICENSE.txt`).
 
 ---

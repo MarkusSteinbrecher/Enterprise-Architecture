@@ -14,7 +14,7 @@ import type { ImportResult } from './problems'
 /** A minimal Archi model: two actors, a view folder, and `body` in Other. */
 const archi = (body: string, extra = '') =>
   `<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="m">
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="m" version="5.0.0">
   <folder name="Business" id="top-b" type="business">
     <element xsi:type="archimate:BusinessActor" name="A" id="a"/>
     <element xsi:type="archimate:BusinessRole" name="B" id="b"/>
