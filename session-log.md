@@ -1,5 +1,11 @@
 # Session Log
 
+## 2026-10-06 (cont.) — Next phase decided: the diagram editor (ADR 0008)
+
+The sponsor chose **M2, the diagram editor**, as the next step after M1. That settles #74's open question and the concept's §7.5. ADR 0008 records it: thin slices that each round-trip to Archi, beginning with move and resize, valid-only connecting, and saving a file Archi opens as drawn. #74 is updated, with M1 ticked and the decision recorded. #123 and #124 are merged.
+
+**Next session, started fresh:** file the M2 issues from #74's list, each with acceptance criteria, beginning with the first slice. The engine is ADR 0006 (Proposed). Read it and the concept's §2.2 and §5 first.
+
 ## 2026-10-06 (cont.) — #123 (#118) reviewed; #115 landed as PR #125
 
 **All seven findings are fixed in `dc9b6c3`; CI is green.** Archi 5.10 re-saved the extended evidence model, and 30 of 30 mutations are caught. #125 merged, and `feat/108` and `feat/115` were deleted.
