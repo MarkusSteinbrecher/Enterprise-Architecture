@@ -1,5 +1,27 @@
 # Session Log
 
+## 2026-10-06 (wrap-up) — #144 merged: views can be made from scratch
+
+**Merged:** #144 (#130) after its review fixes. #130 is closed, and #74 has it ticked.
+
+**State:**
+- `main` is at `5a91390`.
+- M2 open: #131–#137.
+- New follow-ups from the #144 review: #145 (a dropped element brings its relationships to shapes already drawn, as Archi does) and #146 (a collapsible palette; at 1280 px the canvas is about 325 px wide).
+- Also open: #138, #96, #97.
+- Five nice-to-haves from the #144 review were not filed as issues. They are on the PR:
+  - clear an armed tool when the viewpoint hides its type
+  - a junction's history entry shows empty quotes
+  - one helper for "add X and draw it" instead of two copies
+  - a writer check on renaming in the tree (unreachable today)
+  - say on the palette that Enter places, for screen-reader users
+- Merged branches the permission classifier will not let me delete: `feat/130-create-views`, plus `feat/129-connect`, `feat/127-archi-roundtrip-check`, `feat/128-move-resize` and `chore/adr-0008-editor-next` from before.
+
+**Next session, started fresh:** #131 (nesting, with the "which relationship does this nesting mean" prompt) on top of `main`.
+- Placement already nests where a click lands (`placement` in `src/ui/views/create.ts`), and so does a move (`dropTarget` in `edit.ts`). #131 adds the prompt to both.
+- Archi's own nesting prompt is `CreateNestedArchimateConnectionsWithDialogCommand`. Its drop policy calls it when `ConnectionPreferences.createRelationWhenAddingModelTreeElement()` is on. Read both with `javap`.
+- Extend `edited-claims.ts` (`scratchView`) and re-run `scripts/fixtures/archi-roundtrip.sh` with `ARCHI=/Applications/Archi.app/Contents/MacOS/Archi`.
+
 ## 2026-10-06 (cont.) — #144 reviewed and its blocking findings fixed
 
 **Reviewed** with `/review-pr 144 high`, in the session that wrote it, so less independent than usual. The generic code-review pass ran in a fresh agent and found the two worst defects.
