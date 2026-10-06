@@ -403,3 +403,49 @@ read is `import.content-unread` (#101), including model `<metadata>` and a
 specialization no imported concept uses. An Archi model saved with images is a zip archive, which is refused
 with an explanation (`archimate.archive-unsupported`). Any other zip, such as a
 `.docx`, is named as an archive, not as an Archi model (`file.archive-unrecognised`).
+
+## Archi as the oracle for edited views (#127)
+
+ADR 0008 makes Archi 5.10 the test of the editor: a view edited in Archipelago
+and saved must open in Archi as it was drawn. `src/io/archi-roundtrip.test.ts`
+holds that for one edited view, and every editor slice extends it.
+
+- `src/test/edited-claims.ts` edits the claims landscape through the store,
+  one command per edit: move, resize, re-parent both ways, bend-points added,
+  moved and removed, appearance, a removed note, and a new element, relationship
+  and note.
+- `scripts/fixtures/build-edited-claims.ts` writes it with the exchange writer
+  to `fixtures/claims-edited.xml`. A test fails when the writer's output has
+  moved on from the checked-in file.
+- `scripts/fixtures/archi-roundtrip.sh` has Archi import that file, save the
+  model (`claims-edited.archi.archimate`) and export it again
+  (`claims-edited.archi.xml`). Archi's command line exits 0 when an import
+  fails, so the script checks that the files exist.
+- `src/test/view-oracle.ts` compares the two, drawing by drawing: absolute
+  bounds, parent, what is drawn, source and target, bend-points and every
+  appearance field. Drawings are matched by id, because Archi's exchange import
+  keeps every `identifier`. A drawing Archi made up has an id of its own and is
+  reported as `extra`.
+
+To re-run after an editor or writer change:
+
+```sh
+npx vite-node scripts/fixtures/build-edited-claims.ts
+scripts/fixtures/archi-roundtrip.sh src/io/fixtures/claims-edited.xml \
+  src/io/fixtures/claims-edited.archi.archimate src/io/fixtures/claims-edited.archi.xml
+```
+
+`export-with-archi.sh` runs both, after re-saving the claims model they start
+from.
+
+**What Archi changes, and why.** The test requires every difference to have one
+of five reasons, each read from Archi 5.10's `XMLModelImporter` with `javap`,
+and it pins which drawing has which reason:
+
+| Difference | Reason |
+|---|---|
+| Text alignment, text position, strikethrough | The format has no attribute for them. `archipelago.style` carries them, and Archi keeps that property without drawing it. So the oracle removes the property before reading Archi's save. |
+| A shape's line width is gone | `addNodeStyle` reads fill, line colour and font only. `addConnectionStyle` does read `lineWidth`, so a connection's must survive. |
+| A font with no name comes back named | `addFont` starts from the user's default view font (`FontFactory.getDefaultUserViewFontData`). |
+| An alpha one byte off | The format holds a percent, and Archi reads it as `round(a × 255 / 100)`. |
+| Connections Archi added | `addNestedConnections` draws every relationship between a shape and the element shape it sits in. Archi hides them when drawing (#96). Its exporter leaves them out again (`XMLModelExporter.isNestedConnection`), and it also leaves out one we drew on purpose between nested shapes. |

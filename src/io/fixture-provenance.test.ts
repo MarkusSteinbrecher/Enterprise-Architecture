@@ -71,6 +71,7 @@ describe('fixtures said to be saved by Archi hold only what Archi writes (#100)'
     expect(Object.keys(FIXTURES)).toEqual(
       expect.arrayContaining([
         './fixtures/archi-coverage.archimate',
+        './fixtures/claims-edited.archi.archimate',
         './fixtures/claims-platform.archimate',
         './fixtures/relationship-attributes.archimate',
         './fixtures/text-position.archimate',
