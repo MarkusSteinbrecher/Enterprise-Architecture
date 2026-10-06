@@ -1,5 +1,26 @@
 # Session Log
 
+## 2026-10-06 (cont.) — #144 reviewed and its blocking findings fixed
+
+**Reviewed** with `/review-pr 144 high`, in the session that wrote it, so less independent than usual. The generic code-review pass ran in a fresh agent and found the two worst defects.
+
+**Five blocking findings, all fixed in `7b456d7`:**
+1. A view's name field took focus back after every rename. It focused itself on mount and remounts on every rename.
+2. Committing a shape's name by leaving the field moved focus to the canvas, so Backspace in the field the user had clicked deleted the new shape.
+3. Placing from the keyboard re-fit the view.
+4. No real-browser journey dragged a tree element onto the canvas. Journey 10 now does, in Chromium.
+5. Nothing tested where focus lands after the element panel's Remove from view and Delete from model.
+
+Each fix has a test that fails without it.
+
+**Checked against Archi 5.10 with `javap`:** its drop never consults the viewpoint, and it adds an element the view already draws. It also draws the dropped element's relationships to shapes already in the view; filed as #145. A collapsible palette is #146.
+
+**Harvested:**
+- A CLAUDE.md line on when code may move focus. #142's focus finding came back in the very next PR.
+- A sharpened review-skill bullet: a flag that every edit path must set belongs in the one function they all call.
+
+**Open:** five nice-to-haves remain on #144. Re-review #144, then #131.
+
 ## 2026-10-06 (cont.) — #130 implemented: views made from scratch (PR #144)
 
 **What a user can do now:**
