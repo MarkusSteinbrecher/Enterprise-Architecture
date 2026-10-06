@@ -17,7 +17,8 @@ export interface InlineNameProps {
   /** Where the shape is on screen, relative to the canvas. */
   box: { left: number; top: number; width: number; height: number }
   label: string
-  onCommit: (value: string) => void
+  /** `key` for Enter, `blur` for leaving the field: only Enter hands focus on. */
+  onCommit: (value: string, ended: 'key' | 'blur') => void
   onCancel: () => void
 }
 
@@ -34,8 +35,8 @@ export function InlineName({
     ref.current?.focus()
     ref.current?.select()
   }, [])
-  const finish = (commit: boolean, value: string) => {
-    if (commit) onCommit(value)
+  const finish = (commit: boolean, value: string, ended: 'key' | 'blur' = 'key') => {
+    if (commit) onCommit(value, ended)
     else onCancel()
   }
   const props = {
@@ -64,7 +65,7 @@ export function InlineName({
       }
     },
     onBlur: (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      finish(true, event.currentTarget.value),
+      finish(true, event.currentTarget.value, 'blur'),
   }
   return multiline ? <textarea {...props} /> : <input {...props} />
 }

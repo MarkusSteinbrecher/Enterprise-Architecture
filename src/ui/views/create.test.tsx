@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen, within } from '@testing-library/react'
 import { toCanonicalJson } from '@/io/canonical-json'
 import { ELEMENT_TYPES, absoluteBounds, type ElementNode, type ViewNode } from '@/model'
 import type { ModelStore } from '@/store'
-import { click, setup, type User } from '@/test/view-editor'
+import { SCREEN, click, setup, type User } from '@/test/view-editor'
 import { ELEMENT_DRAG_TYPE } from './create'
+import { fitViewport } from './geometry'
 
 /**
  * Making things in a view (#130): the palette, placing, naming, drawing an
@@ -74,6 +75,23 @@ describe('placing a new element from the palette (#130)', () => {
     act(() => void store.undo())
     act(() => void store.undo())
     expect(model(store)).toBe(before)
+  })
+
+  it('leaves focus where the user moved it when a name is committed by leaving the field (#144 review)', async () => {
+    const { store, user, surface, view } = setup()
+    await user.click(tool('Business Actor'))
+    await click(user, surface, EMPTY_SPOT)
+    const node = newest(view().nodes) as ElementNode
+    await user.type(screen.getByRole('textbox', { name: 'Element name' }), '{End} 2')
+
+    // Clicking another field commits the name, and that field keeps the focus:
+    // a Backspace there must not reach the canvas, where it deletes the selected shape.
+    const filter = screen.getByRole('searchbox', { name: /Find an element type/ })
+    await user.click(filter)
+    expect(filter).toHaveFocus()
+    expect(store.element(node.element)!.name).toBe('Business Actor 2')
+    await user.keyboard('{Backspace}')
+    expect(view().nodes.some((n) => n.id === node.id)).toBe(true)
   })
 
   it('places inside the container under the click, relative to it', async () => {
@@ -173,6 +191,21 @@ describe('placing a new element from the palette (#130)', () => {
     expect(node.bounds).toEqual({ x: 940, y: 723, width: 120, height: 55 })
     expect(store.element(node.element)!.type).toBe('Capability')
     expect(screen.getByRole('textbox', { name: /^(Element|Group) name$/ })).toHaveFocus()
+  })
+
+  it('does not move the view when the keyboard places a shape (#144 review)', () => {
+    // A canvas with a size, so the auto-fit runs: jsdom lays nothing out.
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(SCREEN.width)
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(SCREEN.height)
+    const { surface, view } = setup('writer', { viewId: 'v-empty' })
+    // An empty view sits where fit puts nothing. Placing gives the drawing its
+    // first bounds, which an auto-fit still in charge would centre on.
+    const before = fitViewport(undefined, SCREEN.width, SCREEN.height)
+    fireEvent.keyDown(tool('Capability'), { key: 'Enter' })
+    expect(view().nodes).toHaveLength(1)
+    expect(surface.querySelector('svg > g')!.getAttribute('transform')).toBe(
+      `translate(${before.x} ${before.y}) scale(${before.zoom})`,
+    )
   })
 
   it('places the first match of the type filter on Enter, matching each word typed', async () => {
@@ -301,6 +334,18 @@ describe('drawing an element the model holds (#130)', () => {
     ).toHaveLength(drawings.length + 1)
   })
 
+  it('does not move the view when a drop draws the first shape (#144 review)', () => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(SCREEN.width)
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(SCREEN.height)
+    const { surface, view } = setup('writer', { viewId: 'v-empty' })
+    const before = fitViewport(undefined, SCREEN.width, SCREEN.height)
+    expect(drop(surface, { [ELEMENT_DRAG_TYPE]: 'ac-engine' }, EMPTY_SPOT)).toBe(true)
+    expect(view().nodes).toHaveLength(1)
+    expect(surface.querySelector('svg > g')!.getAttribute('transform')).toBe(
+      `translate(${before.x} ${before.y}) scale(${before.zoom})`,
+    )
+  })
+
   it('takes no drag that is not a model element', () => {
     const first = setup()
     expect(drop(first.surface, { 'text/plain': 'Claims' }, EMPTY_SPOT)).toBe(false)
@@ -316,7 +361,7 @@ describe('drawing an element the model holds (#130)', () => {
 
 describe('removing and deleting an element (#130)', () => {
   it('Delete from model names the other views, removes every drawing, and one undo restores them', async () => {
-    const { store, dispatch, user, canvas, nodeEl } = setup()
+    const { store, dispatch, user, canvas, surface, nodeEl } = setup()
     const before = model(store)
     const node = [...canvas.querySelectorAll('[data-node]')].find((el) =>
       store
@@ -343,6 +388,8 @@ describe('removing and deleting an element (#130)', () => {
       expect(view.nodes.some((n) => n.kind === 'element' && n.element === 'ac-engine')).toBe(false)
     }
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    // The panel that held the button is gone: the canvas takes focus, so keys still edit (#142, #144 review).
+    expect(surface).toHaveFocus()
 
     act(() => void store.undo())
     expect(model(store)).toBe(before)
@@ -364,12 +411,13 @@ describe('removing and deleting an element (#130)', () => {
     expect(dispatch).not.toHaveBeenCalled()
   })
 
-  it('Remove from view keeps the element in the model', async () => {
-    const { store, dispatch, user, nodeEl, view } = setup()
+  it('Remove from view keeps the element in the model, and gives the canvas focus', async () => {
+    const { store, dispatch, user, surface, nodeEl, view } = setup()
     const node = view().nodes.find((n) => n.kind === 'element' && n.element === 'ac-engine')!
     await click(user, nodeEl(node.id), { x: 0, y: 0 })
     await user.click(screen.getByRole('button', { name: 'Remove from view' }))
     expect(dispatch).toHaveBeenCalledTimes(1)
+    expect(surface).toHaveFocus()
     expect(view().nodes.some((n) => n.id === node.id)).toBe(false)
     expect(store.element('ac-engine')).toBeDefined()
   })

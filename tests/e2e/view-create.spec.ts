@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { test, expect, dirtyCount, loadDemo, saveWorkspaceFile } from './support'
+import { test, expect, DEMO, dirtyCount, loadDemo, saveWorkspaceFile } from './support'
 
 /**
  * Journey 10 — a view made from scratch in a real browser (#130): made from the
@@ -85,7 +85,14 @@ test('a view is made, two elements are placed and connected, and the file holds 
   await expect(canvas.locator('[data-connection]')).toHaveCount(1)
   expect(await portal.getAttribute('data-node')).toBeTruthy()
 
-  // Saved: the file holds the view, its two drawings and the one line. A
+  // An element the model holds, dragged in from the tree: Chromium's own drag,
+  // `dataTransfer` and all, which the unit tests can only fake (#144 review).
+  await tree
+    .getByRole('treeitem', { name: 'Handle Claim' })
+    .dragTo(page.locator('.view-screen__canvas'), { targetPosition: { x: 60, y: 420 } })
+  await expect(canvas.locator('[data-node]')).toHaveCount(3)
+
+  // Saved: the file holds the view, its three drawings and the one line. A
   // download is a write the app cannot see finish, so the indicator does not
   // claim it (CLAUDE.md, Constraints), as in journey 5.
   const unsaved = await dirtyCount(page)
@@ -93,13 +100,20 @@ test('a view is made, two elements are placed and connected, and the file holds 
   expect(await dirtyCount(page)).toBe(unsaved)
   const view = saved.views.find((v: { name: string }) => v.name === 'Claims overview')
   expect(view).toBeTruthy()
-  expect(view.nodes).toHaveLength(2)
+  expect(view.nodes).toHaveLength(3)
   expect(view.connections).toHaveLength(1)
   const elements = new Map<string, { name: string; type: string }>(
     saved.elements.map((e: { id: string; name: string; type: string }) => [e.id, e]),
   )
   const drawn = view.nodes.map((n: { element: string }) => elements.get(n.element))
-  expect(drawn.map((e: { name: string }) => e.name).sort()).toEqual(['Broker', 'Claims Portal'])
+  expect(drawn.map((e: { name: string }) => e.name).sort()).toEqual([
+    'Broker',
+    'Claims Portal',
+    'Handle Claim',
+  ])
+  // The demo's own Handle Claim, drawn again, not a copy: two new elements in all.
+  expect(saved.elements).toHaveLength(DEMO.elements + 2)
+  expect(saved.elements.filter((e: { name: string }) => e.name === 'Handle Claim')).toHaveLength(1)
   const relationship = saved.relationships.find(
     (r: { id: string }) => r.id === view.connections[0].relationship,
   )

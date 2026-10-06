@@ -240,9 +240,26 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     [editable],
   )
   useScreenActions(screenActions)
-  /** A view made a moment ago opens with its name field focused (#130). */
+  /**
+   * A view made a moment ago opens with its name field focused and selected
+   * (#130). Decided here, once, because this mounts once per view: the field
+   * itself remounts on every rename (`key={view.name}`), and a field that
+   * focused itself on mount took focus back after each one (#144 review). The
+   * route state is consumed, so going Back to the view does not do it again.
+   */
   const location = useLocation()
-  const [naming] = useState(() => (location.state as ViewRouteState | null)?.naming === true)
+  const nameField = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if ((location.state as ViewRouteState | null)?.naming !== true) return
+    nameField.current?.focus()
+    nameField.current?.select()
+    navigate(
+      { pathname: location.pathname, search: location.search },
+      { replace: true, state: null },
+    )
+    // Only as the view opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // An undo can take away a selected shape; the selection holds only what is drawn.
   const present = useMemo(() => new Set(view.nodes.map((n) => n.id)), [view])
@@ -581,6 +598,10 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
    * none to show.
    */
   const place = (chosen: Tool, at: Point) => {
+    // An edit hands the viewport to the user, so the auto-fit cannot make the
+    // view jump. Here, not at each entry point: the keyboard path missed it
+    // (#144 review).
+    auto.current = false
     setTool(null)
     const spot = placement(view, at, toolSize(chosen), isJunction)
     if (chosen.kind === 'element') {
@@ -632,6 +653,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const drawExisting = (elementId: string, at: Point) => {
     const element = store.element(elementId)
     if (!element) return
+    auto.current = false
     const spot = placement(view, at, defaultNodeSize('element', element.type), isJunction)
     const node: ElementNode = { id: newId('node'), kind: 'element', element: element.id, ...spot }
     if (!store.addNode(view.id, node)) return
@@ -639,10 +661,16 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     release()
   }
 
-  /** Commit what was typed into the inline editor: one command, or none when nothing changed. */
-  const commitName = (nodeId: string, value: string) => {
+  /**
+   * Commit what was typed into the inline editor: one command, or none when
+   * nothing changed. Enter hands focus to the canvas, so the keyboard goes on
+   * editing. A blur does not: it is the user putting focus somewhere else, and
+   * taking it back made their next key edit the canvas (#144 review: Backspace
+   * in the type filter deleted the shape just placed).
+   */
+  const commitName = (nodeId: string, value: string, ended: 'key' | 'blur') => {
     setEditing(null)
-    release()
+    if (ended === 'key') release()
     const node = view.nodes.find((n) => n.id === nodeId)
     if (!node) return
     if (node.kind === 'element') {
@@ -815,8 +843,8 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               <ViewNameField
                 // Remounted when the stored name changes, so an undone rename shows.
                 key={view.name}
+                inputRef={nameField}
                 name={view.name}
-                focus={naming}
                 onRename={(name) => store.updateView(view.id, (v) => ({ ...v, name }))}
                 onDone={release}
               />
@@ -1104,7 +1132,6 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             const elementId = event.dataTransfer.getData(ELEMENT_DRAG_TYPE)
             if (!elementId) return
             event.preventDefault()
-            auto.current = false
             drawExisting(elementId, toView({ x: event.clientX, y: event.clientY }))
           }}
         >
@@ -1254,7 +1281,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
                     width: b.width * vp.zoom,
                     height: b.height * vp.zoom,
                   }}
-                  onCommit={(value) => commitName(editing, value)}
+                  onCommit={(value, ended) => commitName(editing, value, ended)}
                   onCancel={() => {
                     setEditing(null)
                     release()
@@ -1560,29 +1587,22 @@ function LinePanel({
 }
 
 /**
- * The view's name, typed where it is shown (#130). A view just made opens with
- * this focused and its name selected. Enter or leaving the field renames, as
- * one command; Escape puts the name back. An empty name is not taken.
+ * The view's name, typed where it is shown (#130). Enter or leaving the field
+ * renames, as one command; Escape puts the name back. An empty name is not
+ * taken. It never focuses itself: it remounts on every rename, so focus is
+ * given to it by the canvas, once, when a new view opens.
  */
 function ViewNameField({
+  inputRef: ref,
   name,
-  focus,
   onRename,
   onDone,
 }: {
+  inputRef: React.RefObject<HTMLInputElement>
   name: string
-  focus: boolean
   onRename: (name: string) => void
   onDone: () => void
 }) {
-  const ref = useRef<HTMLInputElement>(null)
-  useEffect(() => {
-    if (!focus) return
-    ref.current?.focus()
-    ref.current?.select()
-    // Only on the first mount: a rename remounts this, and must not refocus it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
   const commit = (value: string) => {
     const trimmed = value.trim()
     if (trimmed && trimmed !== name) onRename(trimmed)

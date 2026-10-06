@@ -71,6 +71,28 @@ describe('a new view from the model tree (#130)', () => {
     expect(screen.getByLabelText('View Target state')).toHaveFocus()
   })
 
+  it('gives the new view’s name focus once, not again after each rename (#144 review)', async () => {
+    renderApp(claims())
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: '+ View' }))
+    const name = await screen.findByRole('textbox', { name: 'View name' })
+    await waitFor(() => expect(name).toHaveFocus())
+    // Tab renames on the way out, and focus moves on: it does not come back.
+    await user.keyboard('Target')
+    await user.tab()
+    expect(
+      theStore()
+        .viewList()
+        .some((v) => v.name === 'Target'),
+    ).toBe(true)
+    expect(screen.getByRole('textbox', { name: 'View name' })).not.toHaveFocus()
+    expect(screen.getByRole('combobox', { name: 'Viewpoint' })).toHaveFocus()
+    // An undone rename remounts the field too, and leaves focus alone.
+    act(() => void theStore().undo())
+    expect(screen.getByRole('textbox', { name: 'View name' })).toHaveValue(NEW_VIEW_NAME)
+    expect(screen.getByRole('textbox', { name: 'View name' })).not.toHaveFocus()
+  })
+
   it('goes directly under Views when the selection is not in Views', async () => {
     renderApp(claims())
     const user = userEvent.setup()
