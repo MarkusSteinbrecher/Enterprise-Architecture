@@ -1,5 +1,20 @@
 # Session Log
 
+## 2026-10-06 (cont.) — #123 (#118) reviewed; #115 landed as PR #125
+
+`/review-pr 123` ran in the author's session. The code pass was a separate agent with none of the author's context, and it checked each candidate with Archi 5.10 itself. All four criteria are met in substance, but the size handler's "unset" was not Archi's. **Changes needed, not yet fixed:**
+- **Below 3.0.0, 0 or negative counted as unset.** Archi uses `== -1`, and it kept a 0-width group that Archipelago grew.
+- **Four new tallies count skipped duplicates.** `defaultSized` and `countUnsupported` already did the same.
+- **The size summary says "120 × 55 for any element".** A junction is 15 × 15.
+- **Eight more guards survive removal:** nested growth, a written centre alignment, the 1 → 0 figure swap, connections under outline opacity, and smaller ones.
+- **A malformed `lineAlpha` at 4.0.1 or 4.4.0 is silent.**
+
+**Harvested:**
+- **CLAUDE.md:** a tally counts only kept objects (third recurrence).
+- **Review skill §2:** port another tool's predicate, not ours; and a default never reaches a tool-saved fixture.
+
+**Also:** the #115 fix had missed `main`. PR #125 lands #117's two commits unchanged; its CI is green. Five merged branches were deleted.
+
 ## 2026-10-06 — #118 implemented → PR #123
 
 The handlers come from Archi's source (`handlers/*.java`, `ModelCompatibility`, `StringUtils.versionNumberAsInt`, and the `plugin.xml` order). Their effects were settled by Archi 5.10 itself: one model was saved under 12 versions around the thresholds, plus Open Day, and the older file must read as Archi's save does. **16 of 16 mutations caught; 1003 tests pass.**
