@@ -476,6 +476,17 @@ describe('the branches only a damaged or unusual file reaches (#13)', () => {
     expect(result.workspace!.elements.map((e) => e.id)).toContain('g')
   })
 
+  it('reads every viewpoint in Archi’s own list, including Application Structure (#130)', () => {
+    // The reader's map once held 24 of Archi's 25, and dropped this one as unknown.
+    const result = importArchimate(
+      model(
+        `<element xsi:type="archimate:ArchimateDiagramModel" name="V" id="v" viewpoint="application_structure"/>`,
+      ),
+    )
+    expect(result.problems).toEqual([])
+    expect(result.workspace!.views[0]!.viewpoint).toBe('Application Structure')
+  })
+
   it('keeps the first of two objects sharing an id, and the first specialization of two', () => {
     const result = importArchimate(
       model(

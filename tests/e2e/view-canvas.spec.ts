@@ -163,6 +163,10 @@ test('two shapes connected in a real browser, with only valid types offered, and
   await expect(
     page.getByRole('complementary', { name: /Selected: Customer Data Hub/ }),
   ).toBeVisible()
+  // The palette (#130) and the panel leave the canvas narrow at this window
+  // size, and the target can end up behind the panel: Fit brings it back, as a
+  // user would.
+  await page.getByRole('button', { name: 'Fit' }).click()
   const handle = (await page.getByTestId('connect-handle').boundingBox())!
   const target = (await canvas.locator('[data-node="o-as-payment"]').boundingBox())!
 

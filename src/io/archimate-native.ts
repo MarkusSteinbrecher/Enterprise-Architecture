@@ -8,6 +8,7 @@ import {
   isElementType,
   isInfluenceModifier,
   isRelationshipType,
+  viewpointByArchiId,
   type AccessType,
   type Appearance,
   type Element,
@@ -100,34 +101,6 @@ export { ARCHI_NAMESPACE, ARCHI_LEGACY_NAMESPACE } from './xml-root'
 export function isArchiModel(text: string): boolean {
   return isArchiNamespace(xmlRoot(text)?.namespace)
 }
-
-/** Archi's viewpoint ids, as the exchange format (and so the model) spells them. Taken from Archi 5.10's own export. */
-const VIEWPOINTS = new Map<string, string>([
-  ['application_cooperation', 'Application Cooperation'],
-  ['application_usage', 'Application Usage'],
-  ['business_process_cooperation', 'Business Process Cooperation'],
-  ['capability', 'Capability Map'],
-  ['goal_realization', 'Goal Realization'],
-  ['implementation_deployment', 'Implementation and Deployment'],
-  ['implementation_migration', 'Implementation and Migration'],
-  ['information_structure', 'Information Structure'],
-  ['layered', 'Layered'],
-  ['migration', 'Migration'],
-  ['motivation', 'Motivation'],
-  ['organization', 'Organization'],
-  ['outcome_realization', 'Outcome Realization'],
-  ['physical', 'Physical'],
-  ['product', 'Product'],
-  ['project', 'Project'],
-  ['requirements_realization', 'Requirements Realization'],
-  ['resource', 'Resource Map'],
-  ['service_realization', 'Service Realization'],
-  ['stakeholder', 'Stakeholder'],
-  ['strategy', 'Strategy'],
-  ['technology', 'Technology'],
-  ['technology_usage', 'Technology Usage'],
-  ['value_stream', 'Value Stream'],
-])
 
 /** Archi's top-level folder types. A `Map`: the key comes from the file (#37). */
 const TOP_FOLDERS = new Map<string, FolderRoot>([
@@ -1076,8 +1049,9 @@ function readView(member: Member, context: ViewContext): View | undefined {
   if (documentation) view.documentation = documentation
   const viewpoint = asString(raw['@viewpoint'])
   if (viewpoint) {
-    const mapped = VIEWPOINTS.get(viewpoint)
-    if (mapped) view.viewpoint = mapped
+    // Archi's ids, mapped to the names the exchange format (and so the model) uses.
+    const mapped = viewpointByArchiId(viewpoint)
+    if (mapped) view.viewpoint = mapped.name
     else
       skip(
         'archimate.viewpoint-unknown',

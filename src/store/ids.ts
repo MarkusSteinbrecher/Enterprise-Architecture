@@ -20,7 +20,9 @@ function uuid(): string {
 }
 
 /** A new id with a readable prefix, e.g. `el-3f2c…`. */
-export function newId(prefix: 'el' | 'rel' | 'ws' | 'view' | 'folder' | 'cmd' | 'conn'): string {
+export function newId(
+  prefix: 'el' | 'rel' | 'ws' | 'view' | 'folder' | 'cmd' | 'conn' | 'node',
+): string {
   return `${prefix}-${uuid()}`
 }
 

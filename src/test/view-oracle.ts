@@ -36,7 +36,7 @@ export interface ViewDifference {
    * `viewpoint`, `folder`, `properties`, and `order` (a parent's children, by id).
    * For a drawing: `missing`, `extra`, `draws`, `bounds`, `parent`, `source`,
    * `target`, `bendpoints`, `appearance.<field>`. For what a view draws:
-   * `element.<field>` or `relationship.<field>`.
+   * `element.<field>` (`folder` by path) or `relationship.<field>`.
    */
   field: string
   ours: unknown
@@ -286,6 +286,13 @@ function compareDrawn(ours: Workspace, archi: Workspace): ViewDifference[] {
     push(element.id, 'element.type', element.type, other.type)
     push(element.id, 'element.name', element.name, other.name)
     push(element.id, 'element.junctionKind', element.junctionKind, other.junctionKind)
+    // In its folder (#130): by path, as a view's folder is, since Archi gives folders ids of its own.
+    push(
+      element.id,
+      'element.folder',
+      folderPath(ours, element.folder),
+      folderPath(archi, other.folder),
+    )
   }
   const archiRelationships = new Map(archi.relationships.map((r) => [r.id, r]))
   for (const relationship of ours.relationships) {

@@ -215,7 +215,7 @@ describe('selection follows the screen beside the tree', () => {
   it('opens the fact sheet of an element the open view does not draw', async () => {
     renderApp(claims(), { route: '/view/v-empty' })
     const user = userEvent.setup()
-    await screen.findByText('This view is empty.')
+    await screen.findByText(/^This view is empty./)
     await user.type(screen.getByRole('searchbox', { name: 'Filter the model tree' }), 'Policy Host')
     await user.click(row('Policy Host', 'element'))
     expect(await screen.findByRole('heading', { name: 'Policy Host' })).toBeInTheDocument()

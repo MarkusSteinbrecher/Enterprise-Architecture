@@ -82,7 +82,9 @@ export function LeftNav({ treeOpen, treeId, onToggleTree }: LeftNavProps) {
       >
         <span className="nav__glyph" aria-hidden="true" />
         <span className="nav__text">Model tree</span>
-        <span className="nav__badge">{stats.views ? `${stats.views} views` : ''}</span>
+        <span className="nav__badge">
+          {stats.views ? `${stats.views} view${stats.views === 1 ? '' : 's'}` : ''}
+        </span>
       </button>
 
       {PLANNED.map((item) => (

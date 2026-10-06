@@ -15,6 +15,7 @@ import {
   withoutRelationship,
   withoutViewReference,
   type Element,
+  type ElementNode,
   type FileableKind,
   type Folder,
   type FolderDestination,
@@ -579,6 +580,25 @@ export class ModelStore {
       kind: 'batch',
       commands: [
         { kind: 'add-relationship', relationship },
+        { kind: 'update-view', before, after },
+      ],
+    })
+    return true
+  }
+
+  /**
+   * Create an element and draw it in a view, as one command (#130): placing a
+   * new element from the palette is one step, and one undo takes both away.
+   * The node must draw `element`; nothing is dispatched if the view is not there.
+   */
+  addElementInView(viewId: string, element: Element, node: ElementNode): boolean {
+    const before = this.#views.get(viewId)
+    if (!before) return false
+    const after: View = { ...before, nodes: [...before.nodes, node] }
+    this.dispatch({
+      kind: 'batch',
+      commands: [
+        { kind: 'add-element', element },
         { kind: 'update-view', before, after },
       ],
     })
