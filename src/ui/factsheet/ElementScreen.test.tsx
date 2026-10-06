@@ -1,7 +1,8 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { loadDemoWorkspace } from '@/io'
+import claimsXml from '@/io/fixtures/claims-platform.xml?raw'
+import { importExchangeXml, loadDemoWorkspace } from '@/io'
 import { renderApp } from '@/test/render'
 
 function demo() {
@@ -186,8 +187,30 @@ describe('adding a relation', () => {
     // An application component cannot Access another application component.
     await user.selectOptions(within(dialog).getByLabelText('Element'), 'app-crm')
 
-    expect(within(dialog).getByRole('alert')).toHaveTextContent(/Access targets passive structure/)
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      /does not allow Access from Application Component to Application Component/,
+    )
     expect(within(dialog).getByRole('button', { name: 'Add' })).toBeDisabled()
+  })
+
+  it('holds a junction to one relationship type, as Archi does (#129)', async () => {
+    // j-split joins Triggerings: Accept → it → Valuate and Pay.
+    const claims = importExchangeXml(claimsXml, 'claims-platform.xml').workspace!
+    renderApp(claims, { route: '/element/j-split' })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.click(screen.getByRole('button', { name: '+ Relation' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Add relation' })
+    await user.selectOptions(within(dialog).getByLabelText('Relationship'), 'Flow')
+    await user.selectOptions(within(dialog).getByLabelText('Element'), 'bp-register')
+    // Flow from a junction to a process is a cell of the matrix; the junction's Triggerings refuse it.
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(/already joins Triggering/)
+    expect(within(dialog).getByRole('button', { name: 'Add' })).toBeDisabled()
+
+    await user.selectOptions(within(dialog).getByLabelText('Relationship'), 'Triggering')
+    expect(within(dialog).getByRole('button', { name: 'Add' })).toBeEnabled()
+    expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('adds a valid relation through the command stack', async () => {

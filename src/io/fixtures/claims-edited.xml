@@ -124,6 +124,9 @@
     <element identifier="ac-fraud" xsi:type="ApplicationComponent">
       <name xml:lang="en">Fraud Detection</name>
     </element>
+    <element identifier="j-intake" xsi:type="AndJunction">
+      <name xml:lang="en"></name>
+    </element>
   </elements>
   <relationships>
     <relationship identifier="r-cust-ins" source="ba-customer" target="br-insurant" xsi:type="Assignment">
@@ -226,6 +229,20 @@
     </relationship>
     <relationship identifier="r-fraud-valuate" source="ac-fraud" target="bp-valuate" xsi:type="Serving">
     </relationship>
+    <relationship identifier="r-hub-payment" source="ac-customer" target="as-payment" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="r-calc-customer" source="af-calc" target="do-customer" xsi:type="Access">
+    </relationship>
+    <relationship identifier="r-rollout-req" source="wp-rollout" target="r-rules" xsi:type="Realization">
+    </relationship>
+    <relationship identifier="r-crm-req" source="ac-crm" target="r-rules" xsi:type="Influence">
+    </relationship>
+    <relationship identifier="r-damage-intake" source="be-damage" target="j-intake" xsi:type="Triggering">
+    </relationship>
+    <relationship identifier="r-intake-register" source="j-intake" target="bp-register" xsi:type="Triggering">
+    </relationship>
+    <relationship identifier="r-intake-valuate" source="j-intake" target="bp-valuate" xsi:type="Triggering">
+    </relationship>
   </relationships>
   <organizations>
     <item>
@@ -297,6 +314,7 @@
       <label xml:lang="en">Other</label>
       <item identifierRef="loc-zurich" />
       <item identifierRef="j-split" />
+      <item identifierRef="j-intake" />
     </item>
     <item>
       <label xml:lang="en">Relations</label>
@@ -352,6 +370,13 @@
       <item identifierRef="r-req-goal" />
       <item identifierRef="r-wp-engine" />
       <item identifierRef="r-fraud-valuate" />
+      <item identifierRef="r-hub-payment" />
+      <item identifierRef="r-calc-customer" />
+      <item identifierRef="r-rollout-req" />
+      <item identifierRef="r-crm-req" />
+      <item identifierRef="r-damage-intake" />
+      <item identifierRef="r-intake-register" />
+      <item identifierRef="r-intake-valuate" />
     </item>
     <item>
       <label xml:lang="en">Views</label>
@@ -527,6 +552,8 @@ for claims under 500.</label>
         <node identifier="o-note-edited" x="1240" y="380" w="170" h="55" xsi:type="Label">
           <label xml:lang="en">Edited in Archipelago (#127).</label>
         </node>
+        <node identifier="o-intake" x="1195" y="330" w="15" h="15" xsi:type="Element" elementRef="j-intake">
+        </node>
         <connection identifier="c-cust-ins" xsi:type="Relationship" relationshipRef="r-cust-ins" source="o-customer" target="o-insurant">
         </connection>
         <connection identifier="c-reg-ins" xsi:type="Relationship" relationshipRef="r-ins-reg" source="o-reg-svc" target="o-insurant">
@@ -631,6 +658,24 @@ for claims under 500.</label>
         <connection identifier="c-wp-engine" xsi:type="Relationship" relationshipRef="r-wp-engine" source="o-rollout" target="o-engine">
         </connection>
         <connection identifier="c-fraud-valuate" xsi:type="Relationship" relationshipRef="r-fraud-valuate" source="o-fraud" target="o-valuate">
+        </connection>
+        <connection identifier="c-hub-payment" xsi:type="Relationship" relationshipRef="r-hub-payment" source="o-customer-hub" target="o-as-payment">
+        </connection>
+        <connection identifier="c-calc-customer" xsi:type="Relationship" relationshipRef="r-calc-customer" source="o-calc" target="o-do-customer">
+        </connection>
+        <connection identifier="c-rollout-req" xsi:type="Relationship" relationshipRef="r-rollout-req" source="o-rollout" target="o-req">
+        </connection>
+        <connection identifier="c-crm-req" xsi:type="Relationship" relationshipRef="r-crm-req" source="o-crm" target="o-req">
+        </connection>
+        <connection identifier="c-damage-intake" xsi:type="Relationship" relationshipRef="r-damage-intake" source="o-damage" target="o-intake">
+        </connection>
+        <connection identifier="c-intake-register" xsi:type="Relationship" relationshipRef="r-intake-register" source="o-intake" target="o-register">
+        </connection>
+        <connection identifier="c-intake-valuate" xsi:type="Relationship" relationshipRef="r-intake-valuate" source="o-intake" target="o-valuate">
+        </connection>
+        <connection identifier="c-claim-bo" xsi:type="Relationship" relationshipRef="r-claim-bo" source="o-do-claim" target="o-claim-bo">
+        </connection>
+        <connection identifier="c-note-fraud" xsi:type="Line" source="o-note-edited" target="o-fraud">
         </connection>
       </view>
     </diagrams>

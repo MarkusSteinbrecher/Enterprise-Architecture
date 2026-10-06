@@ -53,7 +53,26 @@ describe('workspace validation', () => {
     const finding = report.errors[0]
     expect(finding?.code).toBe('relationship.invalid')
     expect(finding?.message).toContain('Access')
-    expect(finding?.message).toContain('behaviour or active structure')
+    expect(finding?.message).toContain('Access is allowed the other way')
+  })
+
+  it('holds a junction to Archi’s junction rules, as Archi’s validator does (#129)', () => {
+    const base = workspace()
+    const junction = { id: 'j', type: 'Junction' as const, name: '', properties: {} }
+    const report = validate({
+      ...base,
+      elements: [...base.elements, junction],
+      relationships: [
+        relationship({ id: 'r-in', type: 'Serving', source: 'app-crm', target: 'j' }),
+        // Two types on one junction: each is a legal cell of the matrix on its own.
+        relationship({ id: 'r-out', type: 'Flow', source: 'j', target: 'proc-claim' }),
+      ],
+    })
+    expect(report.errors.map((f) => `${f.subjectId} ${f.code}`)).toEqual([
+      'r-in relationship.invalid',
+      'r-out relationship.invalid',
+    ])
+    expect(report.errors[0]?.message).toMatch(/already joins Flow relationships/)
   })
 
   it('reports duplicate ids', () => {

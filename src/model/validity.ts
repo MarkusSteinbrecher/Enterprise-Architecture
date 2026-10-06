@@ -1,47 +1,22 @@
-import {
-  ELEMENT_TYPES,
-  elementTypeMeta,
-  type ElementType,
-  type ElementTypeMeta,
-} from './element-types'
+import matrixXml from './archi/relationships.xml?raw'
+import { ELEMENT_TYPES, elementTypeMeta, type ElementType } from './element-types'
 import { RELATIONSHIP_TYPE_NAMES, type RelationshipType } from './relationship-types'
 
 /**
- * The ArchiMate 3.2 relationship validity matrix.
+ * The ArchiMate 3.2 relationship validity matrix: which relationship types may
+ * join an element of one type to an element of another.
  *
- * The specification publishes the matrix as a generated table (Appendix B) that
- * already includes derived relationships, which is why it is so permissive. Rather
- * than transcribing ~4,000 cells that cannot be reviewed, this module expresses the
- * structural rules the matrix is generated from, over the (layer, aspect) metadata
- * in `element-types.ts`, plus a short list of named exceptions from the spec text.
+ * The data is Archi's own `relationships.xml` (`./archi/`, vendored unmodified,
+ * MIT; see its NOTICE): the specification's Appendix B as Archi 5.10 enforces
+ * it. Archi is the oracle for everything the editor makes (ADR 0008), so a
+ * relationship we allow and Archi does not is one its validator flags in a
+ * model we saved. Until #129 this module derived the matrix from structural
+ * rules over (layer, aspect) instead; that disagreed with Archi on 5,437 cells,
+ * allowing 4,540 that Archi rejects and rejecting 897 that Archi allows.
  *
- * The rules, one per relationship type:
- *
- * | Relationship   | Rule                                                                    |
- * |----------------|-------------------------------------------------------------------------|
- * | Composition    | same aspect and same layer group; composite elements may contain anything |
- * | Aggregation    | as Composition, plus Product aggregating services and contracts          |
- * | Assignment     | active structure → behaviour; active → active within a layer group;      |
- * |                | technology active structure → artifact/material (deployment);            |
- * |                | Work Package → Deliverable; Stakeholder → Driver; Location → anything    |
- * | Realization    | source no more abstract than target (rank ≤), or anything → motivation,   |
- * |                | or implementation → core / implementation                               |
- * | Serving        | behaviour or active structure both ends, source rank ≤ target rank        |
- * | Access         | behaviour or active structure → passive structure                        |
- * | Influence      | anything → a motivation element                                          |
- * | Triggering     | behaviour, active structure or plateau at both ends                      |
- * | Flow           | as Triggering                                                            |
- * | Specialization | both ends the same element type                                          |
- * | Association    | always permitted                                                        |
- *
- * Grouping and Location connect to anything (spec: Grouping "may be related to any
- * other concept"); Junction participates in every relationship except the three
- * that require structural identity (Composition, Aggregation, Specialization).
- *
- * The rules are deliberately at least as permissive as the published matrix in the
- * places where the matrix admits derived relationships, and never more permissive
- * on the cross-layer patterns the tests pin down. Where the two could differ, the
- * tests in `validity.test.ts` are the specification of record.
+ * A junction is checked against the model as well as the matrix, as Archi does
+ * (`ArchimateModelUtils.isValidRelationship`, read with `javap`): see
+ * `validateRelationshipBetween`.
  */
 
 export interface ValidityResult {
@@ -56,259 +31,107 @@ function invalid(reason: string): ValidityResult {
   return { valid: false, reason }
 }
 
+/** `relationships-keys.xml`, beside Archi's matrix. */
+const LETTERS: Readonly<Record<string, RelationshipType>> = {
+  a: 'Access',
+  c: 'Composition',
+  f: 'Flow',
+  g: 'Aggregation',
+  i: 'Assignment',
+  n: 'Influence',
+  o: 'Association',
+  r: 'Realization',
+  s: 'Specialization',
+  t: 'Triggering',
+  v: 'Serving',
+}
+
 /**
- * Abstraction rank: realization and serving flow from the concrete to the abstract.
- * Physical shares Technology's rank (the spec treats physical as a technology
- * extension); Strategy sits above Business.
+ * `source>target` → the relationship types allowed between them. A pair the
+ * file does not list allows nothing, as in Archi. `validity.test.ts` holds that
+ * the file lists every pair of our element types, so a renamed type cannot
+ * quietly allow nothing.
  */
-const LAYER_RANK: Record<string, number> = {
-  technology: 1,
-  physical: 1,
-  application: 2,
-  business: 3,
-  strategy: 4,
-}
-
-/** Layer group used by the structural rules — technology and physical are one. */
-function layerGroup(meta: ElementTypeMeta): string {
-  return meta.layer === 'physical' ? 'technology' : meta.layer
-}
-
-function isCore(meta: ElementTypeMeta): boolean {
-  return meta.layer in LAYER_RANK
-}
-
-function isMotivation(meta: ElementTypeMeta): boolean {
-  return meta.aspect === 'motivation'
-}
-
-/** Grouping and Location — "may be related to any other concept". */
-function isOpenComposite(meta: ElementTypeMeta): boolean {
-  return meta.type === 'Grouping' || meta.type === 'Location'
-}
-
-function isJunction(meta: ElementTypeMeta): boolean {
-  return meta.aspect === 'connector'
-}
-
-function isBehaviourOrActive(meta: ElementTypeMeta): boolean {
-  return meta.aspect === 'behaviour' || meta.aspect === 'active-structure'
-}
-
-/** Relationship types that require structural identity and so reject junctions. */
-const STRUCTURAL_IDENTITY: readonly RelationshipType[] = [
-  'Composition',
-  'Aggregation',
-  'Specialization',
-]
-
-/** Product aggregates the services and contracts it bundles (spec §8.2.8). */
-const PRODUCT_AGGREGATES: readonly string[] = [
-  'BusinessService',
-  'ApplicationService',
-  'TechnologyService',
-  'Contract',
-]
-
-function checkContainment(
-  rel: 'Composition' | 'Aggregation',
-  source: ElementTypeMeta,
-  target: ElementTypeMeta,
-): ValidityResult {
-  // Plateau aggregates the core elements that make up a state of the architecture.
-  if (source.type === 'Plateau') {
-    return isCore(target) || target.type === 'Plateau' || target.aspect === 'composite'
-      ? VALID
-      : invalid(`A Plateau can only contain core elements, not ${target.label}.`)
-  }
-  if (rel === 'Aggregation' && source.type === 'Product') {
-    if (PRODUCT_AGGREGATES.includes(target.type)) return VALID
-  }
-  if (source.aspect !== target.aspect) {
-    return invalid(
-      `${rel} joins elements of the same aspect — ${source.label} is ${source.aspect}, ${target.label} is ${target.aspect}.`,
-    )
-  }
-  if (layerGroup(source) !== layerGroup(target)) {
-    return invalid(
-      `${rel} joins elements of the same layer — ${source.label} is ${source.layer}, ${target.label} is ${target.layer}. Consider Realization across layers.`,
-    )
-  }
-  return VALID
-}
-
-function checkAssignment(source: ElementTypeMeta, target: ElementTypeMeta): ValidityResult {
-  if (source.aspect === 'active-structure') {
-    // Who performs what: active structure carries out behaviour.
-    if (target.aspect === 'behaviour') return VALID
-    // Actor fulfils role, node hosts node, interface belongs to a component.
-    if (target.aspect === 'active-structure' && layerGroup(source) === layerGroup(target)) {
-      return VALID
+export function parseRelationshipMatrix(xml: string): Map<string, ReadonlySet<RelationshipType>> {
+  const matrix = new Map<string, ReadonlySet<RelationshipType>>()
+  let source: string | undefined
+  for (const match of xml.matchAll(
+    /<(source|target)\s+concept="(\w+)"(?:\s+relations="(\w*)")?/g,
+  )) {
+    const [, tag, concept, relations] = match
+    if (tag === 'source') {
+      source = concept
+      continue
     }
-    // Deployment: a node or device holds an artifact; equipment handles material.
-    if (target.aspect === 'passive-structure' && layerGroup(source) === 'technology') {
-      return VALID
+    if (source === undefined)
+      throw new Error(`relationships.xml: target ${concept} outside a source`)
+    const allowed = new Set<RelationshipType>()
+    // Upper case marks a derived relationship in Archi's format; it is allowed all the same.
+    for (const letter of relations ?? '') {
+      const type = LETTERS[letter.toLowerCase()]
+      if (!type)
+        throw new Error(`relationships.xml: unknown letter "${letter}" for ${source}>${concept}`)
+      allowed.add(type)
     }
+    matrix.set(`${source}>${concept}`, allowed)
   }
-  // A work package produces a deliverable.
-  if (source.layer === 'implementation' && target.layer === 'implementation') {
-    if (source.aspect === 'behaviour' && target.aspect === 'passive-structure') return VALID
-  }
-  // A stakeholder holds a driver.
-  if (source.type === 'Stakeholder' && isMotivation(target)) return VALID
-
-  return invalid(
-    `Assignment runs from an active structure element to the behaviour it performs — ${source.label} cannot be assigned to ${target.label}.`,
-  )
+  return matrix
 }
 
-function checkRealization(source: ElementTypeMeta, target: ElementTypeMeta): ValidityResult {
-  // Anything can realize a motivation element (a requirement, principle, goal).
-  if (isMotivation(target)) return VALID
-  // Deliverables realize the core elements and plateaus they produce.
-  if (source.layer === 'implementation') {
-    return isCore(target) || target.layer === 'implementation' || target.aspect === 'composite'
-      ? VALID
-      : invalid(`${source.label} cannot realize ${target.label}.`)
-  }
-  if (isCore(source) && isCore(target)) {
-    const from = LAYER_RANK[layerGroup(source)] ?? 0
-    const to = LAYER_RANK[layerGroup(target)] ?? 0
-    if (from <= to) return VALID
-    return invalid(
-      `Realization runs from the concrete to the abstract — a ${source.label} (${source.layer}) cannot realize a ${target.label} (${target.layer}). Try the other direction, or Serving.`,
-    )
-  }
-  return invalid(`${source.label} cannot realize ${target.label}.`)
+const MATRIX = parseRelationshipMatrix(matrixXml)
+const NONE: ReadonlySet<RelationshipType> = new Set()
+
+function allowedSet(sourceType: string, targetType: string): ReadonlySet<RelationshipType> {
+  return MATRIX.get(`${sourceType}>${targetType}`) ?? NONE
 }
 
-function checkServing(source: ElementTypeMeta, target: ElementTypeMeta): ValidityResult {
-  if (!isBehaviourOrActive(source) || !isBehaviourOrActive(target)) {
-    return invalid(
-      `Serving connects behaviour or active structure elements — ${source.label} and ${target.label} do not qualify.`,
-    )
-  }
-  if (isCore(source) && isCore(target)) {
-    const from = LAYER_RANK[layerGroup(source)] ?? 0
-    const to = LAYER_RANK[layerGroup(target)] ?? 0
-    if (from <= to) return VALID
-    return invalid(
-      `Serving runs from the serving element upward — a ${source.label} (${source.layer}) cannot serve a ${target.label} (${target.layer}).`,
-    )
-  }
-  return VALID
-}
-
-function checkAccess(source: ElementTypeMeta, target: ElementTypeMeta): ValidityResult {
-  if (!isBehaviourOrActive(source)) {
-    return invalid(`Access starts at behaviour or active structure — ${source.label} does not.`)
-  }
-  if (target.aspect !== 'passive-structure') {
-    return invalid(
-      `Access targets passive structure (a business object, data object, artifact) — ${target.label} is ${target.aspect}.`,
-    )
-  }
-  return VALID
-}
-
-function checkInfluence(source: ElementTypeMeta, target: ElementTypeMeta): ValidityResult {
-  if (isMotivation(target)) return VALID
-  return invalid(
-    `Influence targets a motivation element — ${target.label} is not one. ${source.label} can use Association instead.`,
-  )
-}
-
-function checkDynamic(
-  rel: 'Triggering' | 'Flow',
-  source: ElementTypeMeta,
-  target: ElementTypeMeta,
-): ValidityResult {
-  const ok = (m: ElementTypeMeta) => isBehaviourOrActive(m) || m.type === 'Plateau'
-  if (ok(source) && ok(target)) return VALID
-  return invalid(
-    `${rel} connects behaviour or active structure elements — ${source.label} and ${target.label} do not qualify.`,
-  )
+function list(types: readonly string[]): string {
+  if (types.length <= 1) return types.join('')
+  return `${types.slice(0, -1).join(', ')} and ${types.at(-1)}`
 }
 
 /**
- * Is `source —rel→ target` a legal ArchiMate 3.2 relationship?
- *
- * The `reason` on a rejection is written for the relation picker in the fact sheet,
- * so it explains the rule rather than restating the inputs.
+ * Is `source —rel→ target` a legal ArchiMate 3.2 relationship between elements
+ * of these types? The `reason` on a rejection is written for the relation
+ * pickers, so it says what is allowed instead.
  */
 export function validateRelationship(
   sourceType: ElementType,
   relType: RelationshipType,
   targetType: ElementType,
 ): ValidityResult {
-  const source = elementTypeMeta(sourceType)
-  const target = elementTypeMeta(targetType)
-
-  // A junction is a connector, not a concept: it joins dynamic and dependency
-  // relationships and takes no part in the three that require structural identity.
-  if (isJunction(source) || isJunction(target)) {
-    return STRUCTURAL_IDENTITY.includes(relType)
-      ? invalid(`A Junction cannot take part in a ${relType} relationship.`)
-      : VALID
-  }
-
-  // Specialization is about type identity, so it is checked before the escape hatch
-  // that lets Grouping and Location relate to anything.
-  if (relType === 'Specialization') {
-    return sourceType === targetType
-      ? VALID
-      : invalid(
-          `Specialization joins two elements of the same type — ${source.label} and ${target.label} differ.`,
-        )
-  }
-
-  // Grouping and Location are the modelling escape hatch: they relate to anything.
-  if (isOpenComposite(source) || isOpenComposite(target)) return VALID
-
-  switch (relType) {
-    case 'Association':
-      return VALID
-    case 'Composition':
-    case 'Aggregation':
-      return checkContainment(relType, source, target)
-    case 'Assignment':
-      return checkAssignment(source, target)
-    case 'Realization':
-      return checkRealization(source, target)
-    case 'Serving':
-      return checkServing(source, target)
-    case 'Access':
-      return checkAccess(source, target)
-    case 'Influence':
-      return checkInfluence(source, target)
-    case 'Triggering':
-    case 'Flow':
-      return checkDynamic(relType, source, target)
-  }
+  if (allowedSet(sourceType, targetType).has(relType)) return VALID
+  const source = elementTypeMeta(sourceType).label
+  const target = elementTypeMeta(targetType).label
+  const allowed = allowedRelationships(sourceType, targetType)
+  const instead = allowed.length
+    ? `From ${source} to ${target} it allows ${list(allowed)}.`
+    : `It allows no relationship from ${source} to ${target}.`
+  const reverse = allowedSet(targetType, sourceType).has(relType)
+    ? ` ${relType} is allowed the other way, from ${target} to ${source}.`
+    : ''
+  return invalid(
+    `ArchiMate does not allow ${relType} from ${source} to ${target}. ${instead}${reverse}`,
+  )
 }
 
-/** Every relationship type permitted from `sourceType` to `targetType`. */
+/** Every relationship type permitted from `sourceType` to `targetType`, in catalogue order. */
 export function allowedRelationships(
   sourceType: ElementType,
   targetType: ElementType,
 ): RelationshipType[] {
-  return RELATIONSHIP_TYPE_NAMES.filter(
-    (rel) => validateRelationship(sourceType, rel, targetType).valid,
-  )
+  const allowed = allowedSet(sourceType, targetType)
+  return RELATIONSHIP_TYPE_NAMES.filter((rel) => allowed.has(rel))
 }
 
 /** Every element type that can be the target of `sourceType —relType→ ?`. */
 export function allowedTargets(sourceType: ElementType, relType: RelationshipType): ElementType[] {
-  return ELEMENT_TYPES.map((m) => m.type).filter(
-    (target) => validateRelationship(sourceType, relType, target).valid,
+  return ELEMENT_TYPES.map((m) => m.type).filter((target) =>
+    allowedSet(sourceType, target).has(relType),
   )
 }
 
-/**
- * Materialise the whole matrix as `source>target → relationship types`.
- * Used by the relation picker and by the matrix tests; ~4k entries, so build it
- * once and keep it rather than calling this per render.
- */
+/** The whole matrix as `source>target → relationship types`, for the tests. */
 export function buildValidityMatrix(): Map<string, readonly RelationshipType[]> {
   const matrix = new Map<string, readonly RelationshipType[]>()
   for (const source of ELEMENT_TYPES) {
@@ -317,4 +140,117 @@ export function buildValidityMatrix(): Map<string, readonly RelationshipType[]> 
     }
   }
   return matrix
+}
+
+// ── In a model: junctions ────────────────────────────────────────────────────
+
+/** An element as the junction rules see it. */
+export interface ElementRef {
+  readonly id: string
+  readonly type: ElementType
+}
+
+/** A relationship as the junction rules see it. */
+export interface RelationshipRef {
+  readonly id: string
+  readonly type: RelationshipType
+  readonly source: string
+  readonly target: string
+}
+
+/** What the junction rules read from the model. The store satisfies it. */
+export interface RelationshipContext {
+  element(id: string): ElementRef | undefined
+  /** Every relationship touching the element, in either direction, each once. */
+  relationshipsOf(elementId: string): readonly RelationshipRef[]
+}
+
+/** A Grouping or Location containing something: Archi's exception to the junction rules. */
+function isContainment(sourceType: ElementType, relType: RelationshipType): boolean {
+  return (
+    (sourceType === 'Grouping' || sourceType === 'Location') &&
+    (relType === 'Aggregation' || relType === 'Composition')
+  )
+}
+
+/** The first relationship on `junction` of another type than `relType`, if any. */
+function otherTypeOn(
+  context: RelationshipContext,
+  junction: string,
+  relType: RelationshipType,
+): RelationshipRef | undefined {
+  return context.relationshipsOf(junction).find((r) => {
+    if (r.type === relType) return false
+    const from = context.element(r.source)
+    return !(from && isContainment(from.type, r.type))
+  })
+}
+
+/**
+ * Is `source —relType→ target` legal between these two elements of the model?
+ *
+ * The matrix, and two rules for a junction, both Archi's
+ * (`ArchimateModelUtils.isValidRelationship`, which its connection tool and its
+ * validator both call):
+ *
+ * - **One type.** Every relationship on a junction is of one type, so a
+ *   junction joining Flows takes no Serving. A Grouping or Location containing
+ *   the junction does not count.
+ * - **Through it.** A junction stands for the relationships it joins, so each
+ *   element on its far side must be a legal end. From a junction to `target`,
+ *   every element flowing into the junction must be allowed to reach `target`;
+ *   from `source` to a junction, `source` must be allowed to reach every
+ *   element the junction leads to.
+ *
+ * The validator checks a relationship already in the model the same way: its
+ * own type matches itself, and it is never on the far side of its own junction.
+ */
+export function validateRelationshipBetween(
+  context: RelationshipContext,
+  source: ElementRef,
+  relType: RelationshipType,
+  target: ElementRef,
+): ValidityResult {
+  if (source.type === 'Junction') {
+    for (const r of context.relationshipsOf(source.id)) {
+      if (r.target !== source.id) continue
+      const before = context.element(r.source)
+      if (before && !allowedSet(before.type, target.type).has(relType)) {
+        return invalid(
+          `Through this junction, ${relType} would join ${elementTypeMeta(before.type).label} to ${elementTypeMeta(target.type).label}, which ArchiMate does not allow.`,
+        )
+      }
+    }
+    const other = otherTypeOn(context, source.id, relType)
+    if (other) return invalid(oneType(other.type, relType))
+  }
+  if (target.type === 'Junction' && !isContainment(source.type, relType)) {
+    for (const r of context.relationshipsOf(target.id)) {
+      if (r.source !== target.id) continue
+      const after = context.element(r.target)
+      if (after && !allowedSet(source.type, after.type).has(relType)) {
+        return invalid(
+          `Through this junction, ${relType} would join ${elementTypeMeta(source.type).label} to ${elementTypeMeta(after.type).label}, which ArchiMate does not allow.`,
+        )
+      }
+    }
+    const other = otherTypeOn(context, target.id, relType)
+    if (other) return invalid(oneType(other.type, relType))
+  }
+  return validateRelationship(source.type, relType, target.type)
+}
+
+function oneType(joined: RelationshipType, relType: RelationshipType): string {
+  return `This junction already joins ${joined} relationships, and every relationship on a junction is of one type, so it cannot take ${relType}.`
+}
+
+/** Every relationship type `validateRelationshipBetween` allows, in catalogue order. */
+export function allowedRelationshipsBetween(
+  context: RelationshipContext,
+  source: ElementRef,
+  target: ElementRef,
+): RelationshipType[] {
+  return RELATIONSHIP_TYPE_NAMES.filter(
+    (rel) => validateRelationshipBetween(context, source, rel, target).valid,
+  )
 }

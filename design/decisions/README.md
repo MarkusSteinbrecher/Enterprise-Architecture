@@ -12,3 +12,4 @@ Product ADRs for Archipelago. Fresh sequence started 2026-08 (the knowledge-base
 | [0006](0006-diagram-engine.md) | A custom SVG editor over our own model for hand-drawn views | 2026-10-02 | Accepted |
 | [0007](0007-one-language-per-model.md) | A model holds one language, chosen by the texts it keeps | 2026-10-05 | Accepted |
 | [0008](0008-diagram-editor-before-transformation.md) | The diagram editor comes before transition planning | 2026-10-06 | Accepted |
+| [0009](0009-relationship-validity-from-archi.md) | Relationship validity is Archi's matrix, with Archi's junction rules | 2026-10-06 | Accepted |

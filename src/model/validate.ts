@@ -4,7 +4,11 @@ import {
   isRelationshipType,
   misplacedAttributes,
 } from './relationship-types'
-import { validateRelationship } from './validity'
+import {
+  validateRelationshipBetween,
+  type RelationshipContext,
+  type RelationshipRef,
+} from './validity'
 import { LIFECYCLE_PHASES } from './profile'
 import { parseLifecycleDate } from './lifecycle'
 import type { Workspace } from './workspace'
@@ -109,6 +113,7 @@ export function validate(workspace: Workspace): ValidationReport {
 
   // Indexed once: endpoint lookup is the hot path at 5,000 elements.
   const elementsById = new Map(workspace.elements.map((element) => [element.id, element]))
+  const context = relationshipContext(workspace, elementsById)
 
   for (const relationship of workspace.relationships) {
     if (seenRelationshipIds.has(relationship.id)) {
@@ -177,7 +182,8 @@ export function validate(workspace: Workspace): ValidationReport {
     }
 
     if (findElementType(source.type) && findElementType(target.type)) {
-      const result = validateRelationship(source.type, relationship.type, target.type)
+      // As Archi's validator: the matrix, and the junction rules in the model.
+      const result = validateRelationshipBetween(context, source, relationship.type, target)
       if (!result.valid) {
         findings.push({
           severity: 'error',
@@ -205,4 +211,31 @@ export function validate(workspace: Workspace): ValidationReport {
   const errors = findings.filter((f) => f.severity === 'error')
   const warnings = findings.filter((f) => f.severity === 'warning')
   return { findings, errors, warnings, valid: errors.length === 0 }
+}
+
+/**
+ * The model as the junction rules read it: only the elements and relationships
+ * whose types are known, since the others are reported on their own.
+ */
+function relationshipContext(
+  workspace: Workspace,
+  elementsById: ReadonlyMap<string, Workspace['elements'][number]>,
+): RelationshipContext {
+  const byElement = new Map<string, RelationshipRef[]>()
+  for (const relationship of workspace.relationships) {
+    if (!isRelationshipType(relationship.type)) continue
+    const ends = new Set([relationship.source, relationship.target])
+    for (const end of ends) {
+      const list = byElement.get(end)
+      if (list) list.push(relationship)
+      else byElement.set(end, [relationship])
+    }
+  }
+  return {
+    element: (id) => {
+      const element = elementsById.get(id)
+      return element && isElementType(element.type) ? element : undefined
+    },
+    relationshipsOf: (id) => byElement.get(id) ?? [],
+  }
 }

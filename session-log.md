@@ -1,5 +1,26 @@
 # Session Log
 
+## 2026-10-06 (cont.) — #129 implemented: connecting shapes, and validity is now Archi's matrix
+
+**Connecting.** A selected shape has a connect handle. Dragging from it to another shape opens a menu.
+- Between two element shapes, the menu offers only the types ArchiMate allows, and any relationship of the model between them, in that direction, that the view does not draw yet. Choosing a type creates the relationship and its connection as one command (`addRelationshipInView`, a batch); one undo leaves the workspace byte-identical. Re-using adds a connection only.
+- With nothing allowed, the menu says so and creates nothing. Association joins anything, so this happens only through a junction's rules.
+- A note, a group or a view reference at either end gets a plain line at once.
+- A line can now be selected, by a press on it (an 8 px hit stroke, GEF's tolerance) or in a reader tab. Delete or **Remove from view** keeps the relationship. **Delete from model…** names the other views that draw it first.
+
+**Validity follows Archi (sponsor's call, ADR 0009).** Checking `validity.ts` against Archi's `relationships.xml` showed 5,437 disagreeing cells: 4,540 we allowed and Archi rejects, and 897 the other way.
+- `src/model/archi/relationships.xml` is now the matrix, vendored unmodified (MIT), with its SHA-256 pinned in a test.
+- Archi's junction rules (read from `ArchimateModelUtils` with `javap`) are `validateRelationshipBetween`: one type per junction, and the far side's elements must be legal ends. The menu, the fact sheet picker and `validate()` all use it. Every fixture and the demo still validate clean.
+
+**Archi oracle.** `edited-claims.ts` now connects five types, three through a new junction, re-uses `r-claim-bo` and draws a line from a note. Archi 5.10 imported and saved it, and the oracle passes with no new unexplained difference.
+- Archi's command line cannot run its validator, and its matrix loader needs OSGi, so "Archi reports no invalid relationship" is checked with our port of Archi's check, run over Archi's own save. A mutated junction shows the check bites.
+
+**Tests.** 1136 unit tests and 21 e2e journeys pass (1 skipped, the existing #32 fixme). The new journey connects two shapes in Chromium, and passed `--repeat-each=4`. 21 guard mutations were run on the connect flow and the junction rules, and each one is caught; two that were missed at first were fixed. The editor's test harness moved to `src/test/view-editor.tsx`.
+
+**Found in a real browser:** a line drawn across a shape takes a press on that spot. That is Archi's behaviour (connections are drawn above shapes), so it is kept.
+
+**Open:** review this PR. Then #130 (create views, palette).
+
 ## 2026-10-06 (wrap-up) — #139 and #140 merged; a committed `node_modules` symlink removed
 
 **Merged today:** #139 (Archi oracle, #127) and #140 (editor's first slice, #128). ADR 0006 is accepted. #127 and #128 are closed.
