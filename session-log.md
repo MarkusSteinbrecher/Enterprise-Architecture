@@ -22,7 +22,7 @@ A reader tab keeps the read-only canvas. Both Archi questions the issue left ope
 - 1093 tests, 20 e2e journeys; 25 guard mutations, each caught.
 
 **Open:**
-- ADR 0006 is still Proposed. Accepting it is the sponsor's call, now that the first slice is built on it.
+- ADR 0006 was accepted by the sponsor (2026-10-06), recorded in this PR.
 - Next: review this PR, then #129 (connecting).
 
 ## 2026-10-06 (cont.) — #127 implemented: Archi as the oracle for edited views

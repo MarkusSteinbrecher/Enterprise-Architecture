@@ -2,7 +2,7 @@
 adr: '0006'
 title: A custom SVG editor over our own model for hand-drawn views
 date: 2026-10-02
-status: Proposed
+status: Accepted
 scope: project
 tags: [modelling, views, diagram-engine, react, svg]
 ---
@@ -105,6 +105,13 @@ Reasons:
 - #77 components stay plain React SVG, with no engine-specific wrapper.
 - ADR 0003 is unchanged: generated views stay on React Flow + ELK. "Materialise as editable view" (concept §2.2) converts a React Flow layout into a `View`; it does not share the renderer.
 - If M2 turns out to need most of diagram-js's interaction set anyway, revisit this ADR with a diagram-js adapter whose read-back is property-tested against the model. That is the runner-up, not React Flow.
+
+## Status
+
+**Accepted 2026-10-06** by the sponsor, on the evidence of the first slice built on it (#128, PR #140). That slice adds select, move, resize, re-parent, nudge and remove, all over the model directly:
+- every finished gesture is one store command, so there is one model and one undo history
+- the #77 shapes are drawn unchanged
+- the "stop invalidating unchanged nodes" consequence is met: `updateView` no longer clones the view, and the drawing is memoised node by node, so moving 1 of 500 shapes redraws that shape and its two lines only (`render-count.test.tsx`)
 
 ## References
 
