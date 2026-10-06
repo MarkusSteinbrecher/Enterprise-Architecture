@@ -115,6 +115,18 @@ describe('moveSelection', () => {
   })
 })
 
+describe('a re-parented node goes on top of its new siblings, as Archi appends it', () => {
+  it('moves to the end of the array, so it is drawn last in its new parent', () => {
+    const before = sample()
+    const after = moveSelection(before, new Set(['c']), -300, 0, { into: 'g' })
+    expect(after.nodes.map((n) => n.id)).toEqual(['g', 'a', 'b', 'd', 'c'])
+    // A move that keeps the parent keeps the order.
+    expect(moveSelection(before, new Set(['c']), 5, 0).nodes.map((n) => n.id)).toEqual(
+      before.nodes.map((n) => n.id),
+    )
+  })
+})
+
 describe('bend-points follow their ends, as Archi’s relative bend-points do', () => {
   it('move by the whole distance when both ends move', () => {
     const after = moveSelection(sample(), new Set(['g']), 10, 20)
@@ -194,6 +206,12 @@ describe('dropTarget', () => {
     expect(dropTarget(v, new Set(), { x: 100, y: 100 }, never)).toBe('inner')
     expect(dropTarget(v, new Set(), { x: 300, y: 300 }, never)).toBe('outer')
     expect(dropTarget(v, new Set(), { x: 500, y: 500 }, never)).toBeUndefined()
+  })
+
+  it('walks in drawing order, not array order: a child listed before its parent still wins', () => {
+    // inner is nested in outer but listed first, as a re-parent used to leave it.
+    const v = view([group('inner', 50, 50, 100, 100, 'outer'), group('outer', 0, 0, 400, 400)])
+    expect(dropTarget(v, new Set(), { x: 100, y: 100 }, () => false)).toBe('inner')
   })
 
   it('never drops into a moving node or anything inside it', () => {

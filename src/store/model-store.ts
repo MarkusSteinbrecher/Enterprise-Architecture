@@ -542,10 +542,13 @@ export class ModelStore {
   updateNode(viewId: string, nodeId: string, change: (node: ViewNode) => ViewNode): void {
     const view = this.#views.get(viewId)
     if (!view?.nodes.some((node) => node.id === nodeId)) return
-    this.updateView(viewId, (draft) => ({
-      ...draft,
-      nodes: draft.nodes.map((node) => (node.id === nodeId ? change(node) : node)),
-    }))
+    this.updateView(viewId, (draft) => {
+      const node = draft.nodes.find((n) => n.id === nodeId)!
+      const next = change(node)
+      // Unchanged: hand the view back, which updateView records as nothing.
+      if (next === node) return draft
+      return { ...draft, nodes: draft.nodes.map((n) => (n === node ? next : n)) }
+    })
   }
 
   /**
@@ -574,12 +577,15 @@ export class ModelStore {
   ): void {
     const view = this.#views.get(viewId)
     if (!view?.connections.some((connection) => connection.id === connectionId)) return
-    this.updateView(viewId, (draft) => ({
-      ...draft,
-      connections: draft.connections.map((connection) =>
-        connection.id === connectionId ? change(connection) : connection,
-      ),
-    }))
+    this.updateView(viewId, (draft) => {
+      const connection = draft.connections.find((c) => c.id === connectionId)!
+      const next = change(connection)
+      if (next === connection) return draft
+      return {
+        ...draft,
+        connections: draft.connections.map((c) => (c === connection ? next : c)),
+      }
+    })
   }
 
   removeConnection(viewId: string, connectionId: string): void {

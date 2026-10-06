@@ -690,15 +690,6 @@ for claims under 500.</label>
             </style>
           </node>
         </node>
-        <node identifier="o-scanner" elementRef="eq-scanner" xsi:type="Element" x="40" y="860" w="120" h="55">
-          <style>
-            <fillColor r="201" g="231" b="183" a="100" />
-            <lineColor r="92" g="92" b="92" a="100" />
-            <font name="Lucida Grande" size="12">
-              <color r="0" g="0" b="0" />
-            </font>
-          </style>
-        </node>
         <node identifier="o-zurich" elementRef="loc-zurich" xsi:type="Element" x="1240" y="830" w="150" h="55">
           <style>
             <fillColor r="237" g="207" b="226" a="100" />
@@ -745,6 +736,15 @@ for claims under 500.</label>
             </font>
           </style>
           <viewRef ref="v-data" />
+        </node>
+        <node identifier="o-scanner" elementRef="eq-scanner" xsi:type="Element" x="40" y="860" w="120" h="55">
+          <style>
+            <fillColor r="201" g="231" b="183" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
         </node>
         <node identifier="o-note-edited" xsi:type="Label" x="1240" y="380" w="170" h="55">
           <label xml:lang="en">Edited in Archipelago (#127).</label>
@@ -1049,14 +1049,6 @@ for claims under 500.</label>
           <bendpoint x="100" y="1010" />
           <bendpoint x="1010" y="1010" />
         </connection>
-        <connection identifier="c-scanner-net" relationshipRef="r-scanner-net" xsi:type="Relationship" source="o-scanner" target="o-backbone">
-          <style>
-            <lineColor r="0" g="0" b="0" />
-            <font name="Lucida Grande" size="12">
-              <color r="0" g="0" b="0" />
-            </font>
-          </style>
-        </connection>
         <connection identifier="c-zurich-k8s" relationshipRef="r-zurich-k8s" xsi:type="Relationship" source="o-zurich" target="o-k8s">
           <style>
             <lineColor r="0" g="0" b="0" />
@@ -1074,6 +1066,14 @@ for claims under 500.</label>
           </style>
         </connection>
         <connection identifier="c-wp-engine" relationshipRef="r-wp-engine" xsi:type="Relationship" source="o-rollout" target="o-engine">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-scanner-net" relationshipRef="r-scanner-net" xsi:type="Relationship" source="o-scanner" target="o-backbone">
           <style>
             <lineColor r="0" g="0" b="0" />
             <font name="Lucida Grande" size="12">

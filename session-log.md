@@ -23,6 +23,14 @@ A reader tab keeps the read-only canvas. Both Archi questions the issue left ope
 
 **Open:**
 - ADR 0006 was accepted by the sponsor (2026-10-06), recorded in this PR.
+- **#140 reviewed (`/review-pr 140`, same session):** 11 findings.
+  - Sponsor's call: Delete follows Archi; Shift+Delete keeps the children.
+  - Re-parented shapes now go on top of their new siblings (Archi's `AddObjectCommand` appends), and the drop target walks drawing order.
+  - A run of nudges rounds bend-points once. Before, ten 1 px nudges moved a weight-½ point 10 px one way and 0 px back.
+  - Escape cancels a drag. A release the canvas cannot see ends the press. Space resets on blur. The panel waits only for a press that changes the selection. No-op node and connection updates record nothing.
+  - Finding 10 (a stale view at commit) was demoted: the canvas re-renders before a release can be handled, and its mutation survives because the two views are the same.
+  - 1105 tests pass. The Archi save was regenerated, and Archi keeps the new drawing order.
+  - **Harvested:** review skill §2: the same order where it is stored and where it is walked.
 - **Delete follows Archi (sponsor's call in the #140 review).** Archi's Delete from View removes a container with everything inside. Its "Delete from View (keep children)" (`DeleteContainerAction`) is the other action, and Archipelago gives it Shift+Delete. #128 had lifted the children out on Delete, as the issue's own text said, which matches only Archi's secondary action.
 - Next: review this PR, then #129 (connecting).
 

@@ -502,8 +502,6 @@ for claims under 500.</label>
           <node identifier="o-backbone" x="40" y="960" w="120" h="45" xsi:type="Element" elementRef="cn-backbone">
           </node>
         </node>
-        <node identifier="o-scanner" x="40" y="860" w="120" h="55" xsi:type="Element" elementRef="eq-scanner">
-        </node>
         <node identifier="o-zurich" x="1240" y="830" w="150" h="55" xsi:type="Element" elementRef="loc-zurich">
         </node>
         <node identifier="o-goal" x="1240" y="60" w="170" h="60" xsi:type="Element" elementRef="g-settle">
@@ -523,6 +521,8 @@ for claims under 500.</label>
         <node identifier="o-ref-data" x="1240" y="640" w="170" h="55" xsi:type="Label">
           <label xml:lang="en">Claim data</label>
           <viewRef ref="v-data" />
+        </node>
+        <node identifier="o-scanner" x="40" y="860" w="120" h="55" xsi:type="Element" elementRef="eq-scanner">
         </node>
         <node identifier="o-note-edited" x="1240" y="380" w="170" h="55" xsi:type="Label">
           <label xml:lang="en">Edited in Archipelago (#127).</label>

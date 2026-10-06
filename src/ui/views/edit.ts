@@ -1,5 +1,5 @@
 import type { Bounds, Point, View, ViewConnection, ViewNode } from '@/model'
-import { absoluteIndex } from './geometry'
+import { absoluteIndex, childrenIndex } from './geometry'
 
 /**
  * The editor's geometry (#128): what a finished gesture does to a view. Pure,
@@ -70,7 +70,7 @@ export function moveSelection(
   if (top.size === 0) return view
   const before = absoluteIndex(view)
   let changed = false
-  const nodes = view.nodes.map((node) => {
+  const moved = view.nodes.map((node) => {
     if (!top.has(node.id)) return node
     const parent = drop ? drop.into : node.parent
     if (dx === 0 && dy === 0 && parent === node.parent) return node
@@ -89,7 +89,19 @@ export function moveSelection(
     else moved.parent = parent
     return moved
   })
-  return changed ? followBendpoints(view, { ...view, nodes }) : view
+  if (!changed) return view
+  // A node dropped into a new parent goes last among its new siblings, so it is
+  // drawn on top of them: Archi appends it (`DiagramLayoutPolicy$AddObjectCommand`
+  // adds to the end of the new container's children). Sibling order is array
+  // order, so moving it to the end of the array is enough; its own children keep
+  // their order among themselves.
+  const reparented = new Set(
+    moved.filter((node, i) => node.parent !== view.nodes[i]!.parent).map((node) => node.id),
+  )
+  const nodes = reparented.size
+    ? [...moved.filter((n) => !reparented.has(n.id)), ...moved.filter((n) => reparented.has(n.id))]
+    : moved
+  return followBendpoints(view, { ...view, nodes })
 }
 
 /**
@@ -197,17 +209,30 @@ export function dropTarget(
     }
     return false
   }
-  // Later nodes are drawn on top, and a child after its parent, so the last
-  // container that holds the point is the innermost one the user sees.
+  // Walked in drawing order (`ViewDrawing`'s: a parent, then its children, then
+  // the next sibling), so the last container that holds the point is the one
+  // drawn on top of the others there. Array order is not drawing order: a
+  // re-parented node can sit before its new parent in `view.nodes`.
   let target: string | undefined
-  for (const node of view.nodes) {
-    if (!canContain(node, isJunction) || insideMoving(node)) continue
-    const b = bounds.get(node.id)
-    if (!b) continue
-    if (point.x >= b.x && point.x <= b.x + b.width && point.y >= b.y && point.y <= b.y + b.height) {
-      target = node.id
+  const children = childrenIndex(view)
+  const visit = (parent: string | undefined) => {
+    for (const node of children.get(parent) ?? []) {
+      const b = bounds.get(node.id)
+      if (
+        b &&
+        canContain(node, isJunction) &&
+        !insideMoving(node) &&
+        point.x >= b.x &&
+        point.x <= b.x + b.width &&
+        point.y >= b.y &&
+        point.y <= b.y + b.height
+      ) {
+        target = node.id
+      }
+      visit(node.id)
     }
   }
+  visit(undefined)
   return target
 }
 

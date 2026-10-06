@@ -121,10 +121,12 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     return node ? [node.id] : []
   })
   /**
-   * A press is in progress. The selection panel waits for it to end: a press
-   * selects at once, so the shape can be dragged, and a panel opening then
-   * would narrow the canvas and slide under the pointer, taking the rest of the
-   * drag with it (seen in a real browser; jsdom lays nothing out).
+   * A press that changed the selection is in progress. The selection panel
+   * waits for it to end: a press selects at once, so the shape can be dragged,
+   * and a panel opening or changing then would narrow the canvas and slide
+   * under the pointer, taking the rest of the drag with it (seen in a real
+   * browser; jsdom lays nothing out). A press on what is already selected
+   * leaves the panel alone, so clicking it does not make the canvas jump.
    */
   const [pressing, setPressing] = useState(false)
   const [lasso, setLasso] = useState<Bounds | null>(null)
@@ -288,20 +290,32 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     [store],
   )
 
-  /** The view as the gesture would leave it, with the pointer at `client`. */
+  /** Where a move would drop the selection, with the pointer at `client`. */
+  const dropFor = useCallback(
+    (base: View, g: Extract<Gesture, { kind: 'move' }>, client: Point) =>
+      dropTarget(base, topSelected(base, g.ids), toView(client), isJunction),
+    [toView, isJunction],
+  )
+
+  /**
+   * `base` as the gesture would leave it, with the pointer at `client`. The
+   * commit passes the store's current view rather than the render's. They are
+   * the same object in practice, since a store change re-renders the canvas
+   * before a release can be handled; building on the store's is simply the
+   * honest base for a command whose `before` is the store's.
+   */
   const outcome = useCallback(
-    (g: Extract<Gesture, { kind: 'move' | 'resize' }>, client: Point): View => {
+    (base: View, g: Extract<Gesture, { kind: 'move' | 'resize' }>, client: Point): View => {
       const at = toView(client)
       const dx = Math.round(at.x - g.from.x)
       const dy = Math.round(at.y - g.from.y)
       if (g.kind === 'move') {
-        const into = dropTarget(view, topSelected(view, g.ids), at, isJunction)
-        return moveSelection(view, g.ids, dx, dy, { into })
+        return moveSelection(base, g.ids, dx, dy, { into: dropFor(base, g, client) })
       }
-      const node = view.nodes.find((n) => n.id === g.node)
-      return node ? resizeNode(view, g.node, resized(node.bounds, g.handle, dx, dy)) : view
+      const node = base.nodes.find((n) => n.id === g.node)
+      return node ? resizeNode(base, g.node, resized(node.bounds, g.handle, dx, dy)) : base
     },
-    [view, toView, isJunction],
+    [toView, dropFor],
   )
 
   /** Redraw the gesture in progress for the pointer at `client`. */
@@ -313,14 +327,17 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         setLasso(spanned(g.from, toView(client)))
         return
       }
-      setPreview(outcome(g, client))
+      setPreview(outcome(view, g, client))
       if (g.kind === 'move') {
-        const into = dropTarget(view, topSelected(view, g.ids), toView(client), isJunction)
-        const parents = new Set([...topSelected(view, g.ids)].map((id) => byIdParent(view, id)))
+        // Outlined only when the drop would change where the selection lives.
+        const into = dropFor(view, g, client)
+        const parents = new Set(
+          [...topSelected(view, g.ids)].map((id) => view.nodes.find((n) => n.id === id)?.parent),
+        )
         setDropInto(into !== undefined && !(parents.size === 1 && parents.has(into)) ? into : null)
       }
     },
-    [view, toView, outcome, isJunction],
+    [view, toView, outcome, dropFor],
   )
 
   /** Scroll while a drag rests near the canvas edge, carrying the gesture along. */
@@ -368,6 +385,15 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     }
   }
 
+  /** Drop the gesture in progress without committing it: Escape, a lost pointer. */
+  const cancelGesture = () => {
+    gesture.current = null
+    setPressing(false)
+    setPreview(null)
+    setLasso(null)
+    setDropInto(null)
+  }
+
   const endGesture = (client: Point) => {
     const g = gesture.current
     gesture.current = null
@@ -394,15 +420,45 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       if (g.kind === 'move' && !g.additive) choose([g.node])
       return
     }
-    // A gesture that changed nothing returns the view itself, which the store records as nothing.
-    const next = outcome(g, client)
-    store.updateView(view.id, () => next)
+    // Built on the store's current view; one that changed nothing is the view
+    // itself, which the store records as nothing.
+    store.updateView(view.id, (current) => outcome(current, g, client))
   }
+
+  /**
+   * A run of nudges: the view before the first, the selection it moves, the
+   * total so far, and the view the last one left. Each press is still its own
+   * command, but each is computed from the start of the run by the running
+   * total, so bend-points are rounded once, as one drag rounds them. Rounding at
+   * every press would drift them: a weight-½ point would move 10 px for ten
+   * 1 px presses one way and none the other (#140 review). A run ends when
+   * anything else changes the view or the selection.
+   */
+  const nudgeRun = useRef<{
+    start: View
+    selection: string
+    dx: number
+    dy: number
+    last: View
+  } | null>(null)
 
   const nudge = (dx: number, dy: number) => {
     if (selected.length === 0) return
     auto.current = false
-    store.updateView(view.id, (v) => moveSelection(v, new Set(selected), dx, dy))
+    const key = JSON.stringify(selected)
+    const run = nudgeRun.current
+    const continues = run !== null && run.last === view && run.selection === key
+    const next = continues
+      ? { ...run, dx: run.dx + dx, dy: run.dy + dy }
+      : { start: view, selection: key, dx, dy, last: view }
+    const ids = new Set(selected)
+    const after = store.updateView(view.id, (current) =>
+      // The run's start holds only if nothing else has changed the view since.
+      current === next.last
+        ? moveSelection(next.start, ids, next.dx, next.dy)
+        : moveSelection(current, ids, dx, dy),
+    )
+    nudgeRun.current = after ? { ...next, last: after } : null
   }
 
   const zoomBy = (factor: number) =>
@@ -521,7 +577,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               return
             }
             if (event.key === 'Escape') {
-              choose([])
+              // As GEF does: Escape cancels a drag in progress, and only then the selection.
+              if (gesture.current) cancelGesture()
+              else choose([])
               return
             }
             if (!editable || gesture.current) return
@@ -551,6 +609,10 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           onKeyUp={(event) => {
             if (event.key === ' ') space.current = false
           }}
+          onBlur={() => {
+            // A Space released while focus was elsewhere never reaches the canvas.
+            space.current = false
+          }}
           onPointerDown={(event) => {
             if (event.button !== 0 && event.button !== 1) return
             const start = { x: event.clientX, y: event.clientY }
@@ -561,7 +623,6 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               return
             }
             auto.current = false
-            setPressing(true)
             const from = toView(start)
             if (grip && single) {
               gesture.current = {
@@ -581,9 +642,12 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
                 ids = selected.includes(node)
                   ? selected.filter((id) => id !== node)
                   : [...selected, node]
-                choose(ids)
               } else if (!selected.includes(node)) {
                 ids = [node]
+              }
+              if (ids !== selected) {
+                // A selection made by this press: the panel waits for the release.
+                setPressing(true)
                 choose(ids)
               }
               gesture.current = {
@@ -602,6 +666,12 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           onPointerMove={(event) => {
             const g = gesture.current
             if (!g) return
+            // The button came up where the canvas could not see it: before the drag
+            // captured the pointer, a release outside the canvas sends no pointerup.
+            if (event.buttons === 0) {
+              cancelGesture()
+              return
+            }
             const client = { x: event.clientX, y: event.clientY }
             pointer.current = client
             if (!g.moved && Math.hypot(client.x - g.start.x, client.y - g.start.y) < CLICK_SLOP) {
@@ -624,13 +694,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             autoScroll()
           }}
           onPointerUp={(event) => endGesture({ x: event.clientX, y: event.clientY })}
-          onPointerCancel={() => {
-            gesture.current = null
-            setPressing(false)
-            setPreview(null)
-            setLasso(null)
-            setDropInto(null)
-          }}
+          onPointerCancel={cancelGesture}
           onDoubleClick={(event) => {
             const node = view.nodes.find((n) => n.id === target(event).node)
             if (node?.kind === 'view-ref' && store.view(node.view))
@@ -721,10 +785,6 @@ function handlePoint(b: Bounds, h: Handle): Point {
   const x = h.includes('w') ? b.x : h.includes('e') ? b.x + b.width : b.x + b.width / 2
   const y = h.includes('n') ? b.y : h.includes('s') ? b.y + b.height : b.y + b.height / 2
   return { x, y }
-}
-
-function byIdParent(view: View, id: string): string | undefined {
-  return view.nodes.find((n) => n.id === id)?.parent
 }
 
 function SelectionPanel({

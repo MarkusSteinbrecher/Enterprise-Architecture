@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import claimsXml from '@/io/fixtures/claims-platform.xml?raw'
@@ -245,6 +245,121 @@ describe('moving shapes (#128)', () => {
     await user.keyboard('{Shift>}{ArrowDown}{/Shift}')
     expect(absoluteBounds(view(), 'o-goal')).toMatchObject({ x: before.x + 1, y: before.y + 10 })
     expect(dispatch).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('gestures that end early (#140 review)', () => {
+  it('cancels a drag on Escape: nothing is committed and the selection stays', async () => {
+    const { dispatch, user, nodeEl, view } = setup()
+    const before = absoluteBounds(view(), 'o-goal')!
+    await user.pointer([
+      { keys: '[MouseLeft>]', target: nodeEl('o-goal'), coords: { clientX: 1250, clientY: 70 } },
+      { target: nodeEl('o-goal'), coords: { clientX: 1290, clientY: 100 } },
+    ])
+    expect(drawnAt(nodeEl('o-goal'))).not.toEqual({ x: before.x, y: before.y })
+    await user.keyboard('{Escape}')
+    expect(drawnAt(nodeEl('o-goal'))).toEqual({ x: before.x, y: before.y })
+    await user.pointer({
+      keys: '[/MouseLeft]',
+      target: nodeEl('o-goal'),
+      coords: { clientX: 1290, clientY: 100 },
+    })
+    expect(dispatch).not.toHaveBeenCalled()
+    expect(screen.getAllByTestId('selection')).toHaveLength(1)
+  })
+
+  it('drops a press released where the canvas could not see it', async () => {
+    const { dispatch, user, nodeEl, view, canvas } = setup()
+    const before = absoluteBounds(view(), 'o-goal')!
+    await user.pointer({
+      keys: '[MouseLeft>]',
+      target: nodeEl('o-goal'),
+      coords: { clientX: 1250, clientY: 70 },
+    })
+    // Released outside the canvas before the drag captured the pointer.
+    await user.pointer({ keys: '[/MouseLeft]', target: document.body })
+    // Hovering back with no button held must not drag the shape.
+    await user.pointer({ target: canvas, coords: { clientX: 1300, clientY: 120 } })
+    await user.pointer({ target: canvas, coords: { clientX: 1350, clientY: 170 } })
+    expect(drawnAt(nodeEl('o-goal'))).toEqual({ x: before.x, y: before.y })
+    expect(dispatch).not.toHaveBeenCalled()
+    expect(screen.getByRole('complementary')).toBeInTheDocument()
+  })
+
+  it('forgets a held Space when the canvas loses focus', async () => {
+    const { dispatch, user, nodeEl, canvas } = setup()
+    const host = canvas.closest('.view-screen__canvas') as HTMLElement
+    act(() => host.focus())
+    await user.keyboard('{ }')
+    // Space down, focus lost, Space released elsewhere: only the keydown is seen.
+    fireEvent.keyDown(host, { key: ' ' })
+    act(() => host.blur())
+    await drag(user, nodeEl('o-goal'), { x: 1250, y: 70 }, { x: 1270, y: 90 })
+    expect(dispatch).toHaveBeenCalledTimes(1)
+  })
+
+  // The commit is built on the store's view at release. Whether it used the
+  // render's view instead cannot be seen from here: the canvas re-renders on
+  // every store change before a release is handled, so the two are the same
+  // (#140 review, finding 10, demoted). What can be seen is the outcome.
+  it('keeps an edit made to the view while a drag was in progress', async () => {
+    const { store, user, nodeEl, view } = setup()
+    const goal = absoluteBounds(view(), 'o-goal')!
+    const req = absoluteBounds(view(), 'o-req')!
+    await user.pointer([
+      { keys: '[MouseLeft>]', target: nodeEl('o-goal'), coords: { clientX: 1250, clientY: 70 } },
+      { target: nodeEl('o-goal'), coords: { clientX: 1270, clientY: 80 } },
+    ])
+    // Something else changes the view while the drag is in progress.
+    act(() => {
+      store.updateNode(LANDSCAPE, 'o-req', (node) => ({
+        ...node,
+        bounds: { ...node.bounds, x: node.bounds.x + 5 },
+      }))
+    })
+    await user.pointer({
+      keys: '[/MouseLeft]',
+      target: nodeEl('o-goal'),
+      coords: { clientX: 1270, clientY: 80 },
+    })
+    expect(absoluteBounds(view(), 'o-goal')).toMatchObject({ x: goal.x + 20, y: goal.y + 10 })
+    expect(absoluteBounds(view(), 'o-req')).toMatchObject({ x: req.x + 5 })
+  })
+
+  it('keeps the panel open on a press of what is already selected', async () => {
+    const { user, nodeEl } = setup()
+    await click(user, nodeEl('o-goal'), { x: 1250, y: 70 })
+    expect(screen.getByRole('complementary')).toBeInTheDocument()
+    await user.pointer({
+      keys: '[MouseLeft>]',
+      target: nodeEl('o-goal'),
+      coords: { clientX: 1250, clientY: 70 },
+    })
+    expect(screen.getByRole('complementary')).toBeInTheDocument()
+    await user.pointer({
+      keys: '[/MouseLeft]',
+      target: nodeEl('o-goal'),
+      coords: { clientX: 1250, clientY: 70 },
+    })
+  })
+})
+
+describe('nudging a line’s end (#140 review)', () => {
+  it('moves its bend-points by their weights, and back again, as Archi would', async () => {
+    const { dispatch, user, nodeEl, view } = setup()
+    // c-info-ins runs from o-info-svc through two bend-points (weights 1/3 and 2/3).
+    const bends = view().connections.find((c) => c.id === 'c-info-ins')!.bendpoints!
+    expect(bends).toHaveLength(2)
+    await click(user, nodeEl('o-info-svc'), { x: 665, y: 65 })
+    for (let i = 0; i < 10; i++) await user.keyboard('{ArrowRight}')
+    expect(dispatch).toHaveBeenCalledTimes(10)
+    // The source moved 10: the first point by 2/3 of it, the second by 1/3.
+    expect(view().connections.find((c) => c.id === 'c-info-ins')!.bendpoints).toEqual([
+      { x: Math.round(bends[0]!.x + 20 / 3), y: bends[0]!.y },
+      { x: Math.round(bends[1]!.x + 10 / 3), y: bends[1]!.y },
+    ])
+    for (let i = 0; i < 10; i++) await user.keyboard('{ArrowLeft}')
+    expect(view().connections.find((c) => c.id === 'c-info-ins')!.bendpoints).toEqual(bends)
   })
 })
 

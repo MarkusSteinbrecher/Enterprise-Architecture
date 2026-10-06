@@ -344,6 +344,16 @@ describe('updateView keeps what an edit does not touch (#128)', () => {
     expect(s.canUndo).toBe(false)
   })
 
+  it('records nothing when a node or connection change returns what it was given', () => {
+    const s = store()
+    s.updateNode('view-detail', 'd-app', (node) => node)
+    s.updateConnection('view-detail', 'd-access', (connection) => connection)
+    expect(s.canUndo).toBe(false)
+    // …and something when it does change it, so the guard above is not vacuous.
+    s.updateConnection('view-detail', 'd-access', (connection) => ({ ...connection }))
+    expect(s.canUndo).toBe(true)
+  })
+
   it('refuses, in tests, a change that mutates the view instead of returning a new one', () => {
     const s = store()
     const before = structuredClone(s.view('view-detail')!)
