@@ -115,6 +115,32 @@ describe('each handler, as the evidence shows it', () => {
     expect(node(at('3.0.0'), 'o-location-wide')?.bounds).toMatchObject({ width: 200, height: 55 })
   })
 
+  it('grows a container around a child that grew itself, as Archi 5.10 saved them', () => {
+    // The note at 300 + 185 + 10 grows the inner group past its 400 × 140; the
+    // outer one grows around the inner one's new size, not its default.
+    expect(evidence('2.9.9')).toContain('<bounds x="10" y="30" width="495" height="190"/>')
+    expect(evidence('2.9.9')).toContain('<bounds x="20" y="900" width="515" height="230"/>')
+    expect(node(at('2.9.9'), 'o-group-nest-inner')?.bounds).toMatchObject({
+      width: 495,
+      height: 190,
+    })
+    expect(node(at('2.9.9'), 'o-group-nest-outer')?.bounds).toMatchObject({
+      width: 515,
+      height: 230,
+    })
+  })
+
+  it('keeps a size of 0 or below, which Archi does not count as unset (#123 review)', () => {
+    // Archi 5.10 kept both as written; only -1 is unset to FixDefaultSizesHandler.
+    expect(evidence('2.9.9')).toContain('<bounds x="600" y="900" width="0" height="100"/>')
+    expect(evidence('2.9.9')).toContain('<bounds x="900" y="900" width="-5" height="-5"/>')
+    // Read as Archi's save of them is read: a group's default where 0 or below.
+    expect(node(at('2.9.9'), 'o-group-zero')?.bounds).toMatchObject({ width: 400, height: 100 })
+    expect(node(at('2.9.9'), 'o-group-negative')?.bounds).toMatchObject({ width: 400, height: 140 })
+    const said = importArchimate(at('2.9.9')).problems.map((p) => p.code)
+    expect(said).toContain('archimate.default-size')
+  })
+
   it('below 4.0.0, empties the Connectors and Derived Relations folders and moves elements out of Business', () => {
     const older = workspaceOf(importArchimate(at('3.9.9')))
     const folder = (id: string) => older.folders.find((f) => f.id === id)
@@ -124,6 +150,9 @@ describe('each handler, as the evidence shows it', () => {
       expect(older.elements.find((e) => e.id === id)?.folder).toBeUndefined()
     }
     expect(older.elements.find((e) => e.id === 'e-role')?.folder).toBe('f-places')
+    // Only the first Business folder, and no other, as Archi 5.10 saved them.
+    expect(older.elements.find((e) => e.id === 'e-location-second')?.folder).toBe('f-more-places')
+    expect(older.elements.find((e) => e.id === 'e-location-elsewhere')?.folder).toBe('f-elsewhere')
     const current = workspaceOf(importArchimate(at('4.0.0')))
     expect(current.folders.find((f) => f.id === 'f-older-derived')?.root).toBe('other')
     expect(current.elements.find((e) => e.id === 'e-location')?.folder).toBe('f-places')
@@ -158,12 +187,128 @@ describe('each handler, as the evidence shows it', () => {
     }
   })
 
-  it('below 5.0.0, reports the figure Archi swaps a Grouping, Meaning or Value to', () => {
-    const appearance = (xml: string) =>
-      importArchimate(xml).problems.find((p) => p.code === 'archimate.appearance-unsupported')
-        ?.message
-    expect(appearance(at('4.9.9'))).toContain('type')
-    expect(appearance(base) ?? '').not.toContain('type')
+  it('below 5.0.0, reports the figure Archi swaps to, in the first diagrams folder only', () => {
+    // Archi 5.10 swapped o-app-figure's 1 to the default 0, and left the shape in
+    // the second diagrams folder alone.
+    expect(evidence('4.9.9')).toMatch(/id="o-app-figure" archimateElement="e-app">/)
+    expect(evidence('4.9.9')).toMatch(
+      /id="o-grouping-absent" archimateElement="e-grouping-absent" type="1">/,
+    )
+    expect(evidence('4.9.9')).toMatch(/id="o-app-second" archimateElement="e-app">/)
+    const reported = (shapes: string, version: string) =>
+      importArchimate(figures(shapes, version))
+        .problems.find((p) => p.code === 'archimate.appearance-unsupported')
+        ?.message.includes('type') ?? false
+    const drawn =
+      '<child xsi:type="archimate:DiagramObject" id="s" archimateElement="app"><bounds x="10" y="10" width="120" height="55"/></child>'
+    const typed = drawn.replace('id="s"', 'id="s" type="1"')
+    // 0 swaps to 1, which is not drawn; 1 swaps to 0, which is.
+    expect(reported(drawn, '4.9.9')).toBe(true)
+    expect(reported(typed, '4.9.9')).toBe(false)
+    expect(reported(drawn, '5.0.0')).toBe(false)
+    expect(reported(typed, '5.0.0')).toBe(true)
+    // The second diagrams folder is not walked.
+    expect(
+      reported(
+        `</element></folder><folder name="V2" id="v2" type="diagrams"><element xsi:type="archimate:ArchimateDiagramModel" name="W" id="w">${drawn}`,
+        '4.9.9',
+      ),
+    ).toBe(false)
+  })
+})
+
+/** A model whose one view, in the first diagrams folder, holds `shapes` drawing an ApplicationComponent. */
+const figures = (shapes: string, version: string) =>
+  `<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="m" version="${version}">
+  <folder name="Application" id="fa" type="application"><element xsi:type="archimate:ApplicationComponent" name="A" id="app"/></folder>
+  <folder name="Views" id="fv" type="diagrams"><element xsi:type="archimate:ArchimateDiagramModel" name="V" id="v"><child xsi:type="archimate:Note" id="n"><bounds x="0" y="0" width="10" height="10"/></child></element><element xsi:type="archimate:ArchimateDiagramModel" name="U" id="u">${shapes}</element></folder>
+</archimate:model>`
+
+/** A model at `version` with one view holding `children`, and the elements they may draw. */
+const view = (children: string, version: string) =>
+  `<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="m" version="${version}">
+  <folder name="Business" id="fb" type="business">
+    <element xsi:type="archimate:BusinessActor" name="A" id="a"/>
+    <element xsi:type="archimate:Location" name="L" id="loc"/>
+    <folder name="Sub" id="fs">
+      <element xsi:type="archimate:Location" name="L" id="loc"/>
+      <element xsi:type="archimate:Location" name="M" id="loc-moved"/>
+    </folder>
+  </folder>
+  <folder name="Views" id="fv" type="diagrams"><element xsi:type="archimate:ArchimateDiagramModel" name="V" id="v">${children}</element></folder>
+</archimate:model>`
+
+describe('a skipped duplicate is not counted as changed (#123 review)', () => {
+  const said = (xml: string) => compatibility(importArchimate(xml)) ?? ''
+
+  it('counts one shape when its duplicate is skipped, for each change', () => {
+    const group = (alpha: string) =>
+      `<child xsi:type="archimate:Group" id="g" name="G"${alpha}><bounds x="0" y="0"/></child>`
+    const twice = group('') + group(' alpha="50"')
+    expect(said(view(twice, '2.9.9'))).toContain('1 shape without a size was sized')
+    expect(said(view(twice, '4.3.9'))).toContain('1 group or Grouping label aligned centre was')
+    // Only the skipped duplicate has an alpha, so nothing changed in what was kept.
+    expect(said(view(twice, '4.0.1'))).toContain('1 group or Grouping label')
+    expect(said(view(twice, '4.0.1'))).not.toContain('outline opacity')
+  })
+
+  it('counts a moved element only when it is kept', () => {
+    // The first Location in Sub reuses the id of the one at the top, so it is skipped.
+    expect(said(view('', '3.9.9'))).toContain(
+      '1 Location, Meaning or Value element was moved out of a Business folder',
+    )
+  })
+
+  it('does not count a skipped duplicate at Archi’s default size', () => {
+    const twice =
+      '<child xsi:type="archimate:Group" id="g" name="G"><bounds x="0" y="0" width="100" height="100"/></child>' +
+      '<child xsi:type="archimate:Group" id="g" name="G"><bounds x="0" y="0"/></child>'
+    const codes = importArchimate(view(twice, '5.0.0')).problems.map((p) => p.code)
+    expect(codes).toContain('archimate.duplicate-node-id')
+    expect(codes).not.toContain('archimate.default-size')
+  })
+})
+
+describe('the branches an Archi-saved fixture cannot carry (#123 review)', () => {
+  const alignment = (attributes: string, version: string) =>
+    workspaceOf(
+      importArchimate(
+        view(
+          `<child xsi:type="archimate:Group" id="g" name="G"${attributes}><bounds x="0" y="0" width="100" height="100"/></child>`,
+          version,
+        ),
+      ),
+    ).views[0]!.nodes[0]!.appearance?.textAlignment
+
+  it('aligns left a centre written out, which Archi omits when it saves', () => {
+    // `getTextAlignment() == TEXT_ALIGNMENT_CENTER` holds for a written 2 as for an absent one.
+    expect(alignment(' textAlignment="2"', '4.3.9')).toBe('left')
+    expect(alignment(' textAlignment="2"', '4.4.0')).toBe('center')
+  })
+
+  it('reports a malformed outline opacity that Archi replaces', () => {
+    const result = importArchimate(
+      view(
+        '<child xsi:type="archimate:Group" id="g" name="G" alpha="100" lineColor="#ff0000"><bounds x="0" y="0" width="100" height="100"/><feature name="lineAlpha" value="abc"/></child>',
+        '4.4.0',
+      ),
+    )
+    expect(workspaceOf(result).views[0]!.nodes[0]!.appearance?.lineColor).toBe('#ff000064')
+    const malformed = result.problems.find((p) => p.code === 'archimate.value-malformed')?.message
+    expect(malformed).toContain('lineAlpha')
+    expect(malformed).toContain('an outline opacity that Archi replaces with the fill opacity')
+  })
+
+  it('leaves a connection’s outline opacity alone, as Archi 5.10 did', () => {
+    expect(evidence('4.0.1')).toMatch(
+      /id="l-line-alpha"[^]*?<feature name="lineAlpha" value="200"\/>/,
+    )
+    const line = workspaceOf(importArchimate(at('4.0.1')))
+      .views.flatMap((v) => v.connections)
+      .find((c) => c.id === 'l-line-alpha')
+    expect(line?.appearance?.lineColor).toBe('#0000ffc8')
   })
 })
 
@@ -171,12 +316,15 @@ describe('what was changed is said (#118)', () => {
   it('lists each change with its count, under the file’s version', () => {
     const message = compatibility(importArchimate(at('2.9.9')))
     expect(message).toMatch(/^This file’s model version is “2\.9\.9”, and Archi 5\.10 changes/)
-    expect(message).toContain('11 shapes without a size were sized as Archi sizes them')
-    expect(message).toContain('5 group and Grouping labels aligned centre were aligned left')
+    expect(message).toContain(
+      '16 shapes without a size were sized as Archi sizes them: 120 × 55 for any element but a junction',
+    )
+    expect(message).toContain('9 group and Grouping labels aligned centre were aligned left')
     expect(message).toContain('the contents of the “Connectors” folder were filed under Other')
     expect(message).toContain(
       'the contents of the “Derived Relations” folder were filed under Relations',
     )
+    // Not the Location in Other, nor the one in the second Business folder.
     expect(message).toContain('3 Location, Meaning and Value elements were moved')
     expect(message).not.toContain('outline opacity')
     expect(compatibility(importArchimate(at('4.4.0')))).toContain(
@@ -257,6 +405,32 @@ describe('top-level folders that are none of the fixed groups (#118)', () => {
     )
     expect(workspace.folders).toEqual([{ id: 'f-kept', name: 'Kept', root: 'other' }])
     expect(workspace.elements.map((e) => [e.id, e.folder])).toEqual([['j', 'f-kept']])
+  })
+
+  it('renames a folder whose id an element inside such a folder already has', () => {
+    const workspace = workspaceOf(
+      importArchimate(
+        withFolder(`<folder name="Other" id="top-o" type="other">
+    <folder name="Clash" id="j"/>
+    <element xsi:type="archimate:Folder" name="Kept" id="f-kept">
+      <element xsi:type="archimate:Junction" id="j"/>
+    </element>
+  </folder>`),
+      ),
+    )
+    expect(workspace.elements.map((e) => e.id)).toEqual(['j'])
+    expect(workspace.folders.map((f) => f.id)).not.toContain('j')
+  })
+
+  it('names such a folder a folder when it carries something unread', () => {
+    const result = importArchimate(
+      withFolder(`<folder name="Other" id="top-o" type="other">
+    <element xsi:type="archimate:Folder" name="Kept" id="f-kept" stray="1"/>
+  </folder>`),
+    )
+    expect(result.problems.find((p) => p.code === 'import.content-unread')?.message).toMatch(
+      /^1 folder \(f-kept\) carries the attribute “stray”/,
+    )
   })
 })
 

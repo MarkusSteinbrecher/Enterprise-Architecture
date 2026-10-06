@@ -209,6 +209,10 @@ interface Member {
   /** The legacy name the file wrote, when it wrote one (#105). */
   legacy?: string
   folder?: string
+  /** Taken out of a Business subfolder by `Archimate2To3Handler` (#118). */
+  moved?: true
+  /** Filed under the first diagrams folder, the only one `Archimate32Handler` walks (#123 review). */
+  firstDiagrams?: true
 }
 
 /**
@@ -256,9 +260,10 @@ function archiType(raw: RawNode): { type: string; legacy?: string } {
   return renamed ? { type: `archimate:${renamed}`, legacy: local } : { type }
 }
 
-/** A legacy name is counted once its member is kept: a skipped one was reported already. */
-function countLegacyName(member: Member, reader: Reader): void {
+/** A conversion is counted once its member is kept: a skipped one was reported already. */
+function countConversions(member: Member, reader: Reader): void {
   if (member.legacy) bump(reader.tally.renamed, member.legacy)
+  if (member.moved) reader.tally.movedFromBusiness += 1
 }
 
 interface Tally {
@@ -429,7 +434,7 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     }
     elementIds.add(element.id)
     elements.push(element)
-    countLegacyName(member, reader)
+    countConversions(member, reader)
   }
 
   const relationships: Relationship[] = []
@@ -444,7 +449,7 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     }
     relationshipsById.set(relationship.id, relationship)
     relationships.push(relationship)
-    countLegacyName(member, reader)
+    countConversions(member, reader)
     // Counted only once kept: a skipped relationship's documentation is not lost here (#100).
     if (textOf(member.raw.documentation)) reader.tally.relationshipDocs.push(relationship.id)
     ledger.whole(member.raw, 'documentation')
@@ -501,7 +506,7 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     }
     seenViews.add(view.id)
     views.push(view)
-    countLegacyName(member, reader)
+    countConversions(member, reader)
   }
 
   const modelProperties = readProperties(model, reader)
@@ -576,6 +581,14 @@ function readFolders(model: RawNode, reader: Reader): { members: Member[]; folde
     return claimIdentifier(`folder-${own ?? 'unnamed'}`, used)
   }
 
+  const { compatibility } = reader
+  // Archi's `getFolder(type)` is the first top-level folder of that type: the one
+  // `Archimate2To3Handler` moves elements out of, and `Archimate32Handler` walks.
+  const firstOfType = (type: string) =>
+    list(model.folder).find((top) => asString(top['@type']) === type)
+  const businessTop = firstOfType('business')
+  const diagramsTop = firstOfType('diagrams')
+
   /**
    * A folder's elements and the folders among them. `Archimate2To3Handler` moves
    * a folder into another's elements, and Archi 5.10 saves and reopens it there as
@@ -583,33 +596,27 @@ function readFolders(model: RawNode, reader: Reader): { members: Member[]; folde
    * Below 4.0.0, a Location, Meaning or Value in a Business subfolder is moved to
    * the top of its own group, as the handler moves it.
    */
-  const collect = (
-    raw: RawNode,
-    folder: Folder | undefined,
-    root: FolderRoot,
-    business: boolean,
-  ) => {
+  const collect = (raw: RawNode, folder: Folder | undefined, root: FolderRoot, top: RawNode) => {
     const nested: RawNode[] = []
+    const business = compatibility.archimate2To3 && top === businessTop
     for (const element of list(raw.element)) {
-      if (isFolderElement(element)) nested.push(element)
-      else if (
-        folder &&
+      if (isFolderElement(element)) {
+        nested.push(element)
+        continue
+      }
+      const moved =
+        folder !== undefined &&
         business &&
         MOVED_FROM_BUSINESS.has(splitType(archiType(element).type)[1])
-      ) {
-        members.push(memberOf(element))
-        reader.tally.movedFromBusiness += 1
-      } else members.push(memberOf(element, folder?.id))
+      const member = moved ? memberOf(element) : memberOf(element, folder?.id)
+      if (moved) member.moved = true
+      if (top === diagramsTop) member.firstDiagrams = true
+      members.push(member)
     }
-    walk([...list(raw.folder), ...nested], folder, root, business)
+    walk([...list(raw.folder), ...nested], folder, root, top)
   }
 
-  const walk = (
-    raws: RawNode[],
-    parent: Folder | undefined,
-    root: FolderRoot,
-    business: boolean,
-  ) => {
+  const walk = (raws: RawNode[], parent: Folder | undefined, root: FolderRoot, top: RawNode) => {
     for (const raw of raws) {
       const folder: Folder = { id: claim(raw), name: asString(raw['@name']) ?? '' }
       const documentation = textOf(raw.documentation)
@@ -623,13 +630,10 @@ function readFolders(model: RawNode, reader: Reader): { members: Member[]; folde
       reader.ledger.text(raw, 'documentation')
       reader.ledger.whole(raw, 'property')
       readUnheldFeatures(raw, reader)
-      collect(raw, folder, root, business)
+      collect(raw, folder, root, top)
     }
   }
 
-  const { compatibility } = reader
-  // `Archimate2To3Handler` moves elements out of `getFolder(BUSINESS)`: the first.
-  const business = list(model.folder).find((top) => asString(top['@type']) === 'business')
   for (const top of list(model.folder)) {
     const type = asString(top['@type']) ?? ''
     const topName = asString(top['@name'])
@@ -660,7 +664,7 @@ function readFolders(model: RawNode, reader: Reader): { members: Member[]; folde
     reader.ledger.use(top, '@type', '@id', '@name', 'element', 'folder')
     reader.ledger.whole(top, 'documentation', 'property')
     readUnheldFeatures(top, reader)
-    collect(top, undefined, root, compatibility.archimate2To3 && top === business)
+    collect(top, undefined, root, top)
   }
 
   if (topDocumented.length) {
@@ -1096,9 +1100,25 @@ function readView(member: Member, context: ViewContext): View | undefined {
   const walk = (raws: RawNode[], parent: { id: string; box: Box } | undefined, origin: Point) => {
     for (const child of raws) {
       owners.push(child)
-      countUnsupported(child, UNDRAWN_NODE_ATTRIBUTES, reader, swapsFigure(child, context))
       reader.ledger.first(child, 'bounds')
       const bounds = entries(child.bounds)[0] ?? {}
+      const rawId = asString(child['@id'])
+      if (rawId !== undefined && boxes.has(rawId)) {
+        // Skipped before it is read, so nothing it carries is counted in a
+        // report's tally; its children are still placed by it (#123 review).
+        skip(
+          'archimate.duplicate-node-id',
+          `two shapes share the id "${rawId}"; the later one was skipped.`,
+        )
+        reader.ledger.skip(child, NESTED)
+        const at = {
+          x: origin.x + (num(bounds['@x']) ?? 0),
+          y: origin.y + (num(bounds['@y']) ?? 0),
+        }
+        walk(list(child.child), parent, at)
+        continue
+      }
+      countUnsupported(child, UNDRAWN_NODE_ATTRIBUTES, reader, swapsFigure(child, member, context))
       const x = origin.x + (measured(bounds, 'x', reader) ?? 0)
       const y = origin.y + (measured(bounds, 'y', reader) ?? 0)
       const node = readNode(child, context, skip)
@@ -1118,8 +1138,12 @@ function readView(member: Member, context: ViewContext): View | undefined {
         }
         let width = sized('width') ?? size.width
         let height = sized('height') ?? size.height
-        if (archiSized && reader.compatibility.defaultSizes) {
-          // Below 3.0.0 Archi sizes both sides once either is unset (#118).
+        if (
+          reader.compatibility.defaultSizes &&
+          (legacySide(bounds, 'width') === undefined || legacySide(bounds, 'height') === undefined)
+        ) {
+          // Below 3.0.0 Archi sizes both sides once either is unset (#118). Its
+          // unset is -1 alone: a 0 it keeps, and draws as it draws a 0 today.
           ;({ width, height } = legacySize(child, context.elements))
           reader.tally.legacySized += 1
         } else if (archiSized) reader.tally.defaultSized += 1
@@ -1131,20 +1155,12 @@ function readView(member: Member, context: ViewContext): View | undefined {
           height,
         }
         if (parent) node.parent = parent.id
-        if (boxes.has(node.id)) {
-          skip(
-            'archimate.duplicate-node-id',
-            `two shapes share the id "${node.id}"; the later one was skipped.`,
-          )
-          reader.ledger.skip(child, NESTED)
-        } else {
-          checkViewContent(child, node, reader)
-          reader.ledger.use(child, '@xsi:type', '@id', ...NESTED)
-          boxes.set(node.id, box)
-          nodesById.set(node.id, node)
-          view.nodes.push(node)
-          next = { id: node.id, box }
-        }
+        checkViewContent(child, node, reader)
+        reader.ledger.use(child, '@xsi:type', '@id', ...NESTED)
+        boxes.set(node.id, box)
+        nodesById.set(node.id, node)
+        view.nodes.push(node)
+        next = { id: node.id, box }
       } else reader.ledger.skip(child, NESTED)
       walk(list(child.child), next, { x, y })
     }
@@ -1519,7 +1535,10 @@ const isAppearanceFeature = (name: string) => name === LINE_ALPHA || DISPLAY_FEA
  */
 function outlineFromFill(raw: RawNode, alpha: number | undefined, reader: Reader): number {
   const own = list(raw.feature).find((f) => asString(f['@name']) === LINE_ALPHA)
-  const before = own === undefined ? 255 : (num(own['@value']) ?? 255)
+  const value = own === undefined ? undefined : num(own['@value'])
+  // Replaced, but still a value Archi would not write (#123 review).
+  if (own !== undefined && value === undefined) bump(reader.tally.malformed, LINE_ALPHA)
+  const before = own === undefined ? 255 : (value ?? 255)
   const after = alpha ?? 255
   if (after !== before) reader.tally.outlineOpacity += 1
   return after
@@ -1562,9 +1581,12 @@ function countUnsupported(
   }
 }
 
-/** Does Archi swap this shape's figure as it opens the model (`Archimate32Handler`, #118)? */
-function swapsFigure(raw: RawNode, context: ViewContext): boolean {
-  if (!context.reader.compatibility.alternateFigures) return false
+/**
+ * Does Archi swap this shape's figure as it opens the model (`Archimate32Handler`,
+ * #118)? Only in a view under the first diagrams folder, the one it walks.
+ */
+function swapsFigure(raw: RawNode, view: Member, context: ViewContext): boolean {
+  if (!context.reader.compatibility.alternateFigures || !view.firstDiagrams) return false
   if (splitType(typeOf(raw))[1] !== 'DiagramObject') return false
   const element = context.elements.get(asString(raw['@archimateElement']) ?? '')
   return element !== undefined && SWAPPED_FIGURES.has(element.type)
@@ -1574,15 +1596,16 @@ function swapsFigure(raw: RawNode, context: ViewContext): boolean {
  * The size `FixDefaultSizesHandler.getNewSize` gives a shape (#118). A shape with
  * both sides set keeps them; any other takes its legacy default, and a container
  * with children grows to hold each one, at its own new size, plus 10. Unset is
- * what the reader treats as Archi-sized: absent, malformed or not positive.
+ * Archi's `-1` and nothing else: absent or malformed is EMF's default, -1, while
+ * a 0 or another negative is kept, as Archi 5.10 kept them (#123 review).
  */
 function legacySize(
   raw: RawNode,
   elements: ReadonlyMap<string, Element>,
 ): { width: number; height: number } {
   const bounds = entries(raw.bounds)[0] ?? {}
-  const width = positive(bounds['@width'])
-  const height = positive(bounds['@height'])
+  const width = legacySide(bounds, 'width')
+  const height = legacySide(bounds, 'height')
   if (width !== undefined && height !== undefined) return { width, height }
   const [, type] = splitType(typeOf(raw))
   const element = elements.get(asString(raw['@archimateElement']) ?? '')
@@ -1604,9 +1627,10 @@ function legacySize(
   }
 }
 
-function positive(value: unknown): number | undefined {
-  const n = num(value)
-  return n !== undefined && n > 0 ? n : undefined
+/** A side as `FixDefaultSizesHandler` reads it: `undefined` when it is Archi's unset, -1. */
+function legacySide(bounds: RawNode, key: 'width' | 'height'): number | undefined {
+  const n = num(bounds[`@${key}`])
+  return n === undefined || n === -1 ? undefined : n
 }
 
 /** The child elements a shape's nested shapes and connections hang from: walked, not consumed whole. */
@@ -1770,7 +1794,7 @@ function reportTally(reader: Reader): void {
       problem(
         'warning',
         'archimate.value-malformed',
-        `Some shapes and lines hold values Archi does not write (${listed(names)}). A malformed position or bendpoint offset was read as 0, a size as Archi's default, and a colour, line width or text placement as not set.`,
+        `Some shapes and lines hold values Archi does not write (${listed(names)}). A malformed position or bendpoint offset was read as 0, a size as Archi's default, and a colour, opacity, line width or text placement as not set, except an outline opacity that Archi replaces with the fill opacity as it opens the model, which was replaced the same way.`,
         where,
       ),
     )
@@ -1821,7 +1845,7 @@ function reportCompatibility(reader: Reader): void {
   const changes: string[] = []
   if (tally.legacySized) {
     changes.push(
-      `${plural(tally.legacySized, 'shape without a size was', 'shapes without a size were')} sized as Archi sizes ${tally.legacySized === 1 ? 'it' : 'them'}: 120 × 55 for any element, a Grouping too, and a group or shape grown to hold what is in it`,
+      `${plural(tally.legacySized, 'shape without a size was', 'shapes without a size were')} sized as Archi sizes ${tally.legacySized === 1 ? 'it' : 'them'}: 120 × 55 for any element but a junction, a Grouping too, and a group or shape grown to hold what is in it`,
     )
   }
   if (tally.leftAligned) {
