@@ -1,5 +1,29 @@
 # Session Log
 
+## 2026-10-06 (cont.) — M2 filed: #127–#137
+
+M2's list in #74 became 11 issues, each with acceptance criteria, and #74 links them. **The first slice is #127, #128 and #129.**
+- **#127** builds the Archi oracle once: Archipelago's exchange export goes through Archi's `--xmlexchange.import`, then `--saveModel`, and is compared drawing for drawing. Archi assigns its own ids, so drawings are matched by what they draw, and anything unmatched is reported.
+- **#128** covers move, resize, re-parent and remove from view. It also carries ADR 0006's `updateView` render cost, as a render-count criterion.
+- **#129** covers valid-only connecting.
+
+The rest: #130 create views (with a new viewpoint table, tested against Archi's `viewpoints.xml`), #131 nesting prompt, #132 magic connector, #133 bend-points and router, #134 notes, groups, legends and view references, #135 appearance, #136 align, grid and z-order, #137 copy and paste.
+
+Checked in Archi 5.10's jars while writing them:
+- Archi has a legend object (`ILegendOptions`). #134 starts by finding out what our reader does with one today.
+- The CLI has an exchange-format import (`ImportXMLProvider`).
+- Archi's router is read today only to report `archimate.router-unsupported`; #133 replaces that.
+
+Where an issue depends on Archi's behaviour (paste reference vs copy, the nesting rule, align anchor), it says to settle it with Archi before building, not to assume it.
+
+**Next:** implement #127, then #128 on top of it. ADR 0006 is still Proposed; accepting it fits with #128's PR.
+
+## 2026-10-06 (cont.) — Next phase decided: the diagram editor (ADR 0008)
+
+The sponsor chose **M2, the diagram editor**, as the next step after M1. That settles #74's open question and the concept's §7.5. ADR 0008 records it: thin slices that each round-trip to Archi, beginning with move and resize, valid-only connecting, and saving a file Archi opens as drawn. #74 is updated, with M1 ticked and the decision recorded. #123 and #124 are merged.
+
+**Next session, started fresh:** file the M2 issues from #74's list, each with acceptance criteria, beginning with the first slice. The engine is ADR 0006 (Proposed). Read it and the concept's §2.2 and §5 first.
+
 ## 2026-10-06 (cont.) — #123 (#118) reviewed; #115 landed as PR #125
 
 **All seven findings are fixed in `dc9b6c3`; CI is green.** Archi 5.10 re-saved the extended evidence model, and 30 of 30 mutations are caught. #125 merged, and `feat/108` and `feat/115` were deleted.
