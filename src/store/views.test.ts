@@ -316,3 +316,54 @@ describe('a view the validator would flag (#75)', () => {
     expect(model(s)).toBe(before)
   })
 })
+
+describe('updateView keeps what an edit does not touch (#128)', () => {
+  it('keeps the identity of every node and connection an edit does not touch', () => {
+    const s = store()
+    const before = s.view('view-detail')!
+    s.updateNode('view-detail', 'd-app', (node) => ({
+      ...node,
+      bounds: { ...node.bounds, x: node.bounds.x + 5 },
+    }))
+    const after = s.view('view-detail')!
+    expect(after).not.toBe(before)
+    expect(after.nodes.length).toBeGreaterThan(1)
+    for (const node of after.nodes) {
+      const old = before.nodes.find((n) => n.id === node.id)
+      if (node.id === 'd-app') expect(node).not.toBe(old)
+      else expect(node, node.id).toBe(old)
+    }
+    expect(after.connections).toBe(before.connections)
+  })
+
+  it('records nothing when a change returns the view it was given', () => {
+    const s = store()
+    const version = s.version
+    expect(s.updateView('view-detail', (view) => view)).toBe(s.view('view-detail'))
+    expect(s.version).toBe(version)
+    expect(s.canUndo).toBe(false)
+  })
+
+  it('records nothing when a node or connection change returns what it was given', () => {
+    const s = store()
+    s.updateNode('view-detail', 'd-app', (node) => node)
+    s.updateConnection('view-detail', 'd-access', (connection) => connection)
+    expect(s.canUndo).toBe(false)
+    // …and something when it does change it, so the guard above is not vacuous.
+    s.updateConnection('view-detail', 'd-access', (connection) => ({ ...connection }))
+    expect(s.canUndo).toBe(true)
+  })
+
+  it('refuses, in tests, a change that mutates the view instead of returning a new one', () => {
+    const s = store()
+    const before = structuredClone(s.view('view-detail')!)
+    expect(() =>
+      s.updateView('view-detail', (view) => {
+        view.nodes[0]!.bounds.x += 1
+        return { ...view }
+      }),
+    ).toThrow(TypeError)
+    expect(s.view('view-detail')).toEqual(before)
+    expect(s.canUndo).toBe(false)
+  })
+})

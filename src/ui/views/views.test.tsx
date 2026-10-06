@@ -140,7 +140,7 @@ describe('geometry', () => {
 })
 
 describe('the view screen', () => {
-  it('draws every node of the Archi fixture at its stored bounds, nested in its parent', async () => {
+  it('draws every node of the Archi fixture at its stored bounds, after its parent', async () => {
     const workspace = fixture()
     const v = landscape(workspace)
     renderApp(workspace, { route: `/view/${LANDSCAPE}` })
@@ -153,9 +153,15 @@ describe('the view screen', () => {
       expect(el, n.id).not.toBeNull()
       const { x, y } = absoluteBounds(v, n.id)!
       expect(domPosition(el!), n.id).toEqual({ x, y })
-      // Nested in the DOM exactly as in the model.
-      const domParent = el!.parentElement!.closest('[data-node]')?.getAttribute('data-node')
-      expect(domParent ?? undefined, n.id).toBe(n.parent)
+      // Nested as in the model, and drawn after its parent, so on top of it.
+      expect(el!.getAttribute('data-parent') ?? undefined, n.id).toBe(n.parent)
+      if (n.parent) {
+        const parent = canvas.querySelector(`[data-node="${n.parent}"]`)!
+        expect(
+          parent.compareDocumentPosition(el!) & Node.DOCUMENT_POSITION_FOLLOWING,
+          n.id,
+        ).toBeTruthy()
+      }
     }
     // And the fixture really does nest: this is not vacuous.
     expect(v.nodes.filter((n) => n.parent).length).toBeGreaterThan(20)

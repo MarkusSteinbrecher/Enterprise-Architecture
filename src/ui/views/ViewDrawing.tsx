@@ -1,5 +1,14 @@
 import { memo } from 'react'
-import type { Bounds, ElementType, JunctionKind, Relationship, View, ViewNode } from '@/model'
+import type {
+  Bounds,
+  ElementType,
+  JunctionKind,
+  Point,
+  Relationship,
+  View,
+  ViewConnection,
+  ViewNode,
+} from '@/model'
 import {
   ElementShape,
   GroupShape,
@@ -14,15 +23,18 @@ import { connectionRoute } from './geometry'
 /**
  * A hand-drawn view as SVG (#79), drawn with the #77 notation. Pure: it renders
  * what it is given, holds no state and handles no events, so the canvas, the
- * export and later the editor (ADR 0006) all draw the same thing.
+ * export and the editor (ADR 0006) all draw the same thing.
  *
- * Nodes nest in the DOM as they nest in the model, each `<g>` translated by its
- * offset from the `<g>` it is drawn in. Connections are drawn after every node,
- * on top, as Archi draws them.
+ * Nodes are drawn flat, each `<g>` at its absolute position, in tree order: a
+ * parent before its children, siblings in their order, which is the order
+ * Archi paints them in. Flat rather than nested so that each node can skip
+ * rendering on its own (#128): with nested `<g>`s, a parent that skipped would
+ * also stop a moved grandchild from updating. Connections are drawn after every
+ * node, on top, as Archi draws them.
  *
- * Every node `<g>` carries `data-node` and every connection `data-connection`:
- * the canvas finds what was clicked through them, and the tests and the export
- * count them.
+ * Every node `<g>` carries `data-node` (and `data-parent` when it is nested)
+ * and every connection `data-connection`: the canvas finds what was clicked
+ * through them, and the tests and the export count them.
  */
 
 export interface DrawingLookups {
@@ -46,17 +58,24 @@ export const ViewDrawing = memo(function ViewDrawing({
   children,
   lookups,
 }: ViewDrawingProps) {
+  const ordered: ViewNode[] = []
+  const visit = (parent: string | undefined) => {
+    for (const node of children.get(parent) ?? []) {
+      ordered.push(node)
+      visit(node.id)
+    }
+  }
+  visit(undefined)
   return (
     <g data-view-drawing={view.id}>
       <g>
-        {(children.get(undefined) ?? []).map((node) => (
-          <NodeTree
+        {ordered.map((node) => (
+          <DrawnNode
             key={node.id}
             node={node}
-            origin={ORIGIN}
-            bounds={bounds}
-            children={children}
-            lookups={lookups}
+            at={bounds.get(node.id) ?? node.bounds}
+            element={node.kind === 'element' ? lookups.element(node.element) : undefined}
+            viewName={node.kind === 'view-ref' ? lookups.viewName(node.view) : undefined}
           />
         ))}
       </g>
@@ -64,44 +83,17 @@ export const ViewDrawing = memo(function ViewDrawing({
         {view.connections.map((connection) => {
           const points = connectionRoute(connection, bounds)
           if (!points) return null
-          if (connection.kind === 'relationship') {
-            const relationship = lookups.relationship(connection.relationship)
-            if (relationship) {
-              const label = relationshipLabel(relationship)
-              return (
-                <g key={connection.id} data-connection={connection.id}>
-                  <RelationshipLine
-                    type={relationship.type}
-                    points={points}
-                    {...(relationship.profile?.accessType
-                      ? { accessType: relationship.profile.accessType }
-                      : {})}
-                    {...(relationship.isDirected ? { directed: true } : {})}
-                    {...(label ? { label } : {})}
-                    {...(connection.appearance ? { appearance: connection.appearance } : {})}
-                  />
-                </g>
-              )
-            }
-          }
-          // A plain line, or a relationship that is no longer in the model.
-          const missing = connection.kind === 'relationship'
           return (
-            <g
+            <DrawnConnection
               key={connection.id}
-              data-connection={connection.id}
-              data-missing={missing || undefined}
-            >
-              <path
-                d={`M${points.map((p) => `${p.x},${p.y}`).join('L')}`}
-                fill="none"
-                stroke={
-                  connection.appearance?.lineColor ?? (missing ? 'var(--ink3)' : 'var(--ink2)')
-                }
-                strokeWidth={connection.appearance?.lineWidth ?? 1}
-                strokeDasharray={missing ? '4 3' : undefined}
-              />
-            </g>
+              connection={connection}
+              points={points}
+              relationship={
+                connection.kind === 'relationship'
+                  ? lookups.relationship(connection.relationship)
+                  : undefined
+              }
+            />
           )
         })}
       </g>
@@ -109,55 +101,117 @@ export const ViewDrawing = memo(function ViewDrawing({
   )
 })
 
-const ORIGIN = { x: 0, y: 0 }
+type ResolvedElement = ReturnType<DrawingLookups['element']>
+type ResolvedRelationship = ReturnType<DrawingLookups['relationship']>
 
-interface NodeTreeProps {
-  node: ViewNode
-  /** Absolute position of the `<g>` this node is drawn in. */
-  origin: { x: number; y: number }
-  bounds: ReadonlyMap<string, Bounds>
-  children: ReadonlyMap<string | undefined, ViewNode[]>
-  lookups: DrawingLookups
-}
+const sameBox = (a: Bounds, b: Bounds) =>
+  a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height
 
-function NodeTree({ node, origin, bounds, children, lookups }: NodeTreeProps) {
-  const at = bounds.get(node.id) ?? { ...node.bounds }
-  const { width, height } = node.bounds
-  return (
-    <g
-      data-node={node.id}
-      data-kind={node.kind}
-      transform={`translate(${at.x - origin.x} ${at.y - origin.y})`}
-    >
-      <NodeBody node={node} width={width} height={height} lookups={lookups} />
-      {(children.get(node.id) ?? []).map((child) => (
-        <NodeTree
-          key={child.id}
-          node={child}
-          origin={at}
-          bounds={bounds}
-          children={children}
-          lookups={lookups}
+/**
+ * One node, redrawn only when something it shows changed: its own object, where
+ * it sits, or the element or view name it draws. The store keeps the identity
+ * of everything an edit does not touch, so an element is the same object until
+ * it is changed.
+ */
+const DrawnNode = memo(
+  function DrawnNode({
+    node,
+    at,
+    element,
+    viewName,
+  }: {
+    node: ViewNode
+    at: Bounds
+    element: ResolvedElement
+    viewName: string | undefined
+  }) {
+    return (
+      <g
+        data-node={node.id}
+        data-kind={node.kind}
+        data-parent={node.parent}
+        transform={`translate(${at.x} ${at.y})`}
+      >
+        <NodeBody
+          node={node}
+          width={node.bounds.width}
+          height={node.bounds.height}
+          element={element}
+          viewName={viewName}
         />
-      ))}
-    </g>
-  )
-}
+      </g>
+    )
+  },
+  (a, b) =>
+    a.node === b.node &&
+    sameBox(a.at, b.at) &&
+    a.element === b.element &&
+    a.viewName === b.viewName,
+)
+
+const DrawnConnection = memo(
+  function DrawnConnection({
+    connection,
+    points,
+    relationship,
+  }: {
+    connection: ViewConnection
+    points: Point[]
+    relationship: ResolvedRelationship
+  }) {
+    if (connection.kind === 'relationship' && relationship) {
+      const label = relationshipLabel(relationship)
+      return (
+        <g data-connection={connection.id}>
+          <RelationshipLine
+            type={relationship.type}
+            points={points}
+            {...(relationship.profile?.accessType
+              ? { accessType: relationship.profile.accessType }
+              : {})}
+            {...(relationship.isDirected ? { directed: true } : {})}
+            {...(label ? { label } : {})}
+            {...(connection.appearance ? { appearance: connection.appearance } : {})}
+          />
+        </g>
+      )
+    }
+    // A plain line, or a relationship that is no longer in the model.
+    const missing = connection.kind === 'relationship'
+    return (
+      <g data-connection={connection.id} data-missing={missing || undefined}>
+        <path
+          d={`M${points.map((p) => `${p.x},${p.y}`).join('L')}`}
+          fill="none"
+          stroke={connection.appearance?.lineColor ?? (missing ? 'var(--ink3)' : 'var(--ink2)')}
+          strokeWidth={connection.appearance?.lineWidth ?? 1}
+          strokeDasharray={missing ? '4 3' : undefined}
+        />
+      </g>
+    )
+  },
+  (a, b) =>
+    a.connection === b.connection &&
+    a.relationship === b.relationship &&
+    a.points.length === b.points.length &&
+    a.points.every((p, i) => p.x === b.points[i]!.x && p.y === b.points[i]!.y),
+)
 
 function NodeBody({
   node,
   width,
   height,
-  lookups,
+  element,
+  viewName,
 }: {
   node: ViewNode
   width: number
   height: number
-  lookups: DrawingLookups
+  element: ResolvedElement
+  viewName: string | undefined
 }) {
   switch (node.kind) {
     case 'element': {
-      const element = lookups.element(node.element)
       if (!element) return <MissingShape width={width} height={height} label="Missing element" />
       return (
         <ElementShape
@@ -183,7 +237,7 @@ function NodeBody({
         <ViewReferenceShape
           width={width}
           height={height}
-          name={lookups.viewName(node.view)}
+          name={viewName}
           appearance={node.appearance}
         />
       )

@@ -497,11 +497,24 @@ export class ModelStore {
     return view
   }
 
-  /** Replace a view wholesale; `before` is captured for you. */
+  /**
+   * Replace a view; `before` is captured for you. `change` gets the view itself,
+   * not a copy, and must return a new one without mutating it (the pure
+   * operations in `model/views.ts` and `ui/views/edit.ts` do). Not copying is
+   * what keeps the identity of every node and connection an edit does not touch,
+   * so the canvas redraws only what changed (ADR 0006, Consequences). In
+   * development and tests the view is frozen first, so a `change` that mutates
+   * it throws instead of corrupting the undo history.
+   *
+   * A `change` that returns the view it was given changes nothing, and records
+   * no command.
+   */
   updateView(id: string, change: (view: View) => View): View | undefined {
     const before = this.#views.get(id)
     if (!before) return undefined
-    const after = change(structuredClone(before))
+    if (import.meta.env.DEV) deepFreeze(before)
+    const after = change(before)
+    if (after === before) return before
     this.dispatch({ kind: 'update-view', before, after })
     return after
   }
@@ -529,10 +542,13 @@ export class ModelStore {
   updateNode(viewId: string, nodeId: string, change: (node: ViewNode) => ViewNode): void {
     const view = this.#views.get(viewId)
     if (!view?.nodes.some((node) => node.id === nodeId)) return
-    this.updateView(viewId, (draft) => ({
-      ...draft,
-      nodes: draft.nodes.map((node) => (node.id === nodeId ? change(node) : node)),
-    }))
+    this.updateView(viewId, (draft) => {
+      const node = draft.nodes.find((n) => n.id === nodeId)!
+      const next = change(node)
+      // Unchanged: hand the view back, which updateView records as nothing.
+      if (next === node) return draft
+      return { ...draft, nodes: draft.nodes.map((n) => (n === node ? next : n)) }
+    })
   }
 
   /**
@@ -561,12 +577,15 @@ export class ModelStore {
   ): void {
     const view = this.#views.get(viewId)
     if (!view?.connections.some((connection) => connection.id === connectionId)) return
-    this.updateView(viewId, (draft) => ({
-      ...draft,
-      connections: draft.connections.map((connection) =>
-        connection.id === connectionId ? change(connection) : connection,
-      ),
-    }))
+    this.updateView(viewId, (draft) => {
+      const connection = draft.connections.find((c) => c.id === connectionId)!
+      const next = change(connection)
+      if (next === connection) return draft
+      return {
+        ...draft,
+        connections: draft.connections.map((c) => (c === connection ? next : c)),
+      }
+    })
   }
 
   removeConnection(viewId: string, connectionId: string): void {
@@ -1041,4 +1060,11 @@ function removeFrom<K>(index: Map<K, Set<string>>, key: K, id: string): void {
   if (!bucket) return
   bucket.delete(id)
   if (bucket.size === 0) index.delete(key)
+}
+
+/** Freeze a value and everything it holds; already-frozen parts are skipped. */
+function deepFreeze(value: unknown): void {
+  if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return
+  Object.freeze(value)
+  for (const child of Object.values(value)) deepFreeze(child)
 }
