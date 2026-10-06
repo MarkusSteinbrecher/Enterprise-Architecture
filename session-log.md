@@ -1,5 +1,32 @@
 # Session Log
 
+## 2026-10-06 (cont.) — #130 implemented: views made from scratch (PR #144)
+
+**What a user can do now:**
+- Make a view from the model tree (`+ View`) or the command palette. It opens with its name selected.
+- Rename a view in the header or with F2 in the tree. Delete it in the tree.
+- Choose a viewpoint in the header.
+- Place shapes from a palette beside the canvas: every element type in its notation, then note, group and both junctions. A viewpoint limits the element types offered.
+- Drag an element from the tree onto the canvas to draw it again.
+- Rename any shape in place (F2 or a double-click). Delete an element from the model, after a confirmation that names the other views.
+
+**Viewpoints are ours, checked against Archi.** `src/model/viewpoints.ts` is the table, and `viewpoints.test.ts` reads Archi 5.10's `viewpoints.xml` (now vendored). The file names whole layers as `$ApplicationElements$`; Archi's Java expands them, so the test carries those lists as `javap` printed them. Junction and Grouping are allowed in every viewpoint. The `.archimate` reader's own map turned out to miss Application Structure, and now reads the table.
+
+**Archi oracle.** `edited-claims.ts` adds a view made from scratch in a new folder of Views. Archi 5.10 imported and saved it, and the oracle passes. The oracle now also compares each drawn element's folder.
+
+**Found in a real browser:**
+- A rename on the canvas left the old name drawn, because the drawing was memoised on the view and a rename changes only the element.
+- The palette's type filter needed each word matched ("app comp").
+- The tree's tools wrapped mid-label.
+All three are fixed.
+
+**Tests.** 1205 unit tests and 22 e2e journeys pass; journey 10 is new. 26 mutations were run, one guard at a time. One guard nothing could fire was removed: Chromium sends no `blur` when a focused field is removed. The journey asserts the behaviour instead.
+
+**Open:**
+- Review #144 (`/review-pr 144 high`).
+- At a 1280 px window the palette and the selection panel leave the canvas narrow. A collapsible palette is a candidate follow-up.
+- Next in M2: #131 (nesting, with the "which relationship does this mean" prompt).
+
 ## 2026-10-06 (wrap-up) — #142 merged: M2's first slice is done
 
 **Merged:** #142 (#129, connecting, with validity from Archi's matrix, ADR 0009) after its review fixes. #129 is closed, and #74 has #127–#129 ticked, which is the whole first slice.
