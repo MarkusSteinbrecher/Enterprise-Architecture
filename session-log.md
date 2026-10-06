@@ -15,7 +15,17 @@
 - **Archi's command line exits 0 when an import fails.** The script checks that the output files exist instead.
 - **`export-with-archi.sh` re-saves `open-day.archimate` with new folder ids every run.** Archi generates them for the folders its handlers add. Revert that file after a run unless the change is intended.
 
-**Next:** review #127's PR, then #128 (move and resize) on top of it.
+**Reviewed (`/review-pr 139`, same session):** 12 findings, all fixed.
+- **Explanations were wider than their evidence.** Text alignment was explained whatever value Archi produced; the font name was explained on nodes with no font; and strikethrough had no test where it must not apply. Each now checks the value Archi produced, and each has a test where it must not apply.
+- **The Archi save was not tied to its input.** It now is, by a SHA-256 the script writes.
+- **Reader problems were ignored.** Any problem now fails the test.
+- **The comparison was missing parts.** It now covers the view's own fields, drawing order per parent, and the drawn elements and relationships.
+- **Smaller fixes:** the script now writes atomically, and the comparison strings are JSON.
+- 27 guard removals, all caught; 1053 tests pass.
+- **Harvested:** review skill §2: an explanation of another tool's behaviour is a predicate on the values it produced.
+- **Product note:** the exchange format cannot carry text alignment, text position, strikethrough or a shape's line width to Archi, so a centred group title shows left-aligned there. Only a native `.archimate` writer would close the gap. That is a scope question for the sponsor.
+
+**Next:** merge #139, then #128 (move and resize) on top of it.
 
 ## 2026-10-06 (cont.) — M2 filed: #127–#137
 

@@ -1,11 +1,14 @@
 import { importArchimate } from '@/io/archimate-native'
 import { STYLE_KEY } from '@/io/exchange-views'
+import type { ImportProblem } from '@/io/problems'
 import {
   absoluteBounds,
   type Appearance,
+  type Bounds,
   type View,
   type ViewConnection,
   type ViewNode,
+  type ViewNodeKind,
   type Workspace,
 } from '@/model'
 
@@ -24,13 +27,26 @@ import {
  */
 
 export interface ViewDifference {
+  /** The view's id, or `(model)` for an element or relationship a view draws. */
   view: string
-  /** Node or connection id; the view's own id for a whole missing view. */
+  /** Node, connection, element or relationship id; the view's own id for a view-level field. */
   drawing: string
-  /** What differs: `missing`, `extra`, `kind`, `draws`, `bounds`, `parent`, `source`, `target`, `bendpoints`, or `appearance.<field>`. */
+  /**
+   * What differs. For a view: `missing`, `extra`, `name`, `documentation`,
+   * `viewpoint`, `folder`, `properties`, and `order` (a parent's children, by id).
+   * For a drawing: `missing`, `extra`, `draws`, `bounds`, `parent`, `source`,
+   * `target`, `bendpoints`, `appearance.<field>`. For what a view draws:
+   * `element.<field>` or `relationship.<field>`.
+   */
   field: string
   ours: unknown
   archi: unknown
+}
+
+export interface ArchiSave {
+  workspace: Workspace
+  /** What our reader could not take from Archi's save. Anything here is outside the comparison, so a test requires it empty. */
+  problems: ImportProblem[]
 }
 
 /**
@@ -38,19 +54,23 @@ export interface ViewDifference {
  * exchange format cannot say (text alignment and position, strikethrough) in
  * the `archipelago.style` view property; Archi keeps that property and draws
  * none of it, so it is removed before reading, or the comparison would credit
- * Archi with what only Archipelago reads.
+ * Archi with what only Archipelago reads. If Archi ever spells the property
+ * differently, the removal misses it, so its absence afterwards is checked.
  */
-export function readArchiSave(archimate: string): Workspace {
+export function readArchiSave(archimate: string): ArchiSave {
   const key = STYLE_KEY.replace(/\./g, '\\.')
   const withoutCarried = archimate.replace(
     new RegExp(`\\s*<property key="${key}" value="[^"]*"/>`, 'g'),
     '',
   )
+  if (withoutCarried.includes(STYLE_KEY)) {
+    throw new Error(`${STYLE_KEY} is still in Archi's save: its spelling is not the one removed`)
+  }
   const result = importArchimate(withoutCarried)
   if (!result.workspace) {
     throw new Error(`Archi's save did not import: ${result.problems.map((p) => p.code).join(', ')}`)
   }
-  return result.workspace
+  return { workspace: result.workspace, problems: result.problems }
 }
 
 /** Every difference between the views of `ours` and the views of Archi's save. */
@@ -70,7 +90,12 @@ export function compareViews(ours: Workspace, archi: Workspace): ViewDifference[
       })
       continue
     }
-    differences.push(...compareNodes(view, other), ...compareConnections(view, other))
+    differences.push(
+      ...compareViewFields(view, other, ours, archi),
+      ...compareNodes(view, other),
+      ...compareOrder(view, other),
+      ...compareConnections(view, other),
+    )
   }
   for (const view of archiViews.values()) {
     differences.push({
@@ -81,7 +106,51 @@ export function compareViews(ours: Workspace, archi: Workspace): ViewDifference[
       archi: view.name,
     })
   }
+  return [...differences, ...compareDrawn(ours, archi)]
+}
+
+function compareViewFields(
+  ours: View,
+  archi: View,
+  oursModel: Workspace,
+  archiModel: Workspace,
+): ViewDifference[] {
+  const differences: ViewDifference[] = []
+  const push = (field: string, a: unknown, b: unknown) => {
+    if (JSON.stringify(a) !== JSON.stringify(b)) {
+      differences.push({ view: ours.id, drawing: ours.id, field, ours: a, archi: b })
+    }
+  }
+  push('name', ours.name, archi.name)
+  push('documentation', ours.documentation, archi.documentation)
+  push('viewpoint', ours.viewpoint, archi.viewpoint)
+  push('properties', sortedEntries(ours.properties), sortedEntries(archi.properties))
+  // Archi gives the folders it imports ids of its own, so a folder is compared by its path.
+  push('folder', folderPath(oursModel, ours.folder), folderPath(archiModel, archi.folder))
   return differences
+}
+
+function sortedEntries(record: Record<string, unknown>): [string, unknown][] {
+  return Object.entries(record).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+}
+
+/** A folder's names from its group down, or `undefined` for none. */
+function folderPath(workspace: Workspace, id: string | undefined): string[] | undefined {
+  if (id === undefined) return undefined
+  const folders = new Map(workspace.folders.map((folder) => [folder.id, folder]))
+  const path: string[] = []
+  const seen = new Set<string>()
+  let folder = folders.get(id)
+  while (folder && !seen.has(folder.id)) {
+    seen.add(folder.id)
+    path.unshift(folder.name)
+    if (folder.parent === undefined) {
+      if (folder.root !== undefined) path.unshift(folder.root)
+      break
+    }
+    folder = folders.get(folder.parent)
+  }
+  return path
 }
 
 function compareNodes(ours: View, archi: View): ViewDifference[] {
@@ -96,10 +165,6 @@ function compareNodes(ours: View, archi: View): ViewDifference[] {
       push(node.id, 'missing', describeNode(node), undefined)
       continue
     }
-    if (node.kind !== other.kind) {
-      push(node.id, 'kind', node.kind, other.kind)
-      continue
-    }
     if (describeNode(node) !== describeNode(other)) {
       push(node.id, 'draws', describeNode(node), describeNode(other))
     }
@@ -107,15 +172,52 @@ function compareNodes(ours: View, archi: View): ViewDifference[] {
     const b = absoluteBounds(archi, other.id)
     if (!sameBounds(a, b)) push(node.id, 'bounds', a, b)
     if (node.parent !== other.parent) push(node.id, 'parent', node.parent, other.parent)
-    differences.push(
-      ...compareAppearance(node.appearance, other.appearance).map((d) => ({
-        view: ours.id,
-        drawing: node.id,
-        ...d,
-      })),
-    )
+    for (const d of compareAppearance(node.appearance, other.appearance)) {
+      push(node.id, d.field, d.ours, d.archi)
+    }
   }
   for (const node of theirs.values()) push(node.id, 'extra', undefined, describeNode(node))
+  return differences
+}
+
+/**
+ * Drawing order: each parent's children, in the order they are drawn. Only the
+ * children both sides have are compared, so a missing or extra drawing is
+ * reported once, as itself. The flat order of `view.nodes` is not compared:
+ * Archi saves a tree, so siblings under different parents interleave
+ * differently and are drawn the same.
+ */
+function compareOrder(ours: View, archi: View): ViewDifference[] {
+  const differences: ViewDifference[] = []
+  const both = new Set(archi.nodes.map((node) => node.id))
+  const inOurs = new Set(ours.nodes.map((node) => node.id))
+  const children = (view: View, keep: Set<string>) => {
+    const byParent = new Map<string, string[]>()
+    for (const node of view.nodes) {
+      if (!keep.has(node.id)) continue
+      const parent = node.parent ?? ours.id
+      byParent.set(parent, [...(byParent.get(parent) ?? []), node.id])
+    }
+    return byParent
+  }
+  const a = children(ours, both)
+  const b = children(archi, inOurs)
+  for (const [parent, ids] of a) {
+    const other = b.get(parent) ?? []
+    // Re-parented children are reported as `parent`; order compares the ones both put here.
+    const shared = new Set(other)
+    const mine = ids.filter((id) => shared.has(id))
+    const theirsHere = other.filter((id) => mine.includes(id))
+    if (JSON.stringify(mine) !== JSON.stringify(theirsHere)) {
+      differences.push({
+        view: ours.id,
+        drawing: parent,
+        field: 'order',
+        ours: mine,
+        archi: theirsHere,
+      })
+    }
+  }
   return differences
 }
 
@@ -131,27 +233,21 @@ function compareConnections(ours: View, archi: View): ViewDifference[] {
       push(connection.id, 'missing', describeConnection(connection), undefined)
       continue
     }
-    if (connection.kind !== other.kind) {
-      push(connection.id, 'kind', connection.kind, other.kind)
-      continue
-    }
     if (describeConnection(connection) !== describeConnection(other)) {
       push(connection.id, 'draws', describeConnection(connection), describeConnection(other))
     }
-    if (connection.source !== other.source)
+    if (connection.source !== other.source) {
       push(connection.id, 'source', connection.source, other.source)
-    if (connection.target !== other.target)
+    }
+    if (connection.target !== other.target) {
       push(connection.id, 'target', connection.target, other.target)
+    }
     const a = connection.bendpoints ?? []
     const b = other.bendpoints ?? []
     if (JSON.stringify(a) !== JSON.stringify(b)) push(connection.id, 'bendpoints', a, b)
-    differences.push(
-      ...compareAppearance(connection.appearance, other.appearance).map((d) => ({
-        view: ours.id,
-        drawing: connection.id,
-        ...d,
-      })),
-    )
+    for (const d of compareAppearance(connection.appearance, other.appearance)) {
+      push(connection.id, d.field, d.ours, d.archi)
+    }
   }
   for (const connection of theirs.values()) {
     push(connection.id, 'extra', undefined, describeConnection(connection))
@@ -159,17 +255,67 @@ function compareConnections(ours: View, archi: View): ViewDifference[] {
   return differences
 }
 
-/** What a node draws, as one comparable string. */
+/**
+ * The elements and relationships our views draw, held to Archi's: a drawing
+ * that matches by id can still draw a different shape or arrow if the concept
+ * behind it came out wrong.
+ */
+function compareDrawn(ours: Workspace, archi: Workspace): ViewDifference[] {
+  const differences: ViewDifference[] = []
+  const push = (drawing: string, field: string, a: unknown, b: unknown) => {
+    if (JSON.stringify(a) !== JSON.stringify(b)) {
+      differences.push({ view: '(model)', drawing, field, ours: a, archi: b })
+    }
+  }
+  const elementIds = new Set<string>()
+  const relationshipIds = new Set<string>()
+  for (const view of ours.views) {
+    for (const node of view.nodes) if (node.kind === 'element') elementIds.add(node.element)
+    for (const connection of view.connections) {
+      if (connection.kind === 'relationship') relationshipIds.add(connection.relationship)
+    }
+  }
+  const archiElements = new Map(archi.elements.map((element) => [element.id, element]))
+  for (const element of ours.elements) {
+    if (!elementIds.has(element.id)) continue
+    const other = archiElements.get(element.id)
+    if (!other) {
+      push(element.id, 'element.missing', element.type, undefined)
+      continue
+    }
+    push(element.id, 'element.type', element.type, other.type)
+    push(element.id, 'element.name', element.name, other.name)
+    push(element.id, 'element.junctionKind', element.junctionKind, other.junctionKind)
+  }
+  const archiRelationships = new Map(archi.relationships.map((r) => [r.id, r]))
+  for (const relationship of ours.relationships) {
+    if (!relationshipIds.has(relationship.id)) continue
+    const other = archiRelationships.get(relationship.id)
+    if (!other) {
+      push(relationship.id, 'relationship.missing', relationship.type, undefined)
+      continue
+    }
+    push(relationship.id, 'relationship.type', relationship.type, other.type)
+    push(relationship.id, 'relationship.name', relationship.name, other.name)
+    push(relationship.id, 'relationship.source', relationship.source, other.source)
+    push(relationship.id, 'relationship.target', relationship.target, other.target)
+    push(relationship.id, 'relationship.isDirected', relationship.isDirected, other.isDirected)
+    push(relationship.id, 'relationship.modifier', relationship.modifier, other.modifier)
+  }
+  return differences
+}
+
+/** What a node draws, as one comparable string; JSON, so no id can impersonate a separator. */
 function describeNode(node: ViewNode): string {
   switch (node.kind) {
     case 'element':
-      return `element ${node.element}`
+      return JSON.stringify(['element', node.element])
     case 'note':
-      return `note ${JSON.stringify(node.text)}`
+      return JSON.stringify(['note', node.text])
     case 'group':
-      return `group ${JSON.stringify(node.name)}`
+      return JSON.stringify(['group', node.name, node.documentation ?? null])
     case 'view-ref':
-      return `view-ref ${node.view}`
+      return JSON.stringify(['view-ref', node.view])
   }
 }
 
@@ -177,12 +323,12 @@ function describeNode(node: ViewNode): string {
 function describeConnection(connection: ViewConnection): string {
   const what =
     connection.kind === 'relationship'
-      ? `relationship ${connection.relationship}`
-      : `line ${JSON.stringify(connection.name ?? '')}`
-  return `${what} ${connection.source} → ${connection.target}`
+      ? ['relationship', connection.relationship]
+      : ['line', connection.name ?? null]
+  return JSON.stringify([...what, connection.source, connection.target])
 }
 
-function sameBounds(a: ReturnType<typeof absoluteBounds>, b: ReturnType<typeof absoluteBounds>) {
+function sameBounds(a: Bounds | undefined, b: Bounds | undefined): boolean {
   return (
     a !== undefined &&
     b !== undefined &&
@@ -225,9 +371,10 @@ function compareAppearance(
 /**
  * Why a difference is Archi's doing and not a fault in what Archipelago wrote,
  * or `undefined` when nothing accounts for it. Each reason is read from Archi
- * 5.10's `XMLModelImporter` (with `javap`) or from the exchange format itself,
- * and each one is a property of the format or of Archi's reader. None of them is
- * a tolerance.
+ * 5.10's `XMLModelImporter` (with `javap`) or from the exchange format itself.
+ * Each is a predicate on the **values** Archi produces, not on the field name:
+ * Archi's default is the only value its import can give a field it was not
+ * told, so any other value is still a difference (#139 review).
  */
 export function explainDifference(
   difference: ViewDifference,
@@ -235,21 +382,23 @@ export function explainDifference(
   archi: Workspace,
 ): string | undefined {
   const { field } = difference
+  const mine = drawingIn(ours, difference)
+  const node = mine !== undefined && 'bounds' in mine ? mine : undefined
   if (field === 'appearance.textAlignment' || field === 'appearance.textPosition') {
-    return CARRIED_ONLY
+    const defaults =
+      field === 'appearance.textAlignment' ? ARCHI_TEXT_ALIGNMENT : ARCHI_TEXT_POSITION
+    if (!node || !(node.kind in defaults)) return undefined
+    return difference.archi === defaults[node.kind] ? CARRIED_ONLY : undefined
   }
   if (field === 'appearance.fontStyle' && onlyStrikethroughLost(difference)) return CARRIED_ONLY
-  if (
-    field === 'appearance.lineWidth' &&
-    isNode(ours, difference) &&
-    difference.archi === undefined
-  ) {
+  if (field === 'appearance.lineWidth' && node && difference.archi === undefined) {
     return NODE_LINE_WIDTH
   }
   if (
     field === 'appearance.fontName' &&
     difference.ours === undefined &&
-    typeof difference.archi === 'string'
+    typeof difference.archi === 'string' &&
+    wroteFont(mine?.appearance)
   ) {
     return DEFAULT_FONT_NAME
   }
@@ -263,8 +412,24 @@ export function explainDifference(
   return undefined
 }
 
+/**
+ * What our reader makes of the text alignment Archi gives an object it was not
+ * told one for, by kind: measured from `claims-edited.archi.archimate`, where
+ * Archi writes `textAlignment="1"` (left) on groups and notes and nothing,
+ * which is centre, on element shapes. A kind not measured is not explained.
+ */
+const ARCHI_TEXT_ALIGNMENT: Partial<Record<ViewNodeKind, string | undefined>> = {
+  element: undefined,
+  group: 'left',
+  note: 'left',
+}
+/** The same for text position: Archi writes none, which is its default, top. */
+const ARCHI_TEXT_POSITION: Partial<Record<ViewNodeKind, string | undefined>> = {
+  element: undefined,
+}
+
 export const CARRIED_ONLY =
-  'The exchange format has no text alignment, text position or strikethrough. Archipelago carries them in archipelago.style, which Archi keeps and does not draw.'
+  'The exchange format has no text alignment, text position or strikethrough. Archipelago carries them in archipelago.style, which Archi keeps and does not draw, so Archi shows its own default: the text visibly moves.'
 export const NODE_LINE_WIDTH =
   "Archi's exchange import does not read a shape's lineWidth: XMLModelImporter.addNodeStyle reads fillColor, lineColor and font only (addConnectionStyle does read it)."
 export const DEFAULT_FONT_NAME =
@@ -274,16 +439,35 @@ export const ALPHA_PERCENT =
 export const NESTED_CONNECTION =
   "Archi's exchange import draws every relationship between a shape and the shape it is nested in (XMLModelImporter.addNestedConnections). Archi hides such connections when drawing; #96 does the same."
 
-function isNode(workspace: Workspace, difference: ViewDifference): boolean {
+function drawingIn(
+  workspace: Workspace,
+  difference: ViewDifference,
+): ViewNode | ViewConnection | undefined {
   const view = workspace.views.find((v) => v.id === difference.view)
-  return view?.nodes.some((node) => node.id === difference.drawing) ?? false
+  return (
+    view?.nodes.find((node) => node.id === difference.drawing) ??
+    view?.connections.find((connection) => connection.id === difference.drawing)
+  )
+}
+
+/**
+ * Whether our writer wrote a `<font>` for this appearance: a size, a colour, or
+ * a style the format can say. Strikethrough alone is carried, not written.
+ */
+function wroteFont(appearance: Appearance | undefined): boolean {
+  if (!appearance) return false
+  return (
+    appearance.fontSize !== undefined ||
+    appearance.fontColor !== undefined ||
+    (appearance.fontStyle ?? []).some((style) => style !== 'strikethrough')
+  )
 }
 
 function onlyStrikethroughLost({ ours, archi }: ViewDifference): boolean {
   const a = (ours as string[] | undefined) ?? []
   const b = (archi as string[] | undefined) ?? []
   const kept = a.filter((style) => style !== 'strikethrough')
-  return a.includes('strikethrough') && JSON.stringify(kept) === JSON.stringify(b.length ? b : [])
+  return a.includes('strikethrough') && JSON.stringify(kept) === JSON.stringify(b)
 }
 
 /** Called on two values that differ: the same colour, with alphas that are the same whole percent. */

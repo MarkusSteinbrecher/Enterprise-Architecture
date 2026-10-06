@@ -20,22 +20,30 @@ fi
 IN="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 SAVED="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
 [ -f "$IN" ] || { echo "no such file: $1" >&2; exit 2; }
-# Archi's command line exits 0 even when an import fails, so the save is
-# removed first and its absence afterwards is the failure.
-rm -f "$SAVED"
+[ -x "$ARCHI" ] || { echo "Archi not found at $ARCHI; set ARCHI=" >&2; exit 2; }
+# Archi writes into a scratch directory, and the outputs replace the checked-in
+# ones only when both exist: a failed run leaves the fixtures as they were.
+# Archi's command line exits 0 when an import fails, so existence is the test.
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
 if [ "$#" -eq 3 ]; then
   EXPORTED="$(cd "$(dirname "$3")" && pwd)/$(basename "$3")"
-  rm -f "$EXPORTED"
   "$ARCHI" -application com.archimatetool.commandline.app -consoleLog -nosplash \
     --xmlexchange.import "$IN" \
-    --saveModel "$SAVED" \
-    --xmlexchange.export "$EXPORTED" \
+    --saveModel "$TMP/saved.archimate" \
+    --xmlexchange.export "$TMP/exported.xml" \
     --xmlexchange.exportFolders \
     --xmlexchange.exportLang en
-  [ -s "$EXPORTED" ] || { echo "Archi wrote no export: $3" >&2; exit 1; }
+  [ -s "$TMP/saved.archimate" ] || { echo "Archi could not import $1: no model saved" >&2; exit 1; }
+  [ -s "$TMP/exported.xml" ] || { echo "Archi saved the model but wrote no export: $3" >&2; exit 1; }
+  mv "$TMP/exported.xml" "$EXPORTED"
 else
   "$ARCHI" -application com.archimatetool.commandline.app -consoleLog -nosplash \
     --xmlexchange.import "$IN" \
-    --saveModel "$SAVED"
+    --saveModel "$TMP/saved.archimate"
+  [ -s "$TMP/saved.archimate" ] || { echo "Archi could not import $1: no model saved" >&2; exit 1; }
 fi
-[ -s "$SAVED" ] || { echo "Archi saved no model: $2" >&2; exit 1; }
+mv "$TMP/saved.archimate" "$SAVED"
+# The save is evidence about one input only. Its hash goes beside the save, and
+# the test checks that the input checked in is still that one (#139 review).
+shasum -a 256 "$IN" | cut -d' ' -f1 >"$SAVED.input-sha256"

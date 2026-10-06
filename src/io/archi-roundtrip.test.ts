@@ -1,7 +1,9 @@
+import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import claimsNative from './fixtures/claims-platform.archimate?raw'
 import editedXml from './fixtures/claims-edited.xml?raw'
 import archiSave from './fixtures/claims-edited.archi.archimate?raw'
+import archiSaveInput from './fixtures/claims-edited.archi.archimate.input-sha256?raw'
 import { exportExchange } from './exchange-format'
 import { importArchimate } from './archimate-native'
 import { editedClaims } from '@/test/edited-claims'
@@ -24,10 +26,12 @@ import {
 
 const STALE =
   'claims-edited.xml is not what the writer now produces. Re-run scripts/fixtures/build-edited-claims.ts and then archi-roundtrip.sh (see src/io/README.md).'
+const UNSAVED =
+  'claims-edited.archi.archimate was not made from the claims-edited.xml checked in. Re-run archi-roundtrip.sh (see src/io/README.md).'
 
 describe('an edited view, saved by Archipelago and by Archi after it (#127)', () => {
   const ours = editedClaims()
-  const archi = readArchiSave(archiSave)
+  const { workspace: archi, problems: readProblems } = readArchiSave(archiSave)
   const differences = compareViews(ours, archi)
   const explained = differences.map((d) => ({ ...d, why: explainDifference(d, ours, archi) }))
 
@@ -35,6 +39,18 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
     const { xml, problems } = exportExchange(ours)
     expect(problems).toEqual([])
     expect(xml, STALE).toBe(editedXml)
+  })
+
+  it('holds Archi’s save to the file it was made from', () => {
+    // A writer change that regenerates only the xml would otherwise leave the
+    // oracle comparing against Archi's save of the file before it (#139 review).
+    const hash = createHash('sha256').update(editedXml, 'utf8').digest('hex')
+    expect(archiSaveInput.trim(), UNSAVED).toBe(hash)
+  })
+
+  it('reads all of Archi’s save, so nothing in it is left out of the comparison', () => {
+    expect(archi.views.length).toBeGreaterThan(0)
+    expect(readProblems).toEqual([])
   })
 
   it('starts from a workspace the edits really changed', () => {
@@ -97,7 +113,10 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
     // Archi's ids for the connections it added are its own, so they are named by what they draw.
     const added = explained
       .filter((d) => d.field === 'extra')
-      .map((d) => `${String(d.archi)}: ${reason(d.why)}`)
+      .map((d) => {
+        const [kind, relationship, source, target] = JSON.parse(String(d.archi)) as string[]
+        return `${kind} ${relationship} ${source} → ${target}: ${reason(d.why)}`
+      })
     expect(added.sort()).toEqual(
       [
         'relationship r-engine-calc o-engine → o-calc: nested connection',
