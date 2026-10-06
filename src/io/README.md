@@ -403,3 +403,66 @@ read is `import.content-unread` (#101), including model `<metadata>` and a
 specialization no imported concept uses. An Archi model saved with images is a zip archive, which is refused
 with an explanation (`archimate.archive-unsupported`). Any other zip, such as a
 `.docx`, is named as an archive, not as an Archi model (`file.archive-unrecognised`).
+
+## Archi as the oracle for edited views (#127)
+
+ADR 0008 makes Archi 5.10 the test of the editor: a view edited in Archipelago
+and saved must open in Archi as it was drawn. `src/io/archi-roundtrip.test.ts`
+holds that for one edited view, and every editor slice extends it.
+
+- `src/test/edited-claims.ts` edits the claims landscape through the store,
+  one command per edit: move, resize, re-parent both ways, bend-points added,
+  moved and removed, appearance, a removed note, and a new element, relationship
+  and note.
+- `scripts/fixtures/build-edited-claims.ts` writes it with the exchange writer
+  to `fixtures/claims-edited.xml`. A test fails when the writer's output has
+  moved on from the checked-in file.
+- `scripts/fixtures/archi-roundtrip.sh` has Archi import that file, save the
+  model (`claims-edited.archi.archimate`) and export it again
+  (`claims-edited.archi.xml`). Archi's command line exits 0 when an import
+  fails, so the script checks that the files exist. It writes into a scratch
+  directory and replaces the fixtures only on success. It records the input's
+  SHA-256 beside the save, and a test checks that the save was made from the
+  `claims-edited.xml` checked in.
+- `src/test/view-oracle.ts` compares the two:
+  - the view's name, documentation, viewpoint, properties and folder (by path,
+    because Archi gives imported folders new ids)
+  - each parent's children in drawing order
+  - drawing by drawing: absolute bounds, parent, what is drawn, source and
+    target, bend-points and every appearance field
+  - the type, name and ends of every element and relationship a view draws
+
+  Drawings are matched by id, because Archi's exchange import keeps every
+  `identifier`. A drawing Archi made up has an id of its own and is reported as
+  `extra`. Anything our reader reports about Archi's save fails the test, since
+  it would otherwise be left out of the comparison.
+
+To re-run after an editor or writer change:
+
+```sh
+npx vite-node scripts/fixtures/build-edited-claims.ts
+scripts/fixtures/archi-roundtrip.sh src/io/fixtures/claims-edited.xml \
+  src/io/fixtures/claims-edited.archi.archimate src/io/fixtures/claims-edited.archi.xml
+```
+
+`export-with-archi.sh` runs both, after re-saving the claims model they start
+from.
+
+**What Archi changes, and why.** The test requires every difference to have one
+of five reasons, each read from Archi 5.10's `XMLModelImporter` with `javap`,
+and it pins which drawing has which reason. Each reason checks the value Archi
+produced, not only the field: for a field Archi was not told, its import can
+only give its own default, so any other value is still a difference.
+
+**Not everything opens as drawn.** The exchange format cannot carry text
+alignment, text position, strikethrough or a shape's line width. Archi shows its
+own default for each, so a centred group title is left-aligned in Archi. Only a
+native `.archimate` writer could carry them.
+
+| Difference | Reason |
+|---|---|
+| Text alignment, text position, strikethrough | The format has no attribute for them. `archipelago.style` carries them, and Archi keeps that property without drawing it, so the oracle removes it before reading Archi's save. Explained only where Archi's value is its default for that kind: left for groups and notes, centre for element shapes (measured from the save). |
+| A shape's line width is gone | `addNodeStyle` reads fill, line colour and font only. `addConnectionStyle` does read `lineWidth`, so a connection's must survive. |
+| A font with no name comes back named | `addFont` starts from the user's default view font (`FontFactory.getDefaultUserViewFontData`). Explained only where we wrote a `<font>`: a size, a colour, or a style the format can say. |
+| An alpha one byte off | The format holds a percent, and Archi reads it as `round(a × 255 / 100)`. |
+| Connections Archi added | `addNestedConnections` draws every relationship between a shape and the element shape it sits in. Archi hides them when drawing (#96). Its exporter leaves them out again (`XMLModelExporter.isNestedConnection`), and it also leaves out one we drew on purpose between nested shapes. |

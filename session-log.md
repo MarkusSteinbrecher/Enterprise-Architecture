@@ -1,5 +1,32 @@
 # Session Log
 
+## 2026-10-06 (cont.) — #127 implemented: Archi as the oracle for edited views
+
+`src/test/edited-claims.ts` edits the claims landscape through the store. Our exchange writer saves it, and Archi 5.10 imports it, saves it and exports it again (`scripts/fixtures/archi-roundtrip.sh`). `src/test/view-oracle.ts` then compares the two drawing for drawing. 19 helper and fixture tests pass, and 1041 in all; 19 guard mutations are each caught.
+
+- **Archi keeps every `identifier` on exchange import**, so drawings are matched by id. That is stricter than the issue's "match by what they draw". The only drawings with fresh ids are the ones Archi made up.
+- **Five differences are Archi's doing, read from `XMLModelImporter` with javap.** The test pins which drawing has which reason.
+  - The format cannot carry text alignment, text position or strikethrough. Archi keeps `archipelago.style` but does not draw it, so the oracle strips the property before reading.
+  - `addNodeStyle` ignores a shape's `lineWidth`.
+  - `addFont` fills a missing font name with the machine's default.
+  - Alpha comes back as a whole percent.
+  - `addNestedConnections` adds a connection for each nested relationship, which Archi hides (#96).
+- **Found:** #138. Our `literal` style marker survives Archi's re-export and turns Archi's full computed style into overrides.
+- **Archi's command line exits 0 when an import fails.** The script checks that the output files exist instead.
+- **`export-with-archi.sh` re-saves `open-day.archimate` with new folder ids every run.** Archi generates them for the folders its handlers add. Revert that file after a run unless the change is intended.
+
+**Reviewed (`/review-pr 139`, same session):** 12 findings, all fixed.
+- **Explanations were wider than their evidence.** Text alignment was explained whatever value Archi produced; the font name was explained on nodes with no font; and strikethrough had no test where it must not apply. Each now checks the value Archi produced, and each has a test where it must not apply.
+- **The Archi save was not tied to its input.** It now is, by a SHA-256 the script writes.
+- **Reader problems were ignored.** Any problem now fails the test.
+- **The comparison was missing parts.** It now covers the view's own fields, drawing order per parent, and the drawn elements and relationships.
+- **Smaller fixes:** the script now writes atomically, and the comparison strings are JSON.
+- 27 guard removals, all caught; 1053 tests pass.
+- **Harvested:** review skill §2: an explanation of another tool's behaviour is a predicate on the values it produced.
+- **Product note:** the exchange format cannot carry text alignment, text position, strikethrough or a shape's line width to Archi, so a centred group title shows left-aligned there. Only a native `.archimate` writer would close the gap. That is a scope question for the sponsor.
+
+**Next:** merge #139, then #128 (move and resize) on top of it.
+
 ## 2026-10-06 (cont.) — M2 filed: #127–#137
 
 M2's list in #74 became 11 issues, each with acceptance criteria, and #74 links them. **The first slice is #127, #128 and #129.**

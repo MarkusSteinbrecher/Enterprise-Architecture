@@ -61,3 +61,9 @@ rm -r "$TMP"
 "$ARCHI" -application com.archimatetool.commandline.app -consoleLog -nosplash \
   --loadModel "$DIR/archi-legacy-open-day.archimate" \
   --saveModel "$DIR/archi-compatibility/open-day.archimate"
+# An edited view, as the oracle for the editor (#127): our exchange writer saves
+# the edited claims landscape, and Archi imports, saves and exports it again.
+cd "$DIR/../../.."
+npx vite-node scripts/fixtures/build-edited-claims.ts
+ARCHI="$ARCHI" scripts/fixtures/archi-roundtrip.sh "$DIR/claims-edited.xml" \
+  "$DIR/claims-edited.archi.archimate" "$DIR/claims-edited.archi.xml"
