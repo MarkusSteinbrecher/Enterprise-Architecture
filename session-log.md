@@ -1,5 +1,24 @@
 # Session Log
 
+## 2026-10-06 (wrap-up) — #139 and #140 merged; a committed `node_modules` symlink removed
+
+**Merged today:** #139 (Archi oracle, #127) and #140 (editor's first slice, #128). ADR 0006 is accepted. #127 and #128 are closed.
+
+**The node_modules incident (mine).**
+- **What went in.** #140's review fixes were made in a scratch `git worktree` with `node_modules` symlinked in, and `git add -A` committed that symlink. It pointed at this machine's absolute path. `.gitignore` said `node_modules/`, which matches a directory and not a symlink.
+- **Where it reached.** It merged to `main` in `a7b2f6f`. Pulling it replaced the real install with the link here, and it would do the same on any other machine. CI stayed green only because `npm ci` deletes `node_modules` first.
+- **The fix, in this PR:** the link is untracked, the rule is now `node_modules`, and `src/test/repo-hygiene.test.ts` fails if `node_modules`, `dist` or `coverage` is tracked, or any symlink to an absolute path. Both guards were fired on purpose.
+- **On the other machine:** after pulling this fix, run `rm node_modules && npm ci` if `node_modules` turned into a link.
+
+**State:**
+- M2's first slice is done (#127, #128).
+- Open: #129 (connecting, next), #130–#137 (rest of M2), #138 (`archipelago.style` literal marker survives Archi's re-export), #96, #97.
+- Merged branches the permission classifier will not let me delete: `feat/127-archi-roundtrip-check`, `feat/128-move-resize`, `chore/adr-0008-editor-next`.
+
+**Next session, started fresh:** implement #129 (connect shapes, only valid relationships offered) on top of `main`.
+- The editor lives in `src/ui/views/ViewScreen.tsx` (gestures) and `edit.ts` (pure geometry).
+- The Archi oracle is `src/test/view-oracle.ts` and `edited-claims.ts`. Extend `edited-claims.ts` with the slice's edits and re-run `scripts/fixtures/archi-roundtrip.sh`.
+
 ## 2026-10-06 (cont.) — #128 implemented: the view editor's first slice
 
 The canvas edits now, in the tab that holds the model.
