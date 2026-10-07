@@ -515,6 +515,23 @@
   padding: 0 0 10px;
 }
 
+.view-palette__guide {
+  flex: none;
+  padding: 8px 10px;
+  border-top: 1px solid var(--bd);
+  font: 400 11.5px/1.3 var(--font-ui);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.view-palette__guide::after {
+  content: ' →';
+}
+
+.view-palette__guide:hover {
+  background: var(--panel);
+}
+
 .view-palette__empty {
   margin: 8px 10px;
   font: 400 12px/1.4 var(--font-ui);

@@ -6,6 +6,7 @@ import { InventoryScreen } from '@/ui/inventory/InventoryScreen'
 import { ElementScreen } from '@/ui/factsheet/ElementScreen'
 import { GraphScreen } from '@/ui/graph/GraphScreen'
 import { ViewScreen } from '@/ui/views/ViewScreen'
+import { GuideScreen } from '@/ui/guide/GuideScreen'
 import { PaletteProvider } from '@/ui/palette/PaletteProvider'
 import { FileWorkspaceProvider } from '@/ui/files/FileWorkspaceProvider'
 import { FirstRun } from '@/ui/files/FirstRun'
@@ -70,7 +71,9 @@ function AppRoutes() {
     )
   }
   if (role === 'reader') return <TakeoverScreen />
-  if (ready && elementCount === 0 && !startedEmpty) {
+  // The guide needs no model, and first run links to it, so it skips first run.
+  const onGuide = pathname === '/guide'
+  if (ready && elementCount === 0 && !startedEmpty && !onGuide) {
     return <FirstRun onStartEmpty={() => setStartedEmpty(true)} />
   }
 
@@ -82,6 +85,7 @@ function AppRoutes() {
         <Route path="/element/:id" element={<KeyedElementScreen />} />
         <Route path="/graph" element={<GraphScreen />} />
         <Route path="/view/:id" element={<KeyedViewScreen />} />
+        <Route path="/guide" element={<GuideScreen />} />
         <Route path="*" element={<Navigate to="/inventory" replace />} />
       </Route>
     </Routes>
