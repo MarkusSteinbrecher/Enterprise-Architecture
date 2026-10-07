@@ -2,6 +2,8 @@
 
 An **open-source Enterprise Architecture repository that runs entirely in the browser** — a static web app, all data stored locally, no backend, no login. ArchiMate 3.2-native at the core, LeanIX-class portfolio management at the surface.
 
+It implements **ArchiMate 3.2**. ArchiMate 4 (published April 2026) is not supported yet; [ADR 0011](design/decisions/0011-stay-on-archimate-3-2.md) says when that will be revisited.
+
 > *"LeanIX-class EA portfolio management as a static web app — ArchiMate-native, local-first, git-friendly, agent-ready."*
 
 **Status: in implementation.** Concept, design, and hi-fi prototype are done; the app is being built out issue by issue — see the [issues](../../issues).
