@@ -309,6 +309,43 @@
   color: var(--ink3);
 }
 
+/* ── Citations and guidance (#153) ──────────────────────────────────────── */
+
+.guide__cite {
+  font: 400 11px/1.5 var(--font-ui);
+  color: var(--ink3);
+  margin: 4px 0 0;
+  max-width: 68ch;
+}
+
+.guide__cite a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--bd2);
+  text-underline-offset: 2px;
+}
+
+.guide__cite a:hover {
+  color: var(--ink);
+}
+
+.guide__cite-label {
+  font: 400 10.5px/1 var(--font-mono);
+  color: var(--ink3);
+}
+
+.guide__guidance {
+  font: 400 12px/1.5 var(--font-ui);
+  color: var(--ink2);
+  border-left: 2px solid var(--bd2);
+  padding-left: 8px;
+  margin: 0;
+}
+
+.guide__guidance a {
+  color: inherit;
+}
+
 /* ── Connection lookup ──────────────────────────────────────────────────── */
 
 .guide__lookup {

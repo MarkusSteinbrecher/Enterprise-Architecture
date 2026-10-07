@@ -1,4 +1,5 @@
 import type { ElementType, RelationshipType } from '@/model'
+import type { Citation } from './sources'
 
 /**
  * "How we model in Archipelago" (#149): cookbook-style patterns, each with the
@@ -23,8 +24,15 @@ export interface Pattern {
   readonly title: string
   readonly intro: string
   readonly steps: readonly PatternStep[]
-  /** Advice that is not a relationship. */
+  /** Advice that is not a relationship: Archipelago's own guidance. */
   readonly notes: readonly string[]
+  /**
+   * Where the steps come from (#153). A Cookbook citation names the figures
+   * that show them; a step that takes another route than the figure (a direct
+   * line where the Cookbook goes through a resource, say) makes the pattern
+   * "adapted from" the source, which is how the guide words it.
+   */
+  readonly sources: readonly Citation[]
 }
 
 export const PATTERNS: readonly Pattern[] = [
@@ -68,6 +76,10 @@ export const PATTERNS: readonly Pattern[] = [
     notes: [
       'Name capabilities with nouns ("Claims Management"), processes with verbs ("Handle Claim"). A capability says what; a process says how.',
       'Two or three levels deep is enough for most maps. Deeper levels tend to turn into processes.',
+    ],
+    sources: [
+      { work: 'cookbook', at: '2.2.4 Strategy & Capability View, Figure 10' },
+      { work: 'cookbook', at: '8.2.9 Anatomy of a Business Capability, Figure 89' },
     ],
   },
   {
@@ -123,6 +135,11 @@ export const PATTERNS: readonly Pattern[] = [
       'Model a system as one Application Component until a question needs its parts. Finer components are worth it only where they are replaced or owned separately.',
       'Prefer Serving through an Application Service over a direct component-to-component line when you want to say what is used, not only that something is.',
     ],
+    sources: [
+      { work: 'cookbook', at: '2.9.1 Application Design Pattern (Basic Model), Figures 37 and 38' },
+      { work: 'cookbook', at: '2.4.3 Application Interaction (Co-operation) View, Figure 29' },
+      { work: 'cookbook', at: '2.3 Layered View, Figure 17' },
+    ],
   },
   {
     id: 'business-support',
@@ -170,6 +187,10 @@ export const PATTERNS: readonly Pattern[] = [
     notes: [
       'Serving points from the provider to the user: from the application service to the process, not the other way.',
     ],
+    sources: [
+      { work: 'cookbook', at: '2.3 Layered View, Figure 17' },
+      { work: 'cookbook', at: '8.2.8 Layered Process View, Figure 86' },
+    ],
   },
   {
     id: 'technology',
@@ -210,6 +231,9 @@ export const PATTERNS: readonly Pattern[] = [
     ],
     notes: [
       'A Technology Service between the platform and the application keeps the landscape stable when the platform underneath changes.',
+    ],
+    sources: [
+      { work: 'cookbook', at: '2.8 Technology Platform View (Infrastructure View), Figure 35' },
     ],
   },
   {
@@ -258,6 +282,7 @@ export const PATTERNS: readonly Pattern[] = [
     notes: [
       'Keep goals few and broad, and make outcomes measurable. A goal nobody can tell is reached is a slogan.',
     ],
+    sources: [{ work: 'cookbook', at: '2.1 Motivation View (Goals View), Figure 2' }],
   },
   {
     id: 'change',
@@ -299,6 +324,7 @@ export const PATTERNS: readonly Pattern[] = [
     notes: [
       'Archipelago also carries time on elements and relationships directly: see "Lifecycle and dates" below. Plateaus are for when you need to name and compare whole states.',
     ],
+    sources: [{ work: 'cookbook', at: '2.2.5 Implementation Roadmap View, Figures 15 and 16' }],
   },
   {
     id: 'portfolio-data',
@@ -331,6 +357,7 @@ export const PATTERNS: readonly Pattern[] = [
       'Every relationship can carry validity dates (valid from, valid to), so a dependency can start and end without either element doing so.',
       'A cost on the relationship can be split by consumer: the same platform costs one amount for one application and another for the next. On the element, that split is lost.',
     ],
+    sources: [{ work: 'adr', adr: '0001' }],
   },
 ]
 
@@ -339,6 +366,8 @@ export interface ConventionSection {
   readonly id: string
   readonly title: string
   readonly paragraphs: readonly string[]
+  /** The decision the convention follows. */
+  readonly source: Citation
 }
 
 export const CONVENTIONS: readonly ConventionSection[] = [
@@ -349,6 +378,7 @@ export const CONVENTIONS: readonly ConventionSection[] = [
       'An element carries the date each lifecycle phase starts: Plan, Phase In, Active, Phase Out, End of Life. Archipelago never stores which phase an element is in. It works the phase out from the dates at the time you are looking at: today in the inventory, the chosen year in the dependency graph.',
       'Fill in the dates you know and leave the rest empty. An element with no dates counts as Active.',
     ],
+    source: { work: 'ui-spec', at: '§3.1 Lifecycle is derived, never stored' },
   },
   {
     id: 'portfolio-fields',
@@ -356,6 +386,7 @@ export const CONVENTIONS: readonly ConventionSection[] = [
     paragraphs: [
       'The types below carry the portfolio fields: functional fit, technical fit, business criticality and a TIME classification (Tolerate, Invest, Migrate, Eliminate). They travel through the exchange format as ArchiMate properties, so Archi keeps them.',
     ],
+    source: { work: 'adr', adr: '0001' },
   },
   {
     id: 'codes',
@@ -363,5 +394,6 @@ export const CONVENTIONS: readonly ConventionSection[] = [
     paragraphs: [
       'Lists, cards and the graph show each element type as a two-letter code in its layer colour (AC for Application Component). Views draw the standard ArchiMate notation. This guide shows both.',
     ],
+    source: { work: 'ui-spec', at: '§2.2 ArchiMate notation' },
   },
 ]
