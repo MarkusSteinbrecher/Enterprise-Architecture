@@ -7,6 +7,7 @@ import {
   type RelationshipContext,
   type RelationshipType,
 } from '@/model'
+import { DialogOverlay } from '@/ui/common/DialogOverlay'
 import { useFocusTrap } from '@/ui/common/use-focus-trap'
 
 /**
@@ -71,13 +72,7 @@ export function AddRelationDialog({
   const canAdd = Boolean(selected?.result.valid)
 
   return (
-    <div
-      className="dialog-overlay"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onCancel()
-      }}
-    >
+    <DialogOverlay onDismiss={onCancel}>
       <div
         className="dialog"
         role="dialog"
@@ -150,6 +145,6 @@ export function AddRelationDialog({
           </button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
