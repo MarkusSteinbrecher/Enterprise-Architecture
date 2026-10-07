@@ -79,3 +79,36 @@
   border-left: 2px solid var(--accent);
   padding-left: 10px;
 }
+
+/* The strip above a model opened from a shared folder. */
+.shared-banner {
+  display: grid;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--bd);
+  background: var(--panel);
+}
+
+.shared-banner__line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.shared-banner__text {
+  font: 400 12.5px/1.5 var(--font-ui);
+  color: var(--ink2);
+}
+
+.shared-banner__actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.shared-banner__confirm,
+.shared-banner__conflicts {
+  display: grid;
+  gap: 6px;
+}

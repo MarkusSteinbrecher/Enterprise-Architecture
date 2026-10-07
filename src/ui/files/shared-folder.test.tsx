@@ -7,7 +7,6 @@ import { emptyWorkspace } from '@/model'
 import type { StoredFolder } from '@/store/shared-folder-storage'
 import { FakeDirectoryHandle } from '@/test/fake-directory'
 import { renderApp } from '@/test/render'
-import { SHARED_FOLDERS_SWITCH } from './shared-folder-switch'
 
 /**
  * The way into a shared folder (#147, part 2): criteria 1 and 16 in jsdom.
@@ -56,7 +55,6 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-const switchOn = () => localStorage.setItem(SHARED_FOLDERS_SWITCH, 'on')
 const withPicker = (pick: () => Promise<unknown> = async () => dir.handle) =>
   vi.stubGlobal('showDirectoryPicker', pick)
 
@@ -65,20 +63,7 @@ async function openImportDialog(user: ReturnType<typeof userEvent.setup>) {
   return screen.getByRole('dialog', { name: 'Import' })
 }
 
-describe('until part 3, the way in is switched off', () => {
-  it('sends /folder to the inventory, and offers nothing in the import dialog', async () => {
-    withPicker()
-    renderApp(loadDemoWorkspace(), { route: '/folder' })
-    expect(await screen.findByRole('heading', { name: 'Inventory' })).toBeInTheDocument()
-    const dialog = await openImportDialog(userEvent.setup())
-    expect(within(dialog).getByRole('button', { name: 'Choose a file…' })).toBeInTheDocument()
-    expect(within(dialog).queryByRole('button', { name: /shared folder/ })).toBeNull()
-  })
-})
-
 describe('in Firefox and Safari (criterion 16)', () => {
-  beforeEach(switchOn)
-
   it('offers no folder action, and says why, in the import dialog and on first run', async () => {
     renderApp(loadDemoWorkspace())
     const dialog = await openImportDialog(userEvent.setup())
@@ -101,10 +86,7 @@ describe('in Firefox and Safari (criterion 16)', () => {
 })
 
 describe('opening a shared folder (criterion 1)', () => {
-  beforeEach(() => {
-    switchOn()
-    withPicker()
-  })
+  beforeEach(() => withPicker())
 
   it('asks for the name on the lock first, then lists the models without reading them', async () => {
     const read = vi.spyOn(dir, 'getFileHandle')
@@ -119,12 +101,14 @@ describe('opening a shared folder (criterion 1)', () => {
     expect(memory.settings?.displayName).toBe('Markus')
 
     const models = await screen.findByRole('region', { name: 'Models in Architecture' })
-    const rows = within(models).getAllByRole('listitem')
-    expect(rows.map((row) => row.textContent)).toEqual([
-      'Claims.json',
-      'Landscape.json',
+    expect(
+      within(models)
+        .getAllByRole('button')
+        .map((b) => b.getAttribute('aria-label')),
+    ).toEqual(['Open Claims.json', 'Open Landscape.json', 'Open Landscape-DESKTOP7.json'])
+    expect(within(models).getAllByRole('listitem')[2]).toHaveTextContent(
       'Landscape-DESKTOP7.json may be a copy of Landscape.json kept by the sync client',
-    ])
+    )
     expect(read).not.toHaveBeenCalled()
   })
 

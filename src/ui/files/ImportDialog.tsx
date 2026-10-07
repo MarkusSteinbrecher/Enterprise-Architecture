@@ -5,7 +5,6 @@ import { supportsDirectoryAccess } from '@/io/shared-folder'
 import { DialogOverlay } from '@/ui/common/DialogOverlay'
 import { useFocusTrap } from '@/ui/common/use-focus-trap'
 import { useFileWorkspace } from './context'
-import { sharedFoldersEnabled } from './shared-folder-switch'
 
 /**
  * The import dialog (issue #11), wrapped around the structured problems from #5.
@@ -99,7 +98,7 @@ function ImportDialogBody() {
               Open and keep linked
             </button>
           )}
-          {sharedFoldersEnabled() && supportsDirectoryAccess() && (
+          {supportsDirectoryAccess() && (
             <button
               type="button"
               className="button"
@@ -115,7 +114,7 @@ function ImportDialogBody() {
           )}
         </div>
 
-        {sharedFoldersEnabled() && !supportsDirectoryAccess() && (
+        {!supportsDirectoryAccess() && (
           <p className="dialog__help">
             Shared folders need a Chromium browser, such as Edge or Chrome: Firefox and Safari
             cannot write into a folder you pick.

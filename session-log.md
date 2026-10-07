@@ -1,5 +1,20 @@
 # Session Log
 
+## 2026-10-07 — #147 part 3: editing a model in a shared folder
+
+**Part 3 → PR stacked on part 2 (#162), with #159 merged in.** It uses `DialogOverlay`, so #159 must merge first.
+- **`use-shared-model.ts`:** opens a model (read-only while it takes the lock), runs the heartbeat and the reader poll (also when the page becomes visible again), and applies each tick. That covers demotion, the reader's reload, `diverged` with its blocking notice, and conflict copies. It also handles save, overwrite, save as copy (which then opens the copy), reload, edit, takeover, unlock and close. A page that is closing tries to release its lock.
+- **Effective role:** the file provider re-provides the store context. `role` is reader unless this tab holds the folder lock; the new `tabRole` alone decides the takeover screen and the header's Import and SAVE FILE, so a demoted writer can still save a copy.
+- **UI:** `SharedModelUi.tsx` has the strip above the model (status, Edit, Take over…, Unlock… with confirmation, Save as copy, Close, possible conflict copies with Dismiss), the refusal dialog (Overwrite anyway… then a second confirmation), and the blocking "changed on disk" notice. The save-state indicator reads **FILE CHANGED ON DISK** when diverged.
+- **Fix found while wiring:** a writer that lost the lock with unsaved edits and took it back had its edits reloaded away, and its base was reset to the colleague's file. That would have let the next save overwrite the colleague's version silently. `acquire({ hasUnsavedChanges })` now keeps the base and diverges instead. There is a session test and a UI test for it.
+- **`ModelStore.markSavedThrough(count)`:** an edit made during a shared save stays unsaved. The single-file save has the same race with `markSaved()`; that is pre-existing and not changed here.
+- **The switch is gone.**
+- **e2e journey 13:** lock, save, takeover by a colleague, and save as copy, on real OPFS handles with Playwright's clock.
+- **Manual script:** `tests/manual/shared-folder.md`, for two machines and one synced library.
+- **Probes:** 17 guards broken one at a time, each caught.
+
+**Open:** review of #159, #160 and #161–#163 (merge order: #159 and #161 first, then #162, then part 3). Hosting (spec §14.3) is still open. Timings stay at their defaults, with no preferences screen; only the display name can be changed in the app.
+
 ## 2026-10-07 — #147 part 2: opening a shared folder
 
 **Part 2 → PR stacked on part 1 (#161).**

@@ -8,9 +8,11 @@ import {
   type ExportFormat,
   type ImportResult,
   type SaveFileHandle,
+  type SaveOutcome,
 } from '@/io'
-import { useModelStoreContext } from '@/store'
+import { ModelStoreContext, useModelStoreContext } from '@/store'
 import { FileWorkspaceContext, type FileWorkspaceContextValue } from './context'
+import { useSharedModel } from './use-shared-model'
 
 /**
  * Wires files to the model (issue #11).
@@ -22,15 +24,26 @@ import { FileWorkspaceContext, type FileWorkspaceContextValue } from './context'
  */
 
 export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
-  const { store, role, flush } = useModelStoreContext()
+  const outer = useModelStoreContext()
+  const { store, role, flush } = outer
   const handleRef = useRef<SaveFileHandle | undefined>(undefined)
   const [fileName, setFileName] = useState<string | undefined>(undefined)
   const [importing, setImporting] = useState(false)
   const [lastImport, setLastImport] = useState<ImportResult | undefined>(undefined)
   const [notice, setNotice] = useState<string | undefined>(undefined)
+  const shared = useSharedModel(store, setNotice)
+  const sharedSave = shared.save
+  const closeShared = shared.close
+  const inShared = shared.shared !== undefined
 
   const save = useCallback(
-    async (format: ExportFormat = 'json', { reuseHandle = true } = {}) => {
+    async (format: ExportFormat = 'json', { reuseHandle = true } = {}): Promise<SaveOutcome> => {
+      // A model from a shared folder saves through its guard (#147); an export
+      // is still a file of its own.
+      if (inShared && format === 'json' && reuseHandle) {
+        await sharedSave()
+        return { kind: 'cancelled' }
+      }
       const outcome = await saveWorkspaceToFile(
         store.snapshot(),
         format,
@@ -57,13 +70,15 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
       }
       return outcome
     },
-    [store],
+    [store, inShared, sharedSave],
   )
 
   const applyImport = useCallback(
     (result: ImportResult, name: string, handle?: SaveFileHandle) => {
       setLastImport(result)
       if (!result.workspace) return
+      // Another model replaces the shared one: give its lock back.
+      void closeShared()
       // An imported model does not match any file we could write back to unless
       // we opened it through a handle, so the handle is only kept in that case.
       handleRef.current = handle
@@ -71,7 +86,7 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
       store.replaceWorkspace(result.workspace, { markClean: Boolean(handle) })
       if (result.problems.length === 0) setImporting(false)
     },
-    [store],
+    [store, closeShared],
   )
 
   const openFile = useCallback(async () => {
@@ -88,11 +103,12 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
   )
 
   const loadDemo = useCallback(() => {
+    void closeShared()
     store.replaceWorkspace(loadDemoWorkspace(), { markClean: false })
     handleRef.current = undefined
     setFileName(undefined)
     setImporting(false)
-  }, [store])
+  }, [store, closeShared])
 
   // ⌘S / Ctrl+S saves, as it does in every other tool that owns a file.
   useEffect(() => {
@@ -120,8 +136,8 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<FileWorkspaceContextValue>(
     () => ({
-      fileName,
-      hasHandle: Boolean(handleRef.current),
+      fileName: shared.shared?.model ?? fileName,
+      hasHandle: inShared || Boolean(handleRef.current),
       canPickFiles: supportsFileSystemAccess(),
       importing,
       lastImport,
@@ -130,6 +146,7 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
       openFile,
       importFile,
       loadDemo,
+      shared,
       startImport: () => {
         setLastImport(undefined)
         setImporting(true)
@@ -137,8 +154,31 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
       cancelImport: () => setImporting(false),
       dismissNotice: () => setNotice(undefined),
     }),
-    [fileName, importing, lastImport, notice, save, openFile, importFile, loadDemo],
+    [
+      fileName,
+      inShared,
+      importing,
+      lastImport,
+      notice,
+      save,
+      openFile,
+      importFile,
+      loadDemo,
+      shared,
+    ],
   )
 
-  return <FileWorkspaceContext.Provider value={value}>{children}</FileWorkspaceContext.Provider>
+  // Within, a model in a shared folder is read-only unless this tab holds its
+  // lock (ADR 0010). The tab's own lock still decides the takeover screen.
+  const editable = role === 'writer' && (!shared.shared || shared.shared.phase === 'writer')
+  const storeContext = useMemo(
+    () => ({ ...outer, role: editable ? ('writer' as const) : ('reader' as const) }),
+    [outer, editable],
+  )
+
+  return (
+    <ModelStoreContext.Provider value={storeContext}>
+      <FileWorkspaceContext.Provider value={value}>{children}</FileWorkspaceContext.Provider>
+    </ModelStoreContext.Provider>
+  )
 }

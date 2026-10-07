@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   browserFolder,
   failure,
@@ -16,6 +17,7 @@ import {
   saveSettings,
   type StoredFolder,
 } from '@/store/shared-folder-storage'
+import { useFileWorkspace } from './context'
 import './shared-folder.css'
 
 /**
@@ -38,6 +40,9 @@ export function SharedFolderScreen() {
   const [settings, setSettings] = useState<SharedFolderSettings | undefined>(undefined)
   const [opened, setOpened] = useState<Opened | undefined>(undefined)
   const [problem, setProblem] = useState<string | undefined>(undefined)
+  const [renaming, setRenaming] = useState(false)
+  const { shared } = useFileWorkspace()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!supported) return
@@ -92,7 +97,12 @@ export function SharedFolderScreen() {
     }
   }
 
-  const needsName = opened !== undefined && settings !== undefined && settings.displayName === ''
+  const needsName =
+    (opened !== undefined && settings !== undefined && settings.displayName === '') || renaming
+
+  const openModel = async (folder: StoredFolder, model: string) => {
+    if (await shared.open(folder, model)) navigate('/inventory')
+  }
 
   return (
     <div className="shared-folder">
@@ -148,14 +158,30 @@ export function SharedFolderScreen() {
           <NameForm
             onSave={async (displayName) => {
               const result = await saveSettings({ ...settings, displayName })
-              if (result.ok) setSettings(result.settings)
+              if (result.ok) {
+                setSettings(result.settings)
+                setRenaming(false)
+              }
               return result.ok
             }}
           />
         )}
 
+        {!needsName && settings && settings.displayName !== '' && (
+          <p className="shared-folder__note">
+            Colleagues see you as <strong>{settings.displayName}</strong> on a model you edit.{' '}
+            <button type="button" className="button" onClick={() => setRenaming(true)}>
+              Change
+            </button>
+          </p>
+        )}
+
         {!needsName && opened && 'listing' in opened && (
-          <Listing name={opened.folder.name} listing={opened.listing} />
+          <Listing
+            name={opened.folder.name}
+            listing={opened.listing}
+            onOpen={(model) => void openModel(opened.folder, model)}
+          />
         )}
       </div>
     </div>
@@ -196,7 +222,15 @@ function NameForm({ onSave }: { onSave: (name: string) => Promise<boolean> }) {
   )
 }
 
-function Listing({ name, listing }: { name: string; listing: FolderListing }) {
+function Listing({
+  name,
+  listing,
+  onOpen,
+}: {
+  name: string
+  listing: FolderListing
+  onOpen: (model: string) => void
+}) {
   return (
     <section className="shared-folder__section" aria-label={`Models in ${name}`}>
       <div className="section-label">
@@ -209,6 +243,14 @@ function Listing({ name, listing }: { name: string; listing: FolderListing }) {
           {listing.models.map((model) => (
             <li key={model} className="shared-folder__row">
               <span className="shared-folder__file">{model}</span>
+              <button
+                type="button"
+                className="button"
+                aria-label={`Open ${model}`}
+                onClick={() => onOpen(model)}
+              >
+                Open
+              </button>
             </li>
           ))}
         </ul>
@@ -223,7 +265,15 @@ function Listing({ name, listing }: { name: string; listing: FolderListing }) {
                 <span className="shared-folder__note">
                   may be a copy of <span className="shared-folder__file">{copy.of}</span> kept by
                   the sync client
-                </span>
+                </span>{' '}
+                <button
+                  type="button"
+                  className="button"
+                  aria-label={`Open ${copy.name}`}
+                  onClick={() => onOpen(copy.name)}
+                >
+                  Open
+                </button>
               </li>
             ))}
           </ul>

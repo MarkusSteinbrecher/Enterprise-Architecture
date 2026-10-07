@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react'
 import type { ExportFormat, ImportResult, SaveOutcome } from '@/io'
+import type { SharedModel } from './use-shared-model'
 
 export interface FileWorkspaceContextValue {
   /** Name of the file this workspace is bound to, if any. */
@@ -18,6 +19,8 @@ export interface FileWorkspaceContextValue {
   startImport: () => void
   cancelImport: () => void
   dismissNotice: () => void
+  /** The model opened from a shared folder, if any (#147). */
+  shared: SharedModel
 }
 
 export const FileWorkspaceContext = createContext<FileWorkspaceContextValue | null>(null)

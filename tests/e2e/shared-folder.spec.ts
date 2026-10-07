@@ -15,7 +15,6 @@ test('a shared folder lists its models, and is offered again after a reload (#14
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('archipelago.sharedFolders', 'on')
     Object.defineProperty(window, 'showDirectoryPicker', {
       configurable: true,
       value: async () => {
@@ -55,8 +54,8 @@ test('a shared folder lists its models, and is offered again after a reload (#14
 
   const models = page.getByRole('region', { name: 'Models in Architecture' })
   await expect(models.getByRole('listitem')).toHaveText([
-    'Claims.json',
-    'Landscape.json',
+    /^Claims\.json/,
+    /^Landscape\.json/,
     /Landscape-DESKTOP7\.json may be a copy of Landscape\.json/,
   ])
 
@@ -69,4 +68,131 @@ test('a shared folder lists its models, and is offered again after a reload (#14
   await expect(form).toHaveCount(0)
   await expect(page.getByRole('alert')).toHaveCount(0)
   expect(await page.evaluate(() => sessionStorage.getItem('picked'))).toBe('yes')
+})
+
+/**
+ * Journey 13 — editing a model in a shared folder (#147, part 3), against real
+ * handles: the lock is taken after the settle delay, a save writes the file,
+ * a colleague's lock taking over makes this tab read-only within a heartbeat,
+ * and its edits then go into a copy, never over the file. Playwright's clock
+ * runs the settle delay and the heartbeat; the fingerprints are real.
+ */
+test('a model in a shared folder is locked, saved, lost to a colleague and saved as a copy (#147)', async ({
+  page,
+}) => {
+  await page.clock.install()
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'showDirectoryPicker', {
+      configurable: true,
+      value: async () =>
+        (await navigator.storage.getDirectory()).getDirectoryHandle('Team', { create: true }),
+    })
+  })
+  await openApp(page, 'folder')
+
+  const files = {
+    write: (name: string, text: string) =>
+      page.evaluate(
+        async ([file, content]) => {
+          const folder = await (
+            await navigator.storage.getDirectory()
+          ).getDirectoryHandle('Team', { create: true })
+          const writable = await (
+            await folder.getFileHandle(file!, { create: true })
+          ).createWritable()
+          await writable.write(content!)
+          await writable.close()
+        },
+        [name, text],
+      ),
+    read: (name: string) =>
+      page.evaluate(async (file) => {
+        const folder = await (await navigator.storage.getDirectory()).getDirectoryHandle('Team')
+        try {
+          return await (await (await folder.getFileHandle(file)).getFile()).text()
+        } catch {
+          return undefined
+        }
+      }, name),
+    names: () =>
+      page.evaluate(async () => {
+        const folder = await (await navigator.storage.getDirectory()).getDirectoryHandle('Team')
+        const names: string[] = []
+        for await (const [name] of (
+          folder as unknown as { entries(): AsyncIterable<[string]> }
+        ).entries())
+          names.push(name)
+        return names.sort()
+      }),
+  }
+
+  await files.write(
+    'Landscape.json',
+    JSON.stringify({
+      schemaVersion: 3,
+      id: 'ws-shared',
+      name: 'Landscape',
+      elements: [
+        { id: 'ac-1', type: 'ApplicationComponent', name: 'Claims Engine', properties: {} },
+      ],
+      relationships: [],
+      views: [],
+      folders: [],
+      reports: [],
+      tagGroups: [],
+    }),
+  )
+
+  await page.getByRole('button', { name: 'Open folder…' }).click()
+  const form = page.getByRole('form', { name: 'Your name on the lock' })
+  await form.getByLabel(/Your name/).fill('Markus')
+  await form.getByRole('button', { name: 'Continue' }).click()
+  await page.getByRole('button', { name: 'Open Landscape.json' }).click()
+
+  const status = page.getByRole('region', { name: 'Shared model' }).getByRole('status')
+  await expect(status).toContainText('Taking Landscape.json for editing')
+  await page.clock.runFor(11_000)
+  await expect(status).toContainText('Editing Landscape.json in Team')
+  expect(JSON.parse((await files.read('Landscape.json.lock'))!)).toMatchObject({
+    displayName: 'Markus',
+  })
+
+  // A save goes through the guard into the folder.
+  await page.getByRole('button', { name: '+ Element' }).click()
+  await page.getByLabel(/Name/).fill('Fraud Detection')
+  await page.getByRole('button', { name: 'Create' }).click()
+  await page.getByRole('button', { name: 'SAVE FILE' }).click()
+  await expect(page.locator('.save-state__label')).toHaveText('LOCAL · SAVED')
+  expect(await files.read('Landscape.json')).toContain('Fraud Detection')
+
+  // Ana takes it over; within a heartbeat this tab is read-only.
+  await page.getByRole('link', { name: /^Inventory/ }).click()
+  await page.getByRole('button', { name: '+ Element' }).click()
+  await page.getByLabel(/Name/).fill('Unsaved idea')
+  await page.getByRole('button', { name: 'Create' }).click()
+  await files.write(
+    'Landscape.json.lock',
+    JSON.stringify({
+      appVersion: '0.2.0',
+      displayName: 'Ana',
+      heartbeatAt: '2026-10-07T08:00:00.000Z',
+      heartbeatSeq: 0,
+      schemaVersion: 1,
+      since: '2026-10-07T08:00:00.000Z',
+      token: 'ana-1',
+    }),
+  )
+  await page.clock.runFor(61_000)
+  await expect(status).toContainText('You no longer hold Landscape.json: Ana took it over')
+
+  // Its edits go into a copy; the file Ana holds is not written.
+  await page
+    .getByRole('region', { name: 'Shared model' })
+    .getByRole('button', { name: 'Save as copy' })
+    .click()
+  await expect(status).toContainText('(copy Markus')
+  const copy = (await files.names()).find((name) => name.includes('(copy Markus'))
+  expect(copy).toBeDefined()
+  expect(await files.read(copy!)).toContain('Unsaved idea')
+  expect(await files.read('Landscape.json')).not.toContain('Unsaved idea')
 })

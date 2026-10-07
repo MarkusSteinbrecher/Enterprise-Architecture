@@ -41,5 +41,14 @@ between visits (folder handles, lock observations, dismissed copies, base
 snapshots, settings, the client id) is `src/store/shared-folder-storage.ts`,
 in its own IndexedDB database. The screen is `src/ui/files/SharedFolderScreen.tsx`.
 
-Until part 3 of #147 lets a model be opened from the folder, the way in is
-switched off (`src/ui/files/shared-folder-switch.ts`).
+Opening a model is `src/ui/files/use-shared-model.ts`: it runs the writer's
+heartbeat and the reader's poll, applies what each tick decided, and keeps the
+state the strip above the model, the save dialog and the "changed on disk"
+notice read (`SharedModelUi.tsx`). The file provider routes a save of a shared
+model through the guard, and makes the model read-only, through the store
+context's `role`, unless this tab holds its lock; `tabRole` still decides the
+second-tab takeover screen.
+
+The automated journeys (`tests/e2e/shared-folder.spec.ts`) run real directory
+handles from the origin-private file system. Two machines and a real sync
+client are `tests/manual/shared-folder.md`.

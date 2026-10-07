@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { supportsDirectoryAccess } from '@/io/shared-folder'
 import { useFileWorkspace } from './context'
-import { sharedFoldersEnabled } from './shared-folder-switch'
 import './files.css'
 
 /**
@@ -63,19 +62,17 @@ export function FirstRun({ onStartEmpty }: FirstRunProps) {
             ? 'This browser can save straight into a folder on your machine — a git working copy, for instance.'
             : 'This browser saves by downloading a file. Chromium browsers can write back into a folder directly.'}
         </p>
-        {sharedFoldersEnabled() && (
-          <p className="first-run__note">
-            {supportsDirectoryAccess() ? (
-              <>
-                Working from a folder your team shares through OneDrive or SharePoint?{' '}
-                <Link to="/folder">Open the shared folder</Link>: one person edits a model at a
-                time, and everyone else sees it read-only.
-              </>
-            ) : (
-              'Shared folders need a Chromium browser, such as Edge or Chrome: Firefox and Safari cannot write into a folder you pick.'
-            )}
-          </p>
-        )}
+        <p className="first-run__note">
+          {supportsDirectoryAccess() ? (
+            <>
+              Working from a folder your team shares through OneDrive or SharePoint?{' '}
+              <Link to="/folder">Open the shared folder</Link>: one person edits a model at a time,
+              and everyone else sees it read-only.
+            </>
+          ) : (
+            'Shared folders need a Chromium browser, such as Edge or Chrome: Firefox and Safari cannot write into a folder you pick.'
+          )}
+        </p>
         <p className="first-run__note">
           New to ArchiMate? <Link to="/guide">Read the guide</Link>: what each element and
           relationship means, and how to model with them.

@@ -21,7 +21,14 @@ export {
 export { fingerprint } from './fingerprint'
 export { listFolder, type FolderListing } from './listing'
 export { decodeText, encodeText, failure, type Folder } from './folder'
-export { parseLock, readLock, serialiseLock, type LockRead, type LockRecord } from './lock-file'
+export {
+  LOCK_SCHEMA_VERSION,
+  parseLock,
+  readLock,
+  serialiseLock,
+  type LockRead,
+  type LockRecord,
+} from './lock-file'
 export {
   LockManager,
   systemClock,
