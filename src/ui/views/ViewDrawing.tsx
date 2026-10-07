@@ -1,13 +1,14 @@
 import { memo } from 'react'
-import type {
-  Bounds,
-  ElementType,
-  JunctionKind,
-  Point,
-  Relationship,
-  View,
-  ViewConnection,
-  ViewNode,
+import {
+  nestedConnections,
+  type Bounds,
+  type ElementType,
+  type JunctionKind,
+  type Point,
+  type Relationship,
+  type View,
+  type ViewConnection,
+  type ViewNode,
 } from '@/model'
 import {
   ElementShape,
@@ -30,7 +31,8 @@ import { connectionRoute } from './geometry'
  * Archi paints them in. Flat rather than nested so that each node can skip
  * rendering on its own (#128): with nested `<g>`s, a parent that skipped would
  * also stop a moved grandchild from updating. Connections are drawn after every
- * node, on top, as Archi draws them.
+ * node, on top, as Archi draws them, except one the nesting already shows
+ * (`nestedConnections`, #96), which Archi does not draw either.
  *
  * Every node `<g>` carries `data-node` (and `data-parent` when it is nested)
  * and every connection `data-connection`: the canvas finds what was clicked
@@ -66,6 +68,7 @@ export const ViewDrawing = memo(function ViewDrawing({
     }
   }
   visit(undefined)
+  const hidden = nestedConnections(view)
   return (
     <g data-view-drawing={view.id}>
       <g>
@@ -81,6 +84,7 @@ export const ViewDrawing = memo(function ViewDrawing({
       </g>
       <g>
         {view.connections.map((connection) => {
+          if (hidden.has(connection.id)) return null
           const points = connectionRoute(connection, bounds)
           if (!points) return null
           return (

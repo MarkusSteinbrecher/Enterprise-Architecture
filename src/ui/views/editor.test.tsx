@@ -468,3 +468,81 @@ describe('a reader tab (#128)', () => {
     expect(dispatch).not.toHaveBeenCalled()
   })
 })
+
+describe('a connection the nesting shows (#96)', () => {
+  /** A line from a shape to its direct parent, added to the landscape before it opens. */
+  function nestedLine() {
+    let child = ''
+    let parent = ''
+    const h = setup('writer', {
+      prepare: (store) => {
+        const v = store.view(LANDSCAPE)!
+        const nested = v.nodes.find(
+          (n) => n.parent && v.nodes.find((p) => p.id === n.parent)?.kind === 'element',
+        )!
+        child = nested.id
+        parent = nested.parent!
+        store.addConnection(LANDSCAPE, {
+          id: 'c-nested',
+          kind: 'line',
+          source: parent,
+          target: child,
+        })
+      },
+    })
+    return { ...h, child, parent }
+  }
+
+  it('is neither drawn nor offered as a hit target while the nesting holds', () => {
+    const { canvas, view } = nestedLine()
+    // Present before absent: the view holds it, and the fixture's own 40 are drawn.
+    expect(view().connections.map((c) => c.id)).toContain('c-nested')
+    expect(canvas.querySelectorAll('[data-connection]')).toHaveLength(40)
+    expect(canvas.querySelector('[data-connection="c-nested"]')).toBeNull()
+    expect(canvas.querySelector('[data-line-hit="c-nested"]')).toBeNull()
+  })
+
+  it('is drawn again, and can be hit, once the nesting ends', () => {
+    const { store, canvas, child } = nestedLine()
+    act(() => {
+      store.updateView(LANDSCAPE, (v) => ({
+        ...v,
+        nodes: v.nodes.map((n) => {
+          if (n.id !== child) return n
+          const { parent: _parent, ...rest } = n
+          return { ...rest, bounds: absoluteBounds(v, n.id)! }
+        }),
+      }))
+    })
+    expect(canvas.querySelector('[data-connection="c-nested"]')).not.toBeNull()
+    expect(canvas.querySelector('[data-line-hit="c-nested"]')).not.toBeNull()
+  })
+
+  it('drops out of the selection when the nesting returns, so Delete cannot remove it', async () => {
+    const { store, canvas, user, view, child } = nestedLine()
+    const before = store.view(LANDSCAPE)!
+    const held = before.nodes.find((n) => n.id === child)!
+    const unnest = (v: View): View => ({
+      ...v,
+      nodes: v.nodes.map((n) => {
+        if (n.id !== child) return n
+        const { parent: _parent, ...rest } = n
+        return { ...rest, bounds: absoluteBounds(v, n.id)! }
+      }),
+    })
+    act(() => void store.updateView(LANDSCAPE, unnest))
+    await click(user, canvas.querySelector('[data-line-hit="c-nested"]')!, { x: 1, y: 1 })
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-selected', 'c-nested')
+
+    act(
+      () =>
+        void store.updateView(LANDSCAPE, (v) => ({
+          ...v,
+          nodes: v.nodes.map((n) => (n.id === child ? held : n)),
+        })),
+    )
+    expect(screen.queryByTestId('selection')).toBeNull()
+    await user.keyboard('{Delete}')
+    expect(view().connections.some((c) => c.id === 'c-nested')).toBe(true)
+  })
+})

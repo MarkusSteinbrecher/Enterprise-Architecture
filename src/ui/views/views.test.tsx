@@ -2,9 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import claimsXml from '@/io/fixtures/claims-platform.xml?raw'
+import claimsArchimate from '@/io/fixtures/claims-platform.archimate?raw'
 import attributesXml from '@/io/fixtures/relationship-attributes.xml?raw'
-import { importExchangeXml } from '@/io'
-import { absoluteBounds, type View, type ViewNode, type Workspace } from '@/model'
+import { exportExchangeXml, importArchimate, importExchangeXml, toCanonicalJson } from '@/io'
+import {
+  absoluteBounds,
+  nestedConnections,
+  type View,
+  type ViewNode,
+  type Workspace,
+} from '@/model'
 import { renderApp } from '@/test/render'
 import {
   absoluteIndex,
@@ -383,5 +390,59 @@ describe('directed associations and influence modifiers on the canvas (#84)', ()
     expect(connection('r-faster-cost').querySelector('text')).toHaveTextContent(/^7$/)
     expect(connection('r-cost-premiums').querySelector('text')).toBeNull()
     expect(connection('r-files').querySelector('text')).toHaveTextContent(/^files$/)
+  })
+})
+
+describe('connections the nesting already shows (#96)', () => {
+  const rel = (id: string, source: string, target: string): View['connections'][number] => ({
+    id,
+    kind: 'relationship',
+    relationship: `r-${id}`,
+    source,
+    target,
+  })
+
+  it('hides a connection between a node and its direct parent, either way round', () => {
+    const v = view(
+      [node('p'), node('c', {}, 'p'), node('g', {}, 'c'), node('s')],
+      [
+        rel('down', 'p', 'c'),
+        rel('up', 'c', 'p'),
+        { id: 'line', kind: 'line', source: 'p', target: 'c' },
+        rel('grand', 'p', 'g'),
+        rel('sibling', 'p', 's'),
+      ],
+    )
+    expect(nestedConnections(v)).toEqual(new Set(['down', 'up', 'line']))
+  })
+
+  it("keeps Archi's hidden connection in the view, writes it out, and does not draw it", () => {
+    const workspace = importArchimate(claimsArchimate).workspace!
+    const v = landscape(workspace)
+    // Presence first: the view holds all 41, the one Archi hides among them.
+    expect(v.connections).toHaveLength(41)
+    expect(v.connections.map((c) => c.id)).toContain('c-k8s-runtime')
+    expect(nestedConnections(v)).toEqual(new Set(['c-k8s-runtime']))
+
+    const { container } = render(
+      <svg>
+        <ViewDrawing
+          view={v}
+          bounds={absoluteIndex(v)}
+          children={childrenIndex(v)}
+          lookups={{
+            element: (id) => workspace.elements.find((e) => e.id === id),
+            relationship: (id) => workspace.relationships.find((r) => r.id === id),
+            viewName: (id) => workspace.views.find((w) => w.id === id)?.name,
+          }}
+        />
+      </svg>,
+    )
+    expect(container.querySelectorAll('[data-connection]')).toHaveLength(40)
+    expect(container.querySelector('[data-connection="c-k8s-runtime"]')).toBeNull()
+
+    // Every writer still writes it: the canvas leaves it out, the model does not.
+    expect(exportExchangeXml(workspace)).toContain('identifier="c-k8s-runtime"')
+    expect(toCanonicalJson(workspace)).toContain('"c-k8s-runtime"')
   })
 })
