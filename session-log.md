@@ -1,5 +1,16 @@
 # Session Log
 
+## 2026-10-07 — #147 design review folded into the shared-folder spec and ADR 0010
+
+Reviewed #147's spec and ADR draft (branch `docs/shared-folder-collaboration`) and folded the fixes in. The main change: the spec claimed more than a synced folder can deliver.
+- **Limits stated (spec §1.1, ADR Consequences).** Three cases get past the lock and the save guard: the acquire race slower than `settleMs`, an offline writer taken over as stale, and a change still in flight. Conflict-copy detection and a writer-side watch on the model file are now load-bearing, not extras.
+- **Save state.** A change under the writer's lock takes the indicator out of "saved" (§8.2). This means `markSaved()` needs an inverse or a "file diverged" state.
+- **Contradictions fixed.** Readers reload automatically only when they hold no unsaved changes, so a demoted writer keeps its edits. Criterion 12 is now achievable: *possible* conflict copies that can be dismissed, with no mtime filter. The save-as-copy indicator wording is clear.
+- **Gaps closed.** A failed lock read is not a foreign token. Self-fencing at `staleAfterMs / 2`. IndexedDB array keys `[folderKey, fileName]`. Copy names cleaned of characters Windows and SharePoint forbid, with clash handling (no exclusive create in the API; gap accepted). One audit log per client. Fingerprint the bytes written. Folder listing doesn't parse files (Files On-Demand). Stale-lock observations survive a reload.
+- Acceptance criteria are now 16, and criterion 4 is split by sync delay below and above `settleMs`.
+
+**Open:** the sponsor's three questions (spec §14; a 30-minute stale default is now suggested). ADR 0010 is still Proposed. The issue body's criteria summary still lists the old 14.
+
 ## 2026-10-06 (cont.) — #129 implemented: connecting shapes, and validity is now Archi's matrix
 
 **Connecting.** A selected shape has a connect handle. Dragging from it to another shape opens a menu.
