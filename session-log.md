@@ -28,7 +28,11 @@
 - **Archi oracle:** `editedClaims()` now nests Policy Host in Claims Engine (Aggregation) and places a new System Software in the Kubernetes Cluster (Composition). Archi 5.10 re-saved the file, and its save holds both relationships, both connections and both nestings. No unexplained difference.
 - **Slip, caught:** my first break-probe script ran under zsh, which doesn't split `$FILES` into words. So no backups were made and the probes piled up. I reversed all 12 mutations by hand, re-ran every probe under bash, and reviewed the full diff.
 
-**State:** #155 (#96), then the #131 PR on top of it, both await `/review-pr`. After they merge, tick #131 on #74. Not in scope: Archi's tree drop also draws the dropped element's other relationships, which is #145.
+**#155 reviewed** (`/review-pr 155`, same session, so the code-review pass ran as a fresh agent). Verdict **approve**. The one finding is fixed in `abf3594`: `drawingBounds` counted the bend-points of hidden connections, so fit, the mini-map and the export kept room for an invisible line. The fix is merged into `feat/131-nesting-prompt`. Harvested into the review skill: a rule about what is drawn applies to everything that measures the drawing.
+
+**HQ:** two lessons in `lessons/verification-and-debugging.md`: check a citation against the page as it reads today, and run probe loops from a bash script.
+
+**State:** #155 is approved and ready to merge. #156 (#131, stacked on it) awaits `/review-pr 156`. After both merge, tick #131 on #74. Not in scope: Archi's tree drop also draws the dropped element's other relationships, which is #145.
 
 ## 2026-10-07 (cont.) — #150 reviewed and merged; guide sources (#153)
 
