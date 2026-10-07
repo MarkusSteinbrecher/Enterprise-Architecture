@@ -1,5 +1,115 @@
 # Session Log
 
+## 2026-10-07 — #147 spec reviewed; ArchiMate 4 decided (ADR 0011); in-app ArchiMate guide (#149)
+
+**#147 (shared-folder collaboration).** The spec and ADR 0010 draft were reviewed and the fixes folded in, on `docs/shared-folder-collaboration`; that branch's own log entry has the details. The main change: a synced folder can't guarantee one editor, so conflict detection is what prevents silent loss. The issue body was updated to match. Still open: the sponsor's three questions, and ADR 0010 is still Proposed.
+
+**ArchiMate 4 (#148 → PR #150).** The Open Group published ArchiMate 4 in April 2026; nothing in the repo mentioned it. The sponsor chose to stay on 3.2 and to decide without the four research questions #148 listed. ADR 0011 records that, with three triggers for revisiting it: Archi supporting version 4, a user bringing a version 4 model, or a version 4 exchange schema becoming what tools write by default. The README now states the implemented version. Docs only.
+
+**ArchiMate guide (#149 → PR #151).** A `/guide` page inside the app.
+- **Generated reference:** framework grid, 61 element entries (code, notation symbol, description, example), 11 relationship entries, a "what can connect" lookup, viewpoints.
+- **Hand-written:** seven modelling patterns whose relationships are data, so a test holds each one to the validity matrix.
+- **Links in:** the left nav (new Help section), first run (the guide needs no model, so `/guide` skips first run), the fact sheet type label and the view palette. A deep link focuses its entry, also after a hard refresh.
+- **Tests:** 19 unit tests and 3 e2e journeys. The lookup is checked against `relationships.xml` read from disk, and the viewpoint lists against the viewpoint data. 11 guard mutations were all caught. 1228 unit tests and 25 e2e journeys pass.
+- **Found:** Archi allows Association between every pair of non-junction types, so the lookup's empty branch can't be reached from the UI and is tested directly. The 3.2 specification online now needs an Open Group sign-in.
+- **Deviation from criterion 1:** the app shell has no phone layout, since the nav and model tree fill a 390 px window. The guide reflows inside its own column instead, tested at 760 px. A shell phone layout would be its own issue.
+
+**Also discussed (no changes made):**
+- **Product name.** The sponsor doesn't like "Archipelago". The shortlist offered was Atoll, Estate, Terrain, Cairn, Holm and Survey. Constraint for any rename: `archipelago` is also a format identifier (exchange property keys such as `archipelago.timeClassification`, the IndexedDB name, localStorage keys, the schema file name). Keep those identifiers, or have the readers accept both spellings. A rename gets a new ADR replacing 0005.
+- **The Open Group licensing.** No problem found in the repo: no spec text copied, the vendored data is Archi's (MIT), the XSDs are not vendored, and nothing claims certification. One concrete fix proposed: the demo model is *named* "ArchiSurance", which is The Open Group's case study, so rename it. Unresolved: whether a free open-source implementation needs the free non-commercial licence or none; the licence PDFs return 404, so the texts couldn't be read. Commercial use (sale, paid hosting, consulting) would need the commercial licence. Suggested: "ArchiMate®" at the guide's first mention.
+
+**State:** #151 (the guide) was merged by the sponsor the same day. #150 (ADR 0011) awaits `/review-pr`; the guide's ADR 0011 link 404s until it merges. Open decisions for the sponsor: the three questions on #147, a new product name, renaming the ArchiSurance demo plus the ® (offered as a small PR or a commit on #151), and whether to write to The Open Group about licensing.
+
+## 2026-10-06 (wrap-up) — #144 merged: views can be made from scratch
+
+**Merged:** #144 (#130) after its review fixes. #130 is closed, and #74 has it ticked.
+
+**State:**
+- `main` is at `5a91390`.
+- M2 open: #131–#137.
+- New follow-ups from the #144 review: #145 (a dropped element brings its relationships to shapes already drawn, as Archi does) and #146 (a collapsible palette; at 1280 px the canvas is about 325 px wide).
+- Also open: #138, #96, #97.
+- Five nice-to-haves from the #144 review were not filed as issues. They are on the PR:
+  - clear an armed tool when the viewpoint hides its type
+  - a junction's history entry shows empty quotes
+  - one helper for "add X and draw it" instead of two copies
+  - a writer check on renaming in the tree (unreachable today)
+  - say on the palette that Enter places, for screen-reader users
+- Merged branches the permission classifier will not let me delete: `feat/130-create-views`, plus `feat/129-connect`, `feat/127-archi-roundtrip-check`, `feat/128-move-resize` and `chore/adr-0008-editor-next` from before.
+
+**Next session, started fresh:** #131 (nesting, with the "which relationship does this nesting mean" prompt) on top of `main`.
+- Placement already nests where a click lands (`placement` in `src/ui/views/create.ts`), and so does a move (`dropTarget` in `edit.ts`). #131 adds the prompt to both.
+- Archi's own nesting prompt is `CreateNestedArchimateConnectionsWithDialogCommand`. Its drop policy calls it when `ConnectionPreferences.createRelationWhenAddingModelTreeElement()` is on. Read both with `javap`.
+- Extend `edited-claims.ts` (`scratchView`) and re-run `scripts/fixtures/archi-roundtrip.sh` with `ARCHI=/Applications/Archi.app/Contents/MacOS/Archi`.
+
+## 2026-10-06 (cont.) — #144 reviewed and its blocking findings fixed
+
+**Reviewed** with `/review-pr 144 high`, in the session that wrote it, so less independent than usual. The generic code-review pass ran in a fresh agent and found the two worst defects.
+
+**Five blocking findings, all fixed in `7b456d7`:**
+1. A view's name field took focus back after every rename. It focused itself on mount and remounts on every rename.
+2. Committing a shape's name by leaving the field moved focus to the canvas, so Backspace in the field the user had clicked deleted the new shape.
+3. Placing from the keyboard re-fit the view.
+4. No real-browser journey dragged a tree element onto the canvas. Journey 10 now does, in Chromium.
+5. Nothing tested where focus lands after the element panel's Remove from view and Delete from model.
+
+Each fix has a test that fails without it.
+
+**Checked against Archi 5.10 with `javap`:** its drop never consults the viewpoint, and it adds an element the view already draws. It also draws the dropped element's relationships to shapes already in the view; filed as #145. A collapsible palette is #146.
+
+**Harvested:**
+- A CLAUDE.md line on when code may move focus. #142's focus finding came back in the very next PR.
+- A sharpened review-skill bullet: a flag that every edit path must set belongs in the one function they all call.
+
+**Open:** five nice-to-haves remain on #144. Re-review #144, then #131.
+
+## 2026-10-06 (cont.) — #130 implemented: views made from scratch (PR #144)
+
+**What a user can do now:**
+- Make a view from the model tree (`+ View`) or the command palette. It opens with its name selected.
+- Rename a view in the header or with F2 in the tree. Delete it in the tree.
+- Choose a viewpoint in the header.
+- Place shapes from a palette beside the canvas: every element type in its notation, then note, group and both junctions. A viewpoint limits the element types offered.
+- Drag an element from the tree onto the canvas to draw it again.
+- Rename any shape in place (F2 or a double-click). Delete an element from the model, after a confirmation that names the other views.
+
+**Viewpoints are ours, checked against Archi.** `src/model/viewpoints.ts` is the table, and `viewpoints.test.ts` reads Archi 5.10's `viewpoints.xml` (now vendored). The file names whole layers as `$ApplicationElements$`; Archi's Java expands them, so the test carries those lists as `javap` printed them. Junction and Grouping are allowed in every viewpoint. The `.archimate` reader's own map turned out to miss Application Structure, and now reads the table.
+
+**Archi oracle.** `edited-claims.ts` adds a view made from scratch in a new folder of Views. Archi 5.10 imported and saved it, and the oracle passes. The oracle now also compares each drawn element's folder.
+
+**Found in a real browser:**
+- A rename on the canvas left the old name drawn, because the drawing was memoised on the view and a rename changes only the element.
+- The palette's type filter needed each word matched ("app comp").
+- The tree's tools wrapped mid-label.
+All three are fixed.
+
+**Tests.** 1205 unit tests and 22 e2e journeys pass; journey 10 is new. 26 mutations were run, one guard at a time. One guard nothing could fire was removed: Chromium sends no `blur` when a focused field is removed. The journey asserts the behaviour instead.
+
+**Open:**
+- Review #144 (`/review-pr 144 high`).
+- At a 1280 px window the palette and the selection panel leave the canvas narrow. A collapsible palette is a candidate follow-up.
+- Next in M2: #131 (nesting, with the "which relationship does this mean" prompt).
+
+## 2026-10-06 (wrap-up) — #142 merged: M2's first slice is done
+
+**Merged:** #142 (#129, connecting, with validity from Archi's matrix, ADR 0009) after its review fixes. #129 is closed, and #74 has #127–#129 ticked, which is the whole first slice.
+
+**State:**
+- `main` is at `e89d429`.
+- Open: #130–#137 (rest of M2), #138, #96, #97.
+- The #142 review's five nice-to-haves were not filed as issues. They are on the PR:
+  - re-use for an element drawn twice
+  - one shared drawing-order walk for `nodeAt` and `dropTarget`
+  - memoised hit routes
+  - an explicit batch label
+  - a release outside the canvas (in principle only)
+- Merged branches the permission classifier will not let me delete: `feat/129-connect`, plus `feat/127-archi-roundtrip-check`, `feat/128-move-resize` and `chore/adr-0008-editor-next` from before.
+
+**Next session, started fresh:** #130 (create views, a palette filtered by viewpoint, add new and existing elements) on top of `main`.
+- New elements go through the store, as `edited-claims.ts` does.
+- Extend the Archi oracle with the slice's edits.
+- `validity.ts` is Archi's matrix now: any "only valid" palette or menu reads `validateRelationshipBetween`.
+
 ## 2026-10-06 (cont.) — #129 implemented: connecting shapes, and validity is now Archi's matrix
 
 **Connecting.** A selected shape has a connect handle. Dragging from it to another shape opens a menu.
