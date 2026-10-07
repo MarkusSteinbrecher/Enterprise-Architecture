@@ -13,4 +13,5 @@ Product ADRs for Archipelago. Fresh sequence started 2026-08 (the knowledge-base
 | [0007](0007-one-language-per-model.md) | A model holds one language, chosen by the texts it keeps | 2026-10-05 | Accepted |
 | [0008](0008-diagram-editor-before-transformation.md) | The diagram editor comes before transition planning | 2026-10-06 | Accepted |
 | [0009](0009-relationship-validity-from-archi.md) | Relationship validity is Archi's matrix, with Archi's junction rules | 2026-10-06 | Accepted |
+| [0010](0010-shared-folder-collaboration.md) | A shared synced folder is the first collaboration mode; one editor per model, enforced by a lock file | 2026-10-07 | Proposed |
 | [0011](0011-stay-on-archimate-3-2.md) | Stay on ArchiMate 3.2 until Archi supports ArchiMate 4 | 2026-10-07 | Accepted |

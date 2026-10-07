@@ -60,6 +60,17 @@
 
 **State:** #152 and the #153 PR await review/merge. `docs/shared-folder-collaboration` also adds a 2026-10-07 entry at the top of this file, so expect a one-hunk conflict here; keep both entries.
 
+## 2026-10-07 — #147 design review folded into the shared-folder spec and ADR 0010
+
+Reviewed #147's spec and ADR draft (branch `docs/shared-folder-collaboration`) and folded the fixes in. The main change: the spec claimed more than a synced folder can deliver.
+- **Limits stated (spec §1.1, ADR Consequences).** Three cases get past the lock and the save guard: the acquire race slower than `settleMs`, an offline writer taken over as stale, and a change still in flight. Conflict-copy detection and a writer-side watch on the model file are now load-bearing, not extras.
+- **Save state.** A change under the writer's lock takes the indicator out of "saved" (§8.2). This means `markSaved()` needs an inverse or a "file diverged" state.
+- **Contradictions fixed.** Readers reload automatically only when they hold no unsaved changes, so a demoted writer keeps its edits. Criterion 12 is now achievable: *possible* conflict copies that can be dismissed, with no mtime filter. The save-as-copy indicator wording is clear.
+- **Gaps closed.** A failed lock read is not a foreign token. Self-fencing at `staleAfterMs / 2`. IndexedDB array keys `[folderKey, fileName]`. Copy names cleaned of characters Windows and SharePoint forbid, with clash handling (no exclusive create in the API; gap accepted). One audit log per client. Fingerprint the bytes written. Folder listing doesn't parse files (Files On-Demand). Stale-lock observations survive a reload.
+- Acceptance criteria are now 16, and criterion 4 is split by sync delay below and above `settleMs`.
+
+**Open:** the sponsor's three questions (spec §14; a 30-minute stale default is now suggested). ADR 0010 is still Proposed. The issue body was updated to match the spec.
+
 ## 2026-10-07 — #147 spec reviewed; ArchiMate 4 decided (ADR 0011); in-app ArchiMate guide (#149)
 
 **#147 (shared-folder collaboration).** The spec and ADR 0010 draft were reviewed and the fixes folded in, on `docs/shared-folder-collaboration`; that branch's own log entry has the details. The main change: a synced folder can't guarantee one editor, so conflict detection is what prevents silent loss. The issue body was updated to match. Still open: the sponsor's three questions, and ADR 0010 is still Proposed.
