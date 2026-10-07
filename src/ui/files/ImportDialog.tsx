@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { summariseProblems, type ImportProblem } from '@/io'
 import { supportsDirectoryAccess } from '@/io/shared-folder'
+import { DialogOverlay } from '@/ui/common/DialogOverlay'
 import { useFocusTrap } from '@/ui/common/use-focus-trap'
 import { useFileWorkspace } from './context'
 import { sharedFoldersEnabled } from './shared-folder-switch'
@@ -48,13 +49,7 @@ function ImportDialogBody() {
   const rest = problems.filter((p) => p.severity !== 'error')
 
   return (
-    <div
-      className="dialog-overlay"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) cancelImport()
-      }}
-    >
+    <DialogOverlay onDismiss={cancelImport}>
       <div
         ref={dialogRef}
         className="dialog dialog--wide"
@@ -161,7 +156,7 @@ function ImportDialogBody() {
           </button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

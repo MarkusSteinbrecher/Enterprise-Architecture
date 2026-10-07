@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import claimsXml from '@/io/fixtures/claims-platform.xml?raw'
 import { importExchangeXml, loadDemoWorkspace } from '@/io'
+import { pressOutside } from '@/test/dialogs'
 import { renderApp } from '@/test/render'
 
 function demo() {
@@ -451,6 +452,17 @@ describe('the fixes from the #27 review', () => {
     expect(dialog.contains(document.activeElement)).toBe(true)
 
     await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'Add relation' })).not.toBeInTheDocument()
+    expect(opener).toHaveFocus()
+  })
+
+  it('closes the add-relation dialog on a press outside, and gives focus back (#157)', async () => {
+    renderApp(demo(), { route: APP })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    const opener = screen.getByRole('button', { name: '+ Relation' })
+    await user.click(opener)
+    await pressOutside(user, screen.getByRole('dialog', { name: 'Add relation' }))
     expect(screen.queryByRole('dialog', { name: 'Add relation' })).not.toBeInTheDocument()
     expect(opener).toHaveFocus()
   })
