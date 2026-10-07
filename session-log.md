@@ -1,5 +1,14 @@
 # Session Log
 
+## 2026-10-07 — /review-pr 156 (#131 nesting prompt)
+
+**Reviewed PR #156: request changes, 2 blocking items.** The port matches Archi 5.10's source, read from GitHub at `release_5.10.0`. All 5 acceptance criteria are met.
+- **Blocking 1:** the "within its container" test can't fail. `o-rules` already has an Assignment from the engine, so deleting the within-container filter left 58 tests green, and moving a shape inside a container then re-asks every time.
+- **Blocking 2:** a press outside the prompt focuses `<body>`, because the overlay's mousedown doesn't call `preventDefault()`. On the palette path this blurs the name field the answer just opened. Verified in Chromium.
+- **Not blocking:** Ctrl+K opens the palette over the prompt (#158); undo labels; `addElementInView` duplicates `updateViewAdding`; an orphaned docblock.
+- **Harvest:** two sharpened CLAUDE.md lines (a587fc4, on this branch); #157 (shared overlay that keeps focus) and #158 (Ctrl+K modal guard), both labelled `harness`.
+- **Open:** fix the two blocking items; retarget #156 to `main` before `feat/96-hide-nested-connections` is deleted.
+
 ## 2026-10-07 (cont.) — #96 and #131: nesting asks what it means, and its connection is hidden
 
 **Housekeeping.** I deleted the merged branches (`docs/148-*`, `feat/149-*`, `feat/153-*`, `chore/session-log-129`), locally and on GitHub. Next in M2 was #131. It needed #96 first, so the two are stacked: **#155** (#96), then the #131 PR on top of it.
