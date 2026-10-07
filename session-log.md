@@ -14,7 +14,11 @@
 - **Found:** Archi allows Association between every pair of non-junction types, so the lookup's empty branch can't be reached from the UI and is tested directly. The 3.2 specification online now needs an Open Group sign-in.
 - **Deviation from criterion 1:** the app shell has no phone layout, since the nav and model tree fill a 390 px window. The guide reflows inside its own column instead, tested at 760 px. A shell phone layout would be its own issue.
 
-**State:** PRs #150 and #151 await `/review-pr`. #151's ADR 0011 link 404s until #150 merges. Sponsor questions on #147 are still open.
+**Also discussed (no changes made):**
+- **Product name.** The sponsor doesn't like "Archipelago". The shortlist offered was Atoll, Estate, Terrain, Cairn, Holm and Survey. Constraint for any rename: `archipelago` is also a format identifier (exchange property keys such as `archipelago.timeClassification`, the IndexedDB name, localStorage keys, the schema file name). Keep those identifiers, or have the readers accept both spellings. A rename gets a new ADR replacing 0005.
+- **The Open Group licensing.** No problem found in the repo: no spec text copied, the vendored data is Archi's (MIT), the XSDs are not vendored, and nothing claims certification. One concrete fix proposed: the demo model is *named* "ArchiSurance", which is The Open Group's case study, so rename it. Unresolved: whether a free open-source implementation needs the free non-commercial licence or none; the licence PDFs return 404, so the texts couldn't be read. Commercial use (sale, paid hosting, consulting) would need the commercial licence. Suggested: "ArchiMate®" at the guide's first mention.
+
+**State:** PRs #150 and #151 await `/review-pr`; merge #150 first, because #151 links ADR 0011 on `main`. The guide is not live until #151 merges. Open decisions for the sponsor: the three questions on #147, a new product name, renaming the ArchiSurance demo plus the ® (offered as a small PR or a commit on #151), and whether to write to The Open Group about licensing.
 
 ## 2026-10-06 (wrap-up) — #144 merged: views can be made from scratch
 
