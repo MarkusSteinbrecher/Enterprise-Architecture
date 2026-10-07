@@ -74,6 +74,17 @@
   color: var(--ink2);
 }
 
+/* The type label opens its entry in the ArchiMate guide (#149). */
+.sheet__type--link {
+  text-decoration: underline dotted var(--bd2);
+  text-underline-offset: 3px;
+}
+
+.sheet__type--link:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+
 .sheet__meta-divider {
   width: 1px;
   height: 11px;

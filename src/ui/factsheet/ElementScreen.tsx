@@ -11,6 +11,7 @@ import {
 } from '@/model'
 import { newId, useModelSelector, useModelStoreContext } from '@/store'
 import { TypeCodeBadge } from '@/ui/common/TypeCodeBadge'
+import { guideHref } from '@/ui/guide/connections'
 import { CompletenessRing } from '@/ui/common/meters'
 import { AddRelationDialog } from './AddRelationDialog'
 import { NeighbourhoodGraph } from './NeighbourhoodGraph'
@@ -208,7 +209,13 @@ export function ElementScreen() {
                 <h1 className="sheet__title">{element.name}</h1>
               )}
               <div className="sheet__meta">
-                <span className="sheet__type">{typeLabel(element.type)}</span>
+                <Link
+                  to={guideHref(element.type)}
+                  className="sheet__type sheet__type--link"
+                  title={`What is a ${typeLabel(element.type)}? Open the ArchiMate guide`}
+                >
+                  {typeLabel(element.type)}
+                </Link>
                 <span className="sheet__meta-divider" aria-hidden="true" />
                 {(element.profile?.tags ?? []).map((tag) => (
                   <button

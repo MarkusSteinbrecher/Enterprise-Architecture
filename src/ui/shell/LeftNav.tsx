@@ -104,6 +104,15 @@ export function LeftNav({ treeOpen, treeId, onToggleTree }: LeftNavProps) {
         </button>
       ))}
 
+      <div className="section-label nav__label nav__label--spaced">Help</div>
+      <NavLink
+        to="/guide"
+        className={({ isActive }) => `nav__item${isActive ? ' nav__item--active' : ''}`}
+      >
+        <span className="nav__glyph" aria-hidden="true" />
+        <span className="nav__text">ArchiMate guide</span>
+      </NavLink>
+
       <div className="health">
         <div className="section-label health__label">Model health</div>
         <div className="health__value">
