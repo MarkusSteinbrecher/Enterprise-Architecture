@@ -1,5 +1,7 @@
 import { forwardRef, memo, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ElementShape, GroupShape, NoteShape } from '@/ui/notation'
+import { guideHref } from '@/ui/guide/connections'
 import { paletteFor, toolKey, toolLabel, toolMatches, type Tool } from './create'
 
 /**
@@ -12,6 +14,9 @@ import { paletteFor, toolKey, toolLabel, toolMatches, type Tool } from './create
  * the middle of the visible canvas, since a keyboard cannot point; so does
  * Enter in the filter, with its first match. "New element in view…" in the
  * command palette lands in that filter.
+ *
+ * The link at the foot opens the ArchiMate guide (#149): at the armed type's
+ * entry when an element tool is armed, at the element reference otherwise.
  */
 export interface ElementPaletteProps {
   viewpoint: string | undefined
@@ -45,6 +50,7 @@ export const ElementPalette = memo(
       : groups
     const first = shown[0]?.tools[0]
     const armedKey = armed ? toolKey(armed) : null
+    const armedType = armed?.kind === 'element' ? armed.type : undefined
 
     return (
       <section className="view-palette" aria-label="Palette">
@@ -107,6 +113,9 @@ export const ElementPalette = memo(
             </section>
           ))}
         </div>
+        <Link className="view-palette__guide" to={guideHref(armedType)}>
+          {armed && armedType ? `About ${toolLabel(armed)}` : 'What these types mean'}
+        </Link>
       </section>
     )
   }),

@@ -220,6 +220,10 @@
   padding: 0 14px 8px;
 }
 
+.nav__label--spaced {
+  margin-top: 14px;
+}
+
 .nav__item {
   display: flex;
   align-items: center;
