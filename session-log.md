@@ -1,5 +1,21 @@
 # Session Log
 
+## 2026-10-07 — #157 and #158: dialogs keep focus, shortcuts respect modals
+
+**#156 merged** (`c7751e4`) after its two blocking fixes, retargeted to `main` first.
+
+**#157 → PR #159.** `DialogOverlay` (`src/ui/common/`) is now the one modal backdrop, and all 8 modals use it. It calls `preventDefault()` on the press that dismisses, so focus stays where the dialog put it instead of landing on `<body>`.
+- An ESLint rule rejects the overlay class names anywhere else. It has tests for the rule and its bypasses (template, variable, built class list), and its exemption still applies the locale rule.
+- `CreateElementDialog` declared `aria-modal` without a focus trap. It now has one, so focus returns to `+ Element`.
+- There is one press-outside focus test per dialog (9), plus a press outside in the e2e journey 11 in Chromium. All of them fail without `preventDefault()`.
+
+**#158 → PR #160.** ⌘K and ⌘S now check `isModalOpen()`, like the other global shortcuts.
+- `global-shortcuts.test.tsx` drives every binding (10 rows) under the import dialog, then again with the dialog closed, where it must act.
+- A tripwire classifies every window/document key listener. Each guard, removed alone, fails its rows.
+- My own call: ⌘S under a dialog (the palette included) now does nothing. The PR says how to revert it.
+
+**Open:** review and merge #159 and #160 (they are independent). Branches already on `main` are left for the sponsor to delete: `feat/96-hide-nested-connections`, `feat/131-nesting-prompt`.
+
 ## 2026-10-07 — /review-pr 156 (#131 nesting prompt)
 
 **Reviewed PR #156: request changes, 2 blocking items.** The port matches Archi 5.10's source, read from GitHub at `release_5.10.0`. All 5 acceptance criteria are met.
