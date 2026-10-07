@@ -7,7 +7,8 @@
 - **Blocking 2:** a press outside the prompt focuses `<body>`, because the overlay's mousedown doesn't call `preventDefault()`. On the palette path this blurs the name field the answer just opened. Verified in Chromium.
 - **Not blocking:** Ctrl+K opens the palette over the prompt (#158); undo labels; `addElementInView` duplicates `updateViewAdding`; an orphaned docblock.
 - **Harvest:** two sharpened CLAUDE.md lines (a587fc4, on this branch); #157 (shared overlay that keeps focus) and #158 (Ctrl+K modal guard), both labelled `harness`.
-- **Open:** fix the two blocking items; retarget #156 to `main` before `feat/96-hide-nested-connections` is deleted.
+- **Blocking items fixed in this same session (12d7fc4).** The overlay now calls `preventDefault()` on the press that closes it. New tests cover a press outside on the move path and on the palette path (where the name field stays focused), and a move within the container uses a shape nested with None. Removing either fix alone fails its test. 1275 tests, lint, typecheck, format and build all pass.
+- **Open:** retarget #156 to `main` before `feat/96-hide-nested-connections` is deleted, then merge; #157, #158.
 
 ## 2026-10-07 (cont.) — #96 and #131: nesting asks what it means, and its connection is hidden
 
