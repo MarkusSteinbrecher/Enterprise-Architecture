@@ -15,6 +15,7 @@
 
 **Open:** review of #159, #160 and #161–#163 (merge order: #159 and #161 first, then #162, then part 3). Hosting (spec §14.3) is still open. Timings stay at their defaults, with no preferences screen; only the display name can be changed in the app.
 
+
 ## 2026-10-07 — #147 part 2: opening a shared folder
 
 **Part 2 → PR stacked on part 1 (#161).**
