@@ -7,6 +7,7 @@ import {
   type RelationshipType,
   type View,
 } from '@/model'
+import { DialogOverlay } from '@/ui/common/DialogOverlay'
 import { useFocusTrap } from '@/ui/common/use-focus-trap'
 import type { ConnectChoice } from './connect'
 import type { Nesting, NestingChoices, NestingOption } from './nesting'
@@ -71,13 +72,7 @@ export function ConnectMenu({ choice, onCreate, onReuse, onCancel }: ConnectMenu
       ? `Connect ${choice.source.name || typeLabel(choice.source.type)} to ${choice.target.name || typeLabel(choice.target.type)}`
       : 'Connect'
   return (
-    <div
-      className="dialog-overlay"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onCancel()
-      }}
-    >
+    <DialogOverlay onDismiss={onCancel}>
       <div
         className="dialog connect-menu"
         role="dialog"
@@ -138,7 +133,7 @@ export function ConnectMenu({ choice, onCreate, onReuse, onCancel }: ConnectMenu
           </button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
@@ -164,13 +159,7 @@ export function DeleteRelationshipDialog({
   useFocusTrap(ref)
   useEscape(onCancel)
   return (
-    <div
-      className="dialog-overlay"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onCancel()
-      }}
-    >
+    <DialogOverlay onDismiss={onCancel}>
       <div
         className="dialog"
         role="dialog"
@@ -205,7 +194,7 @@ export function DeleteRelationshipDialog({
           </button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
@@ -235,13 +224,7 @@ export function DeleteElementDialog({
   useFocusTrap(ref)
   useEscape(onCancel)
   return (
-    <div
-      className="dialog-overlay"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onCancel()
-      }}
-    >
+    <DialogOverlay onDismiss={onCancel}>
       <div
         className="dialog"
         role="dialog"
@@ -278,7 +261,7 @@ export function DeleteElementDialog({
           </button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
@@ -322,18 +305,7 @@ export function NestingDialog({ nesting, onDone }: NestingDialogProps) {
   const single = nesting.ask.length === 1 ? nesting.ask[0] : undefined
   const parent = named(nesting.element)
   return (
-    <div
-      className="dialog-overlay"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target !== event.currentTarget) return
-        // The press's own default would focus what is under it once the
-        // overlay is gone: nothing, so `<body>`, after the answer has put focus
-        // on the canvas or the new element's name (#156 review).
-        event.preventDefault()
-        none()
-      }}
-    >
+    <DialogOverlay onDismiss={none}>
       <div
         className="dialog connect-menu"
         role="dialog"
@@ -415,6 +387,6 @@ export function NestingDialog({ nesting, onDone }: NestingDialogProps) {
           )}
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }

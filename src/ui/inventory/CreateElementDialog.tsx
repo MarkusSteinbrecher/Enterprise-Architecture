@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ELEMENT_TYPE_LIST, type ElementType } from '@/model'
+import { DialogOverlay } from '@/ui/common/DialogOverlay'
+import { useFocusTrap } from '@/ui/common/use-focus-trap'
 
 /**
  * The minimal create dialog behind `+ Element`: a type and a name.
@@ -20,7 +22,12 @@ export function CreateElementDialog({ onCancel, onCreate }: CreateElementDialogP
   const [type, setType] = useState<ElementType>('ApplicationComponent')
   const [name, setName] = useState('')
   const nameRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLFormElement>(null)
 
+  // `aria-modal` promises that focus stays in the dialog and goes back to
+  // `+ Element` on close (#157). The trap goes first, so the opener it records
+  // is that button and not the name field the next effect focuses.
+  useFocusTrap(dialogRef)
   useEffect(() => {
     nameRef.current?.focus()
   }, [])
@@ -40,14 +47,9 @@ export function CreateElementDialog({ onCancel, onCreate }: CreateElementDialogP
   }
 
   return (
-    <div
-      className="dialog-overlay"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onCancel()
-      }}
-    >
+    <DialogOverlay onDismiss={onCancel}>
       <form
+        ref={dialogRef}
         className="dialog"
         onSubmit={submit}
         role="dialog"
@@ -91,6 +93,6 @@ export function CreateElementDialog({ onCancel, onCreate }: CreateElementDialogP
           </button>
         </div>
       </form>
-    </div>
+    </DialogOverlay>
   )
 }
