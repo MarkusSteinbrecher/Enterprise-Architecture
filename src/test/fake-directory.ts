@@ -12,8 +12,12 @@ export class FakeDirectoryHandle {
   /** What `requestPermission` answers; `undefined` keeps `permission`. */
   answer: 'granted' | 'denied' | undefined = 'granted'
   requests = 0
-  /** Make the next `close()` reject, as the sync client holding a file does on Windows. */
-  rejectNextClose = false
+  /**
+   * Make the next `close()` of this file reject, as the sync client holding a
+   * file does on Windows. Named, so a heartbeat writing the lock in between
+   * does not take the failure meant for the model.
+   */
+  rejectNextClose: string | undefined = undefined
 
   constructor(name: string, files: Record<string, string> = {}) {
     this.name = name
@@ -61,8 +65,8 @@ export class FakeDirectoryHandle {
             pending = data.slice()
           },
           close: async () => {
-            if (this.rejectNextClose) {
-              this.rejectNextClose = false
+            if (this.rejectNextClose === name) {
+              this.rejectNextClose = undefined
               throw new DOMException('The file is in use', 'NoModificationAllowedError')
             }
             if (pending) this.files.set(name, pending)

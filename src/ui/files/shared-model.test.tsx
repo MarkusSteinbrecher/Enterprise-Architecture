@@ -211,7 +211,7 @@ describe('saving (criteria 6, 7, 8)', () => {
   it('marks nothing saved when close() rejects', async () => {
     const user = await openModel()
     await addElement(user, 'Fraud Detection')
-    dir.rejectNextClose = true
+    dir.rejectNextClose = MODEL
     await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
     await waitFor(() => expect(screen.getByText(/Could not save Landscape.json/)).toBeVisible())
     expect(saveState()).toBe('LOCAL · 1 UNSAVED')

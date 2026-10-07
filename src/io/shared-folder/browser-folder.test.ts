@@ -37,7 +37,7 @@ describe('a folder over a directory handle (spec §4)', () => {
 
   it('passes on a close() that rejects, and leaves the file as it was', async () => {
     const dir = new FakeDirectoryHandle('F', { 'a.json': 'kept' })
-    dir.rejectNextClose = true
+    dir.rejectNextClose = 'a.json'
     await expect(browserFolder(dir.handle).write('a.json', encodeText('lost'))).rejects.toThrow(
       'in use',
     )
