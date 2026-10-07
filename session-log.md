@@ -1,5 +1,21 @@
 # Session Log
 
+## 2026-10-07 — #147 spec reviewed; ArchiMate 4 decided (ADR 0011); in-app ArchiMate guide (#149)
+
+**#147 (shared-folder collaboration).** The spec and ADR 0010 draft were reviewed and the fixes folded in, on `docs/shared-folder-collaboration`; that branch's own log entry has the details. The main change: a synced folder can't guarantee one editor, so conflict detection is what prevents silent loss. The issue body was updated to match. Still open: the sponsor's three questions, and ADR 0010 is still Proposed.
+
+**ArchiMate 4 (#148 → PR #150).** The Open Group published ArchiMate 4 in April 2026; nothing in the repo mentioned it. The sponsor chose to stay on 3.2 and to decide without the four research questions #148 listed. ADR 0011 records that, with three triggers for revisiting it: Archi supporting version 4, a user bringing a version 4 model, or a version 4 exchange schema becoming what tools write by default. The README now states the implemented version. Docs only.
+
+**ArchiMate guide (#149 → PR #151).** A `/guide` page inside the app.
+- **Generated reference:** framework grid, 61 element entries (code, notation symbol, description, example), 11 relationship entries, a "what can connect" lookup, viewpoints.
+- **Hand-written:** seven modelling patterns whose relationships are data, so a test holds each one to the validity matrix.
+- **Links in:** the left nav (new Help section), first run (the guide needs no model, so `/guide` skips first run), the fact sheet type label and the view palette. A deep link focuses its entry, also after a hard refresh.
+- **Tests:** 19 unit tests and 3 e2e journeys. The lookup is checked against `relationships.xml` read from disk, and the viewpoint lists against the viewpoint data. 11 guard mutations were all caught. 1228 unit tests and 25 e2e journeys pass.
+- **Found:** Archi allows Association between every pair of non-junction types, so the lookup's empty branch can't be reached from the UI and is tested directly. The 3.2 specification online now needs an Open Group sign-in.
+- **Deviation from criterion 1:** the app shell has no phone layout, since the nav and model tree fill a 390 px window. The guide reflows inside its own column instead, tested at 760 px. A shell phone layout would be its own issue.
+
+**State:** PRs #150 and #151 await `/review-pr`. #151's ADR 0011 link 404s until #150 merges. Sponsor questions on #147 are still open.
+
 ## 2026-10-06 (wrap-up) — #144 merged: views can be made from scratch
 
 **Merged:** #144 (#130) after its review fixes. #130 is closed, and #74 has it ticked.
