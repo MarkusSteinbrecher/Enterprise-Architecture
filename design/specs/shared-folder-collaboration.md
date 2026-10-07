@@ -81,7 +81,7 @@ New module, suggested: `src/io/shared-folder/` with `lock-file.ts`, `lock-manage
 ```
 
 - `token`: `crypto.randomUUID()` per acquisition. **Ownership is decided by token only**, because the same person may be on two machines or in two browser profiles.
-- `displayName`: asked once, stored in the app's preferences. It is what others see. There is no other identity. When a foreign lock carries the user's own display name, say so: "Locked by you (Markus) in another browser or on another machine." A forgotten tab on the office desktop is the common case.
+- `displayName`: asked in a one-field prompt the first time a folder is opened (the sponsor's choice; §14), stored in the app's preferences and editable there. It is what others see. There is no other identity. When a foreign lock carries the user's own display name, say so: "Locked by you (Markus) in another browser or on another machine." A forgotten tab on the office desktop is the common case.
 - `heartbeatSeq`: incremented on every heartbeat. Staleness is measured by how long **this** machine has seen it unchanged (§5.3), so clock skew between machines cannot make a live lock look stale.
 - An unparseable or unknown-version lock file is treated as **held by someone else**. It fails closed, shown as "locked, owner unknown", with manual takeover available. This is a guard that must be tested on unreadable input (CLAUDE.md).
 - **"Cannot read the lock" is not "the lock is foreign".** A read that throws (the sync client holding the file, a permission lapse) is a failed observation, not a result. Each step below says what a failed observation does.
@@ -110,7 +110,7 @@ On `visibilitychange` back to visible (after sleep), run the heartbeat at once r
 
 ### 5.3 Stale locks
 
-- While a reader watches a lock, it records the local time whenever `heartbeatSeq` changes. When it has been unchanged for `staleAfterMs` (default 15 minutes), the lock is **stale**.
+- While a reader watches a lock, it records the local time whenever `heartbeatSeq` changes. When it has been unchanged for `staleAfterMs` (default 30 minutes, the sponsor's choice; §14), the lock is **stale**.
 - The observation (token, `heartbeatSeq`, local time first seen at that value) is kept in IndexedDB per model, so a reload on the same machine continues the watch instead of restarting it.
 - A lock with no recorded observation cannot be judged stale until it has been watched for `staleAfterMs`. Show it as "held" in the meantime. An "Unlock" action with confirmation covers the urgent case.
 - Stale locks are offered for takeover ("Markus's lock looks abandoned: no sign of life for 17 minutes. Take over?"), never taken silently. Taking over runs the acquire procedure. The prompt says that an offline colleague may still be editing, and that their work would then come back as a conflict copy.
@@ -235,8 +235,12 @@ In the app's preferences, all with the defaults above: `displayName`, `settleMs`
 - `src/io/README.md`: a short section on shared folders, the lock protocol and its limits (§1.1).
 - `session-log.md` entry.
 
-## 14. Open questions for the sponsor
+## 14. Questions for the sponsor
 
-1. **Display name:** free text, or should the app suggest something? There is no directory to look people up in.
-2. **Default timings:** 10 s settle, 60 s heartbeat, 15 min stale. OneDrive normally syncs within seconds but can lag for minutes. Shorter means faster takeover; longer means fewer offline colleagues wrongly judged gone (§1.1, case 2), whose work then returns as a conflict copy. Since **Unlock** already covers the urgent case, a longer stale default (30 minutes) is worth considering.
-3. **Hosting:** the app is served from public GitHub Pages. Can the team's browsers reach it, or does the same static build need an internal host?
+Answered on 2026-10-07 (recorded on #147):
+
+1. **Display name:** free text, asked in a one-field prompt the first time a folder is opened, editable later in preferences. There is no directory to look people up in.
+2. **Default timings:** 10 s settle, 60 s heartbeat, **30 min stale**. Longer than the first draft's 15 minutes, so fewer offline colleagues are wrongly judged gone (§1.1, case 2) and have their work come back as a conflict copy. **Unlock** covers the urgent case.
+3. **Hosting:** still open. The app is served from public GitHub Pages. Can the team's browsers reach it, or does the same static build need an internal host? It does not block the build.
+
+Delivery is three stacked PRs: (1) the protocol in `src/io/shared-folder/`, React-free, with the sync-world fake; (2) folder access, persistence, listing, the Open folder UI and the Firefox/Safari message; (3) the wiring, the OPFS journey and the manual test script.

@@ -2,7 +2,7 @@
 adr: '0010'
 title: A shared synced folder is the first collaboration mode; one editor per model, enforced by a lock file
 date: 2026-10-07
-status: Proposed
+status: Accepted
 scope: project
 tags: [collaboration, files, sharepoint, onedrive, locking]
 ---

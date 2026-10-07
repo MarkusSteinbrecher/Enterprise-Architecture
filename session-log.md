@@ -1,5 +1,26 @@
 # Session Log
 
+## 2026-10-07 — #147 part 1: the shared-folder protocol
+
+**Sponsor's answers to spec §14** (recorded on #147 and in the spec):
+- ADR 0010 is accepted.
+- The display name is asked the first time a folder is opened.
+- The stale time is **30 min** (settle 10 s, heartbeat 60 s).
+- Delivery is three stacked PRs.
+- Hosting is still open.
+
+**Part 1 → PR (base `main`).** `src/io/shared-folder/`, React-free:
+- **Lock file:** its canonical JSON; unreadable counts as held.
+- **Lock manager:** acquire with the settle delay; heartbeat; self-fencing at half the stale time; staleness by local observation of the counter, which survives a reload through `memory.ts`; release only our own lock; unlock.
+- **Save guard:** lock check and fingerprint check; overwrite; save as copy.
+- **Session:** load, acquire (reloads if the model changed during the settle delay), the writer and reader ticks, `diverged`, and takeover, unlock and overwrite logged first. Each is not done when its log line can't be written.
+- **Names and logs:** conflict-copy detection; copy names safe for Windows and SharePoint; per-client audit logs.
+- **Settings:** a guard on the way in.
+- **Sync world** (`src/test/sync-world.ts`): per-client replicas with upload and download delay, OneDrive-style conflict copies, offline clients, per-file lag and fault injection. It has its own 8 tests.
+- **Tests:** 90 new across the module, with scenarios for criterion 4 below and above the settle delay and for all three cases of §1.1. 30 guards were broken one at a time, and each failed a test.
+
+**Open:** part 2 (folder handle + IndexedDB + Open folder + Firefox/Safari), then part 3 (UI wiring, OPFS journey, manual UAT script). The CLAUDE.md constraint line goes in part 2, where the app first writes into a granted folder. PRs #159 and #160 are still awaiting review.
+
 ## 2026-10-07 — /review-pr 156 (#131 nesting prompt)
 
 **Reviewed PR #156: request changes, 2 blocking items.** The port matches Archi 5.10's source, read from GitHub at `release_5.10.0`. All 5 acceptance criteria are met.
