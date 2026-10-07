@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { emptyWorkspace } from '@/model'
 import { exportExchangeXml, loadDemoWorkspace, toCanonicalJson } from '@/io'
 import { ModelStoreProvider } from '@/store'
+import { pressOutside } from '@/test/dialogs'
 import { renderApp } from '@/test/render'
 import { TakeoverScreen } from './TakeoverScreen'
 
@@ -164,6 +165,13 @@ describe('import dialog', () => {
     const { user } = await openDialog()
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog', { name: 'Import' })).not.toBeInTheDocument()
+  })
+
+  it('closes on a press outside, and gives focus back to Import (#157)', async () => {
+    const { user, dialog } = await openDialog()
+    await pressOutside(user, dialog)
+    expect(screen.queryByRole('dialog', { name: 'Import' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Import' })).toHaveFocus()
   })
 })
 
