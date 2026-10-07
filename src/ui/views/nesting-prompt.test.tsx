@@ -23,6 +23,9 @@ const HUB_PRESS = { x: 700, y: 520 }
 const model = (store: ModelStore) => toCanonicalJson(store.snapshot())
 
 const prompt = () => screen.getByRole('dialog', { name: 'Nested in Claims Engine' })
+/** A press on the overlay around the prompt, outside the prompt itself. */
+const pressOutside = (user: ReturnType<typeof setup>['user']) =>
+  user.pointer({ keys: '[MouseLeft]', target: prompt().parentElement! })
 const options = () =>
   within(within(prompt()).getByRole('region', { name: 'New relationship' })).getAllByRole('button')
 
@@ -95,24 +98,30 @@ describe('moving a shape into an element’s shape (#131)', () => {
     expect(model(store)).toBe(before)
   })
 
-  it.each(['None', 'Escape'] as const)('nests and makes nothing on %s', async (answer) => {
-    const { store, dispatch, user, nodeEl, surface, view } = setup()
-    const relationships = store.relationshipCount
-    const connections = view().connections.length
-    await drag(user, nodeEl('o-customer-hub'), HUB_PRESS, INSIDE_ENGINE)
-    // Present before absent: the question is open.
-    expect(prompt()).toBeInTheDocument()
-    if (answer === 'None') {
-      await user.click(within(prompt()).getByRole('button', { name: 'None' }))
-    } else await user.keyboard('{Escape}')
+  it.each(['None', 'Escape', 'a press outside'] as const)(
+    'nests and makes nothing on %s',
+    async (answer) => {
+      const { store, dispatch, user, nodeEl, surface, view } = setup()
+      const relationships = store.relationshipCount
+      const connections = view().connections.length
+      await drag(user, nodeEl('o-customer-hub'), HUB_PRESS, INSIDE_ENGINE)
+      // Present before absent: the question is open.
+      expect(prompt()).toBeInTheDocument()
+      if (answer === 'None') {
+        await user.click(within(prompt()).getByRole('button', { name: 'None' }))
+      } else if (answer === 'Escape') await user.keyboard('{Escape}')
+      else await pressOutside(user)
 
-    expect(dispatch).toHaveBeenCalledTimes(1)
-    expect(view().nodes.find((n) => n.id === 'o-customer-hub')!.parent).toBe('o-engine')
-    expect(store.relationshipCount).toBe(relationships)
-    expect(view().connections).toHaveLength(connections)
-    expect(screen.queryByRole('dialog')).toBeNull()
-    expect(surface).toHaveFocus()
-  })
+      expect(dispatch).toHaveBeenCalledTimes(1)
+      expect(view().nodes.find((n) => n.id === 'o-customer-hub')!.parent).toBe('o-engine')
+      expect(store.relationshipCount).toBe(relationships)
+      expect(view().connections).toHaveLength(connections)
+      expect(screen.queryByRole('dialog')).toBeNull()
+      // The canvas has the keyboard again, on a press too: its default would
+      // otherwise focus what is under it once the overlay is gone (#156 review).
+      expect(surface).toHaveFocus()
+    },
+  )
 
   it('applies no answer over a view that changed while the question was open', async () => {
     // An undo is the change a user can make meanwhile; the answer must not
@@ -136,20 +145,39 @@ describe('moving a shape into an element’s shape (#131)', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
-  it('asks nothing when the move is into a group, within its container, or out of one', async () => {
+  it('asks nothing when the move is into a group, or out of one', async () => {
     const { dispatch, user, nodeEl, view } = setup()
     // Into a group: (800, 840) is inside o-g-platform, between its nodes.
     await drag(user, nodeEl('o-zurich'), { x: 1250, y: 840 }, { x: 800, y: 840 })
     expect(view().nodes.find((n) => n.id === 'o-zurich')!.parent).toBe('o-g-platform')
-    // Within the engine: a function moved a little stays where it was nested.
-    await drag(user, nodeEl('o-rules'), { x: 260, y: 580 }, { x: 270, y: 570 })
-    expect(view().nodes.find((n) => n.id === 'o-rules')!.parent).toBe('o-engine')
     // Out of the engine, to the empty canvas right of the landscape.
     await drag(user, nodeEl('o-calc'), { x: 460, y: 580 }, { x: 1600, y: 100 })
     expect(view().nodes.find((n) => n.id === 'o-calc')!.parent).toBeUndefined()
 
     // Present before absent: each move committed.
-    expect(dispatch).toHaveBeenCalledTimes(3)
+    expect(dispatch).toHaveBeenCalledTimes(2)
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('asks nothing when a shape moves within the element’s shape it is nested in', async () => {
+    // A shape the question was asked about and answered "none": nothing runs
+    // between the two, so only the move staying within its container keeps the
+    // question shut. (A function the engine is assigned to would keep it shut
+    // through the existing relationship, and could not tell, #156 review.)
+    const { dispatch, user, nodeEl, view } = setup()
+    await drag(user, nodeEl('o-customer-hub'), HUB_PRESS, INSIDE_ENGINE)
+    await user.click(within(prompt()).getByRole('button', { name: 'None' }))
+    const hub = () => view().nodes.find((n) => n.id === 'o-customer-hub')!
+    expect(hub().parent).toBe('o-engine')
+    const at = absoluteBounds(view(), 'o-customer-hub')!
+    const press = { x: at.x + 10, y: at.y + 10 }
+
+    await drag(user, nodeEl('o-customer-hub'), press, { x: press.x + 10, y: press.y + 5 })
+
+    // Present before absent: the move committed, still in the engine.
+    expect(dispatch).toHaveBeenCalledTimes(2)
+    expect(hub().parent).toBe('o-engine')
+    expect(absoluteBounds(view(), 'o-customer-hub')).toMatchObject({ x: at.x + 10, y: at.y + 5 })
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
@@ -245,6 +273,31 @@ describe('placing a new element in an element’s shape (#131)', () => {
     await user.keyboard('{Escape}')
     act(() => void store.undo())
     expect(model(store)).toBe(before)
+  })
+
+  it('opens the name for typing after a press outside, which answers none', async () => {
+    // The press's default would blur the name the answer opens, which commits
+    // it as it is and closes it before anything is typed (#156 review).
+    const { store, dispatch, user, surface, view } = setup()
+    const relationships = store.relationshipCount
+    await user.click(
+      within(screen.getByRole('region', { name: 'Palette' })).getByRole('button', {
+        name: 'Application Interface',
+      }),
+    )
+    await click(user, surface, INSIDE_ENGINE)
+    expect(prompt()).toBeInTheDocument()
+
+    await pressOutside(user)
+
+    expect(dispatch).toHaveBeenCalledTimes(1)
+    const node = view().nodes[view().nodes.length - 1] as ElementNode
+    expect(node.parent).toBe('o-engine')
+    expect(store.relationshipCount).toBe(relationships)
+    const name = screen.getByRole('textbox', { name: /^(Element|Group) name$/ })
+    expect(name).toHaveFocus()
+    await user.keyboard('Claims API{Enter}')
+    expect(store.element(node.element)?.name).toBe('Claims API')
   })
 })
 

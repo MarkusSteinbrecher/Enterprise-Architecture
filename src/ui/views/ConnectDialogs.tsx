@@ -326,7 +326,12 @@ export function NestingDialog({ nesting, onDone }: NestingDialogProps) {
       className="dialog-overlay"
       role="presentation"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) none()
+        if (event.target !== event.currentTarget) return
+        // The press's own default would focus what is under it once the
+        // overlay is gone: nothing, so `<body>`, after the answer has put focus
+        // on the canvas or the new element's name (#156 review).
+        event.preventDefault()
+        none()
       }}
     >
       <div
