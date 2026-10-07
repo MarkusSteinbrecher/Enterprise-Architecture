@@ -10,6 +10,7 @@ import {
   type SaveFileHandle,
 } from '@/io'
 import { useModelStoreContext } from '@/store'
+import { isModalOpen } from '@/ui/palette/typing-target'
 import { FileWorkspaceContext, type FileWorkspaceContextValue } from './context'
 
 /**
@@ -94,12 +95,14 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
     setImporting(false)
   }, [store])
 
-  // ⌘S / Ctrl+S saves, as it does in every other tool that owns a file.
+  // ⌘S / Ctrl+S saves, as it does in every other tool that owns a file. Not
+  // under a modal, as no global shortcut acts under one (#158): the dialog is
+  // what the keys are for. The browser's own Save Page stays suppressed.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
         event.preventDefault()
-        if (role === 'writer') void save('json')
+        if (role === 'writer' && !isModalOpen()) void save('json')
       }
     }
     window.addEventListener('keydown', onKeyDown)

@@ -64,7 +64,12 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
 
       if ((event.metaKey || event.ctrlKey) && key === 'k') {
         event.preventDefault()
-        setOpen(true)
+        // Not over another modal (#158): an action run from the palette would
+        // act behind the dialog (placing an element dropped the nesting the
+        // prompt was asking about), and the Escape that closes the palette
+        // reaches the dialog too, and answers it. Open, the palette is itself
+        // the modal, so this changes nothing there.
+        if (!isModalOpen()) setOpen(true)
         return
       }
       if (event.key === 'Escape') {
