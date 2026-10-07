@@ -11,13 +11,17 @@ tags: [modelling, archimate, versioning, archi]
 
 ## Context
 
-Archipelago is ArchiMate 3.2-native (ADR 0001). The Open Group published the ArchiMate 4 Specification in April 2026, the first major revision in a decade (#148). By The Open Group's announcement, version 4:
+Archipelago is ArchiMate 3.2-native (ADR 0001). The Open Group published the ArchiMate 4 Specification in April 2026, the first major revision in a decade (#148). The specification's publication page lists the main changes from 3.2. Version 4:
 
-- has about 30% fewer concepts (from 60 to 42);
-- merges the behaviour concepts that were split across the Business, Application and Technology layers into one set in a Common Domain;
-- replaces layers with domains;
-- generalises Role and Collaboration, and removes several specialised concepts;
+- removes business interaction, application interaction, technology interaction, constraint, contract, gap and representation;
+- merges the behaviour elements across layers into a single service, process, function and event, which also replaces implementation event;
+- merges the business, application and technology collaborations into one collaboration, and replaces business role with a generic role;
+- replaces the term layer with domain, and describes the generic elements in a new Common Domain chapter;
 - adds multiplicity to relationships.
+
+By our count against that list, the 60 element types of 3.2 (Junction aside, as `src/model/element-types.ts` lists them) become 42, about 30% fewer: seven are removed, the merged services, processes, functions and events lose nine, and the merged collaborations lose two. The Open Group does not publish that figure.
+
+The Open Group's announcement describes version 4 as developed "with strong user-level compatibility, enabling practitioners to transition smoothly from previous versions". The change list above is what a 3.2→4 migration in Archipelago would have to answer to.
 
 Almost everything in `src/model` is keyed to the 3.2 structure: the element catalogue with its layers, aspects, codes and colour groups; the relationship matrix; the viewpoints. So are the exchange reader and writer, the fixtures that Archi re-saves, the ArchiSurance demo and the layer ramp in the report legend. Moving to 4 would also need a 3.2→4 migration. Where concepts merge or disappear, that migration loses information, and every such element would have to surface as an `ImportProblem` (CLAUDE.md).
 
@@ -48,4 +52,4 @@ The four facts #148 lists (Archi's support for version 4, a version 4 exchange s
 
 ## References
 
-#148; #149; ADR 0001, ADR 0004, ADR 0007, ADR 0009. The Open Group, [ArchiMate® 4 Specification announcement](https://www.opengroup.org/The-Open-Group-Announces-ArchiMate%C2%AE-4-Specification).
+#148; #149; ADR 0001, ADR 0004, ADR 0007, ADR 0009. The Open Group, [ArchiMate® 4 Specification publication page](https://publications.opengroup.org/standards/archimate/c260) (the list of main changes from 3.2), and [announcement](https://www.opengroup.org/The-Open-Group-Announces-ArchiMate%C2%AE-4-Specification) (27 April 2026).
