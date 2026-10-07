@@ -587,6 +587,36 @@ export class ModelStore {
   }
 
   /**
+   * Change a view and add the elements and relationships it draws, as one
+   * command (#131): a nesting and the relationships it means are one step, and
+   * so is a new element placed in a container with them; one undo takes it all
+   * away. Elements and relationships are added first, so the view never draws
+   * what the model does not hold. A `change` that returns the view it was
+   * given, with nothing to add, records nothing, as `updateView`.
+   */
+  updateViewAdding(
+    id: string,
+    change: (view: View) => View,
+    adding: { elements?: readonly Element[]; relationships?: readonly Relationship[] },
+  ): View | undefined {
+    const before = this.#views.get(id)
+    if (!before) return undefined
+    if (import.meta.env.DEV) deepFreeze(before)
+    const after = change(before)
+    const commands: Command[] = [
+      ...(adding.elements ?? []).map((element): Command => ({ kind: 'add-element', element })),
+      ...(adding.relationships ?? []).map((relationship): Command => ({
+        kind: 'add-relationship',
+        relationship,
+      })),
+      ...(after === before ? [] : [{ kind: 'update-view', before, after } as const]),
+    ]
+    if (commands.length === 0) return before
+    this.dispatch(commands.length === 1 ? commands[0]! : { kind: 'batch', commands })
+    return after
+  }
+
+  /**
    * Create an element and draw it in a view, as one command (#130): placing a
    * new element from the palette is one step, and one undo takes both away.
    * The node must draw `element`; nothing is dispatched if the view is not there.

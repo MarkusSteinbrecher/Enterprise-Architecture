@@ -1,5 +1,35 @@
 # Session Log
 
+## 2026-10-07 (cont.) — #96 and #131: nesting asks what it means, and its connection is hidden
+
+**Housekeeping.** I deleted the merged branches (`docs/148-*`, `feat/149-*`, `feat/153-*`, `chore/session-log-129`), locally and on GitHub. Next in M2 was #131. It needed #96 first, so the two are stacked: **#155** (#96), then the #131 PR on top of it.
+
+**#96 → PR #155.** The canvas no longer draws a connection whose one end is the other's direct parent, as Archi does (`DiagramModelUtils.shouldBeHiddenConnection`, read at `release_5.10.0`).
+- The rule is `nestedConnections(view)` in `src/model/views.ts`. The drawing, the hit layer and the line selection all leave such connections out. The view keeps them, and every writer writes them.
+- **Correction to the issue:** Archi 5.10 hides *all eleven* relationship types by default (`HIDDEN_RELATIONS_TYPES`), not the five the issue named. Plain lines are always hidden.
+- The Claims `.archimate` landscape now holds 41 connections and draws 40. `archimate-import.spec.ts` asserts both numbers.
+
+**#131 (PR stacked on #155).** Dropping a shape into an element's shape asks which relationship the nesting means, as Archi's `CreateNestedArchimateConnectionsWithDialogCommand` does. This applies to all three paths in: a move, a palette placement and a model-tree drop.
+- **Rules read from Archi 5.10's source:**
+  - The offered types are Composition, Aggregation, Access, Assignment, Realization and Specialization (`NEW_RELATIONS_TYPES`), in that order, filtered by validity. Specialization is created from child to parent.
+  - No prompt if a relationship of an offered type already runs from parent to child, or a Specialization from child to parent. Junction children are never asked about.
+  - "None" or Escape still nests, and creates nothing.
+  - A chosen relationship also gets a connection, which #96 hides. Relationships that already exist between parent and child get a connection in any direction where the view draws none of them yet (`createNewConnectionCommands`).
+  - Several shapes moved in together get one row each, defaulting to the first type, as in `NewNestedRelationsDialog`.
+- **Code:**
+  - `src/ui/views/nesting.ts` (pure).
+  - `NestingDialog` in `ConnectDialogs.tsx`.
+  - `ModelStore.updateViewAdding`: elements, relationships and a view change as one command.
+  - `ViewScreen` keeps the dropped shapes visible while the prompt is open. A new palette element is drawn from a pending lookup, and is only added to the model when the answer commits.
+- **Tests:**
+  - The offered types are checked against Archi's `relationships.xml` read from disk, for every pair of element types.
+  - 14 guards were broken one at a time; 13 failed a test. The 14th showed that `release()` after a move's answer was redundant, because the focus trap already returns focus to the canvas, so I removed it. The tree drop keeps its `release()`, and its test proves it is needed.
+  - A new e2e journey, `view-nesting.spec.ts`.
+- **Archi oracle:** `editedClaims()` now nests Policy Host in Claims Engine (Aggregation) and places a new System Software in the Kubernetes Cluster (Composition). Archi 5.10 re-saved the file, and its save holds both relationships, both connections and both nestings. No unexplained difference.
+- **Slip, caught:** my first break-probe script ran under zsh, which doesn't split `$FILES` into words. So no backups were made and the probes piled up. I reversed all 12 mutations by hand, re-ran every probe under bash, and reviewed the full diff.
+
+**State:** #155 (#96), then the #131 PR on top of it, both await `/review-pr`. After they merge, tick #131 on #74. Not in scope: Archi's tree drop also draws the dropped element's other relationships, which is #145.
+
 ## 2026-10-07 (cont.) — #150 reviewed and merged; guide sources (#153)
 
 **#150 reviewed** (`/review-pr 150`), posted as a comment with "changes requested". The one blocking finding: ADR 0011 credited The Open Group's announcement with five facts about ArchiMate 4 that it does not state. They come from the specification's publication page (c260), and "60 to 42" is in neither. The sponsor merged #150 before the fix landed, so the fix followed as **#152**: c260 is now cited, and "60 to 42" is shown as our own count against `element-types.ts`.

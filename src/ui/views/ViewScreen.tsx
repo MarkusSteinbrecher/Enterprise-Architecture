@@ -7,6 +7,7 @@ import {
   removeNodes,
   typeLabel,
   type Bounds,
+  type Element,
   type ElementNode,
   type Point,
   type RelationshipType,
@@ -49,7 +50,19 @@ import {
   type Handle,
 } from './edit'
 import { connectChoice, nodeAt } from './connect'
-import { ConnectMenu, DeleteElementDialog, DeleteRelationshipDialog } from './ConnectDialogs'
+import {
+  ConnectMenu,
+  DeleteElementDialog,
+  DeleteRelationshipDialog,
+  NestingDialog,
+} from './ConnectDialogs'
+import {
+  nestingEdit,
+  nestingFor,
+  withNewElement,
+  type Nesting,
+  type NestingChoices,
+} from './nesting'
 import {
   ELEMENT_DRAG_TYPE,
   newDrawingNode,
@@ -143,6 +156,17 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
 
   /** The view mid-gesture, drawn instead of the stored one until the gesture ends. */
   const [preview, setPreview] = useState<View | null>(null)
+  /**
+   * A nesting waiting on its answer (#131): what to ask, and how the answer
+   * commits. Meanwhile `preview` draws the shapes where they were dropped, and
+   * `placing` is the palette's new element, which the model holds only once
+   * the answer commits it.
+   */
+  const [nesting, setNesting] = useState<{
+    ask: Nesting
+    commit: (choices: NestingChoices) => void
+  } | null>(null)
+  const [placing, setPlacing] = useState<Element | null>(null)
   const shown = preview ?? view
   const bounds = useMemo(() => absoluteIndex(shown), [shown])
   const children = useMemo(() => childrenIndex(shown), [shown])
@@ -150,7 +174,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const drawing = useMemo(() => drawingBounds(shown, bounds), [shown, bounds])
   const lookups = useMemo<DrawingLookups>(
     () => ({
-      element: (elementId) => store.element(elementId),
+      element: (elementId) => (placing?.id === elementId ? placing : store.element(elementId)),
       relationship: (relationshipId) => store.relationship(relationshipId),
       viewName: (viewId) => store.view(viewId)?.name,
     }),
@@ -159,7 +183,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     // would keep the old name. Each node still redraws only when the element it
     // draws is a new object (`DrawnNode`), so this costs one walk of the drawing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [store, store.version],
+    [store, store.version, placing],
   )
 
   const canvas = useRef<HTMLDivElement>(null)
@@ -596,6 +620,51 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   }
 
   /**
+   * Commit `after`, which is `base` with `children` newly nested in `parent`,
+   * as one command with what the nesting means (#131). Where Archi would ask,
+   * the shapes stay drawn where they were dropped and the prompt opens; its
+   * answer commits, and "none" commits the nesting alone. `adding` is a new
+   * element the command makes with them, the palette's. `done` runs once the
+   * command is made. Closing the prompt hands focus back to what opened it,
+   * the canvas for a move; `done` says where it goes when that is wrong.
+   */
+  const nest = (
+    base: View,
+    after: View,
+    parent: string | undefined,
+    children: readonly string[],
+    done: () => void,
+    adding?: Element,
+  ) => {
+    const model = adding ? withNewElement(store, adding) : store
+    const commit = (choices: NestingChoices) => {
+      setNesting(null)
+      setPreview(null)
+      setPlacing(null)
+      // The prompt is modal, so nothing else changes the view meanwhile; if
+      // something did, the answer is not applied over it.
+      if (store.view(view.id) !== base) return
+      const edit =
+        parent === undefined
+          ? { view: after, relationships: [] }
+          : nestingEdit(model, after, parent, children, choices, newId)
+      const made = store.updateViewAdding(view.id, () => edit.view, {
+        ...(adding ? { elements: [adding] } : {}),
+        relationships: edit.relationships,
+      })
+      if (made) done()
+    }
+    const ask = parent === undefined ? undefined : nestingFor(model, after, parent, children)
+    if (!ask) {
+      commit(new Map())
+      return
+    }
+    setPreview(after)
+    setPlacing(adding ?? null)
+    setNesting({ ask, commit })
+  }
+
+  /**
    * Place what `chosen` makes with its top-left corner at `at` (view
    * coordinates), inside whatever container is there (#130). An element is
    * made and drawn as one command; a note or group is one node. The new shape
@@ -612,10 +681,23 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     if (chosen.kind === 'element') {
       const element = newElement(chosen)
       const node: ElementNode = { id: newId('node'), kind: 'element', element: element.id, ...spot }
-      if (!store.addElementInView(view.id, element, node)) return
-      choose([node.id], store.view(view.id))
-      if (chosen.type !== 'Junction') setEditing(node.id)
-      else release()
+      const base = store.view(view.id)
+      if (!base) return
+      // Placed in an element's shape, it asks what that means before its name
+      // opens for typing, as Archi does.
+      const after = { ...base, nodes: [...base.nodes, node] }
+      nest(
+        base,
+        after,
+        spot.parent,
+        [node.id],
+        () => {
+          choose([node.id], store.view(view.id))
+          if (chosen.type !== 'Junction') setEditing(node.id)
+          else release()
+        },
+        element,
+      )
       return
     }
     const node = newDrawingNode(chosen, spot)
@@ -661,9 +743,12 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     auto.current = false
     const spot = placement(view, at, defaultNodeSize('element', element.type), isJunction)
     const node: ElementNode = { id: newId('node'), kind: 'element', element: element.id, ...spot }
-    if (!store.addNode(view.id, node)) return
-    choose([node.id], store.view(view.id))
-    release()
+    const base = store.view(view.id)
+    if (!base) return
+    nest(base, { ...base, nodes: [...base.nodes, node] }, spot.parent, [node.id], () => {
+      choose([node.id], store.view(view.id))
+      release()
+    })
   }
 
   /**
@@ -753,7 +838,24 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     }
     // Built on the store's current view; one that changed nothing is the view
     // itself, which the store records as nothing.
-    store.updateView(view.id, (current) => outcome(current, g, client))
+    if (g.kind === 'resize') {
+      store.updateView(view.id, (current) => outcome(current, g, client))
+      return
+    }
+    const base = store.view(view.id)
+    if (!base) return
+    const after = outcome(base, g, client)
+    if (after === base) return
+    // Shapes moved into an element's shape ask what that means (#131); a move
+    // within the container they were in, or out of one, does not.
+    const into = dropFor(base, g, client)
+    const nested =
+      into === undefined
+        ? []
+        : [...topSelected(base, g.ids)].filter(
+            (id) => base.nodes.find((n) => n.id === id)?.parent !== into,
+          )
+    nest(base, after, into, nested, () => {})
   }
 
   /**
@@ -1343,6 +1445,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           />
         )}
       </div>
+      {nesting && <NestingDialog nesting={nesting.ask} onDone={nesting.commit} />}
       {choice && choice.kind !== 'line' && (
         <ConnectMenu
           choice={choice}

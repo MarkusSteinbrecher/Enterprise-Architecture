@@ -3,7 +3,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react'
 import { toCanonicalJson } from '@/io/canonical-json'
 import { ELEMENT_TYPES, absoluteBounds, type ElementNode, type ViewNode } from '@/model'
 import type { ModelStore } from '@/store'
-import { SCREEN, click, setup, type User } from '@/test/view-editor'
+import { SCREEN, click, drop, setup, type User } from '@/test/view-editor'
 import { ELEMENT_DRAG_TYPE } from './create'
 import { fitViewport } from './geometry'
 
@@ -282,33 +282,6 @@ describe('the palette and the viewpoint (#130)', () => {
 })
 
 /** A drop as the browser sends it, with data a tree row put on the drag. */
-function drop(target: Element, data: Record<string, string>, at: { x: number; y: number }) {
-  const transfer = {
-    types: Object.keys(data),
-    getData: (type: string) => data[type] ?? '',
-    dropEffect: 'none',
-  }
-  const over = new MouseEvent('dragover', {
-    bubbles: true,
-    cancelable: true,
-    clientX: at.x,
-    clientY: at.y,
-  })
-  Object.defineProperty(over, 'dataTransfer', { value: transfer })
-  const dropped = new MouseEvent('drop', {
-    bubbles: true,
-    cancelable: true,
-    clientX: at.x,
-    clientY: at.y,
-  })
-  Object.defineProperty(dropped, 'dataTransfer', { value: transfer })
-  let accepted = false
-  act(() => {
-    accepted = !target.dispatchEvent(over)
-    if (accepted) target.dispatchEvent(dropped)
-  })
-  return accepted
-}
 
 describe('drawing an element the model holds (#130)', () => {
   it('draws the same element, not a copy, in one command, even where it is drawn already', () => {
