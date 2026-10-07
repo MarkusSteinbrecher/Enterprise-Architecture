@@ -9,7 +9,7 @@ Reviewed #147's spec and ADR draft (branch `docs/shared-folder-collaboration`) a
 - **Gaps closed.** A failed lock read is not a foreign token. Self-fencing at `staleAfterMs / 2`. IndexedDB array keys `[folderKey, fileName]`. Copy names cleaned of characters Windows and SharePoint forbid, with clash handling (no exclusive create in the API; gap accepted). One audit log per client. Fingerprint the bytes written. Folder listing doesn't parse files (Files On-Demand). Stale-lock observations survive a reload.
 - Acceptance criteria are now 16, and criterion 4 is split by sync delay below and above `settleMs`.
 
-**Open:** the sponsor's three questions (spec §14; a 30-minute stale default is now suggested). ADR 0010 is still Proposed. The issue body's criteria summary still lists the old 14.
+**Open:** the sponsor's three questions (spec §14; a 30-minute stale default is now suggested). ADR 0010 is still Proposed. The issue body was updated to match the spec.
 
 ## 2026-10-06 (cont.) — #129 implemented: connecting shapes, and validity is now Archi's matrix
 
