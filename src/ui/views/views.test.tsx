@@ -416,6 +416,26 @@ describe('connections the nesting already shows (#96)', () => {
     expect(nestedConnections(v)).toEqual(new Set(['down', 'up', 'line']))
   })
 
+  it('leaves no room in the drawing for the bend-points of a line it hides', () => {
+    const far = { x: 500, y: 500 }
+    const shown = view(
+      [node('p', { width: 100, height: 100 }), node('s', { x: 200 })],
+      [{ ...rel('out', 'p', 's'), bendpoints: [far] }],
+    )
+    // Present first: a drawn line's bend-point stretches the drawing.
+    expect(drawingBounds(shown, absoluteIndex(shown))).toMatchObject({ width: 500, height: 500 })
+    const nested = view(
+      [node('p', { width: 100, height: 100 }), node('c', {}, 'p')],
+      [{ ...rel('in', 'p', 'c'), bendpoints: [far] }],
+    )
+    expect(drawingBounds(nested, absoluteIndex(nested))).toEqual({
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+    })
+  })
+
   it("keeps Archi's hidden connection in the view, writes it out, and does not draw it", () => {
     const workspace = importArchimate(claimsArchimate).workspace!
     const v = landscape(workspace)

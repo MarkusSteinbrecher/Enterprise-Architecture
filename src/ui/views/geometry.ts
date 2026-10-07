@@ -1,4 +1,11 @@
-import { type Bounds, type Point, type View, type ViewConnection, type ViewNode } from '@/model'
+import {
+  nestedConnections,
+  type Bounds,
+  type Point,
+  type View,
+  type ViewConnection,
+  type ViewNode,
+} from '@/model'
 
 /**
  * Geometry of a hand-drawn view (#79): where things are in view coordinates,
@@ -105,7 +112,12 @@ export function connectionRoute(
   return [chopbox(source, first), ...bends, chopbox(target, last)]
 }
 
-/** The rectangle that holds every node and every bend-point; `undefined` for an empty view. */
+/**
+ * The rectangle that holds every node and every bend-point of a drawn
+ * connection; `undefined` for an empty view. A connection the nesting hides
+ * (#96) is not drawn, so its bend-points take no room: fit, the mini-map and
+ * the export would otherwise leave space for a line nobody sees.
+ */
 export function drawingBounds(view: View, bounds: ReadonlyMap<string, Bounds>): Bounds | undefined {
   let minX = Infinity
   let minY = Infinity
@@ -121,7 +133,9 @@ export function drawingBounds(view: View, bounds: ReadonlyMap<string, Bounds>): 
     add(b.x, b.y)
     add(b.x + b.width, b.y + b.height)
   }
+  const hidden = nestedConnections(view)
   for (const connection of view.connections) {
+    if (hidden.has(connection.id)) continue
     for (const p of connection.bendpoints ?? []) add(p.x, p.y)
   }
   if (minX === Infinity) return undefined
