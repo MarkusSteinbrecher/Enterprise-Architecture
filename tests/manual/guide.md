@@ -21,7 +21,8 @@
    ArchiMate 4.
 3. Under **Start here**, click any type — expected: the page moves to that type's entry and
    it is highlighted. Its entry shows the two-letter code, the ArchiMate symbol, a short
-   description and an example.
+   description, an example, and a source line naming the specification's section on that
+   concept. Where the entry gives advice, it sits in a separate note marked **Archipelago**.
 4. Under **What can connect to what**, pick **Business Actor** → **Application Component**
    — expected: the first list includes **Serving**; the second list shows the other
    direction. Click the swap button — expected: the two selects and the two lists change
@@ -35,9 +36,13 @@
    guide opens at that entry. Reload — expected: still there.
 8. Switch the theme — expected: every part of the guide stays legible, including the
    framework grid, the type codes and the relationship lines.
-9. Make the window narrow until the guide column is under about 640px wide — expected: the
-   framework becomes one column per layer with an aspect label in each cell, the entries stack
-   in one column, and nothing in the guide scrolls sideways.
+9. Under **How we model**, follow the **Adapted from** link of any pattern — expected: the
+   archived **ArchiMate Cookbook** (version 1.0) opens, not the EDGY cookbook now at the
+   author's address. Find the figure the citation names — expected: it shows the pattern's
+   relationships, or close variants of them.
+10. Make the window narrow until the guide column is under about 640px wide — expected: the
+    framework becomes one column per layer with an aspect label in each cell, the entries stack
+    in one column, and nothing in the guide scrolls sideways.
 
 ## Acceptance
 
@@ -46,6 +51,7 @@
 - [ ] The implemented ArchiMate version is stated, with the reason
 - [ ] The connection lookup answers both directions and the swap works
 - [ ] Both themes are legible; the narrow layout does not scroll sideways
+- [ ] Every entry, pattern and convention names its source; advice is marked **Archipelago**
 - [ ] Judgement: the descriptions are plain, correct and not copied from the specification
 - [ ] Judgement: the patterns under **How we model** would help a new modeller start
 

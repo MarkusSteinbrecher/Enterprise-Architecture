@@ -1,5 +1,21 @@
 # Session Log
 
+## 2026-10-07 (cont.) — #150 reviewed and merged; guide sources (#153)
+
+**#150 reviewed** (`/review-pr 150`), posted as a comment with "changes requested". The one blocking finding: ADR 0011 credited The Open Group's announcement with five facts about ArchiMate 4 that it does not state. They come from the specification's publication page (c260), and "60 to 42" is in neither. The sponsor merged #150 before the fix landed, so the fix followed as **#152**: c260 is now cited, and "60 to 42" is shown as our own count against `element-types.ts`.
+- **Harvest:** `src/test/repo-links.test.ts` fails when a `blob/main` link in `src` or a relative README link points at a missing file, or when the ADR index and `design/decisions/` list different files. Its trigger: #151 shipped the guide with a link to ADR 0011 that returned 404 until #150 merged. The test now includes untracked files, so a link in a new file is checked before it is committed.
+- **ADR 0010** is now in the ADR index on `docs/shared-folder-collaboration` (`7930e02`), after merging `main`. #147 is an issue, and that branch still has no PR.
+
+**Archi's licence (question, no change):** MIT for Archi's own code (`License.txt`, and the identical `LICENSE.txt` in each plugin). The notice has to travel with copies, which `src/model/archi/NOTICE.md` does. Not covered: the Archi®, ArchiMate® and TOGAF® trademarks, and content in the repo under its own licence. Example: the Business Model Canvas in Archi's canvas help is CC BY-SA 3.0.
+
+**Guide sources (#153, PR pending).** Every element and relationship entry now cites the specification's section on that concept. Patterns say which Cookbook section and figure they are adapted from, and conventions link the ADR or UI spec section they follow. "Further reading" became "Sources and further reading".
+- **Definitions checked:** all 72 (61 element, 11 relationship) against Archi 5.10's per-concept hints, which follow the specification's definitions (the specification itself needs a sign-in). 21 entries changed. Among them: Contract ("legal weight", where the definition says "formal or informal"), Grouping ("does not make anything own anything", though Grouping may compose), Influence (from any element, not only motivation), Constraint, Technology Collaboration and Communication Network.
+- **Our advice split out.** 8 entries now carry a note marked "Archipelago", with a supporting source where one exists. 6 had advice inside the definition (Capability, Business Role, Business Function, Application Component, Path, Outcome). The other 2 are Composition and Aggregation: what separates them can't be checked without the specification.
+- **Cookbook:** `hosiaisluoma.fi/ArchiMate-Cookbook.pdf` now serves *Enterprise Design with EDGY Cookbook*. The guide links the Wayback copy of the ArchiMate Cookbook (v1.0, 2022-08-05). Each pattern was checked against its figures: technology and business-support are shown step for step; four other patterns are adapted (for example, the Cookbook links Assessment to Goal by association, where we use Influence); portfolio-data is ours (ADR 0001).
+- **Tests:** 8 new tests read the citations off the page. All 10 guard removals were caught, one at a time. CLAUDE.md gained a convention: a citation must be true of the text it labels.
+
+**State:** #152 and the #153 PR await review/merge. `docs/shared-folder-collaboration` also adds a 2026-10-07 entry at the top of this file, so expect a one-hunk conflict here; keep both entries.
+
 ## 2026-10-07 — #147 spec reviewed; ArchiMate 4 decided (ADR 0011); in-app ArchiMate guide (#149)
 
 **#147 (shared-folder collaboration).** The spec and ADR 0010 draft were reviewed and the fixes folded in, on `docs/shared-folder-collaboration`; that branch's own log entry has the details. The main change: a synced folder can't guarantee one editor, so conflict detection is what prevents silent loss. The issue body was updated to match. Still open: the sponsor's three questions, and ADR 0010 is still Proposed.

@@ -21,9 +21,10 @@ const RELATIVE_LINK = /\]\((?!https?:|#|\.\.\/)([^)#\s]+)\)/g
 const INDEX = 'design/decisions/README.md'
 const INDEX_LINK = /\]\(([0-9]{4}-[^)]+\.md)\)/g
 
-/** Every repository path linked from tracked `src` files and the README. */
+/** Every repository path linked from `src` files and the README. */
 function repoLinks(): { from: string; path: string }[] {
-  const sources = git('ls-files')
+  // Untracked files too, so a link in a file not yet committed is checked locally.
+  const sources = git('ls-files', '--cached', '--others', '--exclude-standard')
     .split('\n')
     .filter((f) => /^src\/.*\.(ts|tsx)$/.test(f) || f === 'README.md')
   return sources.flatMap((from) => {
@@ -40,7 +41,7 @@ describe('links into the repository resolve', () => {
     // A pattern that matched nothing would pass below, so name one of each kind.
     const links = repoLinks()
     expect(links).toContainEqual({
-      from: 'src/ui/guide/GuideScreen.tsx',
+      from: 'src/ui/guide/sources.ts',
       path: 'design/decisions/0011-stay-on-archimate-3-2.md',
     })
     expect(links).toContainEqual({ from: 'README.md', path: 'LICENSE' })

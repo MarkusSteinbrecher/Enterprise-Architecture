@@ -21,7 +21,8 @@ import { setup } from '@/test/view-editor'
 import { ARCHIMATE_VERSION, ELEMENT_GUIDE, RELATIONSHIP_GUIDE } from './content'
 import { connectionsBetween, LOOKUP_TYPES } from './connections'
 import { ConnectionList } from './GuideScreen'
-import { PATTERNS } from './patterns'
+import { CONVENTIONS, PATTERNS } from './patterns'
+import { citationParts, UI_SPEC, WORKS } from './sources'
 
 /**
  * The ArchiMate guide (#149). The reference half is generated from `src/model`;
@@ -234,6 +235,131 @@ describe('how we model', () => {
         pattern.steps.map((step) => JSON.stringify([step.source, step.type, step.target])),
       )
     }
+  })
+})
+
+describe('sources (#153)', () => {
+  /** The citation line of one entry, pattern or section, read off the page. */
+  function citeIn(container: HTMLElement): HTMLElement {
+    const cites = container.querySelectorAll<HTMLElement>(':scope [data-cite]')
+    expect(cites, 'one citation line').toHaveLength(1)
+    return cites[0]!
+  }
+
+  it('cites the specification on every element entry, at that concept', () => {
+    openGuide()
+    for (const { type, label } of ELEMENT_TYPES) {
+      const cite = citeIn(entry(type))
+      expect(cite, type).toHaveTextContent(`Source: ArchiMate 3.2 Specification, ${label}`)
+      expect(within(cite).getByRole('link')).toHaveAttribute('href', WORKS.spec.href)
+    }
+  })
+
+  it('cites the specification on every relationship entry, at that relationship', () => {
+    openGuide()
+    for (const { type, label } of RELATIONSHIP_TYPES) {
+      expect(citeIn(entry(`rel-${type}`)), type).toHaveTextContent(
+        `Source: ArchiMate 3.2 Specification, ${label} relationship`,
+      )
+    }
+  })
+
+  it("shows advice apart from the definition, labelled as Archipelago's", () => {
+    openGuide()
+    const guided = [
+      ...ELEMENT_TYPES.map(({ type }) => [type, ELEMENT_GUIDE[type].guidance] as const),
+      ...RELATIONSHIP_TYPES.map(
+        ({ type }) => [`rel-${type}`, RELATIONSHIP_GUIDE[type].guidance] as const,
+      ),
+    ].filter(([, guidance]) => guidance)
+    expect(guided.length).toBeGreaterThan(0)
+    for (const [id, guidance] of guided) {
+      const article = entry(id)
+      const note = article.querySelector<HTMLElement>('[data-guidance]')
+      expect(note, id).toHaveTextContent(`Archipelago: ${guidance!.text}`)
+      expect(article.querySelector('.guide__entry-summary'), id).not.toHaveTextContent(
+        guidance!.text,
+      )
+    }
+    // An entry without guidance shows none.
+    expect(entry('Contract').querySelector('[data-guidance]')).toBeNull()
+    // Guidance may point at what supports it.
+    expect(
+      within(
+        entry('ApplicationComponent').querySelector<HTMLElement>('[data-guidance]')!,
+      ).getByRole('link'),
+    ).toHaveAttribute('href', expect.stringContaining('0001-archimate-core-portfolio-overlay.md'))
+  })
+
+  it('names the source of every pattern, as "adapted from" a Cookbook figure', () => {
+    openGuide()
+    for (const pattern of PATTERNS) {
+      const block = document.querySelector<HTMLElement>(`[data-pattern="${pattern.id}"]`)!
+      const cite = block.querySelector<HTMLElement>(':scope > [data-cite]')!
+      const fromCookbook = pattern.sources.some((source) => source.work === 'cookbook')
+      expect(cite, pattern.id).toHaveTextContent(fromCookbook ? /^Adapted from:/ : /^Source:/)
+      for (const source of pattern.sources) {
+        const { label, at, href } = citationParts(source)
+        expect(cite, pattern.id).toHaveTextContent(at ? `${label}, ${at}` : label)
+        expect(
+          within(cite)
+            .getAllByRole('link')
+            .map((link) => link.getAttribute('href')),
+          pattern.id,
+        ).toContain(href)
+      }
+    }
+  })
+
+  it('links every convention to the decision it follows', () => {
+    openGuide()
+    for (const convention of CONVENTIONS) {
+      const block = document.getElementById(`convention-${convention.id}`)!
+      const { href } = citationParts(convention.source)
+      expect(within(citeIn(block)).getByRole('link'), convention.id).toHaveAttribute('href', href)
+    }
+  })
+
+  it('cites a UI spec section only by a heading the spec has', () => {
+    const headings = readFileSync(
+      join(process.cwd(), 'design', 'specs', 'open-ea-repository-ui-spec.md'),
+      'utf8',
+    )
+      .split('\n')
+      .filter((line) => line.startsWith('#'))
+      .map((line) => line.replace(/^#+ /, ''))
+    const cited = CONVENTIONS.flatMap(({ source }) =>
+      source.work === 'ui-spec' ? [source.at] : [],
+    )
+    expect(cited.length).toBeGreaterThan(0)
+    for (const at of cited) expect(headings, at).toContain(at.replace(/^§/, ''))
+    expect(UI_SPEC.href).toContain('design/specs/open-ea-repository-ui-spec.md')
+  })
+
+  it("cites Archi's files under the lookup and the viewpoints", () => {
+    openGuide()
+    const section = (id: string) => document.getElementById(id)!.closest<HTMLElement>('section')!
+    expect(citeIn(section('connections'))).toHaveTextContent(
+      'Source: Archi 5.10.0, model/relationships.xml; ADR 0009',
+    )
+    expect(citeIn(section('viewpoints'))).toHaveTextContent(
+      'Source: ArchiMate 3.2 Specification; Archi 5.10.0, model/viewpoints.xml',
+    )
+  })
+
+  it('links the archived ArchiMate Cookbook, not the address that now serves another book', () => {
+    openGuide()
+    const sources = screen.getByRole('list', { name: 'Sources this guide cites' })
+    expect(within(sources).getByRole('link', { name: WORKS.cookbook.title })).toHaveAttribute(
+      'href',
+      expect.stringMatching(
+        /^https:\/\/web\.archive\.org\/web\/\d+\/https:\/\/www\.hosiaisluoma\.fi\/ArchiMate-Cookbook\.pdf$/,
+      ),
+    )
+    const live = Array.from(document.querySelectorAll('a'), (a) => a.getAttribute('href') ?? '')
+      .filter((href) => href.includes('hosiaisluoma.fi'))
+      .filter((href) => !href.startsWith('https://web.archive.org/'))
+    expect(live).toEqual([])
   })
 })
 
