@@ -32,8 +32,14 @@ version and renames the other. The writer's tick, which re-fingerprints the
 model and scans for conflict copies every heartbeat, is what tells the user.
 The tests end each of those cases with a client told.
 
-## Still to come
+## In the browser
 
-Folder access over `FileSystemDirectoryHandle`, IndexedDB for `memory.ts`, and
-the Open folder screen are the second PR of #147. The writer and reader
-screens, the save dialog and the OPFS journey are the third.
+`browser-folder.ts` is the `Folder` over a `FileSystemDirectoryHandle`, which
+only Chromium browsers hand out; `listing.ts` lists a folder by name, keeping
+possible conflict copies apart rather than hiding them. What the browser keeps
+between visits (folder handles, lock observations, dismissed copies, base
+snapshots, settings, the client id) is `src/store/shared-folder-storage.ts`,
+in its own IndexedDB database. The screen is `src/ui/files/SharedFolderScreen.tsx`.
+
+Until part 3 of #147 lets a model be opened from the folder, the way in is
+switched off (`src/ui/files/shared-folder-switch.ts`).

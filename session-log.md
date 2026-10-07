@@ -1,5 +1,20 @@
 # Session Log
 
+## 2026-10-07 — #147 part 2: opening a shared folder
+
+**Part 2 → PR stacked on part 1 (#161).**
+- **Adapter:** `browserFolder` over a real `FileSystemDirectoryHandle`, with `pickDirectory` (a cancelled picker is nothing picked) and `folderPermission` (asks only from a click).
+- **Listing:** by name only. Possible conflict copies are listed *apart* under the model they may copy, not hidden. That deviates from spec §4: a name can't tell `Landscape-v2.json` from a OneDrive copy, and a hidden model never gets opened.
+- **Storage:** `src/store/shared-folder-storage.ts` is its own IndexedDB database. It holds folders found again by `isSameEntry`; per-model memory under array keys `[folderKey, fileName]` (tested with separators); guarded settings; and the client id.
+- **Screen:** `/folder` (`SharedFolderScreen`): Open folder…, the folders opened before (each reopens from a click, without the picker), the one-time name prompt, and the model list. Firefox and Safari get a note saying why.
+- **Entry points:** an "Open a shared folder…" button in the Import dialog, and a note on first run, which keeps its three actions.
+- **Hidden for now:** all of it is behind `localStorage['archipelago.sharedFolders'] = 'on'` until part 3, because a listed model can't be opened yet and part 2 alone would otherwise ship to Pages.
+- **CLAUDE.md:** the constraint now allows writes into a folder the user granted (ADR 0010).
+- **e2e journey 12** (`shared-folder.spec.ts`) uses real OPFS handles: listing, the handle stored in IndexedDB and reopened after a reload, and a picker that fails the journey if used twice. That last guard was proven by forcing a second use.
+- **Probes:** 14 guards broken one at a time; 13 were caught. The 14th turned out redundant, because `isModelFileName` already leaves locks and logs out, so it was removed.
+
+**Open:** part 3 (opening a model as writer or reader, the save dialog, the indicator leaving "saved", conflict notices, the switch removed, the OPFS lock/save journey, the manual UAT script). PRs #159, #160 and #161 are awaiting review.
+
 ## 2026-10-07 — #147 part 1: the shared-folder protocol
 
 **Sponsor's answers to spec §14** (recorded on #147 and in the spec):

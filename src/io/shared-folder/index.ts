@@ -1,4 +1,10 @@
 export { appendAudit, readAudit, type AuditEntry } from './audit-log'
+export {
+  browserFolder,
+  folderPermission,
+  pickDirectory,
+  supportsDirectoryAccess,
+} from './browser-folder'
 export { scanConflictCopies, type ConflictCopy } from './conflict-copies'
 export {
   conflictCopyKind,
@@ -13,7 +19,8 @@ export {
   stemOf,
 } from './file-names'
 export { fingerprint } from './fingerprint'
-export { decodeText, encodeText, type Folder } from './folder'
+export { listFolder, type FolderListing } from './listing'
+export { decodeText, encodeText, failure, type Folder } from './folder'
 export { parseLock, readLock, serialiseLock, type LockRead, type LockRecord } from './lock-file'
 export {
   LockManager,
