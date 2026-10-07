@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { summariseProblems, type ImportProblem } from '@/io'
+import { DialogOverlay } from '@/ui/common/DialogOverlay'
 import { useFocusTrap } from '@/ui/common/use-focus-trap'
 import { useFileWorkspace } from './context'
 
@@ -44,13 +45,7 @@ function ImportDialogBody() {
   const rest = problems.filter((p) => p.severity !== 'error')
 
   return (
-    <div
-      className="dialog-overlay"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) cancelImport()
-      }}
-    >
+    <DialogOverlay onDismiss={cancelImport}>
       <div
         ref={dialogRef}
         className="dialog dialog--wide"
@@ -136,7 +131,7 @@ function ImportDialogBody() {
           </button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

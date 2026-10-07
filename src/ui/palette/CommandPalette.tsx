@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { typeLabel, type Element } from '@/model'
 import { useModelSelector } from '@/store'
+import { DialogOverlay } from '@/ui/common/DialogOverlay'
 import { TypeCodeBadge } from '@/ui/common/TypeCodeBadge'
 import './palette.css'
 
@@ -147,13 +148,7 @@ export function CommandPalette({ onClose, onOpenElement, actions }: CommandPalet
   const hidden = Math.max(0, matchedElements - MAX_ELEMENT_HITS)
 
   return (
-    <div
-      className="palette-overlay"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
-    >
+    <DialogOverlay onDismiss={onClose} variant="palette">
       <div
         className="palette"
         role="dialog"
@@ -258,6 +253,6 @@ export function CommandPalette({ onClose, onOpenElement, actions }: CommandPalet
           </span>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }

@@ -70,3 +70,73 @@ describe('the locale-dependent ordering ban (ADR 0004)', () => {
     expect(await violates('const order = a < b ? -1 : a > b ? 1 : 0')).toBe(false)
   })
 })
+
+/** Does `npm run lint` reject this snippet, in this file, for a hand-made modal backdrop? */
+async function copiesOverlay(code: string, filePath = 'src/ui/overlay-rule-probe.tsx') {
+  const results = await eslint.lintText(code, { filePath })
+  return results.some((result) =>
+    result.messages.some(
+      (message) =>
+        message.ruleId === 'no-restricted-syntax' && message.message.includes('<DialogOverlay>'),
+    ),
+  )
+}
+
+describe('the shared modal backdrop (#157)', () => {
+  it('rejects a backdrop spelled by hand, as every modal used to copy it', async () => {
+    expect(
+      await copiesOverlay(
+        'export const M = () => <div className="dialog-overlay" role="presentation" />',
+      ),
+    ).toBe(true)
+    expect(await copiesOverlay('export const M = () => <div className="palette-overlay" />')).toBe(
+      true,
+    )
+  })
+
+  it('rejects the class spelled where a selector on className would not look', async () => {
+    // In a template, beside another class.
+    expect(
+      await copiesOverlay(
+        'export const M = (x: string) => <div className={`dialog-overlay ${x}`} />',
+      ),
+    ).toBe(true)
+    // In a variable first, or in a call that builds the class list.
+    expect(
+      await copiesOverlay(
+        "const c = 'dialog-overlay'\nexport const M = () => <div className={c} />",
+      ),
+    ).toBe(true)
+    expect(
+      await copiesOverlay(
+        "export const M = () => <div className={['dialog-overlay'].join(' ')} />",
+      ),
+    ).toBe(true)
+  })
+
+  it('allows the component, and the one file that spells the classes', async () => {
+    expect(
+      await copiesOverlay(
+        "import { DialogOverlay } from '@/ui/common/DialogOverlay'\nexport const M = () => <DialogOverlay onDismiss={() => {}}>x</DialogOverlay>",
+      ),
+    ).toBe(false)
+    expect(
+      await copiesOverlay(
+        "export const M = () => <div className='dialog-overlay' />",
+        'src/ui/common/DialogOverlay.tsx',
+      ),
+    ).toBe(false)
+  })
+
+  it('still holds the locale rule in the file the backdrop rule exempts', async () => {
+    // The exemption restates `no-restricted-syntax` for that file, and a
+    // restated rule replaces the whole list, not just the backdrop's entries.
+    const results = await eslint.lintText(
+      'export const s = (p: string, q: string) => p.localeCompare(q)',
+      {
+        filePath: 'src/ui/common/DialogOverlay.tsx',
+      },
+    )
+    expect(results.some((r) => r.messages.some((m) => m.message.includes('ADR 0004')))).toBe(true)
+  })
+})

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { emptyWorkspace } from '@/model'
 import { loadDemoWorkspace } from '@/io'
+import { pressOutside } from '@/test/dialogs'
 import { renderApp } from '@/test/render'
 import { syntheticWorkspace } from '@/test/fixtures'
 import { VIRTUALISE_ABOVE } from './InventoryTable'
@@ -369,6 +370,32 @@ describe('creating an element', () => {
     expect(screen.getByRole('dialog', { name: 'New element' })).toBeInTheDocument()
     expect(screen.getByLabelText(/Name/)).toHaveValue('Fraud Detection')
     expect(screen.queryByRole('heading', { name: 'Dependency graph' })).not.toBeInTheDocument()
+  })
+
+  it('closes on a press outside, and gives focus back to + Element (#157)', async () => {
+    renderApp(demo())
+    const user = userEvent.setup()
+    const opener = screen.getByRole('button', { name: '+ Element' })
+    await user.click(opener)
+    const dialog = screen.getByRole('dialog', { name: 'New element' })
+    // `aria-modal` promises focus enters and stays; it starts on the name.
+    expect(screen.getByLabelText(/Name/)).toHaveFocus()
+    await pressOutside(user, dialog)
+    expect(screen.queryByRole('dialog', { name: 'New element' })).not.toBeInTheDocument()
+    expect(opener).toHaveFocus()
+  })
+
+  it('keeps focus inside the create dialog, and gives it back on Escape (#157)', async () => {
+    renderApp(demo())
+    const user = userEvent.setup()
+    const opener = screen.getByRole('button', { name: '+ Element' })
+    await user.click(opener)
+    const dialog = screen.getByRole('dialog', { name: 'New element' })
+    for (let i = 0; i < 8; i += 1) await user.tab()
+    expect(dialog.contains(document.activeElement)).toBe(true)
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'New element' })).not.toBeInTheDocument()
+    expect(opener).toHaveFocus()
   })
 
   it('will not create an unnamed element', async () => {

@@ -3,6 +3,7 @@ import { act, screen, within } from '@testing-library/react'
 import { toCanonicalJson } from '@/io/canonical-json'
 import { absoluteBounds, validateRelationshipBetween, type ElementNode } from '@/model'
 import type { ModelStore } from '@/store'
+import { pressOutside } from '@/test/dialogs'
 import { LANDSCAPE, click, drag, drawnAt, drop, setup } from '@/test/view-editor'
 import { ELEMENT_DRAG_TYPE } from './create'
 import { NESTING_TYPES } from './nesting'
@@ -23,9 +24,6 @@ const HUB_PRESS = { x: 700, y: 520 }
 const model = (store: ModelStore) => toCanonicalJson(store.snapshot())
 
 const prompt = () => screen.getByRole('dialog', { name: 'Nested in Claims Engine' })
-/** A press on the overlay around the prompt, outside the prompt itself. */
-const pressOutside = (user: ReturnType<typeof setup>['user']) =>
-  user.pointer({ keys: '[MouseLeft]', target: prompt().parentElement! })
 const options = () =>
   within(within(prompt()).getByRole('region', { name: 'New relationship' })).getAllByRole('button')
 
@@ -110,7 +108,7 @@ describe('moving a shape into an element’s shape (#131)', () => {
       if (answer === 'None') {
         await user.click(within(prompt()).getByRole('button', { name: 'None' }))
       } else if (answer === 'Escape') await user.keyboard('{Escape}')
-      else await pressOutside(user)
+      else await pressOutside(user, prompt())
 
       expect(dispatch).toHaveBeenCalledTimes(1)
       expect(view().nodes.find((n) => n.id === 'o-customer-hub')!.parent).toBe('o-engine')
@@ -288,7 +286,7 @@ describe('placing a new element in an element’s shape (#131)', () => {
     await click(user, surface, INSIDE_ENGINE)
     expect(prompt()).toBeInTheDocument()
 
-    await pressOutside(user)
+    await pressOutside(user, prompt())
 
     expect(dispatch).toHaveBeenCalledTimes(1)
     const node = view().nodes[view().nodes.length - 1] as ElementNode
