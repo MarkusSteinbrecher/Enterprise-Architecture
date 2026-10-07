@@ -88,6 +88,33 @@ export function withoutViewReference(view: View, viewId: string): View | undefin
 }
 
 /**
+ * The connections a view does not draw because nesting already shows them (#96).
+ *
+ * Archi hides a connection whose one end is the other's direct parent
+ * (`DiagramModelUtils.shouldBeHiddenConnection`, Archi 5.10.0), as long as "use
+ * nested connections" is on, which is its default: a relationship connection
+ * when its type is one of `HIDDEN_RELATIONS_TYPES`, which by default holds all
+ * eleven, and a plain line always. Archi also hides a connection attached to a
+ * hidden one; ours join only nodes, never another connection. So with Archi's
+ * defaults the rule comes down to direct containment, whatever the kind or the
+ * relationship type. A grandparent does not count.
+ *
+ * The connection stays in the view, and every writer writes it; only the
+ * drawing and the hit-testing leave it out.
+ */
+export function nestedConnections(view: View): Set<string> {
+  const parentOf = new Map(view.nodes.map((node) => [node.id, node.parent]))
+  const hidden = new Set<string>()
+  for (const connection of view.connections) {
+    const { source, target } = connection
+    if (parentOf.get(target) === source || parentOf.get(source) === target) {
+      hidden.add(connection.id)
+    }
+  }
+  return hidden
+}
+
+/**
  * A node's bounds in view coordinates, resolving the parent chain. A cycle or a
  * missing parent stops the walk rather than looping — the validator reports both.
  */

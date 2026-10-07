@@ -18,8 +18,9 @@ const FIXTURE = fileURLToPath(
 )
 const MODEL = { elements: 39, relationships: 48 } as const
 // One more connection than the exchange export, which leaves out the one Archi
-// hides inside its nesting (c-k8s-runtime).
-const LANDSCAPE = { nodes: 45, connections: 41 } as const
+// hides inside its nesting (c-k8s-runtime). The view keeps it; the canvas, like
+// Archi, does not draw it (#96).
+const LANDSCAPE = { nodes: 45, connections: 41, drawn: 40 } as const
 
 test('an Archi .archimate file imports, files its folders and draws its views', async ({
   page,
@@ -54,7 +55,9 @@ test('an Archi .archimate file imports, files its folders and draws its views', 
   await expect(page.getByRole('heading', { name: 'Claims landscape' })).toBeVisible()
   const canvas = page.getByTestId('view-canvas')
   await expect(canvas.locator('[data-node]')).toHaveCount(LANDSCAPE.nodes)
-  await expect(canvas.locator('[data-connection]')).toHaveCount(LANDSCAPE.connections)
+  await expect(page.getByText(`${LANDSCAPE.connections} connections`)).toBeVisible()
+  await expect(canvas.locator('[data-connection]')).toHaveCount(LANDSCAPE.drawn)
+  await expect(canvas.locator('[data-connection="c-k8s-runtime"]')).toHaveCount(0)
   await expect(page.locator('.view-screen').getByRole('alert')).toHaveCount(0)
 
   // Relative bounds, resolved: a shape nested two deep sits inside its parent.

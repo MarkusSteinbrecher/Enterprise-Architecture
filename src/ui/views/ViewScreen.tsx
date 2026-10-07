@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import {
   VIEWPOINTS,
   findViewpoint,
+  nestedConnections,
   removeNodes,
   typeLabel,
   type Bounds,
@@ -145,6 +146,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const shown = preview ?? view
   const bounds = useMemo(() => absoluteIndex(shown), [shown])
   const children = useMemo(() => childrenIndex(shown), [shown])
+  const shownHidden = useMemo(() => nestedConnections(shown), [shown])
   const drawing = useMemo(() => drawingBounds(shown, bounds), [shown, bounds])
   const lookups = useMemo<DrawingLookups>(
     () => ({
@@ -265,7 +267,10 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const present = useMemo(() => new Set(view.nodes.map((n) => n.id)), [view])
   const selected = selection.filter((id) => present.has(id))
   const single = selected.length === 1 ? selected[0]! : null
-  const selectedLine = line === null ? undefined : view.connections.find((c) => c.id === line)
+  // Nor can a line the nesting hides be selected: it is not drawn, as in Archi (#96).
+  const hiddenLines = useMemo(() => nestedConnections(view), [view])
+  const selectedLine =
+    line === null || hiddenLines.has(line) ? undefined : view.connections.find((c) => c.id === line)
 
   /**
    * The selection, with a single selected element mirrored into `?element=` so
@@ -1148,6 +1153,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
                 {/* Lines are thin; a wider, invisible stroke over each is what a press finds. */}
                 <g data-testid="line-hits">
                   {shown.connections.map((connection) => {
+                    if (shownHidden.has(connection.id)) return null
                     const points = route(connection)
                     return points ? (
                       <path
