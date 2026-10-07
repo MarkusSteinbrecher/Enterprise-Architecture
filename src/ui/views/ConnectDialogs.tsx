@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   relationshipTypeMeta,
   typeLabel,
@@ -9,12 +9,13 @@ import {
 } from '@/model'
 import { useFocusTrap } from '@/ui/common/use-focus-trap'
 import type { ConnectChoice } from './connect'
+import type { Nesting, NestingChoices, NestingOption } from './nesting'
 
 /**
- * The two dialogs of connecting (#129): the menu a connect gesture ends in, and
- * the confirmation before a relationship leaves the model. Both are modal, as
- * the fact sheet's relation picker is: focus enters, stays, and goes back to the
- * canvas, and Escape cancels.
+ * The dialogs of connecting (#129): the menu a connect gesture ends in, the
+ * confirmation before a relationship leaves the model, and the question a
+ * nesting asks (#131). All are modal, as the fact sheet's relation picker is:
+ * focus enters, stays, and goes back to the canvas, and Escape cancels.
  */
 
 function useEscape(onCancel: () => void) {
@@ -275,6 +276,143 @@ export function DeleteElementDialog({
           <button type="button" className="button button--primary" onClick={onConfirm}>
             Delete from model
           </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function named(element: Element): string {
+  return element.name || typeLabel(element.type)
+}
+
+/** One option, as the nesting prompt lists it: the type, and the relationship's two ends. */
+function OptionText({ option }: { option: NestingOption }) {
+  return (
+    <>
+      <TypeName type={option.type} />
+      <span className="connect-menu__note">
+        {named(option.source)} → {named(option.target)}
+      </span>
+    </>
+  )
+}
+
+export interface NestingDialogProps {
+  nesting: Nesting
+  /** Every child asked about, with its answer; `null` is none. */
+  onDone: (choices: NestingChoices) => void
+}
+
+/**
+ * Archi's "Nested Elements Relationship" (#131): which relationship nesting a
+ * shape in an element's shape means. One child is asked with a list, first
+ * option first in line, as Archi preselects it; several children are asked
+ * with a row each, every row set to its first option. "None", Escape or a
+ * press outside nests the shapes and makes nothing, as Archi's None does.
+ */
+export function NestingDialog({ nesting, onDone }: NestingDialogProps) {
+  const ref = useRef<HTMLDivElement>(null)
+  useFocusTrap(ref)
+  const none = () => onDone(new Map(nesting.ask.map((child) => [child.node, null])))
+  useEscape(none)
+  const [rows, setRows] = useState<ReadonlyMap<string, number>>(
+    () => new Map(nesting.ask.map((child) => [child.node, 0])),
+  )
+  const single = nesting.ask.length === 1 ? nesting.ask[0] : undefined
+  const parent = named(nesting.element)
+  return (
+    <div
+      className="dialog-overlay"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target !== event.currentTarget) return
+        // The press's own default would focus what is under it once the
+        // overlay is gone: nothing, so `<body>`, after the answer has put focus
+        // on the canvas or the new element's name (#156 review).
+        event.preventDefault()
+        none()
+      }}
+    >
+      <div
+        className="dialog connect-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Nested in ${parent}`}
+        ref={ref}
+      >
+        <div className="dialog__title section-label">Nested relationship</div>
+        {single ? (
+          <>
+            <p className="connect-menu__text">
+              “{named(single.element)}” is now inside “{parent}”. Choose the relationship this
+              nesting means, or none.
+            </p>
+            <section className="connect-menu__group" aria-label="New relationship">
+              {single.options.map((option) => (
+                <button
+                  key={option.type}
+                  type="button"
+                  className="connect-menu__item"
+                  onClick={() => onDone(new Map([[single.node, option]]))}
+                >
+                  <OptionText option={option} />
+                </button>
+              ))}
+            </section>
+          </>
+        ) : (
+          <>
+            <p className="connect-menu__text">
+              These are now inside “{parent}”. Choose the relationship each nesting means, or none.
+            </p>
+            <div className="connect-menu__group">
+              {nesting.ask.map((child) => (
+                <label key={child.node} className="dialog__field">
+                  <span className="dialog__label">{named(child.element)}</span>
+                  <select
+                    className="dialog__control"
+                    value={rows.get(child.node) ?? -1}
+                    onChange={(event) =>
+                      setRows((current) =>
+                        new Map(current).set(child.node, Number(event.target.value)),
+                      )
+                    }
+                  >
+                    <option value={-1}>(none)</option>
+                    {child.options.map((option, index) => (
+                      <option key={option.type} value={index}>
+                        {option.type}: {named(option.source)} → {named(option.target)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+            </div>
+          </>
+        )}
+        <div className="dialog__actions">
+          <button type="button" className="button" onClick={none}>
+            None
+          </button>
+          {!single && (
+            <button
+              type="button"
+              className="button button--primary"
+              onClick={() =>
+                onDone(
+                  new Map(
+                    nesting.ask.map((child) => [
+                      child.node,
+                      child.options[rows.get(child.node) ?? -1] ?? null,
+                    ]),
+                  ),
+                )
+              }
+            >
+              Create
+            </button>
+          )}
         </div>
       </div>
     </div>

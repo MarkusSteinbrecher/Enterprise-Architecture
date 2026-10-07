@@ -127,6 +127,9 @@
     <element identifier="j-intake" xsi:type="AndJunction">
       <name xml:lang="en"></name>
     </element>
+    <element identifier="ss-batch" xsi:type="SystemSoftware">
+      <name xml:lang="en">Claims Batch</name>
+    </element>
     <element identifier="as-intake" xsi:type="ApplicationService">
       <name xml:lang="en">Claim Intake</name>
     </element>
@@ -249,6 +252,10 @@
     </relationship>
     <relationship identifier="r-intake-valuate" source="j-intake" target="bp-valuate" xsi:type="Triggering">
     </relationship>
+    <relationship identifier="r-engine-host" source="ac-engine" target="ac-host" xsi:type="Aggregation">
+    </relationship>
+    <relationship identifier="r-k8s-batch" source="n-k8s" target="ss-batch" xsi:type="Composition">
+    </relationship>
     <relationship identifier="r-s-engine-intake" source="ac-engine" target="as-intake" xsi:type="Realization">
     </relationship>
     <relationship identifier="r-s-intake-valuate" source="as-intake" target="bp-valuate" xsi:type="Serving">
@@ -314,6 +321,7 @@
       <item identifierRef="ts-database" />
       <item identifierRef="cn-backbone" />
       <item identifierRef="eq-scanner" />
+      <item identifierRef="ss-batch" />
     </item>
     <item>
       <label xml:lang="en">Motivation</label>
@@ -391,6 +399,8 @@
       <item identifierRef="r-damage-intake" />
       <item identifierRef="r-intake-register" />
       <item identifierRef="r-intake-valuate" />
+      <item identifierRef="r-engine-host" />
+      <item identifierRef="r-k8s-batch" />
       <item identifierRef="r-s-engine-intake" />
       <item identifierRef="r-s-intake-valuate" />
       <item identifierRef="r-s-event-valuate" />
@@ -514,6 +524,8 @@ for claims under 500.</label>
             </node>
             <node identifier="o-do-claim" x="450" y="490" w="150" h="50" xsi:type="Element" elementRef="do-claim">
             </node>
+            <node identifier="o-host" x="240" y="490" w="150" h="55" xsi:type="Element" elementRef="ac-host">
+            </node>
           </node>
           <node identifier="o-customer-hub" x="660" y="500" w="150" h="55" xsi:type="Element" elementRef="ac-customer">
           </node>
@@ -521,8 +533,6 @@ for claims under 500.</label>
             <style>
               <fillColor r="224" g="224" b="224" a="63" />
             </style>
-          </node>
-          <node identifier="o-host" x="1030" y="500" w="150" h="55" xsi:type="Element" elementRef="ac-host">
           </node>
           <node identifier="o-do-customer" x="860" y="610" w="150" h="50" xsi:type="Element" elementRef="do-customer">
           </node>
@@ -539,6 +549,8 @@ for claims under 500.</label>
             <node identifier="o-runtime" x="220" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-runtime">
             </node>
             <node identifier="o-postgres" x="540" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-postgres">
+            </node>
+            <node identifier="o-batch" x="395" y="900" w="120" h="55" xsi:type="Element" elementRef="ss-batch">
             </node>
           </node>
           <node identifier="o-mainframe" x="860" y="830" w="300" h="150" xsi:type="Element" elementRef="n-mainframe">
@@ -697,6 +709,10 @@ for claims under 500.</label>
         <connection identifier="c-claim-bo" xsi:type="Relationship" relationshipRef="r-claim-bo" source="o-do-claim" target="o-claim-bo">
         </connection>
         <connection identifier="c-note-fraud" xsi:type="Line" source="o-note-edited" target="o-fraud">
+        </connection>
+        <connection identifier="c-engine-host" xsi:type="Relationship" relationshipRef="r-engine-host" source="o-engine" target="o-host">
+        </connection>
+        <connection identifier="c-k8s-batch" xsi:type="Relationship" relationshipRef="r-k8s-batch" source="o-k8s" target="o-batch">
         </connection>
       </view>
       <view identifier="v-scratch" xsi:type="Diagram" viewpoint="Business Process Cooperation">

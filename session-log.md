@@ -1,5 +1,49 @@
 # Session Log
 
+## 2026-10-07 — /review-pr 156 (#131 nesting prompt)
+
+**Reviewed PR #156: request changes, 2 blocking items.** The port matches Archi 5.10's source, read from GitHub at `release_5.10.0`. All 5 acceptance criteria are met.
+- **Blocking 1:** the "within its container" test can't fail. `o-rules` already has an Assignment from the engine, so deleting the within-container filter left 58 tests green, and moving a shape inside a container then re-asks every time.
+- **Blocking 2:** a press outside the prompt focuses `<body>`, because the overlay's mousedown doesn't call `preventDefault()`. On the palette path this blurs the name field the answer just opened. Verified in Chromium.
+- **Not blocking:** Ctrl+K opens the palette over the prompt (#158); undo labels; `addElementInView` duplicates `updateViewAdding`; an orphaned docblock.
+- **Harvest:** two sharpened CLAUDE.md lines (a587fc4, on this branch); #157 (shared overlay that keeps focus) and #158 (Ctrl+K modal guard), both labelled `harness`.
+- **Blocking items fixed in this same session (12d7fc4).** The overlay now calls `preventDefault()` on the press that closes it. New tests cover a press outside on the move path and on the palette path (where the name field stays focused), and a move within the container uses a shape nested with None. Removing either fix alone fails its test. 1275 tests, lint, typecheck, format and build all pass.
+- **Open:** retarget #156 to `main` before `feat/96-hide-nested-connections` is deleted, then merge; #157, #158.
+
+## 2026-10-07 (cont.) — #96 and #131: nesting asks what it means, and its connection is hidden
+
+**Housekeeping.** I deleted the merged branches (`docs/148-*`, `feat/149-*`, `feat/153-*`, `chore/session-log-129`), locally and on GitHub. Next in M2 was #131. It needed #96 first, so the two are stacked: **#155** (#96), then the #131 PR on top of it.
+
+**#96 → PR #155.** The canvas no longer draws a connection whose one end is the other's direct parent, as Archi does (`DiagramModelUtils.shouldBeHiddenConnection`, read at `release_5.10.0`).
+- The rule is `nestedConnections(view)` in `src/model/views.ts`. The drawing, the hit layer and the line selection all leave such connections out. The view keeps them, and every writer writes them.
+- **Correction to the issue:** Archi 5.10 hides *all eleven* relationship types by default (`HIDDEN_RELATIONS_TYPES`), not the five the issue named. Plain lines are always hidden.
+- The Claims `.archimate` landscape now holds 41 connections and draws 40. `archimate-import.spec.ts` asserts both numbers.
+
+**#131 (PR stacked on #155).** Dropping a shape into an element's shape asks which relationship the nesting means, as Archi's `CreateNestedArchimateConnectionsWithDialogCommand` does. This applies to all three paths in: a move, a palette placement and a model-tree drop.
+- **Rules read from Archi 5.10's source:**
+  - The offered types are Composition, Aggregation, Access, Assignment, Realization and Specialization (`NEW_RELATIONS_TYPES`), in that order, filtered by validity. Specialization is created from child to parent.
+  - No prompt if a relationship of an offered type already runs from parent to child, or a Specialization from child to parent. Junction children are never asked about.
+  - "None" or Escape still nests, and creates nothing.
+  - A chosen relationship also gets a connection, which #96 hides. Relationships that already exist between parent and child get a connection in any direction where the view draws none of them yet (`createNewConnectionCommands`).
+  - Several shapes moved in together get one row each, defaulting to the first type, as in `NewNestedRelationsDialog`.
+- **Code:**
+  - `src/ui/views/nesting.ts` (pure).
+  - `NestingDialog` in `ConnectDialogs.tsx`.
+  - `ModelStore.updateViewAdding`: elements, relationships and a view change as one command.
+  - `ViewScreen` keeps the dropped shapes visible while the prompt is open. A new palette element is drawn from a pending lookup, and is only added to the model when the answer commits.
+- **Tests:**
+  - The offered types are checked against Archi's `relationships.xml` read from disk, for every pair of element types.
+  - 14 guards were broken one at a time; 13 failed a test. The 14th showed that `release()` after a move's answer was redundant, because the focus trap already returns focus to the canvas, so I removed it. The tree drop keeps its `release()`, and its test proves it is needed.
+  - A new e2e journey, `view-nesting.spec.ts`.
+- **Archi oracle:** `editedClaims()` now nests Policy Host in Claims Engine (Aggregation) and places a new System Software in the Kubernetes Cluster (Composition). Archi 5.10 re-saved the file, and its save holds both relationships, both connections and both nestings. No unexplained difference.
+- **Slip, caught:** my first break-probe script ran under zsh, which doesn't split `$FILES` into words. So no backups were made and the probes piled up. I reversed all 12 mutations by hand, re-ran every probe under bash, and reviewed the full diff.
+
+**#155 reviewed** (`/review-pr 155`, same session, so the code-review pass ran as a fresh agent). Verdict **approve**. The one finding is fixed in `abf3594`: `drawingBounds` counted the bend-points of hidden connections, so fit, the mini-map and the export kept room for an invisible line. The fix is merged into `feat/131-nesting-prompt`. Harvested into the review skill: a rule about what is drawn applies to everything that measures the drawing.
+
+**HQ:** two lessons in `lessons/verification-and-debugging.md`: check a citation against the page as it reads today, and run probe loops from a bash script.
+
+**State:** #155 is approved and ready to merge. #156 (#131, stacked on it) awaits `/review-pr 156`. After both merge, tick #131 on #74. Not in scope: Archi's tree drop also draws the dropped element's other relationships, which is #145.
+
 ## 2026-10-07 (cont.) — #150 reviewed and merged; guide sources (#153)
 
 **#150 reviewed** (`/review-pr 150`), posted as a comment with "changes requested". The one blocking finding: ADR 0011 credited The Open Group's announcement with five facts about ArchiMate 4 that it does not state. They come from the specification's publication page (c260), and "60 to 42" is in neither. The sponsor merged #150 before the fix landed, so the fix followed as **#152**: c260 is now cited, and "60 to 42" is shown as our own count against `element-types.ts`.

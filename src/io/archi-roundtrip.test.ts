@@ -91,6 +91,11 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
         'c-intake-valuate extra',
         'c-claim-bo extra',
         'c-note-fraud extra',
+        // Nested (#131): a shape moved into an element's shape, a new one placed in one.
+        'o-host parent',
+        'c-engine-host extra',
+        'o-batch extra',
+        'c-k8s-batch extra',
       ]),
     )
     // o-k8s grew to the left, and its children stayed where they were drawn (#128).
@@ -145,6 +150,29 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
       ),
     }
     expect(invalid(mixed).map((f) => f.subjectId)).toContain('r-intake-valuate')
+  })
+
+  it('keeps what each nesting meant: the relationship chosen, its connection, and the nesting (#131)', () => {
+    const ends = (w: Workspace, id: string) => {
+      const r = w.relationships.find((x) => x.id === id)
+      return r && `${r.type} ${r.source} → ${r.target}`
+    }
+    // Present in ours first, so the comparison is not of two absences.
+    expect(ends(ours, 'r-engine-host')).toBe('Aggregation ac-engine → ac-host')
+    expect(ends(ours, 'r-k8s-batch')).toBe('Composition n-k8s → ss-batch')
+    for (const id of ['r-engine-host', 'r-k8s-batch'])
+      expect(ends(archi, id), id).toBe(ends(ours, id))
+    expect(archi.elements.find((e) => e.id === 'ss-batch')).toMatchObject({
+      type: 'SystemSoftware',
+      name: 'Claims Batch',
+    })
+    const saved = archi.views.find((v) => v.id === 'v-landscape')!
+    const node = (id: string) => saved.nodes.find((n) => n.id === id)
+    expect(node('o-host')?.parent).toBe('o-engine')
+    expect(node('o-batch')?.parent).toBe('o-k8s')
+    const drawing = (id: string) => saved.connections.find((c) => c.id === id)
+    expect(drawing('c-engine-host')).toMatchObject({ source: 'o-engine', target: 'o-host' })
+    expect(drawing('c-k8s-batch')).toMatchObject({ source: 'o-k8s', target: 'o-batch' })
   })
 
   it('names each difference Archi accounts for, and only those', () => {

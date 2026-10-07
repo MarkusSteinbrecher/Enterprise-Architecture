@@ -99,6 +99,35 @@ export async function drag(user: User, target: Element, from: Point, ...to: Poin
   ])
 }
 
+/** Drop `data` on `target` at `at`, as a drag from the model tree does; whether the target took it. */
+export function drop(target: Element, data: Record<string, string>, at: { x: number; y: number }) {
+  const transfer = {
+    types: Object.keys(data),
+    getData: (type: string) => data[type] ?? '',
+    dropEffect: 'none',
+  }
+  const over = new MouseEvent('dragover', {
+    bubbles: true,
+    cancelable: true,
+    clientX: at.x,
+    clientY: at.y,
+  })
+  Object.defineProperty(over, 'dataTransfer', { value: transfer })
+  const dropped = new MouseEvent('drop', {
+    bubbles: true,
+    cancelable: true,
+    clientX: at.x,
+    clientY: at.y,
+  })
+  Object.defineProperty(dropped, 'dataTransfer', { value: transfer })
+  let accepted = false
+  act(() => {
+    accepted = !target.dispatchEvent(over)
+    if (accepted) target.dispatchEvent(dropped)
+  })
+  return accepted
+}
+
 export async function click(user: User, target: Element, at: Point, keys?: string) {
   if (keys) await user.keyboard(`{${keys}>}`)
   await user.pointer([

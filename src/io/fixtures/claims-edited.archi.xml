@@ -115,6 +115,9 @@
     <element identifier="eq-scanner" xsi:type="Equipment">
       <name xml:lang="en">Mail Scanner</name>
     </element>
+    <element identifier="ss-batch" xsi:type="SystemSoftware">
+      <name xml:lang="en">Claims Batch</name>
+    </element>
     <element identifier="g-settle" xsi:type="Goal">
       <name xml:lang="en">Settle claims within five days</name>
     </element>
@@ -184,6 +187,8 @@
     <relationship identifier="r-damage-intake" source="be-damage" target="j-intake" xsi:type="Triggering" />
     <relationship identifier="r-intake-register" source="j-intake" target="bp-register" xsi:type="Triggering" />
     <relationship identifier="r-intake-valuate" source="j-intake" target="bp-valuate" xsi:type="Triggering" />
+    <relationship identifier="r-engine-host" source="ac-engine" target="ac-host" xsi:type="Aggregation" />
+    <relationship identifier="r-k8s-batch" source="n-k8s" target="ss-batch" xsi:type="Composition" />
     <relationship identifier="r-s-engine-intake" source="ac-engine" target="as-intake" xsi:type="Realization" />
     <relationship identifier="r-s-intake-valuate" source="as-intake" target="bp-valuate" xsi:type="Serving" />
     <relationship identifier="r-s-event-valuate" source="be-claim-in" target="bp-valuate" xsi:type="Triggering" />
@@ -257,6 +262,7 @@
       <item identifierRef="ts-database" />
       <item identifierRef="cn-backbone" />
       <item identifierRef="eq-scanner" />
+      <item identifierRef="ss-batch" />
     </item>
     <item>
       <label xml:lang="en">Motivation</label>
@@ -334,6 +340,8 @@
       <item identifierRef="r-damage-intake" />
       <item identifierRef="r-intake-register" />
       <item identifierRef="r-intake-valuate" />
+      <item identifierRef="r-engine-host" />
+      <item identifierRef="r-k8s-batch" />
       <item identifierRef="r-s-engine-intake" />
       <item identifierRef="r-s-intake-valuate" />
       <item identifierRef="r-s-event-valuate" />
@@ -597,6 +605,15 @@ for claims under 500.</label>
                 </font>
               </style>
             </node>
+            <node identifier="o-host" elementRef="ac-host" xsi:type="Element" x="240" y="490" w="150" h="55">
+              <style>
+                <fillColor r="181" g="255" b="255" a="100" />
+                <lineColor r="92" g="92" b="92" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
           </node>
           <node identifier="o-customer-hub" elementRef="ac-customer" xsi:type="Element" x="660" y="500" w="150" h="55">
             <style>
@@ -610,15 +627,6 @@ for claims under 500.</label>
           <node identifier="o-crm" elementRef="ac-crm" xsi:type="Element" x="860" y="500" w="150" h="55">
             <style>
               <fillColor r="224" g="224" b="224" a="63" />
-              <lineColor r="92" g="92" b="92" a="100" />
-              <font name="Lucida Grande" size="12">
-                <color r="0" g="0" b="0" />
-              </font>
-            </style>
-          </node>
-          <node identifier="o-host" elementRef="ac-host" xsi:type="Element" x="1030" y="500" w="150" h="55">
-            <style>
-              <fillColor r="181" g="255" b="255" a="100" />
               <lineColor r="92" g="92" b="92" a="100" />
               <font name="Lucida Grande" size="12">
                 <color r="0" g="0" b="0" />
@@ -689,6 +697,15 @@ for claims under 500.</label>
               </style>
             </node>
             <node identifier="o-postgres" elementRef="ss-postgres" xsi:type="Element" x="540" y="880" w="150" h="55">
+              <style>
+                <fillColor r="201" g="231" b="183" a="100" />
+                <lineColor r="92" g="92" b="92" a="100" />
+                <font name="Lucida Grande" size="12">
+                  <color r="0" g="0" b="0" />
+                </font>
+              </style>
+            </node>
+            <node identifier="o-batch" elementRef="ss-batch" xsi:type="Element" x="395" y="900" w="120" h="55">
               <style>
                 <fillColor r="201" g="231" b="183" a="100" />
                 <lineColor r="92" g="92" b="92" a="100" />
@@ -1007,6 +1024,14 @@ for claims under 500.</label>
             </font>
           </style>
         </connection>
+        <connection identifier="c-host-crm" relationshipRef="r-host-crm" xsi:type="Relationship" source="o-host" target="o-crm">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
         <connection identifier="c-cust-as" relationshipRef="r-cust-as" xsi:type="Relationship" source="o-customer-hub" target="o-as-customer">
           <style>
             <lineColor r="0" g="0" b="0" />
@@ -1041,14 +1066,6 @@ for claims under 500.</label>
           </style>
         </connection>
         <connection identifier="c-crm-req" relationshipRef="r-crm-req" xsi:type="Relationship" source="o-crm" target="o-req">
-          <style>
-            <lineColor r="0" g="0" b="0" />
-            <font name="Lucida Grande" size="12">
-              <color r="0" g="0" b="0" />
-            </font>
-          </style>
-        </connection>
-        <connection identifier="c-host-crm" relationshipRef="r-host-crm" xsi:type="Relationship" source="o-host" target="o-crm">
           <style>
             <lineColor r="0" g="0" b="0" />
             <font name="Lucida Grande" size="12">

@@ -7,6 +7,7 @@ import {
   type Element,
   type Point,
   type RelationshipType,
+  type View,
   type ViewNode,
   type Workspace,
 } from '@/model'
@@ -21,6 +22,7 @@ import {
   type Tool,
 } from '@/ui/views/create'
 import { moveSelection, resizeNode } from '@/ui/views/edit'
+import { nestingEdit, nestingFor, withNewElement } from '@/ui/views/nesting'
 
 /**
  * The claims landscape after an editing session (#127, #128, #129), and a view
@@ -188,6 +190,67 @@ export function editedClaims(): Workspace {
     source: 'o-note-edited',
     target: 'o-fraud',
   })
+
+  // Nesting (#131), through the prompt's own question: a shape moved into an
+  // element's shape, and a new element placed in one, each committed with the
+  // relationship chosen, and its connection, as one command.
+  const nestAnswering = (
+    after: View,
+    parent: string,
+    child: string,
+    type: RelationshipType,
+    ids: string[],
+    adding?: Element,
+  ) => {
+    const model = adding ? withNewElement(store, adding) : store
+    const option = nestingFor(model, after, parent, [child])?.ask[0]?.options.find(
+      (o) => o.type === type,
+    )
+    if (!option) throw new Error(`nesting ${child} in ${parent} does not offer ${type}`)
+    const edit = nestingEdit(model, after, parent, [child], new Map([[child, option]]), () => {
+      const next = ids.shift()
+      if (!next)
+        throw new Error(`nesting ${child} in ${parent} made more than it was given ids for`)
+      return next
+    })
+    store.updateViewAdding(view, () => edit.view, {
+      ...(adding ? { elements: [adding] } : {}),
+      relationships: edit.relationships,
+    })
+  }
+  // Policy Host moved into the engine, above its functions: aggregated by it.
+  const host = bounds('o-host')
+  nestAnswering(
+    moveSelection(store.view(view)!, new Set(['o-host']), 240 - host.x, 490 - host.y, {
+      into: 'o-engine',
+    }),
+    'o-engine',
+    'o-host',
+    'Aggregation',
+    ['r-engine-host', 'c-engine-host'],
+  )
+  // A new system software placed in the cluster from the palette: composed in it.
+  const batchTool = { kind: 'element', type: 'SystemSoftware' } as const
+  const batch = { ...newElement(batchTool), id: 'ss-batch', name: 'Claims Batch' }
+  const spot = placement(
+    store.view(view)!,
+    { x: 395, y: 900 },
+    toolSize(batchTool),
+    (id) => store.element(id)?.type === 'Junction',
+  )
+  if (spot.parent !== 'o-k8s') throw new Error('the batch spot is not inside the cluster')
+  const landscape = store.view(view)!
+  nestAnswering(
+    {
+      ...landscape,
+      nodes: [...landscape.nodes, { id: 'o-batch', kind: 'element', element: 'ss-batch', ...spot }],
+    },
+    'o-k8s',
+    'o-batch',
+    'Composition',
+    ['r-k8s-batch', 'c-k8s-batch'],
+    batch,
+  )
 
   scratchView(store)
   return store.snapshot()
