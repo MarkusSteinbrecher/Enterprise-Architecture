@@ -15,6 +15,25 @@
 
 **Open:** part 3 (opening a model as writer or reader, the save dialog, the indicator leaving "saved", conflict notices, the switch removed, the OPFS lock/save journey, the manual UAT script). PRs #159, #160 and #161 are awaiting review.
 
+## 2026-10-08 — /review-pr 160 and 161 (same session that wrote them)
+
+Both reviews are less independent, because the same session wrote the PRs; each generic pass ran as a fresh agent. The #161 agent died twice on network errors (ENOTFOUND), and the sponsor chose a third try, which completed. Its leftover worktrees were removed with the `node_modules` symlink unlinked first.
+
+**#160 (#158): request changes, 2 blocking.**
+- **Files, not bindings:** the tripwire classifies files, so a new unguarded chord in `PaletteProvider.tsx` passes. A probe kept all 12 tests green.
+- **Regex bypasses:** `globalThis.`, a variable holding `window`, `documentElement` and `onkeydown =` are all missed.
+- **Proposed fix:** one shared dispatcher that checks for an open modal, plus a registry-driven table test.
+- **Harvest:** CLAUDE.md, "guard the unit that can go wrong, not the file it lives in" (560e89f on #160).
+
+**#161 (#147 part 1): request changes, 3 blocking.**
+- **Fencing only on failure (criterion 5 not met):** fencing fires only when a heartbeat *fails*, so a laptop that slept wakes, succeeds once, and saves over a taken lock. `session.test.ts:182` asserts the deviation.
+- **Orphaned own lock:** fencing, a failed settle re-read, and a failed release read all forget the token while our lock is still there, which blocks everyone for 30 minutes.
+- **Untested error branches:** nine of them, two on the save-state path.
+- **Non-blocking:** stale judged across a sleep, takeover logged before it is attempted, a store error dropping a tick's result, same-profile log races, and the sync fake's losing delete.
+- **Harvest:** CLAUDE.md, "a deadline is checked on every attempt, not only on a failed one" (87cae69, cascaded to #162/#163), and #164 (a 100% branch-coverage gate for `src/io/shared-folder/**`).
+
+**Open:** fix #160 and #161, then review #162 and #163. The fixes to #161's lock manager change part 3's behaviour on wake, so #163 needs re-testing after them.
+
 ## 2026-10-07 — #147 part 1: the shared-folder protocol
 
 **Sponsor's answers to spec §14** (recorded on #147 and in the spec):
