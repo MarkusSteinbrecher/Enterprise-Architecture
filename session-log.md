@@ -1,5 +1,21 @@
 # Session Log
 
+## 2026-10-08 — Wrap-up: where the work stands
+
+**On `main`:** #156 (#131, the nesting prompt) and #159 (#157, one dialog backdrop that keeps focus, with the lint rule that enforces it).
+
+**Open PRs, all reviewed as "request changes"** (the details and fix plans are in the reviews and in the session-log entries on those branches):
+- **#160 (#158):** the ⌘K/⌘S guards are right. Still needed: one shared shortcut dispatcher that checks for an open modal before *any* binding, and a tripwire that covers the regex's bypasses.
+- **#161 (#147 part 1):** writer fencing must also fire on a gap with no heartbeat, not only on a failed one (a laptop that slept). Our own lock must stay recognisable after fencing or a failed check, so release can delete it. Nine error branches need tests.
+- **#162 / #163 (#147 parts 2–3):** stacked on #161, and not reviewed yet. #163 needs re-testing after #161's lock-manager fixes, because they change what happens when a laptop wakes.
+- **Merge order:** #161 → #162 → #163; #160 on its own.
+
+**Issues opened:** #164 (`harness`: a 100% branch-coverage gate for `src/io/shared-folder/**`). #157 and #158 were filed from the #156 review; #157 is closed by #159.
+
+**HQ:** three lessons in `lessons/verification-and-debugging.md`: fake timers vs `crypto.subtle`, naming the target of an injected fault, and OPFS for real directory handles in Playwright.
+
+**For the sponsor:** merged branches to delete: `feat/96-hide-nested-connections`, `feat/131-nesting-prompt`, `feat/157-dialog-overlay`. Keep `docs/shared-folder-collaboration` until #161 merges, because it carries the spec and ADR 0010 into the stack. Spec §14.3 (hosting) is still open.
+
 ## 2026-10-07 — #157 and #158: dialogs keep focus, shortcuts respect modals
 
 **#156 merged** (`c7751e4`) after its two blocking fixes, retargeted to `main` first.
