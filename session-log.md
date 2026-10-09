@@ -1,5 +1,27 @@
 # Session Log
 
+## 2026-10-09 — #160 and #161: review fixes
+
+**#160 (#158) → 7add31e, both blocking findings fixed.**
+- Every global binding is now a row in `SHORTCUTS` (`src/ui/shell/global-shortcuts.ts`). One window listener in `GlobalShortcutsProvider` runs the rows and checks `isModalOpen()` before any of them.
+- Components register only what a binding does, with `useGlobalShortcut`, so a new binding is guarded because it exists. The table test fails on a row that has no case.
+- The tripwire counts key listeners per file and fails closed: any receiver, an event type it can't read, `.call`, or `onkeydown =`. It includes untracked files and catches stale entries. The matcher has its own tests for each bypass.
+- New e2e journey: `shortcuts.spec.ts`.
+- 9 probes, each failing tests on its own. ⌘S under a modal still does nothing; that is the sponsor's call.
+
+**#161 (#147 part 1) → bb19e1e, all three blocking findings fixed.**
+- **Fencing on the deadline:** checked first in `heartbeat()` and in `confirm()`. A failed attempt only retries.
+- **Our own lock stays ours to delete:** the manager keeps the last token *written* (`#written`) apart from the one it *trusts* (`#token`). `look()` reports our own untrusted lock as `ours`, acquire replaces it, and `release()` deletes it.
+- **Error branches:** tests for the nine the review listed, plus the file vanishing between check and write and five more fallbacks found by local v8 coverage. Branch coverage of the module rose from 94.7% to 97.0%; the rest is sort comparators, a getter and a default.
+- The offline-writer scenario now keeps its heartbeat running, as spec §1.1 means. A new scenario covers the writer that slept.
+- 13 probes, each failing tests on its own. The non-blocking findings are in #165, except `scan()` never throwing, which is fixed.
+- **Cascade:** #161 → #162 → #163 merged forward and pushed. All three are green locally (1445 unit, 28 e2e on #163).
+
+**Open:**
+- Re-review and merge #160 and #161.
+- Review #162, then #163. #163 should offer Edit when a reader tick returns `ours` (our own lock after fencing), and its wake behaviour needs a look.
+- #164 (coverage gate), #165.
+
 ## 2026-10-08 — Wrap-up: where the work stands
 
 **On `main`:** #156 (#131, the nesting prompt) and #159 (#157, one dialog backdrop that keeps focus, with the lint rule that enforces it).
