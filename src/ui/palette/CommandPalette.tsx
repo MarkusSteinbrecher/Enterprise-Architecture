@@ -116,6 +116,9 @@ export function CommandPalette({ onClose, onOpenElement, actions }: CommandPalet
     } else if (event.key === 'Enter') {
       event.preventDefault()
       run(hits[active])
+    } else if (event.key === 'Escape') {
+      event.preventDefault()
+      onClose()
     } else if (event.key === 'Tab') {
       // The dialog says `aria-modal`, so it has to mean it. Rows are not tab
       // stops, which leaves the input as the only thing to hold: Tab used to

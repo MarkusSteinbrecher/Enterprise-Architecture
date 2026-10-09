@@ -10,6 +10,7 @@ import {
   type SaveFileHandle,
 } from '@/io'
 import { useModelStoreContext } from '@/store'
+import { useGlobalShortcut } from '@/ui/shell/global-shortcuts'
 import { FileWorkspaceContext, type FileWorkspaceContextValue } from './context'
 
 /**
@@ -94,17 +95,13 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
     setImporting(false)
   }, [store])
 
-  // ⌘S / Ctrl+S saves, as it does in every other tool that owns a file.
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
-        event.preventDefault()
-        if (role === 'writer') void save('json')
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+  // ⌘S / Ctrl+S saves, as it does in every other tool that owns a file. Not
+  // under a modal (#158), and the browser's own Save Page stays suppressed
+  // either way: both are `global-shortcuts.ts`'s job.
+  const saveFromKeys = useCallback(() => {
+    if (role === 'writer') void save('json')
   }, [save, role])
+  useGlobalShortcut('save', saveFromKeys)
 
   // Only warn about leaving when there is something to lose.
   useEffect(() => {
