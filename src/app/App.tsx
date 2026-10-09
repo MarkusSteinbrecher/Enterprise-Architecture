@@ -11,9 +11,11 @@ import { PaletteProvider } from '@/ui/palette/PaletteProvider'
 import { FileWorkspaceProvider } from '@/ui/files/FileWorkspaceProvider'
 import { GlobalShortcutsProvider } from '@/ui/shell/GlobalShortcutsProvider'
 import { FirstRun } from '@/ui/files/FirstRun'
+import { SharedFolderScreen } from '@/ui/files/SharedFolderScreen'
 import { ImportDialog } from '@/ui/files/ImportDialog'
 import { TakeoverScreen } from '@/ui/files/TakeoverScreen'
 import { SaveNotice } from '@/ui/files/SaveNotice'
+import { DivergedNotice, SharedSaveDialog } from '@/ui/files/SharedModelUi'
 
 /**
  * `/element/:id` re-renders without remounting, so every piece of per-element
@@ -49,6 +51,8 @@ export function App() {
           <AppRoutes />
           <ImportDialog />
           <SaveNotice />
+          <SharedSaveDialog />
+          <DivergedNotice />
         </PaletteProvider>
       </FileWorkspaceProvider>
     </GlobalShortcutsProvider>
@@ -60,7 +64,7 @@ export function App() {
  * with nothing in it yet, and everything else.
  */
 function AppRoutes() {
-  const { role, ready } = useModelStoreContext()
+  const { tabRole, ready } = useModelStoreContext()
   const elementCount = useModelSelector((store) => store.elementCount)
   const [startedEmpty, setStartedEmpty] = useState(false)
   const { pathname } = useLocation()
@@ -73,10 +77,11 @@ function AppRoutes() {
       </Suspense>
     )
   }
-  if (role === 'reader') return <TakeoverScreen />
-  // The guide needs no model, and first run links to it, so it skips first run.
-  const onGuide = pathname === '/guide'
-  if (ready && elementCount === 0 && !startedEmpty && !onGuide) {
+  if (tabRole === 'reader') return <TakeoverScreen />
+  // The guide and the shared folder need no model, and first run links to
+  // both, so they skip first run.
+  const noModelNeeded = pathname === '/guide' || pathname === '/folder'
+  if (ready && elementCount === 0 && !startedEmpty && !noModelNeeded) {
     return <FirstRun onStartEmpty={() => setStartedEmpty(true)} />
   }
 
@@ -89,6 +94,7 @@ function AppRoutes() {
         <Route path="/graph" element={<GraphScreen />} />
         <Route path="/view/:id" element={<KeyedViewScreen />} />
         <Route path="/guide" element={<GuideScreen />} />
+        <Route path="/folder" element={<SharedFolderScreen />} />
         <Route path="*" element={<Navigate to="/inventory" replace />} />
       </Route>
     </Routes>

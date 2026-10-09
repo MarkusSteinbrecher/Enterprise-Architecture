@@ -171,6 +171,7 @@ export function ModelStoreProvider({
     () => ({
       store,
       role,
+      tabRole: role,
       ready,
       lastSavedAt,
       workspaces,

@@ -139,8 +139,16 @@ export class SharedModelSession {
    * Take the lock for editing (spec §5.1). With `takeOver`, the user confirmed
    * taking someone else's: that is logged first, and not done if the log
    * cannot be written.
+   *
+   * A model that changed since it was read is reloaded before editing starts,
+   * unless the caller holds unsaved changes (a writer that lost the lock and is
+   * taking it back). Those are never replaced: the base stays the file they were
+   * made on, the session is `diverged`, and the next save is refused for the
+   * user to choose (spec §6.2).
    */
-  async acquire({ takeOver = false } = {}): Promise<AcquireResult | NotLogged> {
+  async acquire({ takeOver = false, hasUnsavedChanges = false } = {}): Promise<
+    AcquireResult | NotLogged
+  > {
     if (takeOver) {
       const view = await this.#lock.look()
       const logged = await this.#audit('takeover', view)
@@ -149,11 +157,12 @@ export class SharedModelSession {
     const outcome = await this.#lock.acquire({ takeOver })
     if (outcome.kind !== 'writer') return { outcome }
     const check = await this.#checkModel()
-    if (check.status === 'changed' && check.bytes) {
+    if (check.status === 'changed' && check.bytes && !hasUnsavedChanges) {
       this.#base = { bytes: check.bytes, fingerprint: check.fingerprint }
       this.#diverged = false
       return { outcome, reload: check.bytes }
     }
+    if (check.status === 'changed' || check.status === 'missing') this.#diverged = true
     return { outcome }
   }
 

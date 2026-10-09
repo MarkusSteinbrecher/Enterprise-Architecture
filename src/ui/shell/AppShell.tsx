@@ -4,6 +4,7 @@ import { usePalette } from '@/ui/palette/context'
 import { ModelTree } from '@/ui/tree/ModelTree'
 import { Header } from './Header'
 import { LeftNav } from './LeftNav'
+import { SharedModelBanner } from '@/ui/files/SharedModelUi'
 import './shell.css'
 
 /**
@@ -48,6 +49,7 @@ export function AppShell() {
         <LeftNav treeOpen={treeOpen} treeId={TREE_ID} onToggleTree={toggleTree} />
         {treeOpen && <ModelTree id={TREE_ID} />}
         <main className="shell__main">
+          <SharedModelBanner />
           <Outlet />
         </main>
       </div>

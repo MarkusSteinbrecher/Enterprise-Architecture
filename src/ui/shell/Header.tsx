@@ -15,16 +15,20 @@ export interface HeaderProps {
 }
 
 export function Header({ onOpenSearch }: HeaderProps) {
-  const { role } = useModelStoreContext()
-  const { save, startImport, fileName, hasHandle, canPickFiles } = useFileWorkspace()
-  const readOnly = role === 'reader'
+  // The tab's own lock: a model another person holds in a shared folder can
+  // still be saved as a copy, or replaced by an import (#147).
+  const { tabRole } = useModelStoreContext()
+  const { save, startImport, fileName, hasHandle, canPickFiles, shared } = useFileWorkspace()
+  const readOnly = tabRole === 'reader'
   const { undoLabel, redoLabel, undo, redo } = useUndoRedo()
 
-  const saveTitle = hasHandle
-    ? `Save to ${fileName}`
-    : canPickFiles
-      ? 'Choose where to save this model'
-      : 'Download this model as a file'
+  const saveTitle = shared.shared
+    ? `Save to ${shared.shared.model} in ${shared.shared.folder.name}`
+    : hasHandle
+      ? `Save to ${fileName}`
+      : canPickFiles
+        ? 'Choose where to save this model'
+        : 'Download this model as a file'
 
   return (
     <header className="header">

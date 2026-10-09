@@ -255,6 +255,21 @@ describe('save state and history', () => {
     expect(s.dirty).toBe(0)
   })
 
+  it('keeps a change made while a save was writing as unsaved (#147)', () => {
+    const s = store()
+    s.addElement(NEW_APP)
+    s.updateElement('app-portal', (element) => ({ ...element, name: 'Portal' }))
+    const written = s.dirty
+    // The save serialised the model here; this edit happened during the write.
+    s.updateElement('app-portal', (element) => ({ ...element, name: 'Portal 2' }))
+    s.markSavedThrough(written)
+    expect(s.dirty).toBe(1)
+    s.markSavedThrough(1)
+    expect(s.dirty).toBe(0)
+    s.markSavedThrough(5)
+    expect(s.dirty).toBe(0)
+  })
+
   it('records a readable history entry per change', () => {
     const s = store()
     s.addElement(NEW_APP)

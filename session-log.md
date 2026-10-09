@@ -1,5 +1,12 @@
 # Session Log
 
+## 2026-10-09 (cont.) — Merges; #163's CI; MVP test plan (#166)
+
+- **Merged by the sponsor:** #160 and #161 to `main`. #162 merged into `feat/147-shared-folder-lock` 14 s after #161 had taken that branch to `main`, so **part 2 is not on `main`**. #163 is retargeted to `main` and carries part 2 with it.
+- **#163's failing check** was a timing race in `shared-model.test.tsx`, reproduced locally. A heartbeat that sees the file change before the save does correctly shows `FILE CHANGED ON DISK`, but the test pinned `1 UNSAVED`. The test now accepts either label and still fails on SAVED. Also merged `main` into #163 (conflicts with #160's dispatcher in `App.tsx` and `FileWorkspaceProvider.tsx`). 1475 unit and 29 e2e tests pass.
+- **#166:** a hands-on test plan for the sponsor's own Archi models (open, look, change, keep, round-trip to Archi, optional shared folder), with the known gaps listed.
+- **Open:** merge #163. `tests/manual/file-round-trip.md` step 8 and the note in `archimate-import.md` are stale since #76 and #96 (views and folders now round-trip; nested connections are hidden).
+
 ## 2026-10-09 — #160 and #161: review fixes
 
 **#160 (#158) → 7add31e, both blocking findings fixed.**
@@ -56,6 +63,37 @@ Both reviews are less independent, because the same session wrote the PRs; each 
 - **Harvest:** CLAUDE.md, "a deadline is checked on every attempt, not only on a failed one" (87cae69, cascaded to #162/#163), and #164 (a 100% branch-coverage gate for `src/io/shared-folder/**`).
 
 **Open:** fix #160 and #161, then review #162 and #163. The fixes to #161's lock manager change part 3's behaviour on wake, so #163 needs re-testing after them.
+
+## 2026-10-07 — #147 part 3: editing a model in a shared folder
+
+**Part 3 → PR stacked on part 2 (#162), with #159 merged in.** It uses `DialogOverlay`, so #159 must merge first.
+- **`use-shared-model.ts`:** opens a model (read-only while it takes the lock), runs the heartbeat and the reader poll (also when the page becomes visible again), and applies each tick. That covers demotion, the reader's reload, `diverged` with its blocking notice, and conflict copies. It also handles save, overwrite, save as copy (which then opens the copy), reload, edit, takeover, unlock and close. A page that is closing tries to release its lock.
+- **Effective role:** the file provider re-provides the store context. `role` is reader unless this tab holds the folder lock; the new `tabRole` alone decides the takeover screen and the header's Import and SAVE FILE, so a demoted writer can still save a copy.
+- **UI:** `SharedModelUi.tsx` has the strip above the model (status, Edit, Take over…, Unlock… with confirmation, Save as copy, Close, possible conflict copies with Dismiss), the refusal dialog (Overwrite anyway… then a second confirmation), and the blocking "changed on disk" notice. The save-state indicator reads **FILE CHANGED ON DISK** when diverged.
+- **Fix found while wiring:** a writer that lost the lock with unsaved edits and took it back had its edits reloaded away, and its base was reset to the colleague's file. That would have let the next save overwrite the colleague's version silently. `acquire({ hasUnsavedChanges })` now keeps the base and diverges instead. There is a session test and a UI test for it.
+- **`ModelStore.markSavedThrough(count)`:** an edit made during a shared save stays unsaved. The single-file save has the same race with `markSaved()`; that is pre-existing and not changed here.
+- **The switch is gone.**
+- **e2e journey 13:** lock, save, takeover by a colleague, and save as copy, on real OPFS handles with Playwright's clock.
+- **Manual script:** `tests/manual/shared-folder.md`, for two machines and one synced library.
+- **Probes:** 17 guards broken one at a time, each caught.
+
+**Open:** review of #159, #160 and #161–#163 (merge order: #159 and #161 first, then #162, then part 3). Hosting (spec §14.3) is still open. Timings stay at their defaults, with no preferences screen; only the display name can be changed in the app.
+
+
+## 2026-10-07 — #147 part 2: opening a shared folder
+
+**Part 2 → PR stacked on part 1 (#161).**
+- **Adapter:** `browserFolder` over a real `FileSystemDirectoryHandle`, with `pickDirectory` (a cancelled picker is nothing picked) and `folderPermission` (asks only from a click).
+- **Listing:** by name only. Possible conflict copies are listed *apart* under the model they may copy, not hidden. That deviates from spec §4: a name can't tell `Landscape-v2.json` from a OneDrive copy, and a hidden model never gets opened.
+- **Storage:** `src/store/shared-folder-storage.ts` is its own IndexedDB database. It holds folders found again by `isSameEntry`; per-model memory under array keys `[folderKey, fileName]` (tested with separators); guarded settings; and the client id.
+- **Screen:** `/folder` (`SharedFolderScreen`): Open folder…, the folders opened before (each reopens from a click, without the picker), the one-time name prompt, and the model list. Firefox and Safari get a note saying why.
+- **Entry points:** an "Open a shared folder…" button in the Import dialog, and a note on first run, which keeps its three actions.
+- **Hidden for now:** all of it is behind `localStorage['archipelago.sharedFolders'] = 'on'` until part 3, because a listed model can't be opened yet and part 2 alone would otherwise ship to Pages.
+- **CLAUDE.md:** the constraint now allows writes into a folder the user granted (ADR 0010).
+- **e2e journey 12** (`shared-folder.spec.ts`) uses real OPFS handles: listing, the handle stored in IndexedDB and reopened after a reload, and a picker that fails the journey if used twice. That last guard was proven by forcing a second use.
+- **Probes:** 14 guards broken one at a time; 13 were caught. The 14th turned out redundant, because `isModelFileName` already leaves locks and logs out, so it was removed.
+
+**Open:** part 3 (opening a model as writer or reader, the save dialog, the indicator leaving "saved", conflict notices, the switch removed, the OPFS lock/save journey, the manual UAT script). PRs #159, #160 and #161 are awaiting review.
 
 ## 2026-10-07 — #147 part 1: the shared-folder protocol
 

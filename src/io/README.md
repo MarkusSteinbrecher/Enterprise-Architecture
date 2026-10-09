@@ -24,6 +24,15 @@ git-friendly files are what LeanIX does not give you. Concept reference: §5.3.
 | `fixtures/archi-coverage.{archimate,xml}`  | every `.archimate` edge case, and Archi 5.10's (XSD-invalid) export of it |
 | `problems.ts`                              | structured import problems                                                |
 
+## Shared folders (#147)
+
+A model in a folder that a sync client keeps in step on every machine, edited by
+one person at a time: a lock file beside it, a save guard before every write,
+and detection of what gets past both (ADR 0010). The protocol and its limits are
+in `shared-folder/README.md`; in short, every check reads this machine's copy of
+an eventually consistent folder, so the lock makes clashes rare and the writer's
+watch and the conflict-copy scan make the rest visible.
+
 ## Canonical JSON
 
 The point is git. Two exports of the same model must be byte-identical, and a

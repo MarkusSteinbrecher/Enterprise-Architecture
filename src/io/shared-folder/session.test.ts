@@ -107,6 +107,32 @@ describe('opening a model (criteria 2, 3)', () => {
   })
 })
 
+describe('taking a model back with unsaved changes', () => {
+  it('never reloads over them: it keeps its base, diverges, and the next save is refused', async () => {
+    const world = await worldWith(0, 'Ana', 'Markus')
+    const markus = session(world, 'Markus')
+    await opened(markus)
+    const ana = session(world, 'Ana')
+    await opened(ana, true)
+    expect((await ana.save(encodeText('Ana’s work'))).kind).toBe('saved')
+    await ana.close()
+    await vi.advanceTimersByTimeAsync(1)
+
+    // Markus lost the lock with edits in hand, and takes the free lock back.
+    const pending = markus.acquire({ hasUnsavedChanges: true })
+    await vi.advanceTimersByTimeAsync(SETTLE)
+    const result = await pending
+    expect(result).toEqual({ outcome: { kind: 'writer' } })
+    expect(markus.diverged).toBe(true)
+    expect(text(markus.base?.bytes)).toBe('v0')
+    expect(await markus.save(encodeText('Markus’s work'))).toMatchObject({
+      kind: 'refused',
+      reason: 'file-changed',
+    })
+    expect(text(world.cloudRead(MODEL))).toBe('Ana’s work')
+  })
+})
+
 describe('two people opening the same free model at once (criterion 4)', () => {
   it('ends with exactly one writer when sync is faster than the settle delay', async () => {
     const world = await worldWith(2000, 'Ana', 'Markus')

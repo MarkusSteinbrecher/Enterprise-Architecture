@@ -22,8 +22,18 @@ import type { TabRole } from './tab-lock'
 
 export interface ModelStoreContextValue {
   store: ModelStore
-  /** Whether this tab holds the writer lock. Readers must not autosave. */
+  /**
+   * Whether this tab may change the model. A reader sees it read-only: another
+   * tab holds the writer lock (`tabRole`), or the model is in a shared folder
+   * and someone else holds its lock file (ADR 0010).
+   */
   role: TabRole
+  /**
+   * Whether this tab holds the browser's writer lock (ADR 0002). Only this one
+   * decides autosave and the takeover screen; a shared folder's lock never
+   * replaces the app with that screen. Equal to `role` outside a shared folder.
+   */
+  tabRole: TabRole
   /** False until the workspace has been restored from IndexedDB. */
   ready: boolean
   /** Epoch ms of the last successful autosave, if any. */

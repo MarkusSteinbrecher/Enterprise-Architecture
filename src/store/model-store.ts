@@ -833,6 +833,18 @@ export class ModelStore {
   }
 
   /**
+   * Called after a save that wrote the model as it stood when `dirty` read
+   * `count`. A change made while the write was under way is not in the file,
+   * so it still counts (#147).
+   */
+  markSavedThrough(count: number): void {
+    const next = Math.max(0, this.#dirty - count)
+    if (next === this.#dirty) return
+    this.#dirty = next
+    this.#bump()
+  }
+
+  /**
    * Replace the entire model — used by import, "load demo" and workspace switching.
    *
    * `markClean` says whether the new model already matches a file **on disk**, and
