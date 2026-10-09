@@ -3,6 +3,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react'
 import { toCanonicalJson } from '@/io/canonical-json'
 import { ELEMENT_TYPES, absoluteBounds, type ElementNode, type ViewNode } from '@/model'
 import type { ModelStore } from '@/store'
+import { pressOutside } from '@/test/dialogs'
 import { SCREEN, click, drop, setup, type User } from '@/test/view-editor'
 import { ELEMENT_DRAG_TYPE } from './create'
 import { fitViewport } from './geometry'
@@ -382,6 +383,19 @@ describe('removing and deleting an element (#130)', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(store.element('ac-engine')).toBeDefined()
     expect(dispatch).not.toHaveBeenCalled()
+  })
+
+  it('deletes nothing on a press outside, and gives focus back to the button that asked (#157)', async () => {
+    const { store, dispatch, user, nodeEl, view } = setup()
+    const node = view().nodes.find((n) => n.kind === 'element' && n.element === 'ac-engine')!
+    await click(user, nodeEl(node.id), { x: 0, y: 0 })
+    const opener = screen.getByRole('button', { name: 'Delete from model…' })
+    await user.click(opener)
+    await pressOutside(user, screen.getByRole('dialog', { name: 'Delete element from the model' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(store.element('ac-engine')).toBeDefined()
+    expect(dispatch).not.toHaveBeenCalled()
+    expect(opener).toHaveFocus()
   })
 
   it('Remove from view keeps the element in the model, and gives the canvas focus', async () => {

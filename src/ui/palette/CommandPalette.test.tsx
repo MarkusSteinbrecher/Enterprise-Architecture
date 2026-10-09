@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { emptyWorkspace } from '@/model'
 import { loadDemoWorkspace } from '@/io'
+import { pressOutside } from '@/test/dialogs'
 import { renderApp } from '@/test/render'
 import { applyTheme } from '@/app/theme'
 import { isTypingTarget } from './typing-target'
@@ -58,13 +59,14 @@ describe('opening and closing', () => {
     expect(paletteInput()).toHaveValue('')
   })
 
-  it('closes when the backdrop is clicked', async () => {
-    const { container } = renderApp(demo())
+  it('closes on a press on the backdrop, and gives focus back to what opened it (#157)', async () => {
+    renderApp(demo())
     const user = userEvent.setup()
-    await openPalette(user)
-    const overlay = container.ownerDocument.querySelector('.palette-overlay')
-    await user.click(overlay as Element)
+    const search = screen.getByRole('button', { name: /Search elements, relations, actions/ })
+    await user.click(search)
+    await pressOutside(user, screen.getByRole('dialog', { name: 'Command palette' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(search).toHaveFocus()
   })
 
   it('autofocuses the input', async () => {

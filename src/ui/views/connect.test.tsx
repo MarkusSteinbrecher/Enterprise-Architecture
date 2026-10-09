@@ -11,6 +11,7 @@ import {
   type View,
 } from '@/model'
 import type { ModelStore } from '@/store'
+import { pressOutside } from '@/test/dialogs'
 import { LANDSCAPE, click, setup, type User } from '@/test/view-editor'
 import { connectChoice } from './connect'
 
@@ -248,6 +249,17 @@ describe('connecting shapes (#129)', () => {
     expect(h.dispatch).not.toHaveBeenCalled()
   })
 
+  it('cancels from the menu on a press outside, and gives the canvas its focus back (#157)', async () => {
+    const h = setup()
+    const canvas = screen.getByRole('generic', { name: /^View / })
+    canvas.focus()
+    await connect(h, 'o-req', 'o-goal')
+    await pressOutside(h.user, menu())
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(document.activeElement).toBe(canvas)
+    expect(h.dispatch).not.toHaveBeenCalled()
+  })
+
   it('refuses a shape whose element is not in the model, and creates nothing', async () => {
     const h = setup('writer', {
       prepare: (store) =>
@@ -363,6 +375,20 @@ describe('removing a connection (#129)', () => {
     await h.user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
     expect(h.store.relationship('r-cust-ins')).toBeDefined()
     expect(h.dispatch).not.toHaveBeenCalled()
+  })
+
+  it('deletes nothing on a press outside, and gives focus back to the button that asked (#157)', async () => {
+    const h = setup()
+    await click(h.user, lineHit(h, 'c-cust-ins'), { x: 215, y: 87 })
+    const opener = screen.getByRole('button', { name: 'Delete from model…' })
+    await h.user.click(opener)
+    await pressOutside(
+      h.user,
+      screen.getByRole('dialog', { name: 'Delete relationship from the model' }),
+    )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(h.store.relationship('r-cust-ins')).toBeDefined()
+    expect(opener).toHaveFocus()
   })
 
   it('gives the canvas back its focus after Remove from view, Delete from model and Close', async () => {
