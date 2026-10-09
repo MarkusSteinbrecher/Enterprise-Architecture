@@ -1,26 +1,21 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toggleTheme } from '@/app/theme'
 import { useModelStoreContext } from '@/store'
 import { useCreateView } from '@/ui/views/use-create-view'
 import { useSaveWorkspace } from '@/ui/shell/use-save-workspace'
 import { useUndoRedo } from '@/ui/shell/use-undo-redo'
+import { useGlobalShortcut } from '@/ui/shell/global-shortcuts'
 import { CommandPalette, type PaletteAction } from './CommandPalette'
 import { PaletteContext } from './context'
-import { hasNativeUndo, historyShortcut, isModalOpen, isTypingTarget } from './typing-target'
 
 /**
- * Owns palette visibility and the global keyboard bindings.
+ * Owns palette visibility, and what the navigation and history shortcuts do.
  *
  * `⌘K` / `Ctrl+K` opens (clearing the query — the palette is remounted, so the
- * query cannot survive), `Esc` closes, and bare `g` / `i` jump to the graph and
- * the inventory. Those single-letter bindings are suppressed while the palette is
- * open *and* while any text input has focus, which is the handoff's known
- * prototype gap #1.
- *
- * `⌘Z` undoes and `⇧⌘Z` / `Ctrl+Y` redo (#88), except in a text field, which
- * keeps its own undo, and under a modal, whose form the model step would pull
- * out from under.
+ * query cannot survive), `Esc` closes, bare `g` / `i` jump to the graph and the
+ * inventory, and `⌘Z` / `⇧⌘Z` undo and redo. Which presses those are, and that
+ * none of them acts under a modal, is `global-shortcuts.ts`'s business (#158).
  */
 
 export function PaletteProvider({ children }: { children: ReactNode }) {
@@ -58,46 +53,16 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
     [navigate, saveFile, undoLabel, redoLabel, undo, redo, role, createView, screenActions],
   )
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase()
-
-      if ((event.metaKey || event.ctrlKey) && key === 'k') {
-        event.preventDefault()
-        // Not over another modal (#158): an action run from the palette would
-        // act behind the dialog (placing an element dropped the nesting the
-        // prompt was asking about), and the Escape that closes the palette
-        // reaches the dialog too, and answers it. Open, the palette is itself
-        // the modal, so this changes nothing there.
-        if (!isModalOpen()) setOpen(true)
-        return
-      }
-      if (event.key === 'Escape') {
-        setOpen(false)
-        return
-      }
-
-      const step = historyShortcut(event)
-      if (step) {
-        if (open || isModalOpen() || hasNativeUndo(event.target)) return
-        event.preventDefault()
-        if (step === 'undo') undo()
-        else redo()
-        return
-      }
-
-      // Everything below is a bare single-letter binding.
-      if (open || isModalOpen()) return
-      if (event.metaKey || event.ctrlKey || event.altKey) return
-      if (isTypingTarget(event.target)) return
-
-      if (key === 'g') navigate('/graph')
-      else if (key === 'i') navigate('/inventory')
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [open, navigate, undo, redo])
+  const goToGraph = useCallback(() => navigate('/graph'), [navigate])
+  const goToInventory = useCallback(() => navigate('/inventory'), [navigate])
+  // Each runs only when no modal is open, the palette included (#158). Open
+  // over another dialog, an action run from the palette would act behind it,
+  // and the Escape that closes the palette would reach the dialog too.
+  useGlobalShortcut('palette', openPalette)
+  useGlobalShortcut('undo', undo)
+  useGlobalShortcut('redo', redo)
+  useGlobalShortcut('graph', goToGraph)
+  useGlobalShortcut('inventory', goToInventory)
 
   const value = useMemo(
     () => ({ open, openPalette, closePalette, setScreenActions }),
