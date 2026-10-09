@@ -287,7 +287,10 @@ describe('holding the lock (spec §5.2)', () => {
     expect(await lock.heartbeat()).toEqual({ kind: 'retry', message: 'busy' })
     expect(lock.holding).toBe(true)
     await vi.advanceTimersByTimeAsync(1)
-    expect(await lock.heartbeat()).toEqual({ kind: 'fenced', message: 'busy' })
+    expect(await lock.heartbeat()).toEqual({
+      kind: 'fenced',
+      message: 'No heartbeat completed for 15 min.',
+    })
     expect(lock.holding).toBe(false)
   })
 
@@ -297,8 +300,38 @@ describe('holding the lock (spec §5.2)', () => {
     await take(lock)
     folder.fail('write', { name: LOCK, times: Infinity, message: 'close() rejected' })
     expect(await lock.heartbeat()).toEqual({ kind: 'retry', message: 'close() rejected' })
+    await vi.advanceTimersByTimeAsync(STALE / 2 - 1)
+    expect(await lock.heartbeat()).toEqual({ kind: 'retry', message: 'close() rejected' })
+    await vi.advanceTimersByTimeAsync(1)
+    expect((await lock.heartbeat()).kind).toBe('fenced')
+  })
+
+  it('fences after half the stale time with no heartbeat attempted at all, as after a sleep', async () => {
+    // Criterion 5. A laptop that slept made no attempt to fail: on waking, its
+    // first heartbeat must not read its own lock, find it, and carry on.
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    const lock = manager(folder)
+    await take(lock)
+    await vi.advanceTimersByTimeAsync(STALE / 2 - 1)
+    expect(await lock.confirm()).toBe('ours')
+    await vi.advanceTimersByTimeAsync(1)
+    expect(await lock.heartbeat()).toEqual({
+      kind: 'fenced',
+      message: 'No heartbeat completed for 15 min.',
+    })
+    expect(lock.holding).toBe(false)
+    // Not rewritten on the way out: a takeover still in flight wins.
+    expect(await lockIn(folder)).toMatchObject({ token: 'Markus-1', heartbeatSeq: 0 })
+  })
+
+  it('refuses to confirm the lock for a save once half the stale time has passed', async () => {
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    const lock = manager(folder)
+    await take(lock)
     await vi.advanceTimersByTimeAsync(STALE / 2)
-    expect(await lock.heartbeat()).toEqual({ kind: 'fenced', message: 'close() rejected' })
+    expect(await lock.confirm()).toBe('not-ours')
+    expect(lock.holding).toBe(false)
+    expect(await lockIn(folder)).toMatchObject({ token: 'Markus-1' })
   })
 
   it('measures fencing from the last heartbeat that completed', async () => {
@@ -339,13 +372,59 @@ describe('giving the lock back (spec §5.4)', () => {
     expect((await lockIn(folder))?.token).toBe('ana-1')
   })
 
-  it('deletes nothing when the lock cannot be read', async () => {
+  it('deletes nothing when the lock cannot be read, and deletes it on a retry', async () => {
     const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
     const lock = manager(folder)
     await take(lock)
     folder.fail('read', { name: LOCK })
     expect(await lock.release()).toBe('failed')
     expect(await folder.has(LOCK)).toBe(true)
+    expect(lock.holding).toBe(false)
+    expect(await lock.release()).toBe('released')
+    expect(await folder.has(LOCK)).toBe(false)
+  })
+
+  it('reports a delete that throws as failed, and deletes it on a retry', async () => {
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    const lock = manager(folder)
+    await take(lock)
+    folder.fail('remove', { name: LOCK })
+    expect(await lock.release()).toBe('failed')
+    expect(await folder.has(LOCK)).toBe(true)
+    expect(await lock.release()).toBe('released')
+    expect(await folder.has(LOCK)).toBe(false)
+  })
+
+  it('deletes its own lock after fencing, and its own lock is no obstacle to taking it again', async () => {
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    const lock = manager(folder)
+    await take(lock)
+    folder.fail('write', { name: LOCK, times: Infinity })
+    await vi.advanceTimersByTimeAsync(STALE / 2)
+    expect((await lock.heartbeat()).kind).toBe('fenced')
+    folder.clearFaults()
+    // Our token is still in the folder: ours to replace without asking…
+    expect(await lock.look()).toEqual({ kind: 'ours' })
+    expect(await take(lock)).toEqual({ kind: 'writer' })
+    expect(await lockIn(folder)).toMatchObject({ token: 'Markus-2' })
+    // …and ours to delete.
+    await vi.advanceTimersByTimeAsync(STALE / 2)
+    expect((await lock.heartbeat()).kind).toBe('fenced')
+    expect(await lock.release()).toBe('released')
+    expect(await folder.has(LOCK)).toBe(false)
+  })
+
+  it('deletes its own lock after an acquire that could not read it back', async () => {
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    const lock = manager(folder)
+    const pending = lock.acquire()
+    await vi.advanceTimersByTimeAsync(1000)
+    folder.fail('read', { name: LOCK })
+    await vi.advanceTimersByTimeAsync(SETTLE)
+    expect(await pending).toEqual({ kind: 'reader', why: 'lost' })
+    expect(await lock.look()).toEqual({ kind: 'ours' })
+    expect(await lock.release()).toBe('released')
+    expect(await folder.has(LOCK)).toBe(false)
   })
 
   it('removes anyone’s lock on an explicit unlock, and says whose it was', async () => {
@@ -353,5 +432,20 @@ describe('giving the lock back (spec §5.4)', () => {
     await folder.write(LOCK, foreign())
     expect(await manager(folder).unlock()).toMatchObject({ removed: { displayName: 'Ana' } })
     expect(await folder.has(LOCK)).toBe(false)
+  })
+
+  it('has nothing to name on an unlock when there was no lock', async () => {
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    expect(await manager(folder).unlock()).toEqual({})
+  })
+
+  it('removes nothing on an unlock when the lock cannot be read, or the delete throws', async () => {
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    await folder.write(LOCK, foreign())
+    folder.fail('read', { name: LOCK, message: 'busy' })
+    expect(await manager(folder).unlock()).toEqual({ failed: 'busy' })
+    folder.fail('remove', { name: LOCK, message: 'denied' })
+    expect(await manager(folder).unlock()).toEqual({ failed: 'denied' })
+    expect((await lockIn(folder))?.token).toBe('ana-1')
   })
 })

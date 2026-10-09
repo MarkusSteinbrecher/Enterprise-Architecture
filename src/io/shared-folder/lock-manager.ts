@@ -45,6 +45,11 @@ export interface LockManagerOptions {
 /**
  * The lock as a reader sees it.
  *
+ * `ours` is a lock carrying the last token this manager wrote: the one it holds,
+ * or one it stopped trusting (fenced, or the settle re-read failed) that is
+ * still in the folder. Acquire replaces it without asking, and release deletes
+ * it (spec §5.1, §5.4).
+ *
  * `held` with no `owner` is a lock file this version cannot read, which counts
  * as held (spec §5). `quietForMs` is how long this machine has seen its
  * heartbeat unchanged; `stale` is that against the stale time. A lock first seen
@@ -80,8 +85,16 @@ export class LockManager {
   readonly #newToken: () => string
   readonly #lockName: string
   readonly #key: ModelKey
-  /** Our token, while we hold the lock. */
+  /** Our token, while we trust that we hold the lock. */
   #token: string | undefined
+  /**
+   * The last token we wrote. It outlives trust: fencing and a lost settle stop
+   * trusting the lock without knowing whether the file still carries our
+   * token, and while it does, the lock is still ours to delete or replace.
+   * Forgetting it orphaned our own lock, so colleagues waited out the stale
+   * time, and so did we (#161 review).
+   */
+  #written: string | undefined
   #seq = 0
   #since = ''
   /** This machine's time when the last heartbeat (or the acquire) completed. */
@@ -110,7 +123,7 @@ export class LockManager {
     }
     if (read.kind === 'unreadable') return { kind: 'held', stale: false, quietForMs: 0 }
     const { lock } = read
-    if (lock.token === this.#token) return { kind: 'ours' }
+    if (lock.token === this.#written) return { kind: 'ours' }
     const now = this.#clock.now()
     const seen = await this.#options.observations.get(this.#key)
     let since = now
@@ -146,6 +159,8 @@ export class LockManager {
     }
     const token = this.#newToken()
     const at = this.#clock.iso()
+    // Before the write: one that throws may still have landed.
+    this.#written = token
     try {
       await this.#write(token, 0, at)
     } catch (error) {
@@ -166,12 +181,26 @@ export class LockManager {
     return { kind: 'reader', why: 'lost', ...(after.kind === 'lock' ? { winner: after.lock } : {}) }
   }
 
-  /** Renew the lock (spec §5.2, step 1), or find out it is no longer ours. */
+  /**
+   * Renew the lock (spec §5.2, step 1), or find out it is no longer ours.
+   *
+   * The fencing deadline is checked first, not only when an attempt fails. A
+   * laptop that slept made no attempt at all: it would wake, read its own lock
+   * before a colleague's takeover had synced, rewrite it, and save over the
+   * model as a second writer.
+   */
   async heartbeat(): Promise<HeartbeatOutcome> {
     const token = this.#token
     if (token === undefined) return { kind: 'not-holding' }
+    const overdue = this.#overdue()
+    if (overdue) {
+      // Stop trusting the lock. The file may still carry our token, so `#written` stays.
+      this.#token = undefined
+      return { kind: 'fenced', message: overdue }
+    }
     const read = await readLock(this.#options.folder, this.#lockName)
-    if (read.kind === 'read-failed') return this.#missedBeat(read.message)
+    // A failed attempt is retried; the deadline above is what fences.
+    if (read.kind === 'read-failed') return { kind: 'retry', message: read.message }
     if (read.kind !== 'lock' || read.lock.token !== token) {
       this.#token = undefined
       return { kind: 'lost', ...(read.kind === 'lock' ? { by: read.lock } : {}) }
@@ -179,7 +208,7 @@ export class LockManager {
     try {
       await this.#write(token, this.#seq + 1, this.#since)
     } catch (error) {
-      return this.#missedBeat(failure(error))
+      return { kind: 'retry', message: failure(error) }
     }
     this.#seq += 1
     this.#lastBeat = this.#clock.now()
@@ -193,6 +222,11 @@ export class LockManager {
   async confirm(): Promise<'ours' | 'not-ours' | { failed: string }> {
     const token = this.#token
     if (token === undefined) return 'not-ours'
+    // Past the fencing deadline, a save must not trust the lock either.
+    if (this.#overdue()) {
+      this.#token = undefined
+      return 'not-ours'
+    }
     const read = await readLock(this.#options.folder, this.#lockName)
     if (read.kind === 'read-failed') return { failed: read.message }
     if (read.kind === 'lock' && read.lock.token === token) return 'ours'
@@ -204,20 +238,27 @@ export class LockManager {
    * Give the lock back (spec §5.4): delete the file only if it still carries
    * our token. There is no compare-and-delete, so a takeover landing between the
    * read and the delete is not caught; it would show up as a lost lock there.
+   *
+   * "Our token" is the last one written, trusted or not, so a fenced writer can
+   * still clean up after itself. A release that fails keeps it, so a retry can.
    */
   async release(): Promise<'released' | 'not-ours' | 'failed'> {
-    const token = this.#token
     this.#token = undefined
+    const token = this.#written
     if (token === undefined) return 'not-ours'
     const read = await readLock(this.#options.folder, this.#lockName)
     if (read.kind === 'read-failed') return 'failed'
-    if (read.kind !== 'lock' || read.lock.token !== token) return 'not-ours'
+    if (read.kind !== 'lock' || read.lock.token !== token) {
+      this.#written = undefined
+      return 'not-ours'
+    }
     try {
       await this.#options.folder.remove(this.#lockName)
-      return 'released'
     } catch {
       return 'failed'
     }
+    this.#written = undefined
+    return 'released'
   }
 
   /**
@@ -236,12 +277,15 @@ export class LockManager {
     return read.kind === 'lock' ? { removed: read.lock } : {}
   }
 
-  #missedBeat(message: string): HeartbeatOutcome {
-    if (this.#clock.now() - this.#lastBeat >= this.#options.settings.staleAfterMs / 2) {
-      this.#token = undefined
-      return { kind: 'fenced', message }
-    }
-    return { kind: 'retry', message }
+  /**
+   * Why we may no longer trust the lock, when no heartbeat has completed for
+   * half the stale time (spec §5.2): others start judging it stale at the full
+   * time, so we stop believing it first.
+   */
+  #overdue(): string | undefined {
+    const quiet = this.#clock.now() - this.#lastBeat
+    if (quiet < this.#options.settings.staleAfterMs / 2) return undefined
+    return `No heartbeat completed for ${Math.floor(quiet / 60_000)} min.`
   }
 
   #write(token: string, heartbeatSeq: number, since: string): Promise<void> {

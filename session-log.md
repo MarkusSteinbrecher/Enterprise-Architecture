@@ -1,19 +1,20 @@
 # Session Log
 
-## 2026-10-07 — #147 part 2: opening a shared folder
+## 2026-10-08 — Wrap-up: where the work stands
 
-**Part 2 → PR stacked on part 1 (#161).**
-- **Adapter:** `browserFolder` over a real `FileSystemDirectoryHandle`, with `pickDirectory` (a cancelled picker is nothing picked) and `folderPermission` (asks only from a click).
-- **Listing:** by name only. Possible conflict copies are listed *apart* under the model they may copy, not hidden. That deviates from spec §4: a name can't tell `Landscape-v2.json` from a OneDrive copy, and a hidden model never gets opened.
-- **Storage:** `src/store/shared-folder-storage.ts` is its own IndexedDB database. It holds folders found again by `isSameEntry`; per-model memory under array keys `[folderKey, fileName]` (tested with separators); guarded settings; and the client id.
-- **Screen:** `/folder` (`SharedFolderScreen`): Open folder…, the folders opened before (each reopens from a click, without the picker), the one-time name prompt, and the model list. Firefox and Safari get a note saying why.
-- **Entry points:** an "Open a shared folder…" button in the Import dialog, and a note on first run, which keeps its three actions.
-- **Hidden for now:** all of it is behind `localStorage['archipelago.sharedFolders'] = 'on'` until part 3, because a listed model can't be opened yet and part 2 alone would otherwise ship to Pages.
-- **CLAUDE.md:** the constraint now allows writes into a folder the user granted (ADR 0010).
-- **e2e journey 12** (`shared-folder.spec.ts`) uses real OPFS handles: listing, the handle stored in IndexedDB and reopened after a reload, and a picker that fails the journey if used twice. That last guard was proven by forcing a second use.
-- **Probes:** 14 guards broken one at a time; 13 were caught. The 14th turned out redundant, because `isModelFileName` already leaves locks and logs out, so it was removed.
+**On `main`:** #156 (#131, the nesting prompt) and #159 (#157, one dialog backdrop that keeps focus, with the lint rule that enforces it).
 
-**Open:** part 3 (opening a model as writer or reader, the save dialog, the indicator leaving "saved", conflict notices, the switch removed, the OPFS lock/save journey, the manual UAT script). PRs #159, #160 and #161 are awaiting review.
+**Open PRs, all reviewed as "request changes"** (the details and fix plans are in the reviews and in the session-log entries on those branches):
+- **#160 (#158):** the ⌘K/⌘S guards are right. Still needed: one shared shortcut dispatcher that checks for an open modal before *any* binding, and a tripwire that covers the regex's bypasses.
+- **#161 (#147 part 1):** writer fencing must also fire on a gap with no heartbeat, not only on a failed one (a laptop that slept). Our own lock must stay recognisable after fencing or a failed check, so release can delete it. Nine error branches need tests.
+- **#162 / #163 (#147 parts 2–3):** stacked on #161, and not reviewed yet. #163 needs re-testing after #161's lock-manager fixes, because they change what happens when a laptop wakes.
+- **Merge order:** #161 → #162 → #163; #160 on its own.
+
+**Issues opened:** #164 (`harness`: a 100% branch-coverage gate for `src/io/shared-folder/**`). #157 and #158 were filed from the #156 review; #157 is closed by #159.
+
+**HQ:** three lessons in `lessons/verification-and-debugging.md`: fake timers vs `crypto.subtle`, naming the target of an injected fault, and OPFS for real directory handles in Playwright.
+
+**For the sponsor:** merged branches to delete: `feat/96-hide-nested-connections`, `feat/131-nesting-prompt`, `feat/157-dialog-overlay`. Keep `docs/shared-folder-collaboration` until #161 merges, because it carries the spec and ADR 0010 into the stack. Spec §14.3 (hosting) is still open.
 
 ## 2026-10-08 — /review-pr 160 and 161 (same session that wrote them)
 
@@ -33,6 +34,21 @@ Both reviews are less independent, because the same session wrote the PRs; each 
 - **Harvest:** CLAUDE.md, "a deadline is checked on every attempt, not only on a failed one" (87cae69, cascaded to #162/#163), and #164 (a 100% branch-coverage gate for `src/io/shared-folder/**`).
 
 **Open:** fix #160 and #161, then review #162 and #163. The fixes to #161's lock manager change part 3's behaviour on wake, so #163 needs re-testing after them.
+
+## 2026-10-07 — #147 part 2: opening a shared folder
+
+**Part 2 → PR stacked on part 1 (#161).**
+- **Adapter:** `browserFolder` over a real `FileSystemDirectoryHandle`, with `pickDirectory` (a cancelled picker is nothing picked) and `folderPermission` (asks only from a click).
+- **Listing:** by name only. Possible conflict copies are listed *apart* under the model they may copy, not hidden. That deviates from spec §4: a name can't tell `Landscape-v2.json` from a OneDrive copy, and a hidden model never gets opened.
+- **Storage:** `src/store/shared-folder-storage.ts` is its own IndexedDB database. It holds folders found again by `isSameEntry`; per-model memory under array keys `[folderKey, fileName]` (tested with separators); guarded settings; and the client id.
+- **Screen:** `/folder` (`SharedFolderScreen`): Open folder…, the folders opened before (each reopens from a click, without the picker), the one-time name prompt, and the model list. Firefox and Safari get a note saying why.
+- **Entry points:** an "Open a shared folder…" button in the Import dialog, and a note on first run, which keeps its three actions.
+- **Hidden for now:** all of it is behind `localStorage['archipelago.sharedFolders'] = 'on'` until part 3, because a listed model can't be opened yet and part 2 alone would otherwise ship to Pages.
+- **CLAUDE.md:** the constraint now allows writes into a folder the user granted (ADR 0010).
+- **e2e journey 12** (`shared-folder.spec.ts`) uses real OPFS handles: listing, the handle stored in IndexedDB and reopened after a reload, and a picker that fails the journey if used twice. That last guard was proven by forcing a second use.
+- **Probes:** 14 guards broken one at a time; 13 were caught. The 14th turned out redundant, because `isModelFileName` already leaves locks and logs out, so it was removed.
+
+**Open:** part 3 (opening a model as writer or reader, the save dialog, the indicator leaving "saved", conflict notices, the switch removed, the OPFS lock/save journey, the manual UAT script). PRs #159, #160 and #161 are awaiting review.
 
 ## 2026-10-07 — #147 part 1: the shared-folder protocol
 
