@@ -9,6 +9,7 @@ import { ViewScreen } from '@/ui/views/ViewScreen'
 import { GuideScreen } from '@/ui/guide/GuideScreen'
 import { PaletteProvider } from '@/ui/palette/PaletteProvider'
 import { FileWorkspaceProvider } from '@/ui/files/FileWorkspaceProvider'
+import { GlobalShortcutsProvider } from '@/ui/shell/GlobalShortcutsProvider'
 import { FirstRun } from '@/ui/files/FirstRun'
 import { SharedFolderScreen } from '@/ui/files/SharedFolderScreen'
 import { ImportDialog } from '@/ui/files/ImportDialog'
@@ -44,15 +45,17 @@ const NotationGallery = import.meta.env.DEV
 
 export function App() {
   return (
-    <FileWorkspaceProvider>
-      <PaletteProvider>
-        <AppRoutes />
-        <ImportDialog />
-        <SaveNotice />
-        <SharedSaveDialog />
-        <DivergedNotice />
-      </PaletteProvider>
-    </FileWorkspaceProvider>
+    <GlobalShortcutsProvider>
+      <FileWorkspaceProvider>
+        <PaletteProvider>
+          <AppRoutes />
+          <ImportDialog />
+          <SaveNotice />
+          <SharedSaveDialog />
+          <DivergedNotice />
+        </PaletteProvider>
+      </FileWorkspaceProvider>
+    </GlobalShortcutsProvider>
   )
 }
 
