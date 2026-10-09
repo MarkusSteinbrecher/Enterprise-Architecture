@@ -1,5 +1,12 @@
 # Session Log
 
+## 2026-10-09 (cont.) — Merges; #163's CI; MVP test plan (#166)
+
+- **Merged by the sponsor:** #160 and #161 to `main`. #162 merged into `feat/147-shared-folder-lock` 14 s after #161 had taken that branch to `main`, so **part 2 is not on `main`**. #163 is retargeted to `main` and carries part 2 with it.
+- **#163's failing check** was a timing race in `shared-model.test.tsx`, reproduced locally. A heartbeat that sees the file change before the save does correctly shows `FILE CHANGED ON DISK`, but the test pinned `1 UNSAVED`. The test now accepts either label and still fails on SAVED. Also merged `main` into #163 (conflicts with #160's dispatcher in `App.tsx` and `FileWorkspaceProvider.tsx`). 1475 unit and 29 e2e tests pass.
+- **#166:** a hands-on test plan for the sponsor's own Archi models (open, look, change, keep, round-trip to Archi, optional shared folder), with the known gaps listed.
+- **Open:** merge #163. `tests/manual/file-round-trip.md` step 8 and the note in `archimate-import.md` are stale since #76 and #96 (views and folders now round-trip; nested connections are hidden).
+
 ## 2026-10-09 — #160 and #161: review fixes
 
 **#160 (#158) → 7add31e, both blocking findings fixed.**
