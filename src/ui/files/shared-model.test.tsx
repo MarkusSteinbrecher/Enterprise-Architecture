@@ -182,7 +182,9 @@ describe('saving (criteria 6, 7, 8)', () => {
     put(MODEL, another())
     await user.click(screen.getByRole('button', { name: 'SAVE FILE' }))
     const dialog = await screen.findByRole('dialog', { name: 'The file changed on disk' })
-    expect(saveState()).toBe('LOCAL · 1 UNSAVED')
+    // Not saved, either way. Which label depends on whether a heartbeat saw the
+    // change before the save's own check did, and on a slow runner one can.
+    expect(['LOCAL · 1 UNSAVED', 'FILE CHANGED ON DISK']).toContain(saveState())
     expect(text(MODEL)).toContain('Changed by Ana')
 
     await user.click(within(dialog).getByRole('button', { name: 'Overwrite anyway…' }))
