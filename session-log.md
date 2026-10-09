@@ -1,5 +1,27 @@
 # Session Log
 
+## 2026-10-09 — #160 and #161: review fixes
+
+**#160 (#158) → 7add31e, both blocking findings fixed.**
+- Every global binding is now a row in `SHORTCUTS` (`src/ui/shell/global-shortcuts.ts`). One window listener in `GlobalShortcutsProvider` runs the rows and checks `isModalOpen()` before any of them.
+- Components register only what a binding does, with `useGlobalShortcut`, so a new binding is guarded because it exists. The table test fails on a row that has no case.
+- The tripwire counts key listeners per file and fails closed: any receiver, an event type it can't read, `.call`, or `onkeydown =`. It includes untracked files and catches stale entries. The matcher has its own tests for each bypass.
+- New e2e journey: `shortcuts.spec.ts`.
+- 9 probes, each failing tests on its own. ⌘S under a modal still does nothing; that is the sponsor's call.
+
+**#161 (#147 part 1) → bb19e1e, all three blocking findings fixed.**
+- **Fencing on the deadline:** checked first in `heartbeat()` and in `confirm()`. A failed attempt only retries.
+- **Our own lock stays ours to delete:** the manager keeps the last token *written* (`#written`) apart from the one it *trusts* (`#token`). `look()` reports our own untrusted lock as `ours`, acquire replaces it, and `release()` deletes it.
+- **Error branches:** tests for the nine the review listed, plus the file vanishing between check and write and five more fallbacks found by local v8 coverage. Branch coverage of the module rose from 94.7% to 97.0%; the rest is sort comparators, a getter and a default.
+- The offline-writer scenario now keeps its heartbeat running, as spec §1.1 means. A new scenario covers the writer that slept.
+- 13 probes, each failing tests on its own. The non-blocking findings are in #165, except `scan()` never throwing, which is fixed.
+- **Cascade:** #161 → #162 → #163 merged forward and pushed. All three are green locally (1445 unit, 28 e2e on #163).
+
+**Open:**
+- Re-review and merge #160 and #161.
+- Review #162, then #163. #163 should offer Edit when a reader tick returns `ours` (our own lock after fencing), and its wake behaviour needs a look.
+- #164 (coverage gate), #165.
+
 ## 2026-10-08 — Wrap-up: where the work stands
 
 **On `main`:** #156 (#131, the nesting prompt) and #159 (#157, one dialog backdrop that keeps focus, with the lint rule that enforces it).
@@ -15,6 +37,46 @@
 **HQ:** three lessons in `lessons/verification-and-debugging.md`: fake timers vs `crypto.subtle`, naming the target of an injected fault, and OPFS for real directory handles in Playwright.
 
 **For the sponsor:** merged branches to delete: `feat/96-hide-nested-connections`, `feat/131-nesting-prompt`, `feat/157-dialog-overlay`. Keep `docs/shared-folder-collaboration` until #161 merges, because it carries the spec and ADR 0010 into the stack. Spec §14.3 (hosting) is still open.
+
+## 2026-10-08 — /review-pr 160 and 161 (same session that wrote them)
+
+Both reviews are less independent, because the same session wrote the PRs; each generic pass ran as a fresh agent. The #161 agent died twice on network errors (ENOTFOUND), and the sponsor chose a third try, which completed. Its leftover worktrees were removed with the `node_modules` symlink unlinked first.
+
+**#160 (#158): request changes, 2 blocking.**
+- **Files, not bindings:** the tripwire classifies files, so a new unguarded chord in `PaletteProvider.tsx` passes. A probe kept all 12 tests green.
+- **Regex bypasses:** `globalThis.`, a variable holding `window`, `documentElement` and `onkeydown =` are all missed.
+- **Proposed fix:** one shared dispatcher that checks for an open modal, plus a registry-driven table test.
+- **Harvest:** CLAUDE.md, "guard the unit that can go wrong, not the file it lives in" (560e89f on #160).
+
+**#161 (#147 part 1): request changes, 3 blocking.**
+- **Fencing only on failure (criterion 5 not met):** fencing fires only when a heartbeat *fails*, so a laptop that slept wakes, succeeds once, and saves over a taken lock. `session.test.ts:182` asserts the deviation.
+- **Orphaned own lock:** fencing, a failed settle re-read, and a failed release read all forget the token while our lock is still there, which blocks everyone for 30 minutes.
+- **Untested error branches:** nine of them, two on the save-state path.
+- **Non-blocking:** stale judged across a sleep, takeover logged before it is attempted, a store error dropping a tick's result, same-profile log races, and the sync fake's losing delete.
+- **Harvest:** CLAUDE.md, "a deadline is checked on every attempt, not only on a failed one" (87cae69, cascaded to #162/#163), and #164 (a 100% branch-coverage gate for `src/io/shared-folder/**`).
+
+**Open:** fix #160 and #161, then review #162 and #163. The fixes to #161's lock manager change part 3's behaviour on wake, so #163 needs re-testing after them.
+
+## 2026-10-07 — #147 part 1: the shared-folder protocol
+
+**Sponsor's answers to spec §14** (recorded on #147 and in the spec):
+- ADR 0010 is accepted.
+- The display name is asked the first time a folder is opened.
+- The stale time is **30 min** (settle 10 s, heartbeat 60 s).
+- Delivery is three stacked PRs.
+- Hosting is still open.
+
+**Part 1 → PR (base `main`).** `src/io/shared-folder/`, React-free:
+- **Lock file:** its canonical JSON; unreadable counts as held.
+- **Lock manager:** acquire with the settle delay; heartbeat; self-fencing at half the stale time; staleness by local observation of the counter, which survives a reload through `memory.ts`; release only our own lock; unlock.
+- **Save guard:** lock check and fingerprint check; overwrite; save as copy.
+- **Session:** load, acquire (reloads if the model changed during the settle delay), the writer and reader ticks, `diverged`, and takeover, unlock and overwrite logged first. Each is not done when its log line can't be written.
+- **Names and logs:** conflict-copy detection; copy names safe for Windows and SharePoint; per-client audit logs.
+- **Settings:** a guard on the way in.
+- **Sync world** (`src/test/sync-world.ts`): per-client replicas with upload and download delay, OneDrive-style conflict copies, offline clients, per-file lag and fault injection. It has its own 8 tests.
+- **Tests:** 90 new across the module, with scenarios for criterion 4 below and above the settle delay and for all three cases of §1.1. 30 guards were broken one at a time, and each failed a test.
+
+**Open:** part 2 (folder handle + IndexedDB + Open folder + Firefox/Safari), then part 3 (UI wiring, OPFS journey, manual UAT script). The CLAUDE.md constraint line goes in part 2, where the app first writes into a granted folder. PRs #159 and #160 are still awaiting review.
 
 ## 2026-10-07 — #157 and #158: dialogs keep focus, shortcuts respect modals
 
@@ -91,6 +153,17 @@
 - **Tests:** 8 new tests read the citations off the page. All 10 guard removals were caught, one at a time. CLAUDE.md gained a convention: a citation must be true of the text it labels.
 
 **State:** #152 and the #153 PR await review/merge. `docs/shared-folder-collaboration` also adds a 2026-10-07 entry at the top of this file, so expect a one-hunk conflict here; keep both entries.
+
+## 2026-10-07 — #147 design review folded into the shared-folder spec and ADR 0010
+
+Reviewed #147's spec and ADR draft (branch `docs/shared-folder-collaboration`) and folded the fixes in. The main change: the spec claimed more than a synced folder can deliver.
+- **Limits stated (spec §1.1, ADR Consequences).** Three cases get past the lock and the save guard: the acquire race slower than `settleMs`, an offline writer taken over as stale, and a change still in flight. Conflict-copy detection and a writer-side watch on the model file are now load-bearing, not extras.
+- **Save state.** A change under the writer's lock takes the indicator out of "saved" (§8.2). This means `markSaved()` needs an inverse or a "file diverged" state.
+- **Contradictions fixed.** Readers reload automatically only when they hold no unsaved changes, so a demoted writer keeps its edits. Criterion 12 is now achievable: *possible* conflict copies that can be dismissed, with no mtime filter. The save-as-copy indicator wording is clear.
+- **Gaps closed.** A failed lock read is not a foreign token. Self-fencing at `staleAfterMs / 2`. IndexedDB array keys `[folderKey, fileName]`. Copy names cleaned of characters Windows and SharePoint forbid, with clash handling (no exclusive create in the API; gap accepted). One audit log per client. Fingerprint the bytes written. Folder listing doesn't parse files (Files On-Demand). Stale-lock observations survive a reload.
+- Acceptance criteria are now 16, and criterion 4 is split by sync delay below and above `settleMs`.
+
+**Open:** the sponsor's three questions (spec §14; a 30-minute stale default is now suggested). ADR 0010 is still Proposed. The issue body was updated to match the spec.
 
 ## 2026-10-07 — #147 spec reviewed; ArchiMate 4 decided (ADR 0011); in-app ArchiMate guide (#149)
 

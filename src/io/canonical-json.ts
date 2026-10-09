@@ -331,7 +331,7 @@ function canonicalTagGroup(group: TagGroup): Record<string, unknown> {
 }
 
 /** JSON.stringify replacer: emit object keys in sorted order at every depth. */
-function sortKeys(_key: string, value: unknown): unknown {
+export function sortKeys(_key: string, value: unknown): unknown {
   if (!isRecord(value) || Array.isArray(value)) return value
   const sorted: Record<string, unknown> = {}
   for (const key of Object.keys(value).sort()) setKey(sorted, key, value[key])
