@@ -256,13 +256,17 @@ export class SharedModelSession {
     return this.#lock.release()
   }
 
-  /** The possible conflict copies, less those the user dismissed. */
+  /**
+   * The possible conflict copies, less those the user dismissed. Never throws:
+   * a tick calls it after the heartbeat, and a rejection there would lose the
+   * heartbeat's result, which may be the news that we lost the lock.
+   */
   async scan(): Promise<ConflictCopy[]> {
-    const dismissed = (await this.#options.dismissed.get(this.#key)) ?? []
     try {
+      const dismissed = (await this.#options.dismissed.get(this.#key)) ?? []
       return await scanConflictCopies(this.#options.folder, this.#options.model, new Set(dismissed))
     } catch {
-      // A listing that fails is no news; the next tick scans again.
+      // A listing or a memory that fails is no news; the next tick scans again.
       return []
     }
   }

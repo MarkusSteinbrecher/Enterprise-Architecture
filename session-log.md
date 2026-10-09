@@ -1,5 +1,40 @@
 # Session Log
 
+## 2026-10-08 — Wrap-up: where the work stands
+
+**On `main`:** #156 (#131, the nesting prompt) and #159 (#157, one dialog backdrop that keeps focus, with the lint rule that enforces it).
+
+**Open PRs, all reviewed as "request changes"** (the details and fix plans are in the reviews and in the session-log entries on those branches):
+- **#160 (#158):** the ⌘K/⌘S guards are right. Still needed: one shared shortcut dispatcher that checks for an open modal before *any* binding, and a tripwire that covers the regex's bypasses.
+- **#161 (#147 part 1):** writer fencing must also fire on a gap with no heartbeat, not only on a failed one (a laptop that slept). Our own lock must stay recognisable after fencing or a failed check, so release can delete it. Nine error branches need tests.
+- **#162 / #163 (#147 parts 2–3):** stacked on #161, and not reviewed yet. #163 needs re-testing after #161's lock-manager fixes, because they change what happens when a laptop wakes.
+- **Merge order:** #161 → #162 → #163; #160 on its own.
+
+**Issues opened:** #164 (`harness`: a 100% branch-coverage gate for `src/io/shared-folder/**`). #157 and #158 were filed from the #156 review; #157 is closed by #159.
+
+**HQ:** three lessons in `lessons/verification-and-debugging.md`: fake timers vs `crypto.subtle`, naming the target of an injected fault, and OPFS for real directory handles in Playwright.
+
+**For the sponsor:** merged branches to delete: `feat/96-hide-nested-connections`, `feat/131-nesting-prompt`, `feat/157-dialog-overlay`. Keep `docs/shared-folder-collaboration` until #161 merges, because it carries the spec and ADR 0010 into the stack. Spec §14.3 (hosting) is still open.
+
+## 2026-10-08 — /review-pr 160 and 161 (same session that wrote them)
+
+Both reviews are less independent, because the same session wrote the PRs; each generic pass ran as a fresh agent. The #161 agent died twice on network errors (ENOTFOUND), and the sponsor chose a third try, which completed. Its leftover worktrees were removed with the `node_modules` symlink unlinked first.
+
+**#160 (#158): request changes, 2 blocking.**
+- **Files, not bindings:** the tripwire classifies files, so a new unguarded chord in `PaletteProvider.tsx` passes. A probe kept all 12 tests green.
+- **Regex bypasses:** `globalThis.`, a variable holding `window`, `documentElement` and `onkeydown =` are all missed.
+- **Proposed fix:** one shared dispatcher that checks for an open modal, plus a registry-driven table test.
+- **Harvest:** CLAUDE.md, "guard the unit that can go wrong, not the file it lives in" (560e89f on #160).
+
+**#161 (#147 part 1): request changes, 3 blocking.**
+- **Fencing only on failure (criterion 5 not met):** fencing fires only when a heartbeat *fails*, so a laptop that slept wakes, succeeds once, and saves over a taken lock. `session.test.ts:182` asserts the deviation.
+- **Orphaned own lock:** fencing, a failed settle re-read, and a failed release read all forget the token while our lock is still there, which blocks everyone for 30 minutes.
+- **Untested error branches:** nine of them, two on the save-state path.
+- **Non-blocking:** stale judged across a sleep, takeover logged before it is attempted, a store error dropping a tick's result, same-profile log races, and the sync fake's losing delete.
+- **Harvest:** CLAUDE.md, "a deadline is checked on every attempt, not only on a failed one" (87cae69, cascaded to #162/#163), and #164 (a 100% branch-coverage gate for `src/io/shared-folder/**`).
+
+**Open:** fix #160 and #161, then review #162 and #163. The fixes to #161's lock manager change part 3's behaviour on wake, so #163 needs re-testing after them.
+
 ## 2026-10-07 — #147 part 3: editing a model in a shared folder
 
 **Part 3 → PR stacked on part 2 (#162), with #159 merged in.** It uses `DialogOverlay`, so #159 must merge first.
@@ -30,25 +65,6 @@
 - **Probes:** 14 guards broken one at a time; 13 were caught. The 14th turned out redundant, because `isModelFileName` already leaves locks and logs out, so it was removed.
 
 **Open:** part 3 (opening a model as writer or reader, the save dialog, the indicator leaving "saved", conflict notices, the switch removed, the OPFS lock/save journey, the manual UAT script). PRs #159, #160 and #161 are awaiting review.
-
-## 2026-10-08 — /review-pr 160 and 161 (same session that wrote them)
-
-Both reviews are less independent, because the same session wrote the PRs; each generic pass ran as a fresh agent. The #161 agent died twice on network errors (ENOTFOUND), and the sponsor chose a third try, which completed. Its leftover worktrees were removed with the `node_modules` symlink unlinked first.
-
-**#160 (#158): request changes, 2 blocking.**
-- **Files, not bindings:** the tripwire classifies files, so a new unguarded chord in `PaletteProvider.tsx` passes. A probe kept all 12 tests green.
-- **Regex bypasses:** `globalThis.`, a variable holding `window`, `documentElement` and `onkeydown =` are all missed.
-- **Proposed fix:** one shared dispatcher that checks for an open modal, plus a registry-driven table test.
-- **Harvest:** CLAUDE.md, "guard the unit that can go wrong, not the file it lives in" (560e89f on #160).
-
-**#161 (#147 part 1): request changes, 3 blocking.**
-- **Fencing only on failure (criterion 5 not met):** fencing fires only when a heartbeat *fails*, so a laptop that slept wakes, succeeds once, and saves over a taken lock. `session.test.ts:182` asserts the deviation.
-- **Orphaned own lock:** fencing, a failed settle re-read, and a failed release read all forget the token while our lock is still there, which blocks everyone for 30 minutes.
-- **Untested error branches:** nine of them, two on the save-state path.
-- **Non-blocking:** stale judged across a sleep, takeover logged before it is attempted, a store error dropping a tick's result, same-profile log races, and the sync fake's losing delete.
-- **Harvest:** CLAUDE.md, "a deadline is checked on every attempt, not only on a failed one" (87cae69, cascaded to #162/#163), and #164 (a 100% branch-coverage gate for `src/io/shared-folder/**`).
-
-**Open:** fix #160 and #161, then review #162 and #163. The fixes to #161's lock manager change part 3's behaviour on wake, so #163 needs re-testing after them.
 
 ## 2026-10-07 — #147 part 1: the shared-folder protocol
 

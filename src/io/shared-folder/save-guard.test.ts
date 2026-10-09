@@ -165,6 +165,27 @@ describe('the save guard (spec §6.1)', () => {
     expect(await text()).toBe('{"v":1}')
   })
 
+  it('writes the model back when it vanishes between the check and the write', async () => {
+    // The sync client can land a colleague's delete in between (spec §12). The
+    // write recreates the file, and in the cloud a delete that meets a change
+    // is dropped. What is recorded is still the bytes written.
+    const { folder, lock, text } = await setup()
+    const bytes = encodeText('{"v":2}')
+    const result = await guardedSave({
+      folder,
+      model: MODEL,
+      lock,
+      expected: await fingerprint(encodeText('{"v":1}')),
+      bytes,
+      beforeWrite: async () => {
+        await folder.remove(MODEL)
+        return true
+      },
+    })
+    expect(result).toEqual({ kind: 'saved', fingerprint: await fingerprint(bytes) })
+    expect(await text()).toBe('{"v":2}')
+  })
+
   it('writes nothing when the step before the write says no', async () => {
     const { folder, lock, text } = await setup()
     const result = await guardedSave({
@@ -209,6 +230,15 @@ describe('save as copy (spec §6.2)', () => {
     expect(await saveAsCopy(folder, MODEL, 'Markus', AT, encodeText('x'))).toEqual({
       kind: 'failed',
       message: 'disk full',
+    })
+  })
+
+  it('reports what the folder threw even when it is not an Error', async () => {
+    const { folder } = await setup()
+    vi.spyOn(folder, 'has').mockRejectedValue('NotAllowedError')
+    expect(await saveAsCopy(folder, MODEL, 'Markus', AT, encodeText('x'))).toEqual({
+      kind: 'failed',
+      message: 'NotAllowedError',
     })
   })
 })

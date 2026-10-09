@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SyncWorld } from '@/test/sync-world'
 import { readAudit } from './audit-log'
-import { decodeText, encodeText } from './folder'
-import { memoryStore, type LockObservation } from './memory'
+import { decodeText, encodeText, type Folder } from './folder'
+import { memoryStore, type KeyedStore, type LockObservation } from './memory'
 import { SharedModelSession, type AcquireResult, type ReaderTick, type WriterTick } from './session'
 import { DEFAULT_SETTINGS } from './settings'
 
@@ -22,7 +22,13 @@ afterEach(() => vi.useRealTimers())
 
 const text = (bytes: Uint8Array | undefined) => bytes && decodeText(bytes)
 
-function session(world: SyncWorld, client: string) {
+function session(
+  world: SyncWorld,
+  client: string,
+  {
+    dismissed = memoryStore<readonly string[]>(),
+  }: { dismissed?: KeyedStore<readonly string[]> } = {},
+) {
   let n = 0
   return new SharedModelSession({
     folder: world.client(client),
@@ -32,7 +38,7 @@ function session(world: SyncWorld, client: string) {
     appVersion: '0.2.0',
     settings: { ...DEFAULT_SETTINGS, displayName: client },
     observations: memoryStore<LockObservation>(),
-    dismissed: memoryStore<readonly string[]>(),
+    dismissed,
     newToken: () => `${client}-${(n += 1)}`,
   })
 }
@@ -185,6 +191,101 @@ describe('a writer whose lock is taken (criterion 5)', () => {
     expect(await markus.saveAsCopy(encodeText('mine'))).toMatchObject({ kind: 'copied' })
     expect(text(await world.client('Markus').read(MODEL))).toBe('v0')
   })
+
+  it('fences itself on waking from a sleep, before the takeover has reached it', async () => {
+    const world = await worldWith(2000, 'Ana', 'Markus')
+    const markus = session(world, 'Markus')
+    const ana = session(world, 'Ana')
+    await open(markus)
+    await vi.advanceTimersByTimeAsync(2000)
+    expect((await opened(ana)).outcome).toMatchObject({ kind: 'reader', why: 'held' })
+
+    // Markus's laptop sleeps: no heartbeat, no sync. Ana sees the lock go stale.
+    world.client('Markus').offline = true
+    await ana.readerTick(false)
+    await vi.advanceTimersByTimeAsync(STALE)
+    expect((await opened(ana, true)).outcome).toEqual({ kind: 'writer' })
+    expect((await ana.save(encodeText('Ana’s work'))).kind).toBe('saved')
+
+    // He wakes, and the heartbeat runs before his sync client has caught up,
+    // so his folder still shows his own lock. It must not be believed.
+    expect((await markus.writerTick()).lock).toMatchObject({ kind: 'fenced' })
+    expect(markus.role).toBe('reader')
+    expect(await markus.save(encodeText('Markus’s work'))).toMatchObject({
+      kind: 'refused',
+      reason: 'lock-lost',
+    })
+
+    // Nothing of his was written, so nothing comes back as a conflict.
+    world.client('Markus').offline = false
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(text(world.cloudRead(MODEL))).toBe('Ana’s work')
+    expect(world.cloudNames().filter((name) => name.includes('-Markus'))).toEqual([])
+  })
+})
+
+describe('when the folder lets a step down (spec §12)', () => {
+  it('reports a model it cannot read, or cannot find, and keeps no base', async () => {
+    const world = await worldWith(0, 'Markus')
+    const s = session(world, 'Markus')
+    world.client('Markus').fail('read', { name: MODEL, message: 'busy' })
+    expect(await s.load()).toEqual({ kind: 'failed', message: 'busy' })
+    expect(s.base).toBeUndefined()
+    await world.client('Markus').remove(MODEL)
+    expect(await s.load()).toEqual({ kind: 'missing' })
+    expect(s.base).toBeUndefined()
+  })
+
+  it('refuses to save over a model it never read, even holding the lock', async () => {
+    const world = new SyncWorld({ delayMs: 0 })
+    const s = session(world, 'Markus')
+    const pending = s.acquire()
+    await vi.advanceTimersByTimeAsync(SETTLE)
+    expect(await pending).toEqual({ outcome: { kind: 'writer' } })
+    expect(s.base).toBeUndefined()
+    expect(await s.save(encodeText('mine'))).toEqual({
+      kind: 'failed',
+      message: 'The model has not been read from the folder.',
+    })
+    expect(await world.client('Markus').has(MODEL)).toBe(false)
+  })
+
+  it('takes a model read that fails as no news: neither changed nor missing', async () => {
+    const world = await worldWith(0, 'Ana', 'Markus')
+    const markus = session(world, 'Markus')
+    await open(markus)
+    const ana = session(world, 'Ana')
+    await open(ana)
+    await markus.save(encodeText('v1'))
+    await vi.advanceTimersByTimeAsync(1)
+
+    world.client('Markus').fail('read', { name: MODEL, message: 'busy' })
+    const writer = await markus.writerTick()
+    expect(writer).toMatchObject({ lock: { kind: 'held' }, model: { failed: 'busy' } })
+    expect(markus.diverged).toBe(false)
+
+    world.client('Ana').fail('read', { name: MODEL, message: 'busy' })
+    const reader = await ana.readerTick(false)
+    expect(reader.model).toEqual({ failed: 'busy' })
+    expect(reader.reload).toBeUndefined()
+    expect(ana.diverged).toBe(false)
+    // The next tick that can read it reloads.
+    expect(text((await ana.readerTick(false)).reload)).toBe('v1')
+  })
+
+  it('keeps a tick’s lock result when the remembered dismissals cannot be read', async () => {
+    const world = await worldWith(0, 'Markus')
+    const broken: KeyedStore<readonly string[]> = {
+      get: () => Promise.reject(new Error('IndexedDB closed')),
+      set: () => Promise.reject(new Error('IndexedDB closed')),
+      delete: () => Promise.reject(new Error('IndexedDB closed')),
+    }
+    const markus = session(world, 'Markus', { dismissed: broken })
+    await open(markus)
+    await vi.advanceTimersByTimeAsync(STALE / 2)
+    // The heartbeat has already stopped trusting the lock; the tick must say so.
+    expect(await markus.writerTick()).toMatchObject({ lock: { kind: 'fenced' }, conflicts: [] })
+  })
 })
 
 describe('the three ways past the lock (spec §1.1)', () => {
@@ -198,8 +299,13 @@ describe('the three ways past the lock (spec §1.1)', () => {
 
     world.client('Markus').offline = true
     // Ana watches the lock sit still for the whole stale time, and takes over.
+    // Markus's heartbeat keeps succeeding in his own copy of the folder: he is
+    // offline, not asleep, so nothing tells him to fence (spec §5.2).
     await ana.readerTick(false)
-    await vi.advanceTimersByTimeAsync(STALE)
+    for (let waited = 0; waited < STALE; waited += HEARTBEAT) {
+      await vi.advanceTimersByTimeAsync(HEARTBEAT)
+      expect((await markus.writerTick()).lock).toEqual({ kind: 'held' })
+    }
     expect((await ana.readerTick(false)).lock).toMatchObject({ kind: 'held', stale: true })
     expect((await opened(ana, true)).outcome).toEqual({ kind: 'writer' })
     expect((await ana.save(encodeText('Ana’s work'))).kind).toBe('saved')
@@ -423,6 +529,65 @@ describe('takeover and unlock are logged (spec §5.5)', () => {
     expect(await world.client('Markus').has(`${MODEL}.lock`)).toBe(false)
     const { entries } = await readAudit(world.client('Markus'))
     expect(entries).toEqual([expect.objectContaining({ action: 'unlock', previousOwner: 'Ana' })])
+  })
+
+  it('reports an unlock whose delete fails, and leaves the lock', async () => {
+    const world = await worldWith(0, 'Ana', 'Markus')
+    await open(session(world, 'Ana'))
+    const markus = session(world, 'Markus')
+    await markus.load()
+    world.client('Markus').fail('remove', { name: `${MODEL}.lock`, message: 'denied' })
+    expect(await markus.unlock()).toEqual({ kind: 'failed', message: 'denied' })
+    expect(await world.client('Markus').has(`${MODEL}.lock`)).toBe(true)
+  })
+
+  it('starts a new line after a torn one, and skips lines that are not entries', async () => {
+    const world = await worldWith(0, 'Ana', 'Markus')
+    const folder = world.client('Markus')
+    await folder.write('.archipelago-log-client-Markus.jsonl', encodeText('null\n[]\n{"action":'))
+    await open(session(world, 'Ana'))
+    await open(session(world, 'Markus'), true)
+    const log = text(await folder.read('.archipelago-log-client-Markus.jsonl'))
+    expect(log?.split('\n')).toEqual([
+      'null',
+      '[]',
+      '{"action":',
+      expect.stringContaining('"action":"takeover"'),
+      '',
+    ])
+    expect((await readAudit(folder)).entries).toEqual([
+      expect.objectContaining({ action: 'takeover', previousOwner: 'Ana' }),
+    ])
+  })
+
+  it('skips a log that is gone by the time it is read', async () => {
+    const world = await worldWith(0, 'Markus')
+    const folder = world.client('Markus')
+    await folder.write('.archipelago-log-a.jsonl', encodeText('{"half": '))
+    const listedThenGone: Folder = {
+      list: () => folder.list(),
+      has: (name) => folder.has(name),
+      read: async () => undefined,
+      write: (name, bytes) => folder.write(name, bytes),
+      remove: (name) => folder.remove(name),
+    }
+    expect(await readAudit(listedThenGone)).toEqual({ entries: [], unreadable: [] })
+  })
+
+  it('names a log it cannot read, and still reads the others', async () => {
+    const world = await worldWith(0, 'Markus')
+    const folder = world.client('Markus')
+    const line = (name: string) =>
+      encodeText(
+        `{"action":"unlock","at":"2026-10-07T09:00:00.000Z","displayName":"${name}","model":"X.json"}\n`,
+      )
+    await folder.write('.archipelago-log-a.jsonl', line('A'))
+    await folder.write('.archipelago-log-b.jsonl', line('B'))
+    folder.fail('read', { name: '.archipelago-log-b.jsonl' })
+    expect(await readAudit(folder)).toEqual({
+      entries: [expect.objectContaining({ displayName: 'A' })],
+      unreadable: ['.archipelago-log-b.jsonl'],
+    })
   })
 
   it('reads every client’s log, oldest first, and survives a torn line', async () => {
