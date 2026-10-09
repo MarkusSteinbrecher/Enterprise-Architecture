@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { summariseProblems, type ImportProblem } from '@/io'
+import { supportsDirectoryAccess } from '@/io/shared-folder'
 import { DialogOverlay } from '@/ui/common/DialogOverlay'
 import { useFocusTrap } from '@/ui/common/use-focus-trap'
 import { useFileWorkspace } from './context'
+import { sharedFoldersEnabled } from './shared-folder-switch'
 
 /**
  * The import dialog (issue #11), wrapped around the structured problems from #5.
@@ -23,6 +26,7 @@ export function ImportDialog() {
 
 function ImportDialogBody() {
   const { lastImport, importFile, openFile, cancelImport, canPickFiles } = useFileWorkspace()
+  const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
@@ -95,7 +99,28 @@ function ImportDialogBody() {
               Open and keep linked
             </button>
           )}
+          {sharedFoldersEnabled() && supportsDirectoryAccess() && (
+            <button
+              type="button"
+              className="button"
+              disabled={busy}
+              onClick={() => {
+                cancelImport()
+                navigate('/folder')
+              }}
+              title="A folder OneDrive, SharePoint or a network drive keeps in step, where one person edits a model at a time"
+            >
+              Open a shared folder…
+            </button>
+          )}
         </div>
+
+        {sharedFoldersEnabled() && !supportsDirectoryAccess() && (
+          <p className="dialog__help">
+            Shared folders need a Chromium browser, such as Edge or Chrome: Firefox and Safari
+            cannot write into a folder you pick.
+          </p>
+        )}
 
         {lastImport && (
           <div className="import-report">

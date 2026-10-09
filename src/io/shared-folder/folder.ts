@@ -38,7 +38,11 @@ export function decodeText(bytes: Uint8Array): string {
   return new TextDecoder().decode(bytes)
 }
 
-/** The message of whatever a folder operation threw. */
+/**
+ * The message of whatever a folder operation threw. The File System Access API
+ * throws `DOMException`s, which are not an `Error` everywhere (jsdom's is not).
+ */
 export function failure(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
+  if (error instanceof Error || error instanceof DOMException) return error.message
+  return String(error)
 }

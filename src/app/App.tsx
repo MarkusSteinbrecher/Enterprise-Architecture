@@ -10,6 +10,8 @@ import { GuideScreen } from '@/ui/guide/GuideScreen'
 import { PaletteProvider } from '@/ui/palette/PaletteProvider'
 import { FileWorkspaceProvider } from '@/ui/files/FileWorkspaceProvider'
 import { FirstRun } from '@/ui/files/FirstRun'
+import { SharedFolderScreen } from '@/ui/files/SharedFolderScreen'
+import { sharedFoldersEnabled } from '@/ui/files/shared-folder-switch'
 import { ImportDialog } from '@/ui/files/ImportDialog'
 import { TakeoverScreen } from '@/ui/files/TakeoverScreen'
 import { SaveNotice } from '@/ui/files/SaveNotice'
@@ -71,9 +73,10 @@ function AppRoutes() {
     )
   }
   if (role === 'reader') return <TakeoverScreen />
-  // The guide needs no model, and first run links to it, so it skips first run.
-  const onGuide = pathname === '/guide'
-  if (ready && elementCount === 0 && !startedEmpty && !onGuide) {
+  // The guide and the shared folder need no model, and first run links to
+  // both, so they skip first run.
+  const noModelNeeded = pathname === '/guide' || pathname === '/folder'
+  if (ready && elementCount === 0 && !startedEmpty && !noModelNeeded) {
     return <FirstRun onStartEmpty={() => setStartedEmpty(true)} />
   }
 
@@ -86,6 +89,12 @@ function AppRoutes() {
         <Route path="/graph" element={<GraphScreen />} />
         <Route path="/view/:id" element={<KeyedViewScreen />} />
         <Route path="/guide" element={<GuideScreen />} />
+        <Route
+          path="/folder"
+          element={
+            sharedFoldersEnabled() ? <SharedFolderScreen /> : <Navigate to="/inventory" replace />
+          }
+        />
         <Route path="*" element={<Navigate to="/inventory" replace />} />
       </Route>
     </Routes>
