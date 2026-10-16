@@ -11,7 +11,8 @@ import type { Folder } from '@/io/shared-folder/folder'
  * the change, does not replace it. The cloud keeps the file it has and stores
  * the late write beside it as a conflict copy, `<stem>-<CLIENT><ext>`
  * (`Landscape-B.json`, `Landscape.json-B.lock`), and every client then
- * receives both. A delete that meets a change is dropped; the changed file wins.
+ * receives both. A delete that meets a change is dropped; the changed file wins,
+ * and the deleting client gets it back, as OneDrive restores it there.
  *
  * A client can go offline, which holds its uploads and its downloads until it
  * comes back, while its own reads and writes keep working locally: the offline
@@ -89,10 +90,13 @@ export class SyncWorld {
       this.#store(upload.name, upload.bytes, client.name)
       return
     }
-    // It meets a version it never saw.
-    if (upload.bytes === null) return // a delete loses to the change
-    this.#store(conflictName(upload.name, client.name), upload.bytes, client.name)
-    // Its writer gets the kept version back under the name.
+    // It meets a version it never saw. Either way its writer gets the kept
+    // version back under the name: a change that reached it while its own upload
+    // was on the way was not applied, so nothing else would restore the file.
+    if (upload.bytes !== null) {
+      this.#store(conflictName(upload.name, client.name), upload.bytes, client.name)
+    }
+    // A delete loses to the change, and stores nothing.
     this.#broadcast(upload.name)
   }
 

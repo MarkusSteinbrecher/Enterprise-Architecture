@@ -1,4 +1,4 @@
-import { appendAudit, type AuditEntry } from './audit-log'
+import { appendAudit, retractAudit, type AuditEntry } from './audit-log'
 import { scanConflictCopies, type ConflictCopy } from './conflict-copies'
 import { fingerprint } from './fingerprint'
 import { failure, type Folder } from './folder'
@@ -56,6 +56,11 @@ export interface AcquireResult {
   readonly outcome: AcquireOutcome
   /** The model changed while we took the lock: load these bytes before allowing edits (spec §5.1, step 5). */
   readonly reload?: Uint8Array
+  /**
+   * A takeover that did not happen, whose line could not be taken back out of
+   * the log: why, for the user to hear that the log now says more than happened.
+   */
+  readonly logNotRetracted?: string
 }
 
 export interface WriterTick {
@@ -138,7 +143,9 @@ export class SharedModelSession {
   /**
    * Take the lock for editing (spec §5.1). With `takeOver`, the user confirmed
    * taking someone else's: that is logged first, and not done if the log
-   * cannot be written.
+   * cannot be written. Our lock write is the takeover, so the line has to be
+   * there before it; a takeover that then ends as a reader (the write failed,
+   * or another lock won the settle) takes its line back out (#165).
    *
    * A model that changed since it was read is reloaded before editing starts,
    * unless the caller holds unsaved changes (a writer that lost the lock and is
@@ -149,13 +156,23 @@ export class SharedModelSession {
   async acquire({ takeOver = false, hasUnsavedChanges = false } = {}): Promise<
     AcquireResult | NotLogged
   > {
+    let logged: AuditEntry | undefined
     if (takeOver) {
       const view = await this.#lock.look()
-      const logged = await this.#audit('takeover', view)
-      if (logged) return logged
+      const audit = await this.#audit('takeover', view)
+      if (audit.kind === 'not-logged') return audit
+      logged = audit.entry
     }
     const outcome = await this.#lock.acquire({ takeOver })
-    if (outcome.kind !== 'writer') return { outcome }
+    if (outcome.kind !== 'writer') {
+      if (!logged) return { outcome }
+      try {
+        await retractAudit(this.#options.folder, this.#options.clientId, logged)
+        return { outcome }
+      } catch (error) {
+        return { outcome, logNotRetracted: failure(error) }
+      }
+    }
     const check = await this.#checkModel()
     if (check.status === 'changed' && check.bytes && !hasUnsavedChanges) {
       this.#base = { bytes: check.bytes, fingerprint: check.fingerprint }
@@ -217,7 +234,8 @@ export class SharedModelSession {
       ...(overwrite
         ? {
             beforeWrite: async () => {
-              notLogged = await this.#audit('overwrite')
+              const audit = await this.#audit('overwrite')
+              if (audit.kind === 'not-logged') notLogged = audit
               return notLogged === undefined
             },
           }
@@ -245,8 +263,8 @@ export class SharedModelSession {
   /** **Unlock** (spec §5.3): remove whoever's lock is there, logged first. */
   async unlock(): Promise<{ kind: 'unlocked' } | { kind: 'failed'; message: string } | NotLogged> {
     const view = await this.#lock.look()
-    const notLogged = await this.#audit('unlock', view)
-    if (notLogged) return notLogged
+    const audit = await this.#audit('unlock', view)
+    if (audit.kind === 'not-logged') return audit
     const result = await this.#lock.unlock()
     return 'failed' in result ? { kind: 'failed', message: result.failed } : { kind: 'unlocked' }
   }
@@ -299,18 +317,22 @@ export class SharedModelSession {
     }
   }
 
-  /** Write the audit line; the reason it could not be written, or nothing. */
-  async #audit(action: AuditEntry['action'], view?: LockView): Promise<NotLogged | undefined> {
+  /** Write the audit line: the line written, or the reason it could not be. */
+  async #audit(
+    action: AuditEntry['action'],
+    view?: LockView,
+  ): Promise<{ kind: 'logged'; entry: AuditEntry } | NotLogged> {
     const owner = view?.kind === 'held' ? view.owner?.displayName : undefined
+    const entry: AuditEntry = {
+      action,
+      at: this.#clock.iso(),
+      displayName: this.#options.settings.displayName,
+      model: this.#options.model,
+      ...(owner !== undefined ? { previousOwner: owner } : {}),
+    }
     try {
-      await appendAudit(this.#options.folder, this.#options.clientId, {
-        action,
-        at: this.#clock.iso(),
-        displayName: this.#options.settings.displayName,
-        model: this.#options.model,
-        ...(owner !== undefined ? { previousOwner: owner } : {}),
-      })
-      return undefined
+      await appendAudit(this.#options.folder, this.#options.clientId, entry)
+      return { kind: 'logged', entry }
     } catch (error) {
       return {
         kind: 'not-logged',

@@ -84,6 +84,25 @@ describe('the sync world', () => {
     expect(await text(a, 'X.json.lock')).toBe('b')
   })
 
+  it('gives the file back to the machine whose delete lost, as OneDrive restores it (#165)', async () => {
+    // B's change reaches A while A's delete is still uploading, so A does not
+    // apply it then; only the cloud's answer to the delete can restore it.
+    const world = new SyncWorld({ delayMs: 4000 })
+    const a = world.client('A')
+    const b = world.client('B')
+    await a.write('X.json.lock', encodeText('a'))
+    await vi.advanceTimersByTimeAsync(10_000)
+    a.lag('X.json.lock', 10_000)
+    await b.write('X.json.lock', encodeText('b'))
+    await a.remove('X.json.lock')
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(await text(a, 'X.json.lock')).toBeUndefined()
+    await vi.advanceTimersByTimeAsync(20_000)
+    expect(world.cloudNames()).toEqual(['X.json.lock'])
+    expect(await text(a, 'X.json.lock')).toBe('b')
+    expect(await text(b, 'X.json.lock')).toBe('b')
+  })
+
   it('holds an offline machine’s writes until it is back, and then they meet what changed', async () => {
     const world = new SyncWorld({ delayMs: 4000 })
     const a = world.client('A')

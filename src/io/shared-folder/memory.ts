@@ -23,6 +23,12 @@ export interface LockObservation {
   readonly heartbeatSeq: number
   /** This machine's clock when it first saw the lock at this token and counter. */
   readonly since: number
+  /**
+   * This machine's clock at the last look. A look long after it finds a lock
+   * nobody here was watching, so the watch starts again (#165). Absent in an
+   * observation stored before #165, which counts as watched by no one.
+   */
+  readonly lookedAt?: number
 }
 
 export function memoryStore<T>(): KeyedStore<T> {

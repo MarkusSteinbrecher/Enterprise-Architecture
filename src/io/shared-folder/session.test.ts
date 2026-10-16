@@ -16,11 +16,22 @@ const MODEL = 'Landscape.json'
 const SETTLE = DEFAULT_SETTINGS.settleMs
 const HEARTBEAT = DEFAULT_SETTINGS.heartbeatMs
 const STALE = DEFAULT_SETTINGS.staleAfterMs
+const POLL = DEFAULT_SETTINGS.pollMs
 
 beforeEach(() => vi.useFakeTimers({ now: new Date('2026-10-07T08:00:00Z') }))
 afterEach(() => vi.useRealTimers())
 
 const text = (bytes: Uint8Array | undefined) => bytes && decodeText(bytes)
+const LOG = '.archipelago-log-client-Markus.jsonl'
+const benLock = JSON.stringify({
+  appVersion: '0.2.0',
+  displayName: 'Ben',
+  heartbeatAt: '2026-10-07T08:00:00.000Z',
+  heartbeatSeq: 0,
+  schemaVersion: 1,
+  since: '2026-10-07T08:00:00.000Z',
+  token: 'ben-1',
+})
 
 function session(
   world: SyncWorld,
@@ -298,13 +309,16 @@ describe('the three ways past the lock (spec §1.1)', () => {
     expect((await opened(ana)).outcome).toMatchObject({ kind: 'reader', why: 'held' })
 
     world.client('Markus').offline = true
-    // Ana watches the lock sit still for the whole stale time, and takes over.
-    // Markus's heartbeat keeps succeeding in his own copy of the folder: he is
-    // offline, not asleep, so nothing tells him to fence (spec §5.2).
+    // Ana watches the lock sit still for the whole stale time, polling, and
+    // takes over. Markus's heartbeat keeps succeeding in his own copy of the
+    // folder: he is offline, not asleep, so nothing tells him to fence (spec §5.2).
     await ana.readerTick(false)
-    for (let waited = 0; waited < STALE; waited += HEARTBEAT) {
-      await vi.advanceTimersByTimeAsync(HEARTBEAT)
-      expect((await markus.writerTick()).lock).toEqual({ kind: 'held' })
+    for (let waited = POLL; waited <= STALE; waited += POLL) {
+      await vi.advanceTimersByTimeAsync(POLL)
+      await ana.readerTick(false)
+      if (waited % HEARTBEAT === 0) {
+        expect((await markus.writerTick()).lock).toEqual({ kind: 'held' })
+      }
     }
     expect((await ana.readerTick(false)).lock).toMatchObject({ kind: 'held', stale: true })
     expect((await opened(ana, true)).outcome).toEqual({ kind: 'writer' })
@@ -511,6 +525,69 @@ describe('takeover and unlock are logged (spec §5.5)', () => {
     const { entries } = await readAudit(world.client('Markus'))
     expect(entries).toEqual([
       expect.objectContaining({ action: 'takeover', displayName: 'Markus', previousOwner: 'Ana' }),
+    ])
+  })
+
+  it('leaves no takeover line when the takeover’s lock cannot be written (#165)', async () => {
+    // The review's probe: a write fault gave reader/write-failed, and the log said takeover.
+    const world = await worldWith(0, 'Ana', 'Markus')
+    await open(session(world, 'Ana'))
+    const markus = session(world, 'Markus')
+    world.client('Markus').fail('write', { name: `${MODEL}.lock`, message: 'denied' })
+    expect(await open(markus, true)).toEqual({
+      outcome: { kind: 'reader', why: 'write-failed', message: 'denied' },
+    })
+    expect((await readAudit(world.client('Markus'))).entries).toEqual([])
+  })
+
+  it('leaves no takeover line when another lock wins the settle (#165)', async () => {
+    const world = await worldWith(0, 'Ana', 'Ben', 'Markus')
+    await open(session(world, 'Ana'))
+    const markus = session(world, 'Markus')
+    await markus.load()
+    const pending = markus.acquire({ takeOver: true })
+    await vi.advanceTimersByTimeAsync(SETTLE / 2)
+    // The line is in the log while the takeover is under way…
+    expect((await readAudit(world.client('Markus'))).entries).toEqual([
+      expect.objectContaining({ action: 'takeover' }),
+    ])
+    await world.client('Ben').write(`${MODEL}.lock`, encodeText(benLock))
+    await vi.advanceTimersByTimeAsync(SETTLE)
+    expect(await pending).toMatchObject({ outcome: { kind: 'reader', why: 'lost' } })
+    // …and out of it once the takeover ended as a reader.
+    expect((await readAudit(world.client('Markus'))).entries).toEqual([])
+  })
+
+  it('says so when a takeover that did not happen cannot be taken back out of the log', async () => {
+    const world = await worldWith(0, 'Ana', 'Ben', 'Markus')
+    await open(session(world, 'Ana'))
+    const markus = session(world, 'Markus')
+    await markus.load()
+    const pending = markus.acquire({ takeOver: true })
+    await vi.advanceTimersByTimeAsync(SETTLE / 2)
+    world.client('Markus').fail('write', { name: LOG, message: 'close() rejected' })
+    await world.client('Ben').write(`${MODEL}.lock`, encodeText(benLock))
+    await vi.advanceTimersByTimeAsync(SETTLE)
+    expect(await pending).toMatchObject({
+      outcome: { kind: 'reader', why: 'lost' },
+      logNotRetracted: 'close() rejected',
+    })
+    expect((await readAudit(world.client('Markus'))).entries).toEqual([
+      expect.objectContaining({ action: 'takeover' }),
+    ])
+  })
+
+  it('takes back only its own line, leaving the lines before it', async () => {
+    const world = await worldWith(0, 'Ana', 'Markus')
+    await open(session(world, 'Ana'))
+    const markus = session(world, 'Markus')
+    await markus.load()
+    expect(await markus.unlock()).toEqual({ kind: 'unlocked' })
+    await open(session(world, 'Ana'))
+    world.client('Markus').fail('write', { name: `${MODEL}.lock` })
+    expect(await open(markus, true)).toMatchObject({ outcome: { why: 'write-failed' } })
+    expect((await readAudit(world.client('Markus'))).entries).toEqual([
+      expect.objectContaining({ action: 'unlock', previousOwner: 'Ana' }),
     ])
   })
 
