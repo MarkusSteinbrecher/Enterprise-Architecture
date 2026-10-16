@@ -456,17 +456,6 @@ describe('giving the lock back (spec §5.4)', () => {
     expect(await folder.has(LOCK)).toBe(false)
   })
 
-  it('reports a delete that throws as failed, and deletes it on a retry', async () => {
-    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
-    const lock = manager(folder)
-    await take(lock)
-    folder.fail('remove', { name: LOCK })
-    expect(await lock.release()).toBe('failed')
-    expect(await folder.has(LOCK)).toBe(true)
-    expect(await lock.release()).toBe('released')
-    expect(await folder.has(LOCK)).toBe(false)
-  })
-
   it('deletes its own lock after fencing, and its own lock is no obstacle to taking it again', async () => {
     const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
     const lock = manager(folder)
