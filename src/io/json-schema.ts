@@ -12,6 +12,7 @@ import {
   SCHEMA_VERSION,
   TEXT_ALIGNMENTS,
   TEXT_POSITIONS,
+  LABEL_POSITIONS,
   TIME_CLASSIFICATIONS,
   TYPE_SPECIFIC_ATTRIBUTES,
 } from '@/model'
@@ -218,6 +219,11 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           name: { type: 'string' },
           documentation: { type: 'string' },
           viewpoint: { type: 'string', description: 'ArchiMate viewpoint name.' },
+          router: {
+            const: 'manhattan',
+            description:
+              'Connections drawn in horizontal and vertical segments, ignoring their bend-points. Absent means through the bend-points.',
+          },
           folder: { $ref: '#/$defs/folderRef' },
           properties: { $ref: '#/$defs/properties' },
           nodes: { type: 'array', items: { $ref: '#/$defs/viewNode' } },
@@ -250,6 +256,10 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           fontStyle: { type: 'array', items: { enum: [...FONT_STYLES] } },
           textAlignment: { enum: [...TEXT_ALIGNMENTS] },
           textPosition: { enum: [...TEXT_POSITIONS] },
+          labelPosition: {
+            enum: [...LABEL_POSITIONS],
+            description: "Where a connection's label sits along it. Absent means the middle.",
+          },
         },
       },
       colour: { type: 'string', pattern: '^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$' },

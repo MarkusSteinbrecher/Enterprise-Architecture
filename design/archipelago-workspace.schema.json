@@ -16,7 +16,7 @@
     "schemaVersion": {
       "type": "integer",
       "minimum": 1,
-      "description": "Format version. This build writes 3."
+      "description": "Format version. This build writes 4."
     },
     "id": {
       "type": "string",
@@ -501,6 +501,10 @@
           "type": "string",
           "description": "ArchiMate viewpoint name."
         },
+        "router": {
+          "const": "manhattan",
+          "description": "Connections drawn in horizontal and vertical segments, ignoring their bend-points. Absent means through the bend-points."
+        },
         "folder": {
           "$ref": "#/$defs/folderRef"
         },
@@ -598,6 +602,14 @@
             "middle",
             "bottom"
           ]
+        },
+        "labelPosition": {
+          "enum": [
+            "source",
+            "middle",
+            "target"
+          ],
+          "description": "Where a connection's label sits along it. Absent means the middle."
         }
       }
     },

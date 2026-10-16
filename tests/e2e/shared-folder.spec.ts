@@ -129,7 +129,7 @@ test('a model in a shared folder is locked, saved, lost to a colleague and saved
   await files.write(
     'Landscape.json',
     JSON.stringify({
-      schemaVersion: 3,
+      schemaVersion: 4,
       id: 'ws-shared',
       name: 'Landscape',
       elements: [
