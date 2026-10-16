@@ -99,10 +99,27 @@ The mapping decisions:
   The defaults were measured from Archi 5.10's own export of every element type.
   The platform font counts as the default only when most objects carry it.
 - **What `<style>` cannot say travels in the view's `archipelago.style`
-  property**: text alignment, text position, strikethrough, and a `literal` flag
-  on every style we wrote. A literal style is read as written — otherwise an
-  explicit override that happens to equal Archi's default (black text) would be
-  dropped on our own round trip.
+  property**: text alignment, text position, strikethrough, and a `literal`
+  record of what each `<style>` we wrote says, field by field
+  (`{"fontColor":"#000000"}`). Without it, an explicit override that happens to
+  equal Archi's default (black text) would be dropped on our own round trip.
+- **Ours or Archi's, value by value (#138).** Archi keeps `archipelago.style`,
+  and when it exports the model again it writes its whole computed style on
+  every object, beside ours. So the marker cannot vouch for a whole `<style>`:
+  it names values, and the reader keeps a value as written, default or not,
+  only when the marker names that same value for that field. Every other value
+  — one the marker does not name (Archi's outline and platform font on a
+  re-export), or one that differs from what it names (changed in another tool)
+  — is read as any tool's is, and dropped when it is Archi's default. The writer
+  writes and records the same normalised values (`styleSays`: a colour's alpha
+  as a whole percent, none on a font colour, a size in half points), so our own
+  file always matches its marker. A marker the reader cannot check fails closed:
+  an older Archipelago's `"literal": true`, which vouched for whatever the
+  `<style>` holds by now, or a field or value this build does not write, vouches
+  for nothing, and the style is read as another tool's, with a warning
+  (`exchange.style-unverifiable`) counting the shapes and lines it applied to.
+  `exchange-views.test.ts` fires each branch; `archi-roundtrip.test.ts` reads
+  Archi's re-export of the edited claims model and holds it to Archi's save.
 - **Folders.** Top-level items named like the fixed groups ("Business",
   "Technology & Physical", "Relations", "Views", …) are those groups. Every other
   item is a folder. Archi writes folder items without identifiers, so a folder's
@@ -438,7 +455,9 @@ holds that for one edited view, and every editor slice extends it.
   moved on from the checked-in file.
 - `scripts/fixtures/archi-roundtrip.sh` has Archi import that file, save the
   model (`claims-edited.archi.archimate`) and export it again
-  (`claims-edited.archi.xml`). Archi's command line exits 0 when an import
+  (`claims-edited.archi.xml`). The exchange reader must read that export as the
+  native reader reads the save, apart from the oracle's reasons (#138). Archi's
+  command line exits 0 when an import
   fails, so the script checks that the files exist. It writes into a scratch
   directory and replaces the fixtures only on success. It records the input's
   SHA-256 beside the save, and a test checks that the save was made from the

@@ -4,7 +4,8 @@ import claimsNative from './fixtures/claims-platform.archimate?raw'
 import editedXml from './fixtures/claims-edited.xml?raw'
 import archiSave from './fixtures/claims-edited.archi.archimate?raw'
 import archiSaveInput from './fixtures/claims-edited.archi.archimate.input-sha256?raw'
-import { exportExchange } from './exchange-format'
+import archiExport from './fixtures/claims-edited.archi.xml?raw'
+import { exportExchange, importExchangeXml } from './exchange-format'
 import { importArchimate } from './archimate-native'
 import { validate, type Workspace } from '@/model'
 import { editedClaims } from '@/test/edited-claims'
@@ -213,6 +214,86 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
         'relationship r-handle-valuate o-handle → o-valuate: nested connection',
         'relationship r-k8s-pg o-k8s → o-postgres: nested connection',
         'relationship r-mf-cics o-mainframe → o-cics: nested connection',
+      ].sort(),
+    )
+  })
+})
+
+describe('Archi’s export of the model it saved, read by the exchange reader (#138)', () => {
+  // Archi made both files in one run: it imported claims-edited.xml, saved the
+  // model and exported it again. Archi keeps archipelago.style, so its export
+  // carries our literal markers beside the whole style Archi computes for every
+  // object. Read through our two readers, the two files must draw the same.
+  const imported = importExchangeXml(archiExport)
+  const exported = imported.workspace!
+  const { workspace: saved } = readArchiSave(archiSave)
+  const explained = compareViews(exported, saved).map((d) => ({
+    ...d,
+    why: explainDifference(d, exported, saved),
+  }))
+
+  it('reads all of Archi’s export, so nothing in it is left out of the comparison', () => {
+    expect(exported.views.length).toBeGreaterThan(0)
+    expect(imported.problems).toEqual([])
+  })
+
+  it('keeps the overrides we wrote and none of the defaults Archi wrote beside them', () => {
+    const landscape = exported.views.find((v) => v.id === 'v-landscape')!
+    const appearance = (id: string) =>
+      [...landscape.nodes, ...landscape.connections].find((item) => item.id === id)?.appearance
+    // Present first: the comparison below is not of two absences.
+    expect(appearance('o-crm')).toEqual({ fillColor: '#e0e0e0a1' })
+    expect(appearance('o-goal')).toEqual({ fillColor: '#ffe9a8' })
+    // 12 points is the platform font's size, kept because we wrote it.
+    expect(appearance('o-req')).toEqual({
+      fontColor: '#5a1e8c',
+      fontSize: 12,
+      fontStyle: ['bold'],
+    })
+    expect(appearance('c-pay-ins')).toEqual({ lineColor: '#7a7a7a' })
+    expect(explained.filter((d) => d.why === undefined)).toEqual([])
+  })
+
+  it('names each difference Archi accounts for, and only those', () => {
+    const named = explained
+      .filter((d) => d.field !== 'extra')
+      .map((d) => `${d.drawing} ${d.field}: ${reason(d.why)}`)
+    expect(named.sort()).toEqual(
+      [
+        'o-g-apps appearance.textAlignment: carried only',
+        'o-g-business appearance.textAlignment: carried only',
+        'o-g-platform appearance.textAlignment: carried only',
+        'o-handle appearance.textAlignment: carried only',
+        'o-note-biz appearance.textAlignment: carried only',
+        'o-note-edited appearance.textAlignment: carried only',
+        'o-req appearance.fontName: default font name',
+        'o-rollout appearance.fontStyle: carried only',
+        'o-rollout appearance.textAlignment: carried only',
+        'o-s-group appearance.textAlignment: carried only',
+      ].sort(),
+    )
+    // Archi's export leaves out every connection between nested shapes
+    // (XMLModelExporter.isNestedConnection), including ones we drew (see the README).
+    const left = explained
+      .filter((d) => d.field === 'extra')
+      .map((d) => {
+        const [, relationship] = JSON.parse(String(d.archi)) as string[]
+        return `${relationship}: ${reason(d.why)}`
+      })
+    expect(left.sort()).toEqual(
+      [
+        'r-engine-calc: nested connection',
+        'r-engine-claim: nested connection',
+        'r-engine-host: nested connection',
+        'r-engine-rules: nested connection',
+        'r-handle-accept: nested connection',
+        'r-handle-pay2: nested connection',
+        'r-handle-register: nested connection',
+        'r-handle-valuate: nested connection',
+        'r-k8s-batch: nested connection',
+        'r-k8s-pg: nested connection',
+        'r-k8s-runtime: nested connection',
+        'r-mf-cics: nested connection',
       ].sort(),
     )
   })
