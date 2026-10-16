@@ -1,5 +1,30 @@
 # Session Log
 
+## 2026-10-16 — Branch sweep, manual scripts, four backlog lanes (#95, #138, #97, #165, #164, #146, #145)
+
+- **Branches:** deleted 36 merged remote branches and 9 local ones. Each was checked to have nothing outside `main` (`feat/147-shared-folder-lock` held only #162's merge, both of whose parents are on `main`). Kept: `assets/77-notation`, `assets/79-view-canvas` and `assets/80-model-tree` (merged PRs show screenshots from them), and the unmerged `spike/78-diagram-engine` and `claude/research-tech-radars-2pWYb`.
+- **#167:** `file-round-trip.md` step 8 and the nested-connection note in `archimate-import.md` were stale since #76 and #96. The demo has no views or folders, so `archimate-import.md` gains a step 7 that takes the fixture back to Archi.
+- **Four lanes,** one worktree agent each, one PR per issue, nothing merged. CI is green on every PR below.
+  - **#174 (#95):** relationship and model documentation in canonical JSON, exchange and `.archimate` (Archi's purpose is the model's documentation, checked with Archi 5.10). Schema 3 → 4. The three "skipped" codes are gone. The fact sheet shows it; editing is **#171**, waiting on the sponsor's call on where.
+  - **#169 (#138):** the `literal` marker now names the values we wrote, field by field, so Archi's re-exported defaults stay defaults. An older file's `"literal": true` is read as another tool's style with `exchange.style-unverifiable` (conservative: a default-equal override in those files is lost).
+  - **#175 (#97):** zipped `.archimate` opens through `DecompressionStream`, with no dependency. The fixture was saved by real Archi. Every image reference is reported, and every malformed-archive branch has a test. Duplicate entry names are refused. Carrying images is **#170**.
+  - **#172 (#165):** all four findings fixed: the watch restarts after a long gap, a takeover that ends as a reader takes its log line back, Web Locks serialise audit-log appends across tabs (e2e journey 14), and the sync fake repairs a losing delete. Open for the sponsor: a reader polls only while visible, so a tab hidden over a minute restarts its watch.
+  - **#176 (#164), stacked on #172:** a 100% gate on all four coverage metrics for `src/io/shared-folder/**`, untested files included, and `coverage-gate.test.ts` guards the configuration. Proven red in CI run 38925338923.
+  - **#168 (#146)** and **#173 (#145), stacked:** collapsible palette; a tree drop draws its relationships (Archi's source followed where the issue's wording differs).
+  - **#133 is WIP** on `feat/133-bendpoints-router`, with no PR. Model fields, the `.archimate` router, the Manhattan port (from diagram-js, MIT notice) and the bend-point commands are done. Still to do: the oracle round trip, an e2e journey, the probes, a full e2e run and the PR. Following Archi, a segment drag adds one bend-point, not the issue's two.
+- **Found along the way:**
+  - **CI runs Node 24, this machine Node 25.** On 24, jsdom's real `Storage` turns `vi.spyOn(localStorage, 'getItem')` into storing an item called "getItem". That was #168's red CI. Nothing pins the Node version locally; worth an `.nvmrc` / `engines`.
+  - **#147's shared-folder journey had a race** (fake clock run before the lock write landed); fixed on #168. `shared-model.test.tsx` also failed once under load in two lanes and passed on re-run. Watch it.
+  - **#177:** in Vitest a regex literal inside `toMatchObject` matches anything (subset check; a RegExp has no keys). Confirmed on 2.1.9, no use on `main`, lint rule proposed.
+  - **Parallel e2e:** `reuseExistingServer` locally means lanes tested each other's `vite preview` on 4173. Give each worktree its own `E2E_PORT`. CI is unaffected.
+- **For the sponsor:**
+  - **Schema numbers collide:** #174 and #133 both bump to 4, so whichever merges second needs 5.
+  - **#133:** one bend-point or two per segment drag, and is the ported Manhattan router acceptable over a `diagram-js` dependency?
+  - **#171:** where documentation is edited.
+  - **#74:** tick #131. The edit was blocked here.
+- **Review order:** #167; #174; #169; #175; #172 → #176; #168 → #173. Then finish #133, and #134–#137, #132.
+- **HQ:** two lessons (`a26e188`): the `toMatchObject` regex trap, and one Playwright port per parallel worktree.
+
 ## 2026-10-09 (cont.) — Merges; #163's CI; MVP test plan (#166)
 
 - **Merged by the sponsor:** #160 and #161 to `main`. #162 merged into `feat/147-shared-folder-lock` 14 s after #161 had taken that branch to `main`, so **part 2 is not on `main`**. #163 is retargeted to `main` and carries part 2 with it.
