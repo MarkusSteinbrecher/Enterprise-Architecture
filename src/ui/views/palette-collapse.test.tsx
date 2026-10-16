@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, screen, within } from '@testing-library/react'
 import { SCREEN, click, setup } from '@/test/view-editor'
 import { PALETTE_COLLAPSED_STORAGE_KEY } from './ViewScreen'
@@ -21,6 +21,7 @@ const blocked = () => {
 }
 
 beforeEach(() => localStorage.clear())
+afterEach(() => vi.unstubAllGlobals())
 
 describe('collapsing the palette (#146)', () => {
   it('collapses to glyphs named by tooltip and accessible name, and back', async () => {
@@ -74,9 +75,22 @@ describe('collapsing the palette (#146)', () => {
   })
 
   it('opens expanded and still collapses when storage is blocked', async () => {
+    // Saved collapsed, so a read that got through would open the palette collapsed.
     localStorage.setItem(PALETTE_COLLAPSED_STORAGE_KEY, 'true')
-    vi.spyOn(localStorage, 'getItem').mockImplementation(blocked)
-    vi.spyOn(localStorage, 'setItem').mockImplementation(blocked)
+    // The whole global is replaced. A spy on `localStorage.getItem` works on the
+    // plain object the test setup installs under Node 25, and not on jsdom's
+    // real Storage, which Node 24 (CI) gets: there, defining `getItem` on it
+    // stores an item of that name, and the method still reads the saved value.
+    vi.stubGlobal('localStorage', {
+      getItem: blocked,
+      setItem: blocked,
+      removeItem: blocked,
+      clear: blocked,
+      key: blocked,
+      length: 0,
+    })
+    // The block is in place: the palette below reads through this.
+    expect(() => localStorage.getItem(PALETTE_COLLAPSED_STORAGE_KEY)).toThrow('blocked')
     const { user } = setup()
     expect(palette()).not.toHaveClass('view-palette--collapsed')
     await user.click(screen.getByRole('button', { name: 'Collapse palette' }))
