@@ -99,8 +99,17 @@ export async function drag(user: User, target: Element, from: Point, ...to: Poin
   ])
 }
 
-/** Drop `data` on `target` at `at`, as a drag from the model tree does; whether the target took it. */
-export function drop(target: Element, data: Record<string, string>, at: { x: number; y: number }) {
+/**
+ * Drop `data` on `target` at `at`, as a drag from the model tree does; whether
+ * the target took it. `keys` are the modifiers held through the drag, as the
+ * browser reports them on both events.
+ */
+export function drop(
+  target: Element,
+  data: Record<string, string>,
+  at: { x: number; y: number },
+  keys: { altKey?: boolean; ctrlKey?: boolean } = {},
+) {
   const transfer = {
     types: Object.keys(data),
     getData: (type: string) => data[type] ?? '',
@@ -111,6 +120,7 @@ export function drop(target: Element, data: Record<string, string>, at: { x: num
     cancelable: true,
     clientX: at.x,
     clientY: at.y,
+    ...keys,
   })
   Object.defineProperty(over, 'dataTransfer', { value: transfer })
   const dropped = new MouseEvent('drop', {
@@ -118,6 +128,7 @@ export function drop(target: Element, data: Record<string, string>, at: { x: num
     cancelable: true,
     clientX: at.x,
     clientY: at.y,
+    ...keys,
   })
   Object.defineProperty(dropped, 'dataTransfer', { value: transfer })
   let accepted = false

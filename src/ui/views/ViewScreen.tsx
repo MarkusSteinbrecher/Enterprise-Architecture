@@ -72,6 +72,7 @@ import {
   type Tool,
 } from './create'
 import { ElementPalette } from './ElementPalette'
+import { heldCopyKey, withDrop } from './drop'
 import { InlineName } from './InlineName'
 import { useScreenActions } from '@/ui/palette/context'
 import type { PaletteAction } from '@/ui/palette/CommandPalette'
@@ -796,9 +797,11 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   /**
    * Draw an element the model already holds, dragged in from the model tree:
    * the same element, drawn again, never a copy. A view that draws it already
-   * draws it twice, as Archi does. One command.
+   * draws it twice, as Archi does. Its relationships to shapes already in the
+   * view are drawn with it (#145), unless the copy key is held, as in Archi.
+   * One command, so one undo takes the shape and its lines.
    */
-  const drawExisting = (elementId: string, at: Point) => {
+  const drawExisting = (elementId: string, at: Point, withConnections: boolean) => {
     const element = store.element(elementId)
     if (!element) return
     auto.current = false
@@ -806,7 +809,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     const node: ElementNode = { id: newId('node'), kind: 'element', element: element.id, ...spot }
     const base = store.view(view.id)
     if (!base) return
-    nest(base, { ...base, nodes: [...base.nodes, node] }, spot.parent, [node.id], () => {
+    const relationships = withConnections ? store.relationshipsOf(element.id) : []
+    const after = withDrop(base, node, relationships, () => newId('conn'))
+    nest(base, after, spot.parent, [node.id], () => {
       choose([node.id], store.view(view.id))
       release()
     })
@@ -1296,14 +1301,19 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             // An element row from the model tree (#130); anything else is not ours to take.
             if (!editable || !event.dataTransfer.types.includes(ELEMENT_DRAG_TYPE)) return
             event.preventDefault()
-            event.dataTransfer.dropEffect = 'copy'
+            // The copy key draws the shape alone (#145); the cursor says which drop this is.
+            event.dataTransfer.dropEffect = heldCopyKey(event) ? 'copy' : 'move'
           }}
           onDrop={(event) => {
             // No role check: a browser sends `drop` only where `dragover` accepted, and that refuses a reader.
             const elementId = event.dataTransfer.getData(ELEMENT_DRAG_TYPE)
             if (!elementId) return
             event.preventDefault()
-            drawExisting(elementId, toView({ x: event.clientX, y: event.clientY }))
+            drawExisting(
+              elementId,
+              toView({ x: event.clientX, y: event.clientY }),
+              !heldCopyKey(event),
+            )
           }}
         >
           {empty ? (

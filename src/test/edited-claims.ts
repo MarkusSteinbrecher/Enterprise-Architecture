@@ -5,6 +5,7 @@ import {
   absoluteBounds,
   type Bounds,
   type Element,
+  type ElementNode,
   type Point,
   type RelationshipType,
   type View,
@@ -21,6 +22,7 @@ import {
   toolSize,
   type Tool,
 } from '@/ui/views/create'
+import { withDrop } from '@/ui/views/drop'
 import { moveSelection, resizeNode } from '@/ui/views/edit'
 import { nestingEdit, nestingFor, withNewElement } from '@/ui/views/nesting'
 
@@ -260,7 +262,9 @@ export function editedClaims(): Workspace {
  * A view made from scratch (#130), as the editor makes one: in a new folder
  * of Views, with a viewpoint, and shapes placed where the palette's
  * `placement` puts them, so a shape placed inside a group is nested in it.
- * New elements and elements the model already holds, drawn and connected.
+ * New elements and elements the model already holds, drawn and connected, and
+ * one dropped from the tree with its relationships drawn, as the canvas's drop
+ * draws them (#145).
  */
 function scratchView(store: ModelStore) {
   const id = 'v-scratch'
@@ -335,4 +339,27 @@ function scratchView(store: ModelStore) {
   connect('s-engine-intake', 'o-s-engine', 'o-s-intake', 'Realization')
   connect('s-intake-valuate', 'o-s-intake', 'o-s-valuate', 'Serving')
   connect('s-event-valuate', 'o-s-event', 'o-s-valuate', 'Triggering')
+
+  // Dropped from the model tree (#145): Rules Evaluation, drawn with a line
+  // from each of the two drawings of the engine that is assigned to it.
+  const rules: ElementNode = {
+    id: 'o-s-rules',
+    kind: 'element',
+    element: 'af-rules',
+    ...placement(
+      store.view(id)!,
+      { x: 190, y: 420 },
+      defaultNodeSize('element', 'ApplicationFunction'),
+      isJunction,
+    ),
+  }
+  const lineIds = ['c-s-engine-rules', 'c-s-engine-2-rules']
+  store.updateView(id, (v) =>
+    withDrop(v, rules, store.relationshipsOf('af-rules'), () => {
+      const next = lineIds.shift()
+      if (!next) throw new Error('the drop drew more lines than it was given ids for')
+      return next
+    }),
+  )
+  if (lineIds.length) throw new Error(`the drop drew fewer lines than expected: ${lineIds}`)
 }

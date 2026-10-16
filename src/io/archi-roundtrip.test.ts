@@ -175,6 +175,22 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
     expect(drawing('c-k8s-batch')).toMatchObject({ source: 'o-k8s', target: 'o-batch' })
   })
 
+  it('keeps the lines a tree drop drew, one to each drawing of the other end (#145)', () => {
+    const lines = (w: Workspace) =>
+      w.views
+        .find((v) => v.id === 'v-scratch')!
+        .connections.filter((c) => c.target === 'o-s-rules')
+        .map((c) => `${c.id} ${c.kind === 'relationship' ? c.relationship : 'line'} ${c.source}`)
+        .sort()
+    const drawn = [
+      'c-s-engine-2-rules r-engine-rules o-s-engine-2',
+      'c-s-engine-rules r-engine-rules o-s-engine',
+    ]
+    // Present in ours first, so the comparison is not of two absences.
+    expect(lines(ours)).toEqual(drawn)
+    expect(lines(archi)).toEqual(drawn)
+  })
+
   it('names each difference Archi accounts for, and only those', () => {
     const named = explained
       .filter((d) => d.field !== 'extra')

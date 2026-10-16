@@ -1273,6 +1273,15 @@ for claims under 500.</label>
             </font>
           </style>
         </node>
+        <node identifier="o-s-rules" elementRef="af-rules" xsi:type="Element" x="190" y="420" w="120" h="55">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
         <connection identifier="c-s-intake-valuate" relationshipRef="r-s-intake-valuate" xsi:type="Relationship" source="o-s-intake" target="o-s-valuate">
           <style>
             <lineColor r="0" g="0" b="0" />
@@ -1290,6 +1299,22 @@ for claims under 500.</label>
           </style>
         </connection>
         <connection identifier="c-s-engine-intake" relationshipRef="r-s-engine-intake" xsi:type="Relationship" source="o-s-engine" target="o-s-intake">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-s-engine-rules" relationshipRef="r-engine-rules" xsi:type="Relationship" source="o-s-engine" target="o-s-rules">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-s-engine-2-rules" relationshipRef="r-engine-rules" xsi:type="Relationship" source="o-s-engine-2" target="o-s-rules">
           <style>
             <lineColor r="0" g="0" b="0" />
             <font name="Lucida Grande" size="12">
