@@ -1,6 +1,7 @@
 import type { Workspace } from '@/model'
 import { fromCanonicalJson } from './canonical-json'
 import { importArchimate, isArchiModel } from './archimate-native'
+import { importArchimateArchive, isZipArchive } from './archimate-archive'
 import { importExchangeXml } from './exchange-format'
 import {
   downloadText,
@@ -152,11 +153,11 @@ export async function openWorkspaceFile(): Promise<OpenedFile | undefined> {
  * of XML, and a `.txt` that starts with `<` is still a model (#13).
  */
 export async function readWorkspaceFile(file: File): Promise<ImportResult> {
-  const text = await file.text()
-  // An Archi model with images in it is saved as a zip archive, not as XML. Its
-  // signature is four ASCII bytes, so the decoded text starts with them too. So
-  // does every other zip, and a .docx or .xlsx is not an Archi model (#99).
-  if (text.startsWith('PK\u0003\u0004') && !file.name.trim().toLowerCase().endsWith('.archimate')) {
+  const bytes = new Uint8Array(await file.arrayBuffer())
+  // An Archi model with images in it is saved as a zip archive, not as XML, and
+  // is read as one (#97). So does every other zip, and a .docx or .xlsx is not
+  // an Archi model (#99).
+  if (isZipArchive(bytes) && !file.name.trim().toLowerCase().endsWith('.archimate')) {
     return {
       ok: false,
       problems: [
@@ -169,19 +170,9 @@ export async function readWorkspaceFile(file: File): Promise<ImportResult> {
       ],
     }
   }
-  if (text.startsWith('PK\u0003\u0004')) {
-    return {
-      ok: false,
-      problems: [
-        problem(
-          'error',
-          'archimate.archive-unsupported',
-          `“${file.name}” is an Archi model saved with images, which Archi stores as a compressed archive. Archipelago cannot open those yet: in Archi, remove the images or use File → Export → Model to Open Exchange File, and open that instead.`,
-          { file: file.name },
-        ),
-      ],
-    }
-  }
+  if (isZipArchive(bytes)) return importArchimateArchive(bytes, file.name)
+  // What `File.text()` does: UTF-8, a byte-order mark dropped, bad bytes replaced.
+  const text = new TextDecoder('utf-8').decode(bytes)
 
   const name = file.name.toLowerCase()
   const first = text.trimStart()[0]

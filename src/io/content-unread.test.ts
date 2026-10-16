@@ -3,6 +3,7 @@ import { importArchimate } from './archimate-native'
 import { Ledger } from './consumption'
 import { importExchangeXml } from './exchange-format'
 import type { Workspace } from '@/model'
+import { fixtureModelXml } from '@/test/fixture-bytes'
 import type { ImportResult } from './problems'
 
 /**
@@ -134,12 +135,15 @@ describe('the checked-in files hold nothing the readers leave unread (#101)', ()
       expect.arrayContaining([
         './fixtures/archi-coverage.archimate',
         './fixtures/archi-coverage.xml',
+        './fixtures/archi-images.archimate',
         './demo/archisurance.xml',
       ]),
     )
   })
-  for (const [path, text] of Object.entries(FILES)) {
-    it(path, () => {
+  for (const [path, raw] of Object.entries(FILES)) {
+    it(path, async () => {
+      // An Archi model saved with images is a zip; its model.xml is held to the same rule (#97).
+      const text = await fixtureModelXml(path, raw)
       const result = path.endsWith('.archimate') ? importArchimate(text) : importExchangeXml(text)
       expect(result.ok).toBe(true)
       expect(unread(result)).toEqual([])

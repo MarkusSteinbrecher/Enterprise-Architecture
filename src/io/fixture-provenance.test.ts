@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { fixtureModelXml } from '@/test/fixture-bytes'
 import { xmlRoot, isArchiNamespace } from './xml-root'
 
 /**
@@ -71,6 +72,7 @@ describe('fixtures said to be saved by Archi hold only what Archi writes (#100)'
     expect(Object.keys(FIXTURES)).toEqual(
       expect.arrayContaining([
         './fixtures/archi-coverage.archimate',
+        './fixtures/archi-images.archimate',
         './fixtures/claims-edited.archi.archimate',
         './fixtures/claims-platform.archimate',
         './fixtures/relationship-attributes.archimate',
@@ -79,7 +81,9 @@ describe('fixtures said to be saved by Archi hold only what Archi writes (#100)'
     )
   })
 
-  it.each(Object.entries(FIXTURES))('%s', (_, xml) => {
+  it.each(Object.entries(FIXTURES))('%s', async (path, raw) => {
+    // A model saved with images is Archi's zip; its model.xml is scanned (#97).
+    const xml = await fixtureModelXml(path, raw)
     // Archi's root, so an empty or unread file cannot pass.
     expect(isArchiNamespace(xmlRoot(xml)?.namespace)).toBe(true)
     expect(notArchis(xml)).toEqual([])

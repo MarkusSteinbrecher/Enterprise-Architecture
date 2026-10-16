@@ -68,3 +68,35 @@ test('an Archi .archimate file imports, files its folders and draws its views', 
   expect(inner.x + inner.width).toBeLessThan(outer.x + outer.width)
   expect(inner.y + inner.height).toBeLessThan(outer.y + outer.height)
 })
+
+/**
+ * Journey 9b — an Archi model saved with images opens (#97). Archi saves such a
+ * model as a zip archive, which is inflated by the browser's own
+ * DecompressionStream: jsdom tests run Node's, so only a real browser shows the
+ * archive opens where users open it. The fixture is Archi 5.10's own save.
+ */
+const ARCHIVE = fileURLToPath(
+  new URL('../../src/io/fixtures/archi-images.archimate', import.meta.url),
+)
+
+test('an Archi model saved with images opens, and its report names each image', async ({
+  page,
+}) => {
+  await startEmpty(page)
+  await importWorkspaceFile(page, ARCHIVE)
+
+  const dialog = page.getByRole('dialog', { name: 'Import' })
+  await expect(dialog).toContainText('3 elements · 2 relationships')
+  await expect(dialog).toContainText('shape "o-engine" shows the image “images/actor.png”')
+  await expect(dialog).toContainText('The archive holds 2 images')
+  await dialog.getByRole('button', { name: 'Done' }).click()
+  await expect(dialog).toBeHidden()
+
+  const tree = page.getByRole('tree', { name: 'Model tree' })
+  const item = (name: string) => tree.getByRole('treeitem', { name, exact: true })
+  await item('Views').click()
+  await item('Claims, illustrated').click()
+  await expect(page.getByRole('heading', { name: 'Claims, illustrated' })).toBeVisible()
+  // The two image boxes are skipped; the group, its two shapes, the actor and the note are drawn.
+  await expect(page.getByTestId('view-canvas').locator('[data-node]')).toHaveCount(5)
+})

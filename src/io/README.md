@@ -20,6 +20,8 @@ git-friendly files are what LeanIX does not give you. Concept reference: §5.3.
 | `fixtures/unsupported-view-constructs.xml` | one of each view construct we cannot carry                                |
 | `fixtures/archi-bendpoint-attachments.xml` | Archi's own MIT test file (attribution inside)                            |
 | `archimate-native.ts`                      | Archi's own `.archimate` model file, read in (#13)                        |
+| `archimate-archive.ts`, `zip.ts`           | an Archi model saved with images: a zip archive, opened in the browser (#97) |
+| `fixtures/archi-images.archimate`          | a model with an image in each place Archi allows one, as Archi 5.10 saved it |
 | `default-sizes.ts`                         | the size Archi draws a shape at when the file does not say                |
 | `fixtures/archi-coverage.{archimate,xml}`  | every `.archimate` edge case, and Archi 5.10's (XSD-invalid) export of it |
 | `problems.ts`                              | structured import problems                                                |
@@ -409,9 +411,43 @@ label expression), and, in both readers, a connection whose shapes do not
 draw its relationship's two ends (`*.connection-mismatch`, skipped rather than
 left for `validate` to find). Anything else the file holds that the reader did not
 read is `import.content-unread` (#101), including model `<metadata>` and a
-specialization no imported concept uses. An Archi model saved with images is a zip archive, which is refused
-with an explanation (`archimate.archive-unsupported`). Any other zip, such as a
-`.docx`, is named as an archive, not as an Archi model (`file.archive-unrecognised`).
+specialization no imported concept uses. Any zip not named `.archimate`, such
+as a `.docx`, is named as an archive, not as an Archi model
+(`file.archive-unrecognised`).
+
+### A model saved with images (#97)
+
+Archi saves a model that holds an image as a zip archive under the same
+`.archimate` name (`ArchiveManager`): the model as `model.xml`, each image under
+`images/`. `readWorkspaceFile` reads the file's bytes and, when they start with
+the zip signature, hands them to `archimate-archive.ts`, which reads `model.xml`
+through `importArchimate`, exactly as an unzipped file is read.
+
+`zip.ts` is just enough of the format, with no dependency: the central
+directory, and stored or deflated entries, inflated by the browser's own
+`DecompressionStream('deflate-raw')`. It trusts the central directory, not the
+local headers, because Archi writes with Java's `ZipOutputStream`, which leaves
+a deflated entry's sizes out of its local header (flag bit 3). Only `model.xml`
+is inflated, and it is checked against the size and CRC-32 the directory gives.
+Everything outside that is refused with its reason, never read in part:
+`archimate.archive-` `truncated`, `signature`, `zip64`, `split`, `encrypted`,
+`method` (anything but stored or deflate), `corrupt` (does not inflate, or to the
+wrong size or checksum), `duplicate` (two entries with one name, so which is the
+model cannot be told), `inflate-unavailable` (a browser without `deflate-raw`)
+and `no-model`. Because any zip named `.archimate` reaches these, the message
+says only that the file is a zip, not that Archi wrote it. `zip.test.ts` fires
+each one.
+
+Images are not carried yet (#170). Each reference to one is reported where it
+is: an image box is a skipped shape that names its image
+(`archimate.node-type-unsupported`), an image on an element shape, group or note
+is `archimate.image-not-drawn` for that shape, and a specialization's image is
+`archimate.specialization-image-dropped`, once. The archive's image files are
+listed (`archimate.archive-images-skipped`), and any other file in it is
+`archimate.archive-entry-unread`. The fixture is Archi's own save:
+`scripts/fixtures/archive-with-archi.sh` zips a model and two images written by
+`build-images-model.ts` (Archi's command line cannot add an image), and Archi
+opens that and saves it.
 
 ## Archi as the oracle for edited views (#127)
 
