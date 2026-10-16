@@ -34,5 +34,24 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: false,
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // `npm run test:coverage`, which CI runs (#164). The lock and save
+    // protocol is held to every branch: its error branches only run on the day
+    // something else already went wrong, and nine of them shipped untested in
+    // #161. `all` counts a file no test imports, so a new file in the directory
+    // cannot pass by having no tests, and every metric is 100 because a file
+    // with no branches has nothing for a branch threshold to miss. Other
+    // directories are not measured yet.
+    coverage: {
+      provider: 'v8',
+      all: true,
+      // .tsx too: the module is React-free, and a component put here must not
+      // escape the gate by its extension.
+      include: ['src/io/shared-folder/**/*.{ts,tsx}'],
+      exclude: ['**/*.test.{ts,tsx}'],
+      reporter: [['text', { skipFull: true }], 'text-summary'],
+      thresholds: {
+        'src/io/shared-folder/**': { branches: 100, functions: 100, lines: 100, statements: 100 },
+      },
+    },
   },
 })

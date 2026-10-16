@@ -12,7 +12,8 @@ import {
   logFileName,
   stemOf,
 } from './file-names'
-import { encodeText } from './folder'
+import { scanConflictCopies } from './conflict-copies'
+import { encodeText, type Folder } from './folder'
 
 const AT = new Date(2026, 9, 7, 8, 27)
 
@@ -22,6 +23,13 @@ describe('the names the protocol writes (spec §5, §5.5)', () => {
     expect(isLockFileName('Landscape.json.lock')).toBe(true)
     expect(isLockFileName('Landscape.json')).toBe(false)
     expect(stemOf('Landscape.json')).toBe('Landscape')
+  })
+
+  it('takes the stem only of a model’s name', () => {
+    expect(stemOf('Landscape.JSON')).toBe('Landscape')
+    expect(stemOf('notes.txt')).toBe('notes.txt')
+    // `.json` alone has no stem to keep.
+    expect(stemOf('.json')).toBe('.json')
   })
 
   it('gives each client its own log', () => {
@@ -101,6 +109,29 @@ describe('the name of a copy (spec §6.2)', () => {
 })
 
 describe('a possible conflict copy (spec §8.1)', () => {
+  it('lists an open model’s copies in name order, whatever order the folder lists them in', async () => {
+    // `Folder.list` promises no order; the scan sorts by code unit, never by locale.
+    const folder = new SyncWorld({ delayMs: 0 }).client('A')
+    const unsorted: Folder = {
+      has: (name) => folder.has(name),
+      read: (name) => folder.read(name),
+      write: (name, bytes) => folder.write(name, bytes),
+      remove: (name) => folder.remove(name),
+      list: async () => [
+        'Landscape-b.json',
+        'Landscape-B.json',
+        'Landscape.json-A.lock',
+        'Landscape-a.json',
+      ],
+    }
+    expect((await scanConflictCopies(unsorted, 'Landscape.json')).map((c) => c.name)).toEqual([
+      'Landscape-B.json',
+      'Landscape-a.json',
+      'Landscape-b.json',
+      'Landscape.json-A.lock',
+    ])
+  })
+
   it('matches OneDrive’s copies of the model and of its lock', () => {
     expect(conflictCopyKind('Landscape.json', 'Landscape-DESKTOP7.json')).toBe('model')
     expect(conflictCopyKind('Landscape.json', 'Landscape-DESKTOP7-2.json')).toBe('model')

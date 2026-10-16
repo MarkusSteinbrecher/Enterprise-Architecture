@@ -20,11 +20,13 @@ export async function scanConflictCopies(
   dismissed: ReadonlySet<string> = new Set(),
 ): Promise<ConflictCopy[]> {
   const names = await folder.list()
-  return names
+  // A listing names each file once, so code-unit order (the default sort's,
+  // never the locale's) is the whole order.
+  return [...names]
+    .sort()
     .filter((name) => !dismissed.has(name))
     .flatMap((name): ConflictCopy[] => {
       const kind = conflictCopyKind(model, name)
       return kind ? [{ name, kind }] : []
     })
-    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
 }
