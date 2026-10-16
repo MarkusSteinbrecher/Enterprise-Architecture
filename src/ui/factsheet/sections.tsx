@@ -388,36 +388,66 @@ export function RelationsSection({
                 )}
               </div>
               {rows.map((entry) => (
-                <div key={entry.relationship.id} className="relation-row">
-                  <span className="relation-row__direction" aria-hidden="true">
-                    {entry.direction === 'outgoing' ? '→' : '←'}
-                  </span>
-                  <TypeCodeBadge type={entry.other.type} size={17} />
-                  <button
-                    type="button"
-                    className="relation-row__name"
-                    onClick={() => onOpen(entry.other.id)}
-                  >
-                    {entry.other.name}
-                  </button>
-                  <span className="relation-row__type">{typeLabel(entry.other.type)}</span>
-                  {editing && (
-                    <button
-                      type="button"
-                      className="relation-row__remove"
-                      aria-label={`Remove ${type} relation to ${entry.other.name}`}
-                      onClick={() => onRemove(entry.relationship.id)}
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
+                <RelationRow
+                  key={entry.relationship.id}
+                  entry={entry}
+                  type={type}
+                  editing={editing}
+                  onOpen={onOpen}
+                  onRemove={onRemove}
+                />
               ))}
             </div>
           )
         })}
       </div>
     </section>
+  )
+}
+
+/**
+ * One relation, and what its relationship says about itself (#95). The
+ * documentation sits under the row it belongs to, indented to the name it
+ * qualifies, so the row itself keeps the handoff's height and rhythm.
+ */
+function RelationRow({
+  entry,
+  type,
+  editing,
+  onOpen,
+  onRemove,
+}: {
+  entry: RelationEntry
+  type: RelationshipType
+  editing: boolean
+  onOpen: (id: string) => void
+  onRemove: (relationshipId: string) => void
+}) {
+  const documentation = entry.relationship.documentation?.trim()
+  return (
+    <div className="relation-entry">
+      <div className="relation-row">
+        <span className="relation-row__direction" aria-hidden="true">
+          {entry.direction === 'outgoing' ? '→' : '←'}
+        </span>
+        <TypeCodeBadge type={entry.other.type} size={17} />
+        <button type="button" className="relation-row__name" onClick={() => onOpen(entry.other.id)}>
+          {entry.other.name}
+        </button>
+        <span className="relation-row__type">{typeLabel(entry.other.type)}</span>
+        {editing && (
+          <button
+            type="button"
+            className="relation-row__remove"
+            aria-label={`Remove ${type} relation to ${entry.other.name}`}
+            onClick={() => onRemove(entry.relationship.id)}
+          >
+            ×
+          </button>
+        )}
+      </div>
+      {documentation && <p className="relation-entry__doc">{documentation}</p>}
+    </div>
   )
 }
 

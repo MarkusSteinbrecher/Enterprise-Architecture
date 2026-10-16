@@ -73,6 +73,7 @@ export function smallWorkspace(): Workspace {
       type: 'Serving',
       source: 'app-claims',
       target: 'proc-claim',
+      documentation: 'Every claim is registered and assessed in the Claims Engine.',
       properties: {},
       profile: { annualCost: 1_200_000, currency: 'EUR' },
     },
@@ -96,6 +97,7 @@ export function smallWorkspace(): Workspace {
   return {
     id: 'ws-test',
     name: 'ArchiSurance',
+    documentation: 'A small insurance landscape for tests.',
     schemaVersion: SCHEMA_VERSION,
     elements,
     relationships,

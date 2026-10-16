@@ -36,6 +36,33 @@ describe('exchange format export', () => {
     expect(xml.indexOf('<relationships>')).toBeLessThan(xml.indexOf('<propertyDefinitions>'))
   })
 
+  it('writes relationship and model documentation where the schema puts it (#95)', () => {
+    const xml = exportExchangeXml(smallWorkspace())
+    const model = xml.slice(0, xml.indexOf('<elements>'))
+    expect(model).toMatch(
+      /<name xml:lang="en">ArchiSurance<\/name>\n {2}<documentation xml:lang="en">A small insurance landscape for tests.<\/documentation>\n/,
+    )
+    const relationship = xml.slice(xml.indexOf('identifier="rel-app-proc"'))
+    const documentation = relationship.indexOf(
+      '<documentation xml:lang="en">Every claim is registered and assessed in the Claims Engine.</documentation>',
+    )
+    expect(documentation).toBeGreaterThan(-1)
+    // The relationship has no name, so documentation comes first, then properties.
+    expect(documentation).toBeLessThan(relationship.indexOf('<properties>'))
+    expect(documentation).toBeLessThan(relationship.indexOf('</relationship>'))
+  })
+
+  it('reads relationship and model documentation back as written (#95)', () => {
+    const workspace = smallWorkspace()
+    const result = importExchangeXml(exportExchangeXml(workspace))
+    expect(result.problems).toEqual([])
+    expect(result.workspace!.documentation).toBe(workspace.documentation)
+    const documentation = (w: Workspace) =>
+      w.relationships.map((r) => [r.id, r.documentation] as const).sort()
+    expect(documentation(result.workspace!)).toEqual(documentation(workspace))
+    expect(toCanonicalJson(result.workspace!)).toBe(toCanonicalJson(roundTrip(result.workspace!)))
+  })
+
   it('escapes markup in names and documentation', () => {
     const xml = exportExchangeXml({
       ...smallWorkspace(),
@@ -329,8 +356,9 @@ describe('exchange hardening (review findings, PR #17)', () => {
 describe('junctions (issue #36)', () => {
   const importFixture = () => {
     const result = importExchangeXml(junctionFlowXml, 'junction-flow.xml')
-    // The fixture describes itself in the model's documentation, which has nowhere to go.
-    expect(result.problems.map((p) => p.code)).toEqual(['exchange.model-documentation-skipped'])
+    // The fixture describes itself in the model's documentation, which is kept (#95).
+    expect(result.problems).toEqual([])
+    expect(result.workspace?.documentation).toMatch(/\S/)
     return result.workspace!
   }
 

@@ -37,7 +37,6 @@ import {
   failed,
   problem,
   propertyRepeated,
-  relationshipDocumentationSkipped,
   succeeded,
   type ImportProblem,
   type ImportResult,
@@ -150,11 +149,6 @@ function isExchangePropertyType(value: string): value is ExchangePropertyType {
   return (EXCHANGE_PROPERTY_TYPES as readonly string[]).includes(value)
 }
 
-export interface ExchangeExportOptions {
-  /** Overrides the model documentation written into the file. */
-  documentation?: string
-}
-
 /** The XML, plus anything the format could not carry exactly as it stood. */
 export interface ExchangeExportResult {
   xml: string
@@ -206,10 +200,7 @@ function typeSpecificAttributes(relationship: Relationship, problems: ImportProb
  * by id from every property instance: one definition per distinct key, in first-
  * seen order, so a re-export of an unchanged model is stable.
  */
-export function exportExchange(
-  workspace: Workspace,
-  options: ExchangeExportOptions = {},
-): ExchangeExportResult {
+export function exportExchange(workspace: Workspace): ExchangeExportResult {
   const problems: ImportProblem[] = []
   const ids = exchangeIdentifiers(workspace, problems)
   const modelProperties = modelLevelProperties(workspace)
@@ -222,8 +213,11 @@ export function exportExchange(
     `<model xmlns="${NS}" xmlns:xsi="${XSI}" xsi:schemaLocation="${SCHEMA_LOCATION}" identifier="${attr(ids.model)}">`,
   )
   lines.push(`  <name xml:lang="${lang}">${text(workspace.name)}</name>`)
-  if (options.documentation) {
-    lines.push(`  <documentation xml:lang="${lang}">${text(options.documentation)}</documentation>`)
+  // Where Archi's export writes a model's purpose, and its import reads it (#95).
+  if (workspace.documentation) {
+    lines.push(
+      `  <documentation xml:lang="${lang}">${text(workspace.documentation)}</documentation>`,
+    )
   }
   lines.push(...propertyLines(modelProperties, definitions, lang, 2))
 
@@ -272,6 +266,11 @@ export function exportExchange(
       )
       if (relationship.name) {
         lines.push(`      <name xml:lang="${lang}">${text(relationship.name)}</name>`)
+      }
+      if (relationship.documentation) {
+        lines.push(
+          `      <documentation xml:lang="${lang}">${text(relationship.documentation)}</documentation>`,
+        )
       }
       lines.push(...propertyLines(properties, definitions, lang, 6))
       lines.push('    </relationship>')
@@ -363,11 +362,8 @@ function writtenLanguage(workspace: Workspace, problems: ImportProblem[]): strin
  * Prefer `exportExchange`, which also hands back what it had to rewrite or leave
  * out — a caller that ignores those is back to losing data quietly.
  */
-export function exportExchangeXml(
-  workspace: Workspace,
-  options: ExchangeExportOptions = {},
-): string {
-  return exportExchange(workspace, options).xml
+export function exportExchangeXml(workspace: Workspace): string {
+  return exportExchange(workspace).xml
 }
 
 /** The fixed group an element is filed under when it has no folder. */
@@ -692,8 +688,7 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   const ledger = new Ledger()
   ledger.use(model, '@identifier', 'elements', 'relationships', 'views', 'organizations')
   ledger.text(model, 'name')
-  // Reported below when it holds anything; empty, nothing is lost.
-  ledger.whole(model, 'documentation')
+  ledger.text(model, 'documentation')
   const reader: Reader = {
     definitions: readPropertyDefinitions(model, problems, where, ledger),
     unresolved: new Set<string>(),
@@ -733,7 +728,6 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
 
   const relationships: Relationship[] = []
   const seenRelationshipIds = new Set<string>()
-  const documented: string[] = []
   for (const relationshipsNode of list(model.relationships)) {
     ledger.use(relationshipsNode, 'relationship')
   }
@@ -757,9 +751,6 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     }
     seenRelationshipIds.add(relationship.id)
     relationships.push(relationship)
-    // Counted only once kept: a skipped relationship was reported already (#100).
-    if (langString(raw.documentation)) documented.push(relationship.id)
-    ledger.whole(raw, 'documentation')
   }
 
   const modelProperties = readProperties(model, reader, false)
@@ -791,17 +782,6 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
   }
   // Property values were read on the way; an unresolved definition can be on a view.
   reportUnresolvedProperties(reader)
-  if (documented.length) problems.push(relationshipDocumentationSkipped(documented, where))
-  if (langString(model.documentation)) {
-    problems.push(
-      problem(
-        'info',
-        'exchange.model-documentation-skipped',
-        'The model’s documentation was not imported — Archipelago has no place for it yet.',
-        where,
-      ),
-    )
-  }
 
   const language = modelLanguage(ledger.languages(), problems, where)
 
@@ -827,6 +807,8 @@ export function importExchangeXml(xml: string, file?: string): ImportResult {
     reports: reports ?? [],
     tagGroups: tagGroups ?? [DEFAULT_TAG_GROUP],
   }
+  const documentation = langString(model.documentation)
+  if (documentation) workspace.documentation = documentation
   const propertyTypes = declaredPropertyTypes(reader.definitions)
   if (propertyTypes) workspace.propertyTypes = propertyTypes
   if (language !== DEFAULT_LANGUAGE) workspace.language = language
@@ -1110,8 +1092,11 @@ function readRelationship(
   }
   const name = langString(raw.name)
   if (name) relationship.name = name
+  const documentation = langString(raw.documentation)
+  if (documentation) relationship.documentation = documentation
   reader.ledger.use(raw, '@identifier', '@type', '@source', '@target')
   reader.ledger.text(raw, 'name')
+  reader.ledger.text(raw, 'documentation')
 
   const profile = read.profile ?? {}
   const attributes = readTypeSpecificAttributes(raw, id, type, reader)

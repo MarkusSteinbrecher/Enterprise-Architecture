@@ -15,9 +15,9 @@
 
 1. Click **Import** — expected: the dialog says it takes an Archi model (.archimate), exchange
    XML or canonical JSON.
-2. Choose the `.archimate` file — expected: the report reads **39 elements · 48
-   relationships** for the fixture, and lists one info line saying the purpose text was not
-   imported. Click **Done**.
+2. Choose the `.archimate` file — expected: the dialog closes with nothing to report (the
+   model's purpose is kept as its documentation since #95), and the nav reads **39 elements ·
+   48 relations**.
 3. In the model tree, open **Application → Claims applications → Legacy → Host-based** —
    expected: **Policy Host** is there, as in Archi's model tree.
 4. Open **Views → Landscapes → Claims landscape** — expected: the diagram looks like it does

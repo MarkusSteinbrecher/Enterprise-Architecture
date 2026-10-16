@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import type { Locator } from '@playwright/test'
-import { test, expect, importWorkspaceFile, startEmpty } from './support'
+import { test, expect, importWithNothingToReport, startEmpty } from './support'
 
 /**
  * Journey 7 — an Archi model's diagram opens and draws in a real browser (#79).
@@ -15,17 +15,13 @@ import { test, expect, importWorkspaceFile, startEmpty } from './support'
  */
 
 const FIXTURE = fileURLToPath(new URL('../../src/io/fixtures/claims-platform.xml', import.meta.url))
+const CLAIMS = { elements: 39, relationships: 48 } as const
 const LANDSCAPE = { nodes: 45, connections: 40, relationships: 38 } as const
 
 test('an imported Archi view draws every node and connection', async ({ page }, testInfo) => {
   await startEmpty(page)
-  await importWorkspaceFile(page, FIXTURE)
-  // Archi exports the model's purpose as its documentation, which has nowhere
-  // to go yet, so the report stays open to say so (#13).
-  const dialog = page.getByRole('dialog', { name: 'Import' })
-  await expect(dialog).toContainText('documentation was not imported')
-  await dialog.getByRole('button', { name: 'Done' }).click()
-  await expect(dialog).toBeHidden()
+  // Archi exports the model's purpose as its documentation, kept since #95.
+  await importWithNothingToReport(page, FIXTURE, CLAIMS)
 
   const tree = page.getByRole('tree', { name: 'Model tree' })
   await tree.getByRole('treeitem', { name: 'Views', exact: true }).click()
@@ -107,9 +103,7 @@ async function drawnAt(node: Locator): Promise<{ x: number; y: number }> {
 
 test('a shape dragged in a real browser moves, and undo puts it back (#128)', async ({ page }) => {
   await startEmpty(page)
-  await importWorkspaceFile(page, FIXTURE)
-  const dialog = page.getByRole('dialog', { name: 'Import' })
-  await dialog.getByRole('button', { name: 'Done' }).click()
+  await importWithNothingToReport(page, FIXTURE, CLAIMS)
   const tree = page.getByRole('tree', { name: 'Model tree' })
   await tree.getByRole('treeitem', { name: 'Views', exact: true }).click()
   await tree.getByRole('treeitem', { name: 'Landscapes' }).click()
@@ -146,8 +140,7 @@ test('two shapes connected in a real browser, with only valid types offered, and
   page,
 }) => {
   await startEmpty(page)
-  await importWorkspaceFile(page, FIXTURE)
-  await page.getByRole('dialog', { name: 'Import' }).getByRole('button', { name: 'Done' }).click()
+  await importWithNothingToReport(page, FIXTURE, CLAIMS)
   const tree = page.getByRole('tree', { name: 'Model tree' })
   await tree.getByRole('treeitem', { name: 'Views', exact: true }).click()
   await tree.getByRole('treeitem', { name: 'Landscapes' }).click()

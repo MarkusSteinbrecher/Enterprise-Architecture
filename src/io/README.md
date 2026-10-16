@@ -394,12 +394,18 @@ Both readers keep names, keys, values and documentation **exactly as written**
 (`trimValues: false`). Trimming changed them in silence and could merge two
 property keys into one (#100).
 
+Relationship documentation and the model's documentation are kept since #95;
+until then both readers reported them as not imported. Archi has no model
+documentation as such: its export writes the model's **purpose** as the model's
+`<documentation>`, and its import reads that back as the purpose
+(`claims-edited.archi.archimate` is the evidence). So the `.archimate` reader
+reads `<purpose>` into `Workspace.documentation`, and both formats agree.
+
 Each of these is reported, never silently dropped: sketches and canvases,
 images, a relationship that ends on a relationship, a connection that ends on a
 connection, display settings without a counterpart (gradient, an alpha with no
-colour to apply it to, …), connection routers, folder properties, a top-level
-folder's documentation, relationship documentation (naming the imported
-relationships that had it), and the model's purpose. So are, since #100: a
+colour to apply it to, …), connection routers, folder properties and a top-level
+folder's documentation. So are, since #100: a
 property key repeated on one object (the first value is kept, in both readers),
 a specialization the file does not define or that the object's own
 `Specialization` property shadows, a view without an id, a value Archi would not
