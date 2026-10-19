@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import type { Page } from '@playwright/test'
-import { test, expect, importWorkspaceFile, startEmpty } from './support'
+import { test, expect, importWithNothingToReport, startEmpty } from './support'
 
 /**
  * Journey 15 — an element dragged in from the model tree brings its
@@ -31,10 +31,8 @@ test('a tree element dropped on a view draws its relationships, unless the copy 
   page,
 }) => {
   await startEmpty(page)
-  await importWorkspaceFile(page, FIXTURE)
-  const report = page.getByRole('dialog', { name: 'Import' })
-  await report.getByRole('button', { name: 'Done' }).click()
-  await expect(report).toBeHidden()
+  // Nothing to report since relationship documentation is read (#95).
+  await importWithNothingToReport(page, FIXTURE, { elements: 39, relationships: 48 })
 
   const tree = page.getByRole('tree', { name: 'Model tree' })
   await tree.getByRole('treeitem', { name: 'Views', exact: true }).click()

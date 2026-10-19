@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import type { Locator, Page } from '@playwright/test'
-import { test, expect, importWorkspaceFile, startEmpty } from './support'
+import { test, expect, importWithNothingToReport, startEmpty } from './support'
 
 /**
  * Journey 16 — shaping a line by hand, and the view's router (#133), with the
@@ -59,10 +59,8 @@ test('a line is bent, moved and straightened by hand, and a Manhattan view draws
   page,
 }) => {
   await startEmpty(page)
-  await importWorkspaceFile(page, FIXTURE)
-  const report = page.getByRole('dialog', { name: 'Import' })
-  await report.getByRole('button', { name: 'Done' }).click()
-  await expect(report).toBeHidden()
+  // Nothing to report since relationship documentation is read (#95).
+  await importWithNothingToReport(page, FIXTURE, { elements: 39, relationships: 48 })
 
   const tree = page.getByRole('tree', { name: 'Model tree' })
   await tree.getByRole('treeitem', { name: 'Views', exact: true }).click()
