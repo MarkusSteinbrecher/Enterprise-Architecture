@@ -111,6 +111,30 @@ export function ViewScreen() {
   return <ViewCanvas view={view} store={store} />
 }
 
+/**
+ * Whether the palette is collapsed to its glyphs (#146): a per-viewer
+ * convenience, as the model tree's is, so it lives in localStorage and the
+ * palette still works without it.
+ */
+export const PALETTE_COLLAPSED_STORAGE_KEY = 'archipelago.view-palette-collapsed'
+
+function readPaletteCollapsed(): boolean {
+  try {
+    return localStorage.getItem(PALETTE_COLLAPSED_STORAGE_KEY) === 'true'
+  } catch {
+    // Storage can be blocked (private mode, site-data policies): open, as for a new viewer.
+    return false
+  }
+}
+
+function writePaletteCollapsed(collapsed: boolean) {
+  try {
+    localStorage.setItem(PALETTE_COLLAPSED_STORAGE_KEY, String(collapsed))
+  } catch {
+    // The palette still collapses; it just will not be remembered.
+  }
+}
+
 /** Movement below this many pixels is a click, not a drag. */
 const CLICK_SLOP = 3
 const NONE: string[] = []
@@ -248,9 +272,28 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
    * unmount has given focus back to whatever opened it.
    */
   const [findType, setFindType] = useState(0)
+  /** The palette drawn as glyphs only (#146). */
+  const [collapsed, setCollapsed] = useState(readPaletteCollapsed)
+  /** The canvas's left edge on screen as the palette was toggled, so the drawing can stay put. */
+  const toggledAt = useRef<number | null>(null)
+  const collapse = useCallback((next: boolean) => {
+    toggledAt.current = canvas.current?.getBoundingClientRect().left ?? null
+    writePaletteCollapsed(next)
+    setCollapsed(next)
+  }, [])
+  /** The type filter is wanted, and focused as soon as it is there: a collapsed palette has none. */
+  const wantsFilter = useRef(false)
   useEffect(() => {
-    if (findType) paletteFilter.current?.focus()
-  }, [findType])
+    if (!findType) return
+    wantsFilter.current = true
+    collapse(false)
+  }, [findType, collapse])
+  useEffect(() => {
+    if (!wantsFilter.current || !paletteFilter.current) return
+    wantsFilter.current = false
+    paletteFilter.current.focus()
+  }, [findType, collapsed])
+  const find = useCallback(() => setFindType((n) => n + 1), [])
   const screenActions = useMemo<PaletteAction[]>(
     () =>
       editable
@@ -259,11 +302,11 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               id: 'new-element-in-view',
               label: 'New element in view…',
               glyph: 'NE',
-              run: () => setFindType((n) => n + 1),
+              run: find,
             },
           ]
         : [],
-    [editable],
+    [editable, find],
   )
   useScreenActions(screenActions)
   /**
@@ -343,6 +386,24 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     auto.current = false
     setViewport(next)
   }, [])
+
+  /**
+   * Toggling the palette moves the canvas's left edge, and the drawing with
+   * it. Before the browser paints, the viewport takes up the difference, so
+   * every shape stays where it was on screen (#146). That hands the viewport
+   * to the user, as any gesture does: an auto-fit would otherwise re-fit the
+   * narrower or wider canvas, which is the jump this avoids.
+   */
+  useLayoutEffect(() => {
+    const before = toggledAt.current
+    toggledAt.current = null
+    const after = canvas.current?.getBoundingClientRect().left
+    if (before === null || after === undefined || after === before) return
+    steer((current) => {
+      const v = current ?? { x: 0, y: 0, zoom: 1 }
+      return { ...v, x: v.x + before - after }
+    })
+  }, [collapsed, steer])
 
   const fit = useCallback(() => {
     auto.current = true
@@ -1046,7 +1107,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       )}
 
       <div
-        className={`view-screen__body${panelNode || panelLine ? ' view-screen__body--panel' : ''}${editable ? ' view-screen__body--palette' : ''}`}
+        className={`view-screen__body${panelNode || panelLine ? ' view-screen__body--panel' : ''}${editable ? ' view-screen__body--palette' : ''}${editable && collapsed ? ' view-screen__body--collapsed' : ''}`}
       >
         {editable && (
           <ElementPalette
@@ -1055,6 +1116,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             armed={tool}
             onArm={arm}
             onPlace={placeFromPalette}
+            collapsed={collapsed}
+            onCollapse={collapse}
+            onFind={find}
           />
         )}
         <div

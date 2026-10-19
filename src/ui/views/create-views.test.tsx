@@ -8,6 +8,7 @@ import type { Workspace } from '@/model'
 import { ModelStore } from '@/store'
 import { renderApp } from '@/test/render'
 import { ELEMENT_DRAG_TYPE, NEW_VIEW_NAME } from './create'
+import { PALETTE_COLLAPSED_STORAGE_KEY } from './ViewScreen'
 
 /**
  * Creating, renaming and deleting views from the app's chrome (#130): the model
@@ -202,6 +203,23 @@ describe('creating from the command palette (#130)', () => {
     await user.keyboard('data object{Enter}')
     expect(dispatch).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('textbox', { name: /^(Element|Group) name$/ })).toHaveFocus()
+  })
+
+  it('New element in view… opens a collapsed palette and lands in its type filter (#146)', async () => {
+    localStorage.setItem(PALETTE_COLLAPSED_STORAGE_KEY, 'true')
+    renderApp(claims(), { route: '/view/v-data' })
+    const user = userEvent.setup()
+    act(() => screen.getByLabelText('View Claim data').focus())
+    // Collapsed: no filter to land in until the palette opens.
+    expect(screen.getByRole('button', { name: 'Expand palette' })).toBeInTheDocument()
+    expect(screen.queryByRole('searchbox', { name: /Find an element type/ })).toBeNull()
+    await runAction(user, 'New element in view')
+    await waitFor(() =>
+      expect(screen.getByRole('searchbox', { name: /Find an element type/ })).toHaveFocus(),
+    )
+    expect(screen.getByRole('button', { name: 'Collapse palette' })).toBeInTheDocument()
+    await user.keyboard('data object{Enter}')
+    expect(dispatch).toHaveBeenCalledTimes(1)
   })
 
   it('takes New element in view… away when the view is left', async () => {

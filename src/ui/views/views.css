@@ -5,6 +5,8 @@
 .view-screen {
   /* Ours, not the handoff's: the handoff has no editor palette (#130). */
   --w-view-palette: 196px;
+  /* Collapsed to its glyphs (#146): a tool's 36 px glyph and its padding. */
+  --w-view-palette-collapsed: 52px;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -88,6 +90,10 @@
 
 .view-screen__body--palette.view-screen__body--panel {
   grid-template-columns: var(--w-view-palette) minmax(0, 1fr) var(--w-graph-panel);
+}
+
+.view-screen__body--collapsed {
+  --w-view-palette: var(--w-view-palette-collapsed);
 }
 
 .view-screen__canvas {
@@ -485,8 +491,43 @@
   background: var(--surface);
 }
 
-.view-palette__filter {
+.view-palette__top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin: 10px 8px 6px;
+}
+
+.view-palette--collapsed .view-palette__top {
+  flex-direction: column;
+  margin: 8px 0 6px;
+}
+
+.view-palette__toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--bd);
+  background: var(--panel);
+  color: var(--ink2);
+  font: 500 13px/1 var(--font-mono);
+  cursor: pointer;
+}
+
+.view-palette__toggle:hover,
+.view-palette__toggle:focus-visible {
+  border-color: var(--accent);
+  color: var(--ink);
+  outline: 0;
+}
+
+.view-palette__filter {
+  flex: 1;
+  min-width: 0;
   height: 26px;
   padding: 0 8px;
   background: var(--panel);
@@ -589,4 +630,36 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   font: 400 12px/1 var(--font-ui);
+}
+
+/* Collapsed (#146): glyphs only. A group's heading stays for assistive
+   technology, and a hairline separates the groups on screen. */
+.view-palette--collapsed .view-palette__heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.view-palette--collapsed .view-palette__group + .view-palette__group {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--bd);
+}
+
+.view-palette--collapsed .view-palette__tool {
+  justify-content: center;
+  padding: 0 5px 0 5px;
+}
+
+.view-palette--collapsed .view-palette__guide {
+  padding: 8px 0;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.view-palette--collapsed .view-palette__guide::after {
+  content: none;
 }
