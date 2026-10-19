@@ -386,3 +386,128 @@ describe('a shape Archi left at its default size (#13)', () => {
     expect(notes[0]!.message).toMatch(/^6 shapes/)
   })
 })
+
+describe('which values in a <style> are ours (#138)', () => {
+  // What the writer writes for n-app: a font in Inter, with black text, which
+  // is Archi's default text colour and an override here.
+  const ours = exportExchange(drawnWorkspace()).xml
+
+  /** `xml` with the `<style>` of the shape or line `id` replaced. */
+  const restyled = (xml: string, id: string, style: (old: string) => string) => {
+    const start = xml.indexOf(`identifier="${id}"`)
+    expect(start, id).toBeGreaterThan(0)
+    const from = xml.indexOf('<style', start)
+    const to = xml.indexOf('</style>', from) + '</style>'.length
+    return xml.slice(0, from) + style(xml.slice(from, to)) + xml.slice(to)
+  }
+  /** `xml` with the carried entry for `id` changed. */
+  const carrying = (xml: string, id: string, change: (entry: Record<string, unknown>) => void) =>
+    xml.replace(/(<value xml:lang="en">)(\[\{"id"[^<]*)(<\/value>)/, (_, open, json, close) => {
+      const entries = JSON.parse(json as string) as Record<string, unknown>[]
+      const entry = entries.find((e) => e.id === id)
+      expect(entry, id).toBeDefined()
+      change(entry!)
+      return `${open}${JSON.stringify(entries)}${close}`
+    })
+  const appearanceOf = (xml: string, id: string) => {
+    const result = importExchangeXml(xml)
+    const node = result.workspace!.views.flatMap((v) => v.nodes).find((n) => n.id === id)
+    return { appearance: node?.appearance, codes: result.problems.map((p) => p.code), result }
+  }
+
+  it('records what each <style> it wrote says, field by field', () => {
+    expect(ours).toContain(
+      '{"id":"n-app","literal":{"fontColor":"#000000","fontName":"Inter","fontSize":11,"fontStyle":["bold","italic"]},"textAlignment":"left","textPosition":"top"}',
+    )
+  })
+
+  it('keeps a value the marker names, default or not: the style as we wrote it', () => {
+    const { appearance, codes } = appearanceOf(ours, 'n-app')
+    expect(appearance?.fontColor).toBe('#000000')
+    expect(codes).toEqual([])
+  })
+
+  it('reads the rest as Archi’s, when Archi wrote its whole style beside ours', () => {
+    // Archi's re-export: its fill for the type, its grey outline, our font.
+    const archis = restyled(
+      ours,
+      'n-app',
+      () => `<style>
+              <fillColor r="181" g="255" b="255" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Inter" size="11" style="bold italic">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>`,
+    )
+    const { appearance, codes } = appearanceOf(archis, 'n-app')
+    expect(appearance).toEqual({
+      fontName: 'Inter',
+      fontSize: 11,
+      fontColor: '#000000',
+      fontStyle: ['bold', 'italic'],
+      textAlignment: 'left',
+      textPosition: 'top',
+    })
+    expect(codes).toEqual([])
+  })
+
+  it('reads a value another tool changed as that tool’s, so Archi’s default is no override', () => {
+    // g-claims was written with a #333333 outline and a #f5f0e6 fill.
+    const changed = restyled(ours, 'g-claims', (style) =>
+      style
+        .replace('<lineColor r="51" g="51" b="51" />', '<lineColor r="92" g="92" b="92" />')
+        .replace('<fillColor r="245" g="240" b="230" />', '<fillColor r="1" g="2" b="3" />'),
+    )
+    expect(changed).not.toBe(ours)
+    expect(appearanceOf(ours, 'g-claims').appearance).toMatchObject({ lineColor: '#333333' })
+    // The changed outline is Archi's default, so it is gone; the changed fill is an override.
+    expect(appearanceOf(changed, 'g-claims').appearance).toEqual({
+      fillColor: '#010203',
+      lineWidth: 2,
+    })
+  })
+
+  it('keeps an override the writer had to round, because the marker records it rounded', () => {
+    const workspace = drawnWorkspace()
+    const node = view(workspace, 'view-landscape').nodes.find((n) => n.id === 'n-app')!
+    // Both are Archi's defaults for an application component as the file spells
+    // them: black text, written without the alpha a font colour cannot hold,
+    // and Archi's fill for the type, written in capitals.
+    node.appearance = { fontColor: '#00000080', fillColor: '#B5FFFF' }
+    const { appearance, codes } = appearanceOf(exportExchange(workspace).xml, 'n-app')
+    expect(appearance).toEqual({ fontColor: '#000000', fillColor: '#b5ffff' })
+    expect(codes).toEqual([])
+  })
+
+  it.each([
+    ['an older Archipelago’s true', true],
+    ['a field this build does not write', { fontColor: '#000000', gradient: true }],
+    ['a value of the wrong type', { fontColor: '#000000', fontSize: '11' }],
+    ['a colour that is not one', { fontColor: 'black' }],
+    ['a font name that is not text', { fontColor: '#000000', fontName: 3 }],
+    ['a font style that is not a list', { fontColor: '#000000', fontStyle: 'bold' }],
+    ['null', null],
+  ])('fails closed on a marker it cannot check: %s', (_, marker) => {
+    const unverifiable = carrying(ours, 'n-app', (entry) => {
+      entry.literal = marker
+    })
+    const { appearance, codes, result } = appearanceOf(unverifiable, 'n-app')
+    // Read as any tool's style: the font is kept, the black text is Archi's default.
+    expect(appearance).toMatchObject({ fontName: 'Inter', textAlignment: 'left' })
+    expect(appearance?.fontColor).toBeUndefined()
+    expect(codes).toEqual(['exchange.style-unverifiable'])
+    expect(result.problems[0]!.message).toMatch(/^View "Claims landscape": 1 style is marked/)
+  })
+
+  it('counts an unverifiable marker only on a shape the view kept', () => {
+    // Two old markers: n-app's, and one for a shape that is not in the view.
+    const xml = carrying(ours, 'n-app', (entry) => {
+      entry.literal = true
+    }).replace(/(<value xml:lang="en">\[)/, '$1{"id":"n-gone","literal":true},')
+    const { codes, result } = appearanceOf(xml, 'n-app')
+    expect(codes.sort()).toEqual(['exchange.carried-unreadable', 'exchange.style-unverifiable'])
+    const warning = result.problems.find((p) => p.code === 'exchange.style-unverifiable')
+    expect(warning?.message).toMatch(/: 1 style is marked/)
+  })
+})
