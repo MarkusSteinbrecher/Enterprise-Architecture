@@ -201,10 +201,12 @@ describe('connecting shapes (#129)', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('draws nothing for a release on the empty canvas or on the shape it started from', async () => {
+  it('draws nothing for a release on the shape it started from; empty canvas is the magic connector’s', async () => {
     const h = setup()
-    // (1220, 1100) is below every shape.
+    // (1220, 1100) is below every shape: the magic connector asks for a new element (#132).
     await connect(h, 'o-goal', 'o-goal', { x: 1220, y: 1100 })
+    expect(screen.getByRole('dialog', { name: /^New element from / })).toBeInTheDocument()
+    await h.user.keyboard('{Escape}')
     // The gesture has ended: the handle is back on the shape still selected.
     expect(screen.getByTestId('connect-handle')).toHaveAttribute('data-connect', 'o-goal')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

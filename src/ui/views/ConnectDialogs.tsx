@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import {
   relationshipTypeMeta,
   typeLabel,
   type Element,
+  type ElementType,
   type Relationship,
   type RelationshipType,
   type View,
@@ -10,12 +11,13 @@ import {
 import { DialogOverlay } from '@/ui/common/DialogOverlay'
 import { useFocusTrap } from '@/ui/common/use-focus-trap'
 import type { ConnectChoice } from './connect'
+import type { MagicEntry } from './magic'
 import type { Nesting, NestingChoices, NestingOption } from './nesting'
 
 /**
  * The dialogs of connecting (#129): the menu a connect gesture ends in, the
  * confirmation before a relationship leaves the model, and the question a
- * nesting asks (#131). All are modal, as the fact sheet's relation picker is:
+ * nesting asks (#131), and the magic connector's menu (#132). All are modal, as the fact sheet's relation picker is:
  * focus enters, stays, and goes back to the canvas, and Escape cancels.
  */
 
@@ -389,4 +391,180 @@ export function NestingDialog({ nesting, onDone }: NestingDialogProps) {
       </div>
     </DialogOverlay>
   )
+}
+
+export interface MagicMenuProps {
+  source: Element
+  entries: readonly MagicEntry[]
+  /** What it says when `entries` is empty (`magicNothing`). */
+  nothing: string
+  onCreate: (type: RelationshipType, target: ElementType) => void
+  onCancel: () => void
+}
+
+/**
+ * The magic connector's menu (#132): a connect gesture released on empty
+ * canvas. Relationship types first, as Archi's menu is by default; the one in
+ * line shows the new elements it can reach, grouped by layer. Up and down move
+ * within a column, right (or Enter, which presses the type) goes into the
+ * element types and left back, Enter on an element type creates, and Escape or
+ * a press outside makes nothing. Hovering a type brings its element types up, and focus to
+ * it, as Archi's submenus open on hover.
+ */
+export function MagicMenu({ source, entries, nothing, onCreate, onCancel }: MagicMenuProps) {
+  const ref = useRef<HTMLDivElement>(null)
+  useFocusTrap(ref)
+  useEscape(onCancel)
+  const [chosen, setChosen] = useState(0)
+  // The model can change while the menu is open, and the list with it: the
+  // entry in line is the last one when the one chosen has gone.
+  const active = Math.min(chosen, entries.length - 1)
+  const typeButtons = useRef<(HTMLButtonElement | null)[]>([])
+  const targetButtons = useRef<(HTMLButtonElement | null)[]>([])
+  const panel = useId()
+  const entry = entries[active]
+  // Each render refills it; a shorter list must not keep the last one's tail.
+  targetButtons.current.length = entry ? countTargets(entry) : 0
+  /**
+   * Bumped to go into the element types of the entry in line. Focused in an
+   * effect, once that entry's column is drawn: a click on another type changes
+   * the column, and focusing in the handler would land on the old one's button
+   * just before it is replaced.
+   */
+  const [enter, setEnter] = useState(0)
+  useEffect(() => {
+    if (enter) targetButtons.current[0]?.focus()
+  }, [enter])
+  const into = (index: number) => {
+    setChosen(index)
+    setEnter((n) => n + 1)
+  }
+
+  const moveTo = (list: (HTMLButtonElement | null)[], index: number) => {
+    const count = list.length
+    if (count === 0) return
+    list[((index % count) + count) % count]?.focus()
+  }
+
+  const onTypeKey = (event: ReactKeyboardEvent, index: number) => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      const next = (index + (event.key === 'ArrowDown' ? 1 : -1) + entries.length) % entries.length
+      setChosen(next)
+      typeButtons.current[next]?.focus()
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      into(index)
+    }
+  }
+
+  const onTargetKey = (event: ReactKeyboardEvent, index: number) => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      moveTo(targetButtons.current, index + (event.key === 'ArrowDown' ? 1 : -1))
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      typeButtons.current[active]?.focus()
+    }
+  }
+
+  let flat = 0
+  return (
+    <DialogOverlay onDismiss={onCancel}>
+      <div
+        className="dialog magic-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`New element from ${named(source)}`}
+        ref={ref}
+      >
+        <div className="dialog__title section-label">New element</div>
+        <p className="connect-menu__text">
+          From “{named(source)}”: choose the relationship, then the element it leads to.
+        </p>
+        {entry ? (
+          <div className="magic-menu__columns">
+            <section className="connect-menu__group magic-menu__types" aria-label="Relationship">
+              {entries.map((candidate, index) => (
+                <button
+                  key={candidate.type}
+                  ref={(el) => {
+                    typeButtons.current[index] = el
+                  }}
+                  type="button"
+                  className={`connect-menu__item${index === active ? ' magic-menu__item--active' : ''}`}
+                  aria-current={index === active ? 'true' : undefined}
+                  aria-controls={panel}
+                  tabIndex={index === active ? 0 : -1}
+                  // A hover brings the type into line and takes focus with it,
+                  // as a native menu's hover does: focus never stays on an
+                  // element type the hover is about to replace (#181 review).
+                  onPointerEnter={() => {
+                    setChosen(index)
+                    typeButtons.current[index]?.focus()
+                  }}
+                  onClick={() => into(index)}
+                  onKeyDown={(event) => onTypeKey(event, index)}
+                >
+                  <span className="connect-menu__abbr">
+                    {relationshipTypeMeta(candidate.type).abbr}
+                  </span>
+                  <span className="magic-menu__phrase">{candidate.phrase}</span>
+                  <span className="magic-menu__count">{countTargets(candidate)}</span>
+                </button>
+              ))}
+            </section>
+            <section
+              id={panel}
+              className="magic-menu__targets"
+              aria-label={`${entry.phrase}: new element`}
+            >
+              {entry.groups.map((group) => (
+                <div
+                  key={group.layer}
+                  className="connect-menu__group"
+                  role="group"
+                  aria-label={group.label}
+                >
+                  <div className="dialog__label">{group.label}</div>
+                  {group.types.map((type) => {
+                    const index = flat++
+                    return (
+                      <button
+                        key={type}
+                        ref={(el) => {
+                          targetButtons.current[index] = el
+                        }}
+                        type="button"
+                        className="connect-menu__item"
+                        tabIndex={-1}
+                        onClick={() => onCreate(entry.type, type)}
+                        onKeyDown={(event) => onTargetKey(event, index)}
+                      >
+                        <span className="magic-menu__target">{typeLabel(type)}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              ))}
+            </section>
+          </div>
+        ) : (
+          <p className="dialog__problem" role="alert">
+            {nothing}
+          </p>
+        )}
+        <div className="dialog__actions">
+          <button type="button" className="button" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </DialogOverlay>
+  )
+}
+
+/** How many element types a relationship type reaches, shown beside it. */
+function countTargets(entry: MagicEntry): number {
+  return entry.groups.reduce((sum, group) => sum + group.types.length, 0)
 }

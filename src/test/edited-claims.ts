@@ -6,6 +6,7 @@ import {
   type Bounds,
   type Element,
   type ElementNode,
+  type ElementType,
   type Point,
   type RelationshipType,
   type View,
@@ -30,6 +31,7 @@ import {
   type Tool,
 } from '@/ui/views/create'
 import { withDrop } from '@/ui/views/drop'
+import { magicEdit, magicMenu } from '@/ui/views/magic'
 import { moveSelection, resizeNode } from '@/ui/views/edit'
 import { nestingEdit, nestingFor, withNewElement } from '@/ui/views/nesting'
 
@@ -373,4 +375,56 @@ function scratchView(store: ModelStore) {
     }),
   )
   if (lineIds.length) throw new Error(`the drop drew fewer lines than expected: ${lineIds}`)
+
+  // The magic connector (#132): a gesture from a shape released on empty
+  // canvas, the menu's own choice under the view's viewpoint, and the new
+  // element, its relationship and both drawings as one command.
+  const magic = (
+    from: string,
+    type: RelationshipType,
+    target: ElementType,
+    point: Point,
+    ids: Record<'node' | 'rel' | 'conn', string>,
+    element: Partial<Element>,
+  ) => {
+    const v = store.view(id)!
+    const node = v.nodes.find((n) => n.id === from)
+    const source = node?.kind === 'element' ? store.element(node.element) : undefined
+    if (!source) throw new Error(`${from} draws no element`)
+    const entry = magicMenu(store, source, v.viewpoint).find((e) => e.type === type)
+    if (!entry?.groups.some((g) => g.types.includes(target))) {
+      throw new Error(`the magic connector does not offer ${type} to a new ${target} from ${from}`)
+    }
+    const edit = magicEdit(
+      v,
+      from,
+      type,
+      target,
+      point,
+      isJunction,
+      (prefix) => ids[prefix],
+      element,
+    )
+    if (!edit) throw new Error(`the magic connector made nothing from ${from}`)
+    store.updateViewAdding(id, () => edit.view, {
+      elements: [edit.element],
+      relationships: [edit.relationship],
+    })
+  }
+  magic(
+    'o-s-event',
+    'Triggering',
+    'BusinessProcess',
+    { x: 760, y: 60 },
+    { node: 'o-s-check', rel: 'r-s-event-check', conn: 'c-s-event-check' },
+    { id: 'bp-check-cover', name: 'Check cover' },
+  )
+  magic(
+    'o-s-intake',
+    'Serving',
+    'Junction',
+    { x: 760, y: 300 },
+    { node: 'o-s-serve', rel: 'r-s-intake-serve', conn: 'c-s-intake-serve' },
+    { id: 'j-serve' },
+  )
 }

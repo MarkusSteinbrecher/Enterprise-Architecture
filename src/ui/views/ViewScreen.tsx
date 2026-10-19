@@ -11,6 +11,7 @@ import {
   type Bounds,
   type Element,
   type ElementNode,
+  type ElementType,
   type LabelPosition,
   type Point,
   type RelationshipType,
@@ -53,8 +54,10 @@ import {
   type Handle,
 } from './edit'
 import { connectChoice, nodeAt } from './connect'
+import { magicEdit, magicMenu, magicNothing } from './magic'
 import {
   ConnectMenu,
+  MagicMenu,
   DeleteElementDialog,
   DeleteRelationshipDialog,
   NestingDialog,
@@ -265,6 +268,11 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const [rubber, setRubber] = useState<{ from: Point; to: Point; over: string | null } | null>(null)
   /** A connect gesture that ended on another shape, waiting on the menu. */
   const [pending, setPending] = useState<{ source: string; target: string } | null>(null)
+  /**
+   * A connect gesture that ended on empty canvas, waiting on the magic
+   * connector's menu (#132): the source shape, and where the new one goes.
+   */
+  const [magic, setMagic] = useState<{ source: string; at: Point } | null>(null)
   /** The relationship whose deletion from the model is waiting on confirmation. */
   const [deleting, setDeleting] = useState<string | null>(null)
   /**
@@ -534,6 +542,28 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     }
   }, [])
 
+  /** Is `client` (a screen point) on the canvas? */
+  const onCanvas = (client: Point): boolean => {
+    const rect = canvas.current?.getBoundingClientRect()
+    return (
+      rect !== undefined &&
+      client.x >= rect.left &&
+      client.x <= rect.right &&
+      client.y >= rect.top &&
+      client.y <= rect.bottom
+    )
+  }
+
+  /**
+   * The element a magic connector gesture starts from (#132): the one `nodeId`
+   * draws. A note, a group or a view reference starts none, as in Archi, whose
+   * magic connector starts only from an ArchiMate shape.
+   */
+  const magicSource = (nodeId: string): Element | undefined => {
+    const node = view.nodes.find((n) => n.id === nodeId)
+    return node?.kind === 'element' ? store.element(node.element) : undefined
+  }
+
   const isJunction = useCallback(
     (elementId: string) => store.element(elementId)?.type === 'Junction',
     [store],
@@ -714,6 +744,31 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       { id, kind: 'relationship', relationship, source: pending.source, target: pending.target },
     )
     if (made) chooseLine(id)
+  }
+
+  /**
+   * The magic connector's choice (#132): a new element of `target` where the
+   * gesture ended, a `type` relationship to it from the source, and both
+   * drawn, as one command. Its name opens for typing, as Archi opens a new
+   * shape's.
+   */
+  const createMagic = (type: RelationshipType, target: ElementType) => {
+    if (!magic) return
+    setMagic(null)
+    auto.current = false
+    const base = store.view(view.id)
+    if (!base) return
+    const edit = magicEdit(base, magic.source, type, target, magic.at, isJunction, newId)
+    if (!edit) return
+    const made = store.updateViewAdding(view.id, () => edit.view, {
+      elements: [edit.element],
+      relationships: [edit.relationship],
+    })
+    if (!made) return
+    choose([edit.node], made)
+    // The editor opens only where there is a name to type (`editableText`), so
+    // a junction gets none, and the closing menu hands focus back to the canvas.
+    setEditing(edit.node)
   }
 
   const reuse = (relationship: string) => {
@@ -929,8 +984,14 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     }
     if (g.kind === 'connect') {
       if (!g.moved) return
-      const over = nodeAt(view, toView(client))
+      const at = toView(client)
+      const over = nodeAt(view, at)
       if (over !== undefined && over !== g.source) connect(g.source, over)
+      // On empty canvas, the magic connector (#132); the menu itself opens only
+      // from an element's shape (`magicFrom`). A release off the canvas is a
+      // drag abandoned, as it was before: the surface holds the pointer, so it
+      // ends here wherever the pointer is (#181 review).
+      else if (over === undefined && onCanvas(client)) setMagic({ source: g.source, at })
       return
     }
     if (g.kind === 'lasso') {
@@ -1043,6 +1104,13 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const route = (connection: ViewConnection) => connectionRoute(connection, bounds, shown.router)
   const pathOf = (points: Point[]) => `M${points.map((p) => `${p.x},${p.y}`).join('L')}`
   const choice = pending ? connectChoice(store, view, pending.source, pending.target) : undefined
+  const magicFrom = magic ? magicSource(magic.source) : undefined
+  // The one guard on the menu: a gesture from a shape that draws no element in
+  // the model opens nothing, and a menu whose source has gone (removed, or
+  // undone away) closes and stays closed rather than coming back with it.
+  useEffect(() => {
+    if (magic && !magicFrom) setMagic(null)
+  }, [magic, magicFrom])
   const deletingRelationship = deleting === null ? undefined : store.relationship(deleting)
   const deletingElementValue = deletingElement === null ? undefined : store.element(deletingElement)
   const singleBounds = single ? bounds.get(single) : undefined
@@ -1680,6 +1748,15 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         )}
       </div>
       {nesting && <NestingDialog nesting={nesting.ask} onDone={nesting.commit} />}
+      {magic && magicFrom && (
+        <MagicMenu
+          source={magicFrom}
+          entries={magicMenu(store, magicFrom, view.viewpoint)}
+          nothing={magicNothing(store, magicFrom)}
+          onCreate={createMagic}
+          onCancel={() => setMagic(null)}
+        />
+      )}
       {choice && choice.kind !== 'line' && (
         <ConnectMenu
           choice={choice}

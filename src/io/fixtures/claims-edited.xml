@@ -137,6 +137,12 @@
     <element identifier="be-claim-in" xsi:type="BusinessEvent">
       <name xml:lang="en">Claim received</name>
     </element>
+    <element identifier="bp-check-cover" xsi:type="BusinessProcess">
+      <name xml:lang="en">Check cover</name>
+    </element>
+    <element identifier="j-serve" xsi:type="AndJunction">
+      <name xml:lang="en"></name>
+    </element>
   </elements>
   <relationships>
     <relationship identifier="r-cust-ins" source="ba-customer" target="br-insurant" xsi:type="Assignment">
@@ -264,6 +270,10 @@
     </relationship>
     <relationship identifier="r-s-event-valuate" source="be-claim-in" target="bp-valuate" xsi:type="Triggering">
     </relationship>
+    <relationship identifier="r-s-event-check" source="be-claim-in" target="bp-check-cover" xsi:type="Triggering">
+    </relationship>
+    <relationship identifier="r-s-intake-serve" source="as-intake" target="j-serve" xsi:type="Serving">
+    </relationship>
   </relationships>
   <organizations>
     <item>
@@ -284,6 +294,7 @@
       <item identifierRef="be-damage" />
       <item identifierRef="bo-claim" />
       <item identifierRef="be-claim-in" />
+      <item identifierRef="bp-check-cover" />
     </item>
     <item>
       <label xml:lang="en">Application</label>
@@ -339,6 +350,7 @@
       <item identifierRef="loc-zurich" />
       <item identifierRef="j-split" />
       <item identifierRef="j-intake" />
+      <item identifierRef="j-serve" />
     </item>
     <item>
       <label xml:lang="en">Relations</label>
@@ -406,6 +418,8 @@
       <item identifierRef="r-s-engine-intake" />
       <item identifierRef="r-s-intake-valuate" />
       <item identifierRef="r-s-event-valuate" />
+      <item identifierRef="r-s-event-check" />
+      <item identifierRef="r-s-intake-serve" />
     </item>
     <item>
       <label xml:lang="en">Views</label>
@@ -734,6 +748,10 @@ for claims under 500.</label>
         </node>
         <node identifier="o-s-rules" x="190" y="420" w="120" h="55" xsi:type="Element" elementRef="af-rules">
         </node>
+        <node identifier="o-s-check" x="760" y="60" w="120" h="55" xsi:type="Element" elementRef="bp-check-cover">
+        </node>
+        <node identifier="o-s-serve" x="760" y="300" w="15" h="15" xsi:type="Element" elementRef="j-serve">
+        </node>
         <connection identifier="c-s-engine-intake" xsi:type="Relationship" relationshipRef="r-s-engine-intake" source="o-s-engine" target="o-s-intake">
         </connection>
         <connection identifier="c-s-intake-valuate" xsi:type="Relationship" relationshipRef="r-s-intake-valuate" source="o-s-intake" target="o-s-valuate">
@@ -743,6 +761,10 @@ for claims under 500.</label>
         <connection identifier="c-s-engine-rules" xsi:type="Relationship" relationshipRef="r-engine-rules" source="o-s-engine" target="o-s-rules">
         </connection>
         <connection identifier="c-s-engine-2-rules" xsi:type="Relationship" relationshipRef="r-engine-rules" source="o-s-engine-2" target="o-s-rules">
+        </connection>
+        <connection identifier="c-s-event-check" xsi:type="Relationship" relationshipRef="r-s-event-check" source="o-s-event" target="o-s-check">
+        </connection>
+        <connection identifier="c-s-intake-serve" xsi:type="Relationship" relationshipRef="r-s-intake-serve" source="o-s-intake" target="o-s-serve">
         </connection>
       </view>
     </diagrams>
