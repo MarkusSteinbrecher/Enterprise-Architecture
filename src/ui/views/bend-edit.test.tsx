@@ -128,6 +128,24 @@ describe('adding, moving and removing a bend-point (#133)', () => {
     expect(h.dispatch).not.toHaveBeenCalled()
   })
 
+  it('records nothing for a bend-point dragged away and back to the pixel it started on', async () => {
+    const h = setup()
+    const bends = bendsOf(h, BENT)!
+    await selectLine(h, BENT)
+    h.dispatch.mockClear()
+    const from = centreOf(bendpoint(h, 0))
+    // A real drag, so the gesture commits, ending where it began once rounded.
+    await drag(
+      h.user,
+      bendpoint(h, 0),
+      from,
+      { x: 900, y: 900 },
+      { x: from.x + 0.3, y: from.y - 0.3 },
+    )
+    expect(h.dispatch).not.toHaveBeenCalled()
+    expect(bendsOf(h, BENT)).toEqual(bends)
+  })
+
   it('removes a bend-point on a double-click, in one command', async () => {
     const h = setup()
     const before = model(h.store)
