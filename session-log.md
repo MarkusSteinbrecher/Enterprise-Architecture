@@ -1,5 +1,18 @@
 # Session Log
 
+## 2026-10-19 (cont.) — Merge round: six PRs on `main`, three re-opened
+
+- **Sponsor's calls on #178:** one bend-point per segment drag (Archi's); the ported Manhattan route stays; #174 takes schema 4 and #133 takes 5. Recorded on #178 and #133.
+- **Merged by the sponsor, without `/review-pr`:** #167, #174, #169, #172, #168. The permission check refuses `gh pr merge` from a session ("merge without review"), so the sponsor merges by hand.
+- **Stranded, as in October:** #176 merged into `feat/165-shared-folder-followups` 18 s after #172 took that branch to `main`. #173 merged into `feat/146-collapsible-palette` 22 s after #168, carrying #178 (which had merged into `feat/145-drop-draws-relationships`). None of it reached `main`. Re-opened as **#179** (coverage gate, #164) and **#180** (#145 + #133).
+- **Fixes on the branches:**
+  - **#169:** the Archi oracle's fixtures conflicted with #174. Rebuilt from the merged writer and re-saved by Archi 5.10.
+  - **#175:** `tests/manual/archimate-import.md` kept both sides' steps. `archimate-import.spec.ts` merged with no text conflict and did not compile, since #174 had replaced the import its new journey uses. After `main` moved again, journey 13's race (fixed by #168) needed one more merge.
+  - **`main` went red after #168:** since #174, the claims import has nothing to report and opens no dialog, and #168's journey 14 waited for its Done button. Fixed on #175 (journey 14) and #180 (14, 15, 16, cherry-picked to match).
+  - **#180:** schema 5, #138's carried-style key list with `labelPosition`, the oracle re-run, and #138's re-export comparison naming the label position as carried only. 1572 unit tests on Node 24 and 25, full e2e 33 passed.
+- **Merge order:** #175 (turns `main` green), #179, #180. Simulated in sequence: no conflicts.
+- **For the sponsor:** stacked merged branches to delete once #179 and #180 are in: `feat/165-shared-folder-followups`, `feat/146-collapsible-palette`, `feat/133-bendpoints-router`, and after them `feat/164-coverage-gate`, `feat/145-drop-draws-relationships`. Also merged: `chore/manual-scripts-refresh`, `feat/95-documentation-fields`, `feat/138-literal-style-marker`.
+
 ## 2026-10-19 — #133 finished: PR #178 (bend-points, Manhattan router, label position)
 
 - **PR #178**, stacked on #173 (`feat/145-drop-draws-relationships`). The WIP from 2026-10-16 is finished. Nothing merged.
