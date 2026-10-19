@@ -375,7 +375,7 @@
         <documentation xml:lang="en">Business, application and platform layers of the claims platform.</documentation>
         <properties>
           <property propertyDefinitionRef="propid-1">
-            <value xml:lang="en">[{"id":"c-note-split","literal":true},{"id":"c-pay-ins","literal":true},{"id":"c-req-goal","literal":true},{"id":"o-crm","literal":true},{"id":"o-engine","literal":true},{"id":"o-g-apps","textAlignment":"center"},{"id":"o-g-business","literal":true,"textAlignment":"center"},{"id":"o-g-platform","textAlignment":"center"},{"id":"o-goal","literal":true},{"id":"o-handle","textAlignment":"left"},{"id":"o-note-biz","textAlignment":"center"},{"id":"o-req","literal":true},{"id":"o-rollout","strikethrough":true,"textAlignment":"right"}]</value>
+            <value xml:lang="en">[{"id":"c-crm-cust","labelPosition":"source"},{"id":"c-note-split","literal":true},{"id":"c-pay-ins","literal":true},{"id":"c-req-goal","literal":true},{"id":"o-crm","literal":true},{"id":"o-engine","literal":true},{"id":"o-g-apps","textAlignment":"center"},{"id":"o-g-business","literal":true,"textAlignment":"center"},{"id":"o-g-platform","textAlignment":"center"},{"id":"o-goal","literal":true},{"id":"o-handle","textAlignment":"left"},{"id":"o-note-biz","textAlignment":"center"},{"id":"o-req","literal":true},{"id":"o-rollout","strikethrough":true,"textAlignment":"right"}]</value>
           </property>
         </properties>
         <node identifier="o-g-business" x="20" y="20" w="1180" h="300" xsi:type="Container">
@@ -923,7 +923,6 @@ for claims under 500.</label>
               <color r="0" g="0" b="0" />
             </font>
           </style>
-          <bendpoint x="547" y="270" />
           <bendpoint x="860" y="270" />
         </connection>
         <connection identifier="c-valuate-pay" relationshipRef="r-valuate-pay" xsi:type="Relationship" source="o-valuate" target="o-pay">
@@ -1040,6 +1039,7 @@ for claims under 500.</label>
             </font>
           </style>
           <bendpoint x="715" y="470" />
+          <bendpoint x="760" y="471" />
         </connection>
         <connection identifier="c-cust-file" relationshipRef="r-cust-file" xsi:type="Relationship" source="o-customer-hub" target="o-do-customer">
           <style>
@@ -1273,6 +1273,15 @@ for claims under 500.</label>
             </font>
           </style>
         </node>
+        <node identifier="o-s-rules" elementRef="af-rules" xsi:type="Element" x="190" y="420" w="120" h="55">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
         <connection identifier="c-s-intake-valuate" relationshipRef="r-s-intake-valuate" xsi:type="Relationship" source="o-s-intake" target="o-s-valuate">
           <style>
             <lineColor r="0" g="0" b="0" />
@@ -1290,6 +1299,22 @@ for claims under 500.</label>
           </style>
         </connection>
         <connection identifier="c-s-engine-intake" relationshipRef="r-s-engine-intake" xsi:type="Relationship" source="o-s-engine" target="o-s-intake">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-s-engine-rules" relationshipRef="r-engine-rules" xsi:type="Relationship" source="o-s-engine" target="o-s-rules">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="c-s-engine-2-rules" relationshipRef="r-engine-rules" xsi:type="Relationship" source="o-s-engine-2" target="o-s-rules">
           <style>
             <lineColor r="0" g="0" b="0" />
             <font name="Lucida Grande" size="12">

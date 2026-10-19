@@ -287,7 +287,6 @@ describe('what it cannot hold, it says (#13)', () => {
     )
     expect(found('archimate.default-size')[0]?.message).toMatch(/^6 shapes/)
     expect(found('archimate.appearance-unsupported')[0]?.message).toMatch(/gradient/)
-    expect(found('archimate.router-unsupported')).toHaveLength(1)
     expect(found('archimate.specialization-as-property')).toHaveLength(1)
     expect(found('archimate.folder-properties-skipped')[0]?.message).toMatch(/Actors/)
     expect(found('import.relationship-documentation-skipped')[0]?.message).toMatch(
@@ -305,12 +304,50 @@ describe('what it cannot hold, it says (#13)', () => {
       'archimate.folder-properties-skipped',
       'archimate.model-purpose-skipped',
       'archimate.node-type-unsupported',
-      'archimate.router-unsupported',
       'archimate.specialization-as-property',
       'archimate.view-type-unsupported',
       'import.relationship-documentation-skipped',
     ])
     expect(codes(claimsNative)).toEqual(['archimate.model-purpose-skipped'])
+  })
+
+  it('reads a Manhattan view’s router, and reports none for it (#133)', () => {
+    // Archi saved v-edges with connectionRouterType="2".
+    expect(coverageNative).toContain('id="v-edges" connectionRouterType="2"')
+    const workspace = read(coverageNative)
+    expect(workspace.views.find((v) => v.id === 'v-edges')?.router).toBe('manhattan')
+    expect(workspace.views.filter((v) => v.router !== undefined).map((v) => v.id)).toEqual([
+      'v-edges',
+    ])
+    expect(found('archimate.router-unsupported')).toEqual([])
+  })
+
+  it('draws a router Archi 5.10 no longer draws through the bend-points, and says so (#133)', () => {
+    const retired = coverageNative.replace(
+      'id="v-edges" connectionRouterType="2"',
+      'id="v-edges" connectionRouterType="1"',
+    )
+    expect(retired).not.toBe(coverageNative)
+    const result = importArchimate(retired)
+    expect(result.workspace!.views.find((v) => v.id === 'v-edges')).not.toHaveProperty('router')
+    expect(result.problems.filter((p) => p.code === 'archimate.router-unsupported')).toHaveLength(1)
+    // Archi's default, written out, is no loss.
+    const manual = coverageNative.replace(
+      'id="v-edges" connectionRouterType="2"',
+      'id="v-edges" connectionRouterType="0"',
+    )
+    expect(codes(manual)).not.toContain('archimate.router-unsupported')
+  })
+
+  it('reads where a connection’s label sits, which Archi saved as its text position (#133)', () => {
+    const edges = read(coverageNative).views.find((v) => v.id === 'v-edges')!
+    const label = (id: string) =>
+      edges.connections.find((c) => c.id === id)?.appearance?.labelPosition
+    expect(label('c-assign')).toBe('source')
+    expect(label('c-influence')).toBe('target')
+    // The default, which Archi does not write.
+    expect(label('c-directed')).toBeUndefined()
+    expect(found('archimate.appearance-unsupported')[0]?.message).not.toMatch(/textPosition/)
   })
 
   it('refuses what is not an Archi model, and what is not XML', () => {

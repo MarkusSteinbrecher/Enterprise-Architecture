@@ -459,7 +459,7 @@
         <documentation xml:lang="en">Business, application and platform layers of the claims platform.</documentation>
         <properties>
           <property propertyDefinitionRef="propid-1">
-            <value xml:lang="en">[{"id":"c-note-split","literal":true},{"id":"c-pay-ins","literal":true},{"id":"c-req-goal","literal":true},{"id":"o-crm","literal":true},{"id":"o-engine","literal":true},{"id":"o-g-apps","textAlignment":"center"},{"id":"o-g-business","literal":true,"textAlignment":"center"},{"id":"o-g-platform","textAlignment":"center"},{"id":"o-goal","literal":true},{"id":"o-handle","textAlignment":"left"},{"id":"o-note-biz","textAlignment":"center"},{"id":"o-req","literal":true},{"id":"o-rollout","strikethrough":true,"textAlignment":"right"}]</value>
+            <value xml:lang="en">[{"id":"c-crm-cust","labelPosition":"source"},{"id":"c-note-split","literal":true},{"id":"c-pay-ins","literal":true},{"id":"c-req-goal","literal":true},{"id":"o-crm","literal":true},{"id":"o-engine","literal":true},{"id":"o-g-apps","textAlignment":"center"},{"id":"o-g-business","literal":true,"textAlignment":"center"},{"id":"o-g-platform","textAlignment":"center"},{"id":"o-goal","literal":true},{"id":"o-handle","textAlignment":"left"},{"id":"o-note-biz","textAlignment":"center"},{"id":"o-req","literal":true},{"id":"o-rollout","strikethrough":true,"textAlignment":"right"}]</value>
           </property>
         </properties>
         <node identifier="o-g-business" x="20" y="20" w="1180" h="300" xsi:type="Container">
@@ -615,7 +615,6 @@ for claims under 500.</label>
         <connection identifier="c-split-valuate" xsi:type="Relationship" relationshipRef="r-split-valuate" source="o-split" target="o-valuate">
         </connection>
         <connection identifier="c-split-pay" xsi:type="Relationship" relationshipRef="r-split-pay" source="o-split" target="o-pay">
-          <bendpoint x="547" y="270" />
           <bendpoint x="860" y="270" />
         </connection>
         <connection identifier="c-valuate-pay" xsi:type="Relationship" relationshipRef="r-valuate-pay" source="o-valuate" target="o-pay">
@@ -648,6 +647,7 @@ for claims under 500.</label>
         </connection>
         <connection identifier="c-cust-as" xsi:type="Relationship" relationshipRef="r-cust-as" source="o-customer-hub" target="o-as-customer">
           <bendpoint x="715" y="470" />
+          <bendpoint x="760" y="471" />
         </connection>
         <connection identifier="c-cust-file" xsi:type="Relationship" relationshipRef="r-cust-file" source="o-customer-hub" target="o-do-customer">
         </connection>
@@ -730,11 +730,17 @@ for claims under 500.</label>
         </node>
         <node identifier="o-s-engine-2" x="300" y="260" w="120" h="55" xsi:type="Element" elementRef="ac-engine">
         </node>
+        <node identifier="o-s-rules" x="190" y="420" w="120" h="55" xsi:type="Element" elementRef="af-rules">
+        </node>
         <connection identifier="c-s-engine-intake" xsi:type="Relationship" relationshipRef="r-s-engine-intake" source="o-s-engine" target="o-s-intake">
         </connection>
         <connection identifier="c-s-intake-valuate" xsi:type="Relationship" relationshipRef="r-s-intake-valuate" source="o-s-intake" target="o-s-valuate">
         </connection>
         <connection identifier="c-s-event-valuate" xsi:type="Relationship" relationshipRef="r-s-event-valuate" source="o-s-event" target="o-s-valuate">
+        </connection>
+        <connection identifier="c-s-engine-rules" xsi:type="Relationship" relationshipRef="r-engine-rules" source="o-s-engine" target="o-s-rules">
+        </connection>
+        <connection identifier="c-s-engine-2-rules" xsi:type="Relationship" relationshipRef="r-engine-rules" source="o-s-engine-2" target="o-s-rules">
         </connection>
       </view>
     </diagrams>

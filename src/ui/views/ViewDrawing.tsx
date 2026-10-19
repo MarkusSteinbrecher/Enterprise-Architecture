@@ -85,7 +85,7 @@ export const ViewDrawing = memo(function ViewDrawing({
       <g>
         {view.connections.map((connection) => {
           if (hidden.has(connection.id)) return null
-          const points = connectionRoute(connection, bounds)
+          const points = connectionRoute(connection, bounds, view.router)
           if (!points) return null
           return (
             <DrawnConnection
