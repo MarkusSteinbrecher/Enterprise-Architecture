@@ -19,7 +19,10 @@ export interface RelationshipLineProps {
   accessType?: AccessType
   /** Association only: draws a half arrow at the target (#84 carries it on the model). */
   directed?: boolean
-  /** Text at the middle of the route: the relationship's name, or an influence modifier. */
+  /**
+   * The relationship's name, or an influence modifier: at the middle of the
+   * route, or near one end when `appearance.labelPosition` says so (#133).
+   */
   label?: string
   appearance?: Appearance
 }
@@ -66,7 +69,7 @@ export const RelationshipLine = memo(function RelationshipLine({
   if (heads.source) route[0] = shorten(sourceEnd, SIZE[heads.source].inset)
   if (heads.target) route[n - 1] = shorten(targetEnd, SIZE[heads.target].inset)
   const d = `M${route.map((p) => `${r(p.x)},${r(p.y)}`).join('L')}`
-  const mid = midpoint(points)
+  const mid = labelPoint(points, appearance?.labelPosition)
 
   return (
     <g
@@ -181,6 +184,33 @@ function HeadShape({
       return <circle {...common} cx={r(c.x)} cy={r(c.y)} r={half} fill={stroke} />
     }
   }
+}
+
+/**
+ * Where the label goes: halfway along the route, or `END_DISTANCE` along it
+ * from the end that `position` names, as Archi's `ConnectionEndpointLocator`
+ * places a source or target label (draw2d's default `uDistance` of 14).
+ */
+function labelPoint(points: readonly Point[], position: Appearance['labelPosition']): Point {
+  if (position === 'source') return along(points, END_DISTANCE)
+  if (position === 'target') return along([...points].reverse(), END_DISTANCE)
+  return midpoint(points)
+}
+
+const END_DISTANCE = 14
+
+/** The point `distance` along the route from its first point, or its last point if shorter. */
+function along(points: readonly Point[], distance: number): Point {
+  let left = distance
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1]!
+    const b = points[i]!
+    const seg = dist(a, b)
+    if (seg >= left && seg > 0)
+      return { x: a.x + ((b.x - a.x) * left) / seg, y: a.y + ((b.y - a.y) * left) / seg }
+    left -= seg
+  }
+  return points[points.length - 1]!
 }
 
 /** The point halfway along the route's length. */

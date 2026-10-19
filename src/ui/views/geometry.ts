@@ -6,6 +6,7 @@ import {
   type ViewConnection,
   type ViewNode,
 } from '@/model'
+import { manhattanRoute } from './manhattan'
 
 /**
  * Geometry of a hand-drawn view (#79): where things are in view coordinates,
@@ -97,15 +98,20 @@ const centre = (b: Bounds): Point => ({ x: b.x + b.width / 2, y: b.y + b.height 
 
 /**
  * The full route of a connection: source anchor, bend-points, target anchor.
- * Undefined when an end is not in the view (the validator reports that).
+ * Undefined when an end is not in the view (the validator reports that). In a
+ * Manhattan view (#133) the route is laid out orthogonally from the two boxes
+ * alone, and the bend-points are ignored, as Archi's `ManhattanConnectionRouter`
+ * ignores them; they stay in the model for a switch back.
  */
 export function connectionRoute(
   connection: ViewConnection,
   bounds: ReadonlyMap<string, Bounds>,
+  router?: View['router'],
 ): Point[] | undefined {
   const source = bounds.get(connection.source)
   const target = bounds.get(connection.target)
   if (!source || !target) return undefined
+  if (router === 'manhattan') return manhattanRoute(source, target)
   const bends = connection.bendpoints ?? []
   const first = bends[0] ?? centre(target)
   const last = bends[bends.length - 1] ?? centre(source)
@@ -136,7 +142,12 @@ export function drawingBounds(view: View, bounds: ReadonlyMap<string, Bounds>): 
   const hidden = nestedConnections(view)
   for (const connection of view.connections) {
     if (hidden.has(connection.id)) continue
-    for (const p of connection.bendpoints ?? []) add(p.x, p.y)
+    // A Manhattan route is drawn instead of the bend-points, and can leave the boxes.
+    const points =
+      view.router === 'manhattan'
+        ? (connectionRoute(connection, bounds, view.router) ?? [])
+        : (connection.bendpoints ?? [])
+    for (const p of points) add(p.x, p.y)
   }
   if (minX === Infinity) return undefined
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }

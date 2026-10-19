@@ -77,6 +77,8 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
         'c-cust-as bendpoints',
         'c-info-ins bendpoints',
         'c-engine-claim bendpoints',
+        'c-split-pay bendpoints',
+        'c-crm-cust appearance.labelPosition',
         'c-req-goal appearance.lineWidth',
         'c-note-ref missing',
         'c-fraud-valuate extra',
@@ -191,12 +193,30 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
     expect(lines(archi)).toEqual(drawn)
   })
 
+  it('keeps the bend-points the canvas added, moved and removed, as drawn (#133)', () => {
+    const points = (w: Workspace, id: string) =>
+      w.views.find((v) => v.id === 'v-landscape')!.connections.find((c) => c.id === id)?.bendpoints
+    // Ours first, so the comparison is not of two absences: two added, rounded
+    // to whole pixels; one of two removed; one moved; and one route straightened.
+    expect(points(ours, 'c-cust-as')).toEqual([
+      { x: 715, y: 470 },
+      { x: 760, y: 471 },
+    ])
+    expect(points(ours, 'c-split-pay')).toEqual([{ x: 860, y: 270 }])
+    expect(points(ours, 'c-engine-claim')).toEqual([{ x: 700, y: 455 }])
+    expect(points(ours, 'c-info-ins')).toBeUndefined()
+    for (const id of ['c-cust-as', 'c-split-pay', 'c-engine-claim', 'c-info-ins']) {
+      expect(points(archi, id), id).toEqual(points(ours, id))
+    }
+  })
+
   it('names each difference Archi accounts for, and only those', () => {
     const named = explained
       .filter((d) => d.field !== 'extra')
       .map((d) => `${d.drawing} ${d.field}: ${reason(d.why)}`)
     expect(named.sort()).toEqual(
       [
+        'c-crm-cust appearance.labelPosition: carried only',
         'o-crm appearance.fillColor: alpha as a percent',
         'o-engine appearance.lineWidth: no shape line width',
         'o-g-apps appearance.textAlignment: carried only',

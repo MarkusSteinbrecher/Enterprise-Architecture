@@ -3,12 +3,15 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import {
   VIEWPOINTS,
   findViewpoint,
+  isLabelPosition,
+  isViewRouter,
   nestedConnections,
   removeNodes,
   typeLabel,
   type Bounds,
   type Element,
   type ElementNode,
+  type LabelPosition,
   type Point,
   type RelationshipType,
   type View,
@@ -73,6 +76,14 @@ import {
 } from './create'
 import { ElementPalette } from './ElementPalette'
 import { heldCopyKey, withDrop } from './drop'
+import {
+  changeConnection,
+  insertBendpoint,
+  moveBendpoint,
+  removeBendpoint,
+  segmentHandles,
+  straightened,
+} from './bendpoints'
 import { InlineName } from './InlineName'
 import { useScreenActions } from '@/ui/palette/context'
 import type { PaletteAction } from '@/ui/palette/CommandPalette'
@@ -172,6 +183,15 @@ type Gesture =
   | { kind: 'lasso'; start: Point; from: Point; additive: boolean; base: string[]; moved: boolean }
   | { kind: 'resize'; start: Point; from: Point; node: string; handle: Handle; moved: boolean }
   | { kind: 'place'; start: Point; from: Point; tool: Tool; moved: boolean }
+  /** A bend-point dragged (#133): `adding` when the drag began on a segment's handle. */
+  | {
+      kind: 'bend'
+      start: Point
+      connection: string
+      index: number
+      adding: boolean
+      moved: boolean
+    }
 
 function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const navigate = useNavigate()
@@ -339,6 +359,14 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const hiddenLines = useMemo(() => nestedConnections(view), [view])
   const selectedLine =
     line === null || hiddenLines.has(line) ? undefined : view.connections.find((c) => c.id === line)
+  /** The selected line as drawn: mid-drag, the preview's. */
+  const shownLine =
+    selectedLine && (shown.connections.find((c) => c.id === selectedLine.id) ?? selectedLine)
+  /**
+   * The selected line's bend-points can be edited: in the tab that holds the
+   * model, and not in a Manhattan view, where Archi ignores them (#133).
+   */
+  const bendable = editable && view.router !== 'manhattan' && selectedLine !== undefined
 
   /**
    * The selection, with a single selected element mirrored into `?element=` so
@@ -539,11 +567,26 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     [toView, dropFor],
   )
 
+  /** `base` with the dragged bend-point at `client`: a new one, or one moved (#133). */
+  const bent = useCallback(
+    (base: View, g: Extract<Gesture, { kind: 'bend' }>, client: Point): View => {
+      const at = toView(client)
+      return changeConnection(base, g.connection, (c) =>
+        g.adding ? insertBendpoint(c, g.index, at) : moveBendpoint(c, g.index, at),
+      )
+    },
+    [toView],
+  )
+
   /** Redraw the gesture in progress for the pointer at `client`. */
   const track = useCallback(
     (client: Point) => {
       const g = gesture.current
       if (!g || g.kind === 'pan' || g.kind === 'place') return
+      if (g.kind === 'bend') {
+        setPreview(bent(view, g, client))
+        return
+      }
       if (g.kind === 'lasso') {
         setLasso(spanned(g.from, toView(client)))
         return
@@ -570,7 +613,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         setDropInto(into !== undefined && !(parents.size === 1 && parents.has(into)) ? into : null)
       }
     },
-    [view, bounds, toView, outcome, dropFor],
+    [view, bounds, toView, outcome, dropFor, bent],
   )
 
   /** Scroll while a drag rests near the canvas edge, carrying the gesture along. */
@@ -617,6 +660,8 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       handle: (el?.closest('[data-handle]')?.getAttribute('data-handle') ?? null) as Handle | null,
       line: el?.closest('[data-line-hit]')?.getAttribute('data-line-hit') ?? null,
       connect: el?.closest('[data-connect]') ? true : false,
+      bendpoint: index(el?.closest('[data-bendpoint]')?.getAttribute('data-bendpoint')),
+      segment: index(el?.closest('[data-segment]')?.getAttribute('data-segment')),
     }
   }
 
@@ -897,6 +942,11 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       choose(g.additive ? [...g.base, ...inside.filter((id) => !g.base.includes(id))] : inside)
       return
     }
+    if (g.kind === 'bend') {
+      // A click on a handle changes nothing, as in GEF; a drag is one command.
+      if (g.moved) store.updateView(view.id, (current) => bent(current, g, client))
+      return
+    }
     if (!g.moved) {
       // A click on a shape: select it alone, unless Shift or ⌘ already toggled it.
       if (g.kind === 'move' && !g.additive) choose([g.node])
@@ -990,7 +1040,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const selectedNode = single ? view.nodes.find((n) => n.id === single) : undefined
   const panelNode = pressing ? undefined : selectedNode
   const panelLine = pressing || panelNode ? undefined : selectedLine
-  const route = (connection: ViewConnection) => connectionRoute(connection, bounds)
+  const route = (connection: ViewConnection) => connectionRoute(connection, bounds, shown.router)
   const pathOf = (points: Point[]) => `M${points.map((p) => `${p.x},${p.y}`).join('L')}`
   const choice = pending ? connectChoice(store, view, pending.source, pending.target) : undefined
   const deletingRelationship = deleting === null ? undefined : store.relationship(deleting)
@@ -1028,38 +1078,63 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           <p className="view-screen__stats">{stats}</p>
         </div>
         {editable && (
-          <label className="view-screen__viewpoint">
-            <span className="view-screen__viewpoint-label">Viewpoint</span>
-            <select
-              className="view-screen__select"
-              value={view.viewpoint ?? ''}
-              onChange={(event) => {
-                const name = event.target.value
-                // Through the guard, as every form value is: only a viewpoint we know, or none.
-                if (name !== '' && !findViewpoint(name)) return
-                store.updateView(view.id, (v) => {
-                  if ((v.viewpoint ?? '') === name) return v
-                  const next = { ...v }
-                  if (name === '') delete next.viewpoint
-                  else next.viewpoint = name
-                  return next
-                })
-              }}
-            >
-              <option value="">None</option>
-              {VIEWPOINTS.map((viewpoint) => (
-                <option key={viewpoint.id} value={viewpoint.name}>
-                  {viewpoint.name}
-                </option>
-              ))}
-              {/* One from a newer tool: shown as it is, so the select does not claim "None". */}
-              {view.viewpoint && !findViewpoint(view.viewpoint) && (
-                <option value={view.viewpoint} disabled>
-                  {view.viewpoint}
-                </option>
-              )}
-            </select>
-          </label>
+          <div className="view-screen__settings">
+            <label className="view-screen__viewpoint">
+              <span className="view-screen__viewpoint-label">Viewpoint</span>
+              <select
+                className="view-screen__select"
+                value={view.viewpoint ?? ''}
+                onChange={(event) => {
+                  const name = event.target.value
+                  // Through the guard, as every form value is: only a viewpoint we know, or none.
+                  if (name !== '' && !findViewpoint(name)) return
+                  store.updateView(view.id, (v) => {
+                    if ((v.viewpoint ?? '') === name) return v
+                    const next = { ...v }
+                    if (name === '') delete next.viewpoint
+                    else next.viewpoint = name
+                    return next
+                  })
+                }}
+              >
+                <option value="">None</option>
+                {VIEWPOINTS.map((viewpoint) => (
+                  <option key={viewpoint.id} value={viewpoint.name}>
+                    {viewpoint.name}
+                  </option>
+                ))}
+                {/* One from a newer tool: shown as it is, so the select does not claim "None". */}
+                {view.viewpoint && !findViewpoint(view.viewpoint) && (
+                  <option value={view.viewpoint} disabled>
+                    {view.viewpoint}
+                  </option>
+                )}
+              </select>
+            </label>
+            <label className="view-screen__viewpoint">
+              <span className="view-screen__viewpoint-label">Router</span>
+              <select
+                className="view-screen__select"
+                value={view.router ?? 'manual'}
+                onChange={(event) => {
+                  const router = event.target.value
+                  // Through the guard (CLAUDE.md): only a router the model knows.
+                  if (!isViewRouter(router)) return
+                  store.updateView(view.id, (v) => {
+                    if ((v.router ?? 'manual') === router) return v
+                    const next = { ...v }
+                    // Manual is the default, and absent, as one never switched.
+                    if (router === 'manual') delete next.router
+                    else next.router = router
+                    return next
+                  })
+                }}
+              >
+                <option value="manual">Manual</option>
+                <option value="manhattan">Manhattan</option>
+              </select>
+            </label>
+          </div>
         )}
         <div className="view-screen__controls">
           <button type="button" className="button" onClick={fit} disabled={empty}>
@@ -1200,7 +1275,14 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             if (event.button !== 0 && event.button !== 1) return
             const start = { x: event.clientX, y: event.clientY }
             pointer.current = start
-            const { node, handle: grip, line: hit, connect: linking } = target(event)
+            const {
+              node,
+              handle: grip,
+              line: hit,
+              connect: linking,
+              bendpoint: bendHandle,
+              segment: segmentHandle,
+            } = target(event)
             if (!editable || event.button === 1 || space.current) {
               gesture.current = { kind: 'pan', start, origin: vp, node, line: hit, moved: false }
               return
@@ -1215,8 +1297,20 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               gesture.current = { kind: 'connect', start, source: single, moved: false }
               return
             }
+            const bendAt = bendable ? (bendHandle ?? segmentHandle) : null
+            if (bendable && selectedLine && bendAt !== null) {
+              gesture.current = {
+                kind: 'bend',
+                start,
+                connection: selectedLine.id,
+                index: bendAt,
+                adding: bendHandle === null,
+                moved: false,
+              }
+              return
+            }
             if (hit && !node) {
-              // A press on a line selects it. Moving its bend-points is #133.
+              // A press on a line selects it; its handles then shape it (#133).
               chooseLine(hit)
               return
             }
@@ -1292,7 +1386,15 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           onPointerUp={(event) => endGesture({ x: event.clientX, y: event.clientY })}
           onPointerCancel={cancelGesture}
           onDoubleClick={(event) => {
-            const node = view.nodes.find((n) => n.id === target(event).node)
+            const at = target(event)
+            if (bendable && selectedLine && at.bendpoint !== null) {
+              // Archi takes a bend-point out when it is dragged into line; a
+              // double-click does it directly (#133). One command.
+              const removed = at.bendpoint
+              store.updateConnection(view.id, selectedLine.id, (c) => removeBendpoint(c, removed))
+              return
+            }
+            const node = view.nodes.find((n) => n.id === at.node)
             if (node?.kind === 'view-ref' && store.view(node.view))
               navigate(`/view/${encodeURIComponent(node.view)}`)
             else if (editable && node && editableText(node) !== undefined) setEditing(node.id)
@@ -1342,18 +1444,58 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
                     ) : null
                   })}
                 </g>
-                {selectedLine &&
+                {shownLine &&
                   (() => {
-                    const points = route(selectedLine)
-                    return points ? (
+                    const points = route(shownLine)
+                    if (!points) return null
+                    const outline = (
                       <path
                         className="view-screen__selection-line"
                         data-testid="selection"
-                        data-selected={selectedLine.id}
+                        data-selected={shownLine.id}
                         d={pathOf(points)}
                         vectorEffect="non-scaling-stroke"
                       />
-                    ) : null
+                    )
+                    if (!bendable) return outline
+                    // A bend-point's handle, and one in the middle of each segment to make one.
+                    const bends = shownLine.bendpoints ?? []
+                    const small = 5 / vp.zoom
+                    return (
+                      <>
+                        {outline}
+                        <g data-testid="bend-handles">
+                          {segmentHandles(points).map((p, i) => (
+                            <rect
+                              key={`s${i}`}
+                              className="view-screen__bend view-screen__bend--segment"
+                              data-segment={i}
+                              x={p.x - small / 2}
+                              y={p.y - small / 2}
+                              width={small}
+                              height={small}
+                              vectorEffect="non-scaling-stroke"
+                            >
+                              <title>Drag to bend the line here</title>
+                            </rect>
+                          ))}
+                          {bends.map((p, i) => (
+                            <rect
+                              key={`b${i}`}
+                              className="view-screen__bend"
+                              data-bendpoint={i}
+                              x={p.x - handle / 2}
+                              y={p.y - handle / 2}
+                              width={handle}
+                              height={handle}
+                              vectorEffect="non-scaling-stroke"
+                            >
+                              <title>Drag to move; double-click to remove</title>
+                            </rect>
+                          ))}
+                        </g>
+                      </>
+                    )
                   })()}
                 {dropInto && bounds.get(dropInto) && (
                   <rect
@@ -1516,6 +1658,24 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               setPicked({ nodes: [] })
               release()
             }}
+            onStraighten={() => {
+              store.updateConnection(view.id, panelLine.id, straightened)
+              // The button goes with the bend-points, and focus with it: back to the canvas.
+              release()
+            }}
+            onLabelPosition={(position) =>
+              store.updateConnection(view.id, panelLine.id, (c) => {
+                if ((c.appearance?.labelPosition ?? 'middle') === position) return c
+                const appearance = { ...c.appearance }
+                // The middle is the default, and absent, as on a line never moved (#133).
+                if (position === 'middle') delete appearance.labelPosition
+                else appearance.labelPosition = position
+                const next = { ...c }
+                if (Object.keys(appearance).length) next.appearance = appearance
+                else delete next.appearance
+                return next
+              })
+            }
           />
         )}
       </div>
@@ -1561,6 +1721,13 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       )}
     </div>
   )
+}
+
+/** A handle's index from its data attribute, or `null` for none. */
+function index(value: string | null | undefined): number | null {
+  if (value === null || value === undefined) return null
+  const n = Number(value)
+  return Number.isInteger(n) && n >= 0 ? n : null
 }
 
 const box = (b: Bounds, pad: number) => ({
@@ -1710,6 +1877,8 @@ function LinePanel({
   onRemove,
   onDelete,
   onClose,
+  onStraighten,
+  onLabelPosition,
 }: {
   connection: ViewConnection
   view: View
@@ -1718,7 +1887,12 @@ function LinePanel({
   onRemove: () => void
   onDelete: (relationship: string) => void
   onClose: () => void
+  /** Remove every bend-point (#133). */
+  onStraighten: () => void
+  onLabelPosition: (position: LabelPosition) => void
 }) {
+  // A Manhattan view ignores bend-points, so there is nothing to remove (#133).
+  const manual = view.router !== 'manhattan'
   const nameOf = (nodeId: string) => {
     const node = view.nodes.find((n) => n.id === nodeId)
     if (!node) return nodeId
@@ -1750,12 +1924,35 @@ function LinePanel({
           </div>
         </div>
       )}
+      {editable && (
+        <label className="view-panel__field">
+          <span className="view-panel__stat-key">Label</span>
+          <select
+            className="view-screen__select"
+            value={connection.appearance?.labelPosition ?? 'middle'}
+            onChange={(event) => {
+              const position = event.target.value
+              // Through the guard (CLAUDE.md): only a position the model knows.
+              if (isLabelPosition(position)) onLabelPosition(position)
+            }}
+          >
+            <option value="source">At the source</option>
+            <option value="middle">In the middle</option>
+            <option value="target">At the target</option>
+          </select>
+        </label>
+      )}
       <div className="view-panel__actions view-panel__actions--wrap">
         {editable && (
           <button type="button" className="button" onClick={onRemove}>
             Remove from view
           </button>
         )}
+        {editable && manual && connection.bendpoints?.length ? (
+          <button type="button" className="button" onClick={onStraighten}>
+            Remove bend-points
+          </button>
+        ) : null}
         {editable && relationship && (
           <button type="button" className="button" onClick={() => onDelete(relationship.id)}>
             Delete from model…

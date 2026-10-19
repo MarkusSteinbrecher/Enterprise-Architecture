@@ -22,6 +22,7 @@ import {
   type Relationship,
   type TextAlignment,
   type TextPosition,
+  type LabelPosition,
   type View,
   type ViewConnection,
   type ViewNode,
@@ -135,6 +136,13 @@ const TEXT_POSITION_CODES = new Map<string, TextPosition>([
   ['2', 'bottom'],
 ])
 
+/** A connection's `textPosition` (#133): `IDiagramModelConnection.CONNECTION_TEXT_POSITION_*`. */
+const LABEL_POSITION_CODES = new Map<string, LabelPosition>([
+  ['0', 'source'],
+  ['1', 'middle'],
+  ['2', 'target'],
+])
+
 /** What Archi calls a specialization's property when it exports one. */
 export const SPECIALIZATION_KEY = 'Specialization'
 
@@ -152,14 +160,11 @@ const UNDRAWN_NODE_ATTRIBUTES: ReadonlySet<string> = new Set([
   'locked',
 ])
 /**
- * A connection's `type` is its line decoration; its text position and alignment
- * place its label (`DiagramModelConnection`, checked class by class with javap).
+ * A connection's `type` is its line decoration; its text alignment places its
+ * label (`DiagramModelConnection`, checked class by class with javap). Its text
+ * position, where along the line the label sits, is read (#133).
  */
-const UNDRAWN_CONNECTION_ATTRIBUTES: ReadonlySet<string> = new Set([
-  'type',
-  'textPosition',
-  'textAlignment',
-])
+const UNDRAWN_CONNECTION_ATTRIBUTES: ReadonlySet<string> = new Set(['type', 'textAlignment'])
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -1058,7 +1063,13 @@ function readView(member: Member, context: ViewContext): View | undefined {
         `viewpoint "${viewpoint}" is not one Archipelago knows; the view was read without one.`,
       )
   }
-  if (raw['@connectionRouterType'] !== undefined) reader.tally.routers += 1
+  // Archi's `connectionRouterType` (#133): 2 is Manhattan, 0 (Archi's default,
+  // never written) the bend-points. Anything else, such as the retired shortest
+  // path (1), Archi 5.10 draws through the bend-points too
+  // (`AbstractDiagramPart.setConnectionRouter`), and so does Archipelago, saying so.
+  const router = asString(raw['@connectionRouterType'])
+  if (router === '2') view.router = 'manhattan'
+  else if (router !== undefined && router !== '0') reader.tally.routers += 1
   if (member.folder) view.folder = member.folder
 
   const boxes = new Map<string, Box>()
@@ -1414,6 +1425,9 @@ function readAppearance(
     }
     const position = coded(raw, 'textPosition', TEXT_POSITION_CODES, reader)
     if (position) appearance.textPosition = position
+  } else {
+    const label = coded(raw, 'textPosition', LABEL_POSITION_CODES, reader)
+    if (label) appearance.labelPosition = label
   }
   return Object.keys(appearance).length ? appearance : undefined
 }
@@ -1789,7 +1803,7 @@ function reportTally(reader: Reader): void {
       problem(
         'info',
         'archimate.router-unsupported',
-        `${tally.routers} view${tally.routers === 1 ? ' uses' : 's use'} a connection router other than Archi's default. Archipelago draws connections through their bendpoints only.`,
+        `${tally.routers} view${tally.routers === 1 ? ' names' : 's name'} a connection router that Archi 5.10 no longer draws, such as the retired shortest path. Archipelago, as Archi does, draws ${tally.routers === 1 ? 'its' : 'their'} connections through their bend-points, and saves ${tally.routers === 1 ? 'it' : 'them'} without the router.`,
         where,
       ),
     )

@@ -205,6 +205,19 @@
   stroke-width: 1;
 }
 
+/* Bend-point handles on a selected line (#133): square, hairline, as the resize handles. */
+.view-screen__bend {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 1;
+  cursor: move;
+}
+
+.view-screen__bend--segment {
+  fill: var(--accent);
+  cursor: crosshair;
+}
+
 .view-screen__connect path {
   fill: none;
   stroke: var(--accent);
@@ -331,6 +344,13 @@
   white-space: pre-wrap;
 }
 
+/* A setting of the selection, labelled as the stats are (#133). */
+.view-panel__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .view-panel__actions {
   display: flex;
   gap: 8px;
@@ -442,11 +462,18 @@
   outline: 0;
 }
 
+/* The view's own settings: its viewpoint and its router (#133). */
+.view-screen__settings {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-right: auto;
+}
+
 .view-screen__viewpoint {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-right: auto;
 }
 
 .view-screen__viewpoint-label {

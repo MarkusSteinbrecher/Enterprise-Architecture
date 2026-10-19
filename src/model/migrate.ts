@@ -14,6 +14,8 @@ import { SCHEMA_VERSION, type Workspace } from './workspace'
  *   workspace has none. Folders are new.
  * - **2 → 3** (#84): only the version moves. Relationships gained optional
  *   `isDirected` and `modifier`, which a schema-2 workspace never has.
+ * - **3 → 4** (#133): only the version moves. Views gained an optional
+ *   `router`, and a connection's appearance an optional `labelPosition`.
  */
 export function migrateWorkspace(stored: Workspace): Workspace {
   const version = stored.schemaVersion || SCHEMA_VERSION

@@ -90,7 +90,7 @@ Second line.</documentation>
         <sourceConnection xsi:type="archimate:Connection" id="c-directed" lineWidth="3" lineColor="#008000" source="o-adjuster" target="o-engine" archimateRelationship="r-directed">
           <bendpoint startX="100" endX="-100" endY="80"/>
         </sourceConnection>
-        <sourceConnection xsi:type="archimate:Connection" id="c-assign" source="o-adjuster" target="o-assess" archimateRelationship="r-assign"/>
+        <sourceConnection xsi:type="archimate:Connection" id="c-assign" textPosition="0" source="o-adjuster" target="o-assess" archimateRelationship="r-assign"/>
       </child>
       <child xsi:type="archimate:DiagramObject" id="o-engine" targetConnections="c-directed" archimateElement="ac-engine">
         <bounds x="300" y="120" width="160" height="70"/>
@@ -101,7 +101,7 @@ Second line.</documentation>
       </child>
       <child xsi:type="archimate:DiagramObject" id="o-cost" archimateElement="d-cost">
         <bounds x="600" y="40" width="120" height="55"/>
-        <sourceConnection xsi:type="archimate:Connection" id="c-influence" source="o-cost" target="o-fast" archimateRelationship="r-influence"/>
+        <sourceConnection xsi:type="archimate:Connection" id="c-influence" textPosition="2" source="o-cost" target="o-fast" archimateRelationship="r-influence"/>
       </child>
       <child xsi:type="archimate:DiagramObject" id="o-fast" targetConnections="c-influence c-note-line" archimateElement="g-fast">
         <bounds x="600" y="200" width="120" height="55"/>
