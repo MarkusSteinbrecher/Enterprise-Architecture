@@ -31,7 +31,7 @@ import {
  */
 
 export const SCHEMA_ID =
-  'https://markussteinbrecher.github.io/Enterprise-Architecture/schema/archipelago-workspace.schema.json'
+  'https://stein-clankers.github.io/Enterprise-Architecture/schema/archipelago-workspace.schema.json'
 
 export function buildWorkspaceJsonSchema(): Record<string, unknown> {
   return {
