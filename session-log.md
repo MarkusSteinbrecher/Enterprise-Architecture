@@ -1,5 +1,12 @@
 # Session Log
 
+## 2026-10-19 — #182: a download's revoke timer no longer outlives its test
+
+- **Branch `feat/182-revoke-timer-flake`.** Nothing merged. Production code is unchanged.
+- **Cause:** `downloadBlob` revokes its Blob URL on a 10 s timer that looks `URL` up when it fires. Six test files stubbed `URL` by hand and put jsdom's back with the timer still pending. jsdom's `URL` has no `revokeObjectURL`, so on a slow run the timer threw into a later test (CI run 39247687272, during #181).
+- **Fix:** `stubDownloads()` (`src/test/downloads.ts`) stubs `URL` (as a subclass, so `new URL` still works) and the anchor click. When the test finishes, through `onTestFinished`, it clears every timer scheduled while the stub was in place, then restores both. GraphScreen, AppShell, CommandPalette, files, global-shortcuts and use-save-workspace now use it.
+- **Proof:** `downloads.test.ts` advances fake timers 10 s after restoring. Without the clearing it throws `URL.revokeObjectURL is not a function`; without `onTestFinished` the next test still sees the stub. A tripwire fails any test file that stubs `URL` by hand (`stubGlobal('URL'`, `URL.createObjectURL =`, `spyOn(URL`, `globalThis.URL =`), and it caught a stub put back into GraphScreen. All three removals were run.
+
 ## 2026-10-19 (wrap-up) — Every open PR is on `main`
 
 - **On `main`:** #167, #174, #169, #172, #168, #175, #179 (re-land of #176) and #180 (re-land of #173 and #178). Issues #95, #97, #133, #145 and #164 are closed. No PRs are open.

@@ -1,8 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { emptyWorkspace } from '@/model'
 import { loadDemoWorkspace } from '@/io'
+import { stubDownloads } from '@/test/downloads'
 import { renderApp } from '@/test/render'
 import { applyTheme } from '@/app/theme'
 
@@ -46,10 +47,7 @@ describe('header', () => {
 
   it('counts unsaved changes, and a download it cannot see does not clear them', async () => {
     // jsdom has no Blob URL plumbing; the download itself is not what is under test.
-    const createObjectURL = vi.fn(() => 'blob:test')
-    vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
-    const click = vi.fn()
-    HTMLAnchorElement.prototype.click = click
+    const { createObjectURL, click } = stubDownloads()
 
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
@@ -68,8 +66,6 @@ describe('header', () => {
     // `writable.close()`, has earned the right to clear the counter.
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
     expect(screen.queryByText('LOCAL · SAVED')).not.toBeInTheDocument()
-
-    vi.unstubAllGlobals()
   })
 
   it('offers Import and Export', () => {
