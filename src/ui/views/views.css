@@ -439,6 +439,51 @@
   font: 400 12.5px/1.5 var(--font-ui);
 }
 
+/* ── Magic connector (#132) ─────────────────────────────────────────────── */
+
+/* Two columns: the relationship types, and the new elements the one in line reaches. */
+.magic-menu {
+  width: 600px;
+}
+
+.magic-menu__columns {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 12px;
+  min-height: 0;
+}
+
+.magic-menu__targets {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 48vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.magic-menu__item--active {
+  border-color: var(--accent);
+}
+
+.magic-menu__phrase,
+.magic-menu__target {
+  font: 500 12.5px/1.2 var(--font-ui);
+}
+
+/* A count is machine-readable: monospace, beside the phrase. */
+.magic-menu__count {
+  margin-left: auto;
+  font: 500 10px/1 var(--font-mono);
+  color: var(--ink3);
+}
+
+@media (max-width: 640px) {
+  .magic-menu__columns {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Naming (#130) ───────────────────────────────────────────────────────── */
 
 /* The view's name, edited where it is shown: the title's type, a hairline when focused. */

@@ -1,5 +1,14 @@
 # Session Log
 
+## 2026-10-19 (cont.) — #132 magic connector: PR open
+
+- **CI on `main`** was still running on the wrap-up commit at the start; check it before merging.
+- **#132** on `feat/132-magic-connector`. A connect gesture released on empty canvas from an element's shape opens the magic connector's menu. Relationship types come first, in Archi's order with its phrases ("Serves", "Composed of"). Each opens the target types valid for it, grouped by Archi's layers, filtered by the view's viewpoint. One `updateViewAdding` command makes element, relationship, node and connection, and the new shape's name opens for typing.
+- **Read from Archi 5.10:** `MagicConnectionCreationTool` source at `release_5.10.0`, with the defaults checked in the shipped jar's `PreferenceInitializer` (`polarityMagicConnector` false, so relations first; `viewpointsHideMagicConnectorElements` true). Archi's target order differs from our catalogue in one place: Value Stream comes before Course of Action. `MAGIC_TARGET_GROUPS` carries Archi's order.
+- **Oracle:** two magic edits in the scratch view (Triggering to a new Business Process, Serving to a new junction), re-saved by Archi 5.10 (`/Applications/Archi.app`). Everything came back as drawn.
+- **Verified:** 1636 unit tests, lint, typecheck, format, build; e2e journey 17 (`view-magic.spec.ts`) 3/3; full e2e 35 passed, 1 skipped (#32). One full run failed journey 16 (bend-points) once, which then passed 3/3 alone and in two more full runs: a flake to watch. 22 guards removed one at a time, each now caught by a test. Three were redundant code and are gone.
+- **For the sponsor** (also in the PR): a release on a group, note or view reference keeps #129's plain line, whereas Archi's magic connector would create the element inside the group. ⌘ to flip to elements first is not built. Focus after a create goes to the name field, as Archi's does, and reaches the canvas on Enter or Escape.
+
 ## 2026-10-19 (wrap-up) — Every open PR is on `main`
 
 - **On `main`:** #167, #174, #169, #172, #168, #175, #179 (re-land of #176) and #180 (re-land of #173 and #178). Issues #95, #97, #133, #145 and #164 are closed. No PRs are open.

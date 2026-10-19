@@ -206,6 +206,37 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
     expect(lines(archi)).toEqual(drawn)
   })
 
+  it('keeps what the magic connector made: each new element, its relationship, and both drawings (#132)', () => {
+    const ends = (w: Workspace, id: string) => {
+      const r = w.relationships.find((x) => x.id === id)
+      return r && `${r.type} ${r.source} → ${r.target}`
+    }
+    const kind = (w: Workspace, id: string) => {
+      const e = w.elements.find((x) => x.id === id)
+      return e && `${e.type} “${e.name}”`
+    }
+    const drawn = (w: Workspace, id: string) => {
+      const c = w.views.find((v) => v.id === 'v-scratch')!.connections.find((x) => x.id === id)
+      return c && `${c.kind === 'relationship' ? c.relationship : 'line'} ${c.source} → ${c.target}`
+    }
+    const at = (w: Workspace, id: string) =>
+      w.views.find((v) => v.id === 'v-scratch')!.nodes.find((n) => n.id === id)?.bounds
+    // Present in ours first, so the comparison is not of two absences.
+    expect(kind(ours, 'bp-check-cover')).toBe('BusinessProcess “Check cover”')
+    expect(kind(ours, 'j-serve')).toBe('Junction “”')
+    expect(ends(ours, 'r-s-event-check')).toBe('Triggering be-claim-in → bp-check-cover')
+    expect(ends(ours, 'r-s-intake-serve')).toBe('Serving as-intake → j-serve')
+    expect(drawn(ours, 'c-s-event-check')).toBe('r-s-event-check o-s-event → o-s-check')
+    expect(drawn(ours, 'c-s-intake-serve')).toBe('r-s-intake-serve o-s-intake → o-s-serve')
+    expect(at(ours, 'o-s-check')).toMatchObject({ x: 760, y: 60 })
+    for (const id of ['bp-check-cover', 'j-serve']) expect(kind(archi, id), id).toBe(kind(ours, id))
+    for (const id of ['r-s-event-check', 'r-s-intake-serve'])
+      expect(ends(archi, id), id).toBe(ends(ours, id))
+    for (const id of ['c-s-event-check', 'c-s-intake-serve'])
+      expect(drawn(archi, id), id).toBe(drawn(ours, id))
+    for (const id of ['o-s-check', 'o-s-serve']) expect(at(archi, id), id).toEqual(at(ours, id))
+  })
+
   it('keeps the bend-points the canvas added, moved and removed, as drawn (#133)', () => {
     const points = (w: Workspace, id: string) =>
       w.views.find((v) => v.id === 'v-landscape')!.connections.find((c) => c.id === id)?.bendpoints
