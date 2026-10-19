@@ -8,6 +8,16 @@
 - **Oracle:** two magic edits in the scratch view (Triggering to a new Business Process, Serving to a new junction), re-saved by Archi 5.10 (`/Applications/Archi.app`). Everything came back as drawn.
 - **Verified:** 1636 unit tests, lint, typecheck, format, build; e2e journey 17 (`view-magic.spec.ts`) 3/3; full e2e 35 passed, 1 skipped (#32). One full run failed journey 16 (bend-points) once, which then passed 3/3 alone and in two more full runs: a flake to watch. 22 guards removed one at a time, each now caught by a test. Three were redundant code and are gone.
 - **For the sponsor** (also in the PR): a release on a group, note or view reference keeps #129's plain line, whereas Archi's magic connector would create the element inside the group. ⌘ to flip to elements first is not built. Focus after a create goes to the name field, as Archi's does, and reaches the canvas on Enter or Escape.
+- **`/review-pr 181 high`, run in the same session** (the code-review layer ran in a fresh subagent, which found 4 of the 5 blockers): request changes on B1–B5, then fixed here.
+  - **B1:** ⇧Tab left the modal. Fixed in `useFocusTrap`, whose ends are now only items Tab can reach.
+  - **B2:** a hover dropped focus to `<body>`. A hover now focuses the type.
+  - **B3:** a release off the canvas opened the menu.
+  - **B4:** a guard test could not fail. The render gate is now the one guard, and stale menus are cleared.
+  - **B5:** the empty menu was untested. Its message now names the junction's types.
+  - **Nits:** `aria-current` replaces `aria-expanded`, the active index is clamped, and the oracle asserts presence first.
+  - **Found while fixing:** a click without a hover focused the old column. Every fix is proven by a probe that removes it.
+  - **Harvest:** the trap fix, plus two CLAUDE.md lines (remove the call, not a shared helper; a hover is an action).
+- **CI flake on `main`, not this PR's:** `file-download.ts` revokes a blob URL after 10 s. `GraphScreen.test.tsx` un-stubs `URL`, and jsdom's `URL` has no `revokeObjectURL`, so a slow CI run throws an unhandled error. Filed as an issue.
 
 ## 2026-10-19 (wrap-up) — Every open PR is on `main`
 

@@ -54,7 +54,7 @@ import {
   type Handle,
 } from './edit'
 import { connectChoice, nodeAt } from './connect'
-import { magicEdit, magicMenu } from './magic'
+import { magicEdit, magicMenu, magicNothing } from './magic'
 import {
   ConnectMenu,
   MagicMenu,
@@ -542,6 +542,18 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     }
   }, [])
 
+  /** Is `client` (a screen point) on the canvas? */
+  const onCanvas = (client: Point): boolean => {
+    const rect = canvas.current?.getBoundingClientRect()
+    return (
+      rect !== undefined &&
+      client.x >= rect.left &&
+      client.x <= rect.right &&
+      client.y >= rect.top &&
+      client.y <= rect.bottom
+    )
+  }
+
   /**
    * The element a magic connector gesture starts from (#132): the one `nodeId`
    * draws. A note, a group or a view reference starts none, as in Archi, whose
@@ -975,8 +987,11 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       const at = toView(client)
       const over = nodeAt(view, at)
       if (over !== undefined && over !== g.source) connect(g.source, over)
-      // On empty canvas from an element's shape, the magic connector (#132).
-      else if (over === undefined && magicSource(g.source)) setMagic({ source: g.source, at })
+      // On empty canvas, the magic connector (#132); the menu itself opens only
+      // from an element's shape (`magicFrom`). A release off the canvas is a
+      // drag abandoned, as it was before: the surface holds the pointer, so it
+      // ends here wherever the pointer is (#181 review).
+      else if (over === undefined && onCanvas(client)) setMagic({ source: g.source, at })
       return
     }
     if (g.kind === 'lasso') {
@@ -1090,6 +1105,12 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const pathOf = (points: Point[]) => `M${points.map((p) => `${p.x},${p.y}`).join('L')}`
   const choice = pending ? connectChoice(store, view, pending.source, pending.target) : undefined
   const magicFrom = magic ? magicSource(magic.source) : undefined
+  // The one guard on the menu: a gesture from a shape that draws no element in
+  // the model opens nothing, and a menu whose source has gone (removed, or
+  // undone away) closes and stays closed rather than coming back with it.
+  useEffect(() => {
+    if (magic && !magicFrom) setMagic(null)
+  }, [magic, magicFrom])
   const deletingRelationship = deleting === null ? undefined : store.relationship(deleting)
   const deletingElementValue = deletingElement === null ? undefined : store.element(deletingElement)
   const singleBounds = single ? bounds.get(single) : undefined
@@ -1731,6 +1752,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         <MagicMenu
           source={magicFrom}
           entries={magicMenu(store, magicFrom, view.viewpoint)}
+          nothing={magicNothing(store, magicFrom)}
           onCreate={createMagic}
           onCancel={() => setMagic(null)}
         />

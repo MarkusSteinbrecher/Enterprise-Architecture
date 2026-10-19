@@ -2,6 +2,8 @@ import { defaultNodeSize } from '@/io/default-sizes'
 import {
   LAYER_LABELS,
   RELATIONSHIP_TYPE_NAMES,
+  junctionTypes,
+  typeLabel,
   validateRelationshipBetween,
   viewpointAllows,
   type Element,
@@ -176,6 +178,21 @@ export function magicMenu(
   return entries
 }
 
+/**
+ * What the menu says when it offers nothing. Every relationship type reaches
+ * some new element from any element, and a junction joining one type still
+ * reaches a new junction with it, so only a junction already joining more than
+ * one type empties the menu: a file can hold one, the connect menu cannot make
+ * one (`magic.test.tsx` holds both claims).
+ */
+export function magicNothing(model: RelationshipContext, source: Element): string {
+  const name = source.name ? `${typeLabel(source.type)} “${source.name}”` : typeLabel(source.type)
+  // In catalogue order, not the order the store happens to hold them in.
+  const types = junctionTypes(model, source.id)
+  const joined = RELATIONSHIP_TYPE_NAMES.filter((type) => types.includes(type)).join(' and ')
+  return `No relationship can start from ${name}. It already joins ${joined} relationships, and every relationship on a junction is of one type. Nothing was created.`
+}
+
 /** What one menu choice makes: the new element, the relationship to it, and the view drawing both. */
 export interface MagicEdit {
   view: View
@@ -189,10 +206,12 @@ export interface MagicEdit {
  * `view` with a new element of `targetType` drawn with its top-left corner at
  * `at`, and a new `type` relationship from the element `sourceNode` draws to
  * it, drawn too. Placed as the palette places (`placement`), so a spot inside
- * a container nests the shape in it; Archi places the new shape at the
- * pointer the same way. `id` names the node, the relationship and the
- * connection, by the prefix each is asked with; the element takes its id from
- * `newElement` unless `element` gives one.
+ * a container would nest the shape in it, and Archi places the new shape at
+ * the pointer the same way. The canvas opens the menu only on empty canvas,
+ * where the parent is the view itself: a release on a group draws #129's line.
+ * `id` names the node, the relationship and the connection, by the prefix each
+ * is asked with; the element takes its id from `newElement` unless `element`
+ * gives one.
  */
 export function magicEdit(
   view: View,

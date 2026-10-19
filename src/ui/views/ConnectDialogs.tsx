@@ -396,6 +396,8 @@ export function NestingDialog({ nesting, onDone }: NestingDialogProps) {
 export interface MagicMenuProps {
   source: Element
   entries: readonly MagicEntry[]
+  /** What it says when `entries` is empty (`magicNothing`). */
+  nothing: string
   onCreate: (type: RelationshipType, target: ElementType) => void
   onCancel: () => void
 }
@@ -406,20 +408,37 @@ export interface MagicMenuProps {
  * line shows the new elements it can reach, grouped by layer. Up and down move
  * within a column, right (or Enter, which presses the type) goes into the
  * element types and left back, Enter on an element type creates, and Escape or
- * a press outside makes nothing. Hovering a type brings its element types up, as Archi's submenus
- * open on hover.
+ * a press outside makes nothing. Hovering a type brings its element types up, and focus to
+ * it, as Archi's submenus open on hover.
  */
-export function MagicMenu({ source, entries, onCreate, onCancel }: MagicMenuProps) {
+export function MagicMenu({ source, entries, nothing, onCreate, onCancel }: MagicMenuProps) {
   const ref = useRef<HTMLDivElement>(null)
   useFocusTrap(ref)
   useEscape(onCancel)
-  const [active, setActive] = useState(0)
+  const [chosen, setChosen] = useState(0)
+  // The model can change while the menu is open, and the list with it: the
+  // entry in line is the last one when the one chosen has gone.
+  const active = Math.min(chosen, entries.length - 1)
   const typeButtons = useRef<(HTMLButtonElement | null)[]>([])
   const targetButtons = useRef<(HTMLButtonElement | null)[]>([])
   const panel = useId()
   const entry = entries[active]
   // Each render refills it; a shorter list must not keep the last one's tail.
   targetButtons.current.length = entry ? countTargets(entry) : 0
+  /**
+   * Bumped to go into the element types of the entry in line. Focused in an
+   * effect, once that entry's column is drawn: a click on another type changes
+   * the column, and focusing in the handler would land on the old one's button
+   * just before it is replaced.
+   */
+  const [enter, setEnter] = useState(0)
+  useEffect(() => {
+    if (enter) targetButtons.current[0]?.focus()
+  }, [enter])
+  const into = (index: number) => {
+    setChosen(index)
+    setEnter((n) => n + 1)
+  }
 
   const moveTo = (list: (HTMLButtonElement | null)[], index: number) => {
     const count = list.length
@@ -431,12 +450,11 @@ export function MagicMenu({ source, entries, onCreate, onCancel }: MagicMenuProp
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
       const next = (index + (event.key === 'ArrowDown' ? 1 : -1) + entries.length) % entries.length
-      setActive(next)
+      setChosen(next)
       typeButtons.current[next]?.focus()
     } else if (event.key === 'ArrowRight') {
       event.preventDefault()
-      // Focus is on the entry in line, so its element types are the ones shown.
-      targetButtons.current[0]?.focus()
+      into(index)
     }
   }
 
@@ -475,14 +493,17 @@ export function MagicMenu({ source, entries, onCreate, onCancel }: MagicMenuProp
                   }}
                   type="button"
                   className={`connect-menu__item${index === active ? ' magic-menu__item--active' : ''}`}
-                  aria-expanded={index === active}
+                  aria-current={index === active ? 'true' : undefined}
                   aria-controls={panel}
                   tabIndex={index === active ? 0 : -1}
-                  onPointerEnter={() => setActive(index)}
-                  onClick={() => {
-                    setActive(index)
-                    targetButtons.current[0]?.focus()
+                  // A hover brings the type into line and takes focus with it,
+                  // as a native menu's hover does: focus never stays on an
+                  // element type the hover is about to replace (#181 review).
+                  onPointerEnter={() => {
+                    setChosen(index)
+                    typeButtons.current[index]?.focus()
                   }}
+                  onClick={() => into(index)}
                   onKeyDown={(event) => onTypeKey(event, index)}
                 >
                   <span className="connect-menu__abbr">
@@ -530,7 +551,7 @@ export function MagicMenu({ source, entries, onCreate, onCancel }: MagicMenuProp
           </div>
         ) : (
           <p className="dialog__problem" role="alert">
-            No relationship can start from {named(source)} here. Nothing was created.
+            {nothing}
           </p>
         )}
         <div className="dialog__actions">

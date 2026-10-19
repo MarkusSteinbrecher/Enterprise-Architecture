@@ -6,6 +6,7 @@ import {
   LAYERS,
   RELATIONSHIP_TYPE_NAMES,
   absoluteBounds,
+  allowedRelationships,
   allowedTargets,
   elementTypeMeta,
   typeLabel,
@@ -20,7 +21,13 @@ import {
 } from '@/model'
 import { pressOutside } from '@/test/dialogs'
 import { LANDSCAPE, click, setup } from '@/test/view-editor'
-import { MAGIC_TARGET_GROUPS, RELATIONSHIP_PHRASES, magicEdit, magicMenu } from './magic'
+import {
+  MAGIC_TARGET_GROUPS,
+  RELATIONSHIP_PHRASES,
+  magicEdit,
+  magicMenu,
+  magicNothing,
+} from './magic'
 
 /**
  * The magic connector (#132): a connect gesture released on empty canvas.
@@ -98,6 +105,19 @@ const element = (type: ElementType, id = `x-${type}`): Element => ({
   name: '',
   properties: {},
 })
+
+/** A model holding junction `j` and one relationship into it per `ins`, each from its own element. */
+function junctionModel(ins: { type: RelationshipType; from: ElementType }[]): RelationshipContext {
+  const elements = new Map<string, Element>([['j', element('Junction', 'j')]])
+  const relationships = ins.map(({ type, from }, i) => {
+    elements.set(`in-${i}`, element(from, `in-${i}`))
+    return { id: `r-${i}`, type, source: `in-${i}`, target: 'j' }
+  })
+  return {
+    element: (id) => elements.get(id),
+    relationshipsOf: (id) => relationships.filter((r) => r.source === id || r.target === id),
+  }
+}
 
 describe('the magic connector menu (#132)', () => {
   it('groups target types as Archi does: every element type once, in its layer', () => {
@@ -205,6 +225,44 @@ describe('the magic connector menu (#132)', () => {
     expect(filtered).toContain('Composition>Grouping')
   })
 
+  it('is never empty from an element, nor from a junction joining one type', () => {
+    for (const type of ELEMENT_TYPE_NAMES) {
+      if (type === 'Junction') continue
+      expect(magicMenu(EMPTY_MODEL, element(type), undefined), type).toHaveLength(
+        RELATIONSHIP_TYPE_NAMES.length,
+      )
+    }
+    // A junction joining one type, from every type that may join it with that
+    // type: the type still reaches a new junction.
+    let junctions = 0
+    for (const joined of RELATIONSHIP_TYPE_NAMES) {
+      for (const from of ELEMENT_TYPE_NAMES) {
+        if (from === 'Junction' || !allowedRelationships(from, 'Junction').includes(joined))
+          continue
+        const model = junctionModel([{ type: joined, from }])
+        expect(
+          magicMenu(model, element('Junction', 'j'), undefined),
+          `${from} ${joined}`,
+        ).not.toEqual([])
+        junctions++
+      }
+    }
+    expect(junctions).toBeGreaterThan(RELATIONSHIP_TYPE_NAMES.length)
+  })
+
+  it('is empty from a junction joining two types, and says so', () => {
+    const model = junctionModel([
+      { type: 'Flow', from: 'BusinessProcess' },
+      { type: 'Triggering', from: 'BusinessEvent' },
+    ])
+    const junction = element('Junction', 'j')
+    expect(magicMenu(model, junction, undefined)).toEqual([])
+    expect(magicNothing(model, junction)).toBe(
+      'No relationship can start from Junction. It already joins Triggering and Flow relationships, ' +
+        'and every relationship on a junction is of one type. Nothing was created.',
+    )
+  })
+
   it('makes nothing from a shape that draws no element', () => {
     const h = setup()
     let n = 0
@@ -277,14 +335,14 @@ describe('the magic connector on the canvas (#132)', () => {
     const types = within(menu()).getByRole('region', { name: 'Relationship' })
     const first = within(types).getAllByRole('button')[0]!
     expect(first).toHaveFocus()
-    expect(first).toHaveAttribute('aria-expanded', 'true')
+    expect(first).toHaveAttribute('aria-current', 'true')
 
     // Down to the second type: its element types come up beside it.
     await h.user.keyboard('{ArrowDown}')
     const second = within(types).getAllByRole('button')[1]!
     expect(second).toHaveFocus()
-    expect(second).toHaveAttribute('aria-expanded', 'true')
-    expect(first).toHaveAttribute('aria-expanded', 'false')
+    expect(second).toHaveAttribute('aria-current', 'true')
+    expect(first).not.toHaveAttribute('aria-current')
     const entries = magicMenu(h.store, h.store.element('ac-customer')!, undefined)
     expect(targets()[0]).toBe(
       `${entries[1]!.groups[0]!.label}: ${typeLabel(entries[1]!.groups[0]!.types[0]!)}`,
@@ -333,7 +391,7 @@ describe('the magic connector on the canvas (#132)', () => {
     expect(count(short)).toBeGreaterThan(1)
     // Hovering a type brings its element types up, as Archi's submenus open.
     await h.user.hover(types[long]!)
-    expect(types[long]).toHaveAttribute('aria-expanded', 'true')
+    expect(types[long]).toHaveAttribute('aria-current', 'true')
     expect(targets()).toHaveLength(count(long))
     await h.user.click(types[short]!)
     const options = within(
@@ -400,6 +458,139 @@ describe('the magic connector on the canvas (#132)', () => {
     expect(offered).toContain('Application: Application Component')
     expect(offered.some((t) => t.startsWith('Business:'))).toBe(false)
     expect(offered).not.toContain('Business: Business Actor')
+  })
+
+  it('keeps ⇧Tab inside the menu from the type in line (#181 review)', async () => {
+    const h = setup()
+    await magic(h, 'o-customer-hub')
+    const types = within(within(menu()).getByRole('region', { name: 'Relationship' })).getAllByRole(
+      'button',
+    )
+    await h.user.keyboard('{ArrowDown}')
+    expect(types[1]).toHaveFocus()
+    await h.user.tab({ shift: true })
+    expect(within(menu()).getByRole('button', { name: 'Cancel' })).toHaveFocus()
+    // And Tab from Cancel comes back to the type in line, not to the first.
+    await h.user.tab()
+    expect(types[1]).toHaveFocus()
+  })
+
+  it('gives focus to the type a hover brings into line, so keys go on working (#181 review)', async () => {
+    const h = setup()
+    await magic(h, 'o-customer-hub')
+    const types = within(within(menu()).getByRole('region', { name: 'Relationship' })).getAllByRole(
+      'button',
+    )
+    const entries = magicMenu(h.store, h.store.element('ac-customer')!, undefined)
+    await h.user.click(types.at(-1)!)
+    expect(within(menu()).getByRole('button', { name: 'Resource' })).toHaveFocus()
+    // The mouse passes over the first type: its element types replace the column.
+    await h.user.hover(types[0]!)
+    expect(types[0]).toHaveFocus()
+    await h.user.keyboard('{ArrowRight}')
+    expect(document.activeElement).toHaveTextContent(typeLabel(entries[0]!.groups[0]!.types[0]!))
+  })
+
+  it('goes into the column of the type clicked, even with no hover before the click', async () => {
+    const h = setup()
+    await magic(h, 'o-customer-hub')
+    const types = within(within(menu()).getByRole('region', { name: 'Relationship' })).getAllByRole(
+      'button',
+    )
+    const entries = magicMenu(h.store, h.store.element('ac-customer')!, undefined)
+    const first = (i: number) => typeLabel(entries[i]!.groups[0]!.types[0]!)
+    // Assistive technology clicks without moving a pointer over the button.
+    expect(first(types.length - 1)).not.toBe(first(0))
+    act(() => types.at(-1)!.click())
+    expect(document.activeElement).toHaveTextContent(first(types.length - 1))
+    expect(types.at(-1)).toHaveAttribute('aria-current', 'true')
+  })
+
+  it('opens nothing for a release off the canvas, a drag abandoned (#181 review)', async () => {
+    const h = setup()
+    // Past the canvas box the harness gives (2000 × 1500): over a panel, or off the window.
+    await magic(h, 'o-customer-hub', { x: 2600, y: 1800 })
+    expect(screen.getByTestId('connect-handle')).toHaveAttribute('data-connect', 'o-customer-hub')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(h.dispatch).not.toHaveBeenCalled()
+  })
+
+  it('closes when its source goes, and does not come back with it (#181 review)', async () => {
+    const h = setup()
+    await magic(h, 'o-customer-hub')
+    expect(menu()).toBeInTheDocument()
+    act(() => void h.store.removeNode(LANDSCAPE, 'o-customer-hub'))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    act(() => void h.store.undo())
+    expect(h.view().nodes.some((n) => n.id === 'o-customer-hub')).toBe(true)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('keeps an entry in line when the model shrinks the list under it', async () => {
+    const h = setup('writer', {
+      prepare: (s) => {
+        s.addElement({ id: 'j-free', type: 'Junction', name: '', properties: {} })
+        s.addNode(LANDSCAPE, {
+          id: 'o-free',
+          kind: 'element',
+          element: 'j-free',
+          bounds: { x: 1500, y: 1000, width: 15, height: 15 },
+        })
+      },
+    })
+    await magic(h, 'o-free')
+    await h.user.keyboard('{ArrowUp}')
+    expect(phrases().at(-1)).toBe('Associated to')
+    // The junction now joins a Triggering, so Triggering is all it may start.
+    act(
+      () =>
+        void h.store.addRelationship({
+          id: 'r-free',
+          type: 'Triggering',
+          source: 'j-free',
+          target: 'bp-valuate',
+          properties: {},
+        }),
+    )
+    expect(phrases()).toEqual(['Triggers'])
+    expect(within(menu()).queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('says why it offers nothing from a junction joining two types, and makes nothing', async () => {
+    const h = setup('writer', {
+      prepare: (s) => {
+        s.addElement({ id: 'j-mixed', type: 'Junction', name: '', properties: {} })
+        s.addRelationship({
+          id: 'r-mixed-in',
+          type: 'Flow',
+          source: 'bp-handle',
+          target: 'j-mixed',
+          properties: {},
+        })
+        s.addRelationship({
+          id: 'r-mixed-out',
+          type: 'Triggering',
+          source: 'j-mixed',
+          target: 'bp-valuate',
+          properties: {},
+        })
+        s.addNode(LANDSCAPE, {
+          id: 'o-mixed',
+          kind: 'element',
+          element: 'j-mixed',
+          bounds: { x: 1500, y: 1000, width: 15, height: 15 },
+        })
+      },
+    })
+    await magic(h, 'o-mixed')
+    expect(within(menu()).getByRole('alert')).toHaveTextContent(
+      'No relationship can start from Junction. It already joins Triggering and Flow relationships, ' +
+        'and every relationship on a junction is of one type. Nothing was created.',
+    )
+    expect(within(menu()).queryByRole('region', { name: 'Relationship' })).not.toBeInTheDocument()
+    await h.user.click(within(menu()).getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(h.dispatch).not.toHaveBeenCalled()
   })
 
   it('opens no menu from a note, whose line needs a shape to end on', async () => {
