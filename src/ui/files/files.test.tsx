@@ -5,6 +5,7 @@ import { emptyWorkspace } from '@/model'
 import { exportExchangeXml, loadDemoWorkspace, toCanonicalJson } from '@/io'
 import { ModelStoreProvider } from '@/store'
 import { pressOutside } from '@/test/dialogs'
+import { stubDownloads } from '@/test/downloads'
 import { renderApp } from '@/test/render'
 import { TakeoverScreen } from './TakeoverScreen'
 
@@ -12,12 +13,10 @@ function demo() {
   return loadDemoWorkspace()
 }
 
-let createObjectURL: ReturnType<typeof vi.fn>
+let createObjectURL: ReturnType<typeof stubDownloads>['createObjectURL']
 
 beforeEach(() => {
-  createObjectURL = vi.fn(() => 'blob:test')
-  vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
-  HTMLAnchorElement.prototype.click = vi.fn()
+  createObjectURL = stubDownloads().createObjectURL
 })
 
 afterEach(() => {

@@ -2,8 +2,9 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { loadDemoWorkspace } from '@/io'
+import { stubDownloads } from '@/test/downloads'
 import { renderApp } from '@/test/render'
 import { SHORTCUT_IDS, type ShortcutId } from './global-shortcuts'
 
@@ -24,16 +25,10 @@ import { SHORTCUT_IDS, type ShortcutId } from './global-shortcuts'
  * rather than through it fails here too.
  */
 
-let createObjectURL: ReturnType<typeof vi.fn>
+let createObjectURL: ReturnType<typeof stubDownloads>['createObjectURL']
 
 beforeEach(() => {
-  createObjectURL = vi.fn(() => 'blob:test')
-  vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
-  HTMLAnchorElement.prototype.click = vi.fn()
-})
-
-afterEach(() => {
-  vi.unstubAllGlobals()
+  createObjectURL = stubDownloads().createObjectURL
 })
 
 type User = ReturnType<typeof userEvent.setup>

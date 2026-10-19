@@ -1,5 +1,12 @@
 # Session Log
 
+## 2026-10-19 — #182: a download's revoke timer no longer outlives its test
+
+- **Branch `feat/182-revoke-timer-flake`.** Nothing merged. Production code is unchanged.
+- **Cause:** `downloadBlob` revokes its Blob URL on a 10 s timer that looks `URL` up when it fires. Six test files stubbed `URL` by hand and put jsdom's back with the timer still pending. jsdom's `URL` has no `revokeObjectURL`, so on a slow run the timer threw into a later test (CI run 39247687272, during #181).
+- **Fix:** `stubDownloads()` (`src/test/downloads.ts`) stubs `URL` (as a subclass, so `new URL` still works) and the anchor click. When the test finishes, through `onTestFinished`, it clears every timer scheduled while the stub was in place, then restores both. GraphScreen, AppShell, CommandPalette, files, global-shortcuts and use-save-workspace now use it.
+- **Proof:** `downloads.test.ts` advances fake timers 10 s after restoring. Without the clearing it throws `URL.revokeObjectURL is not a function`; without `onTestFinished` the next test still sees the stub. A tripwire fails any test file that stubs `URL` by hand (`stubGlobal('URL'`, `URL.createObjectURL =`, `spyOn(URL`, `globalThis.URL =`), and it caught a stub put back into GraphScreen. All three removals were run.
+
 ## 2026-10-19 (cont.) — #132 magic connector: PR open
 
 - **CI on `main`** was still running on the wrap-up commit at the start; check it before merging.
@@ -17,7 +24,7 @@
   - **Nits:** `aria-current` replaces `aria-expanded`, the active index is clamped, and the oracle asserts presence first.
   - **Found while fixing:** a click without a hover focused the old column. Every fix is proven by a probe that removes it.
   - **Harvest:** the trap fix, plus two CLAUDE.md lines (remove the call, not a shared helper; a hover is an action).
-- **CI flake on `main`, not this PR's:** `file-download.ts` revokes a blob URL after 10 s. `GraphScreen.test.tsx` un-stubs `URL`, and jsdom's `URL` has no `revokeObjectURL`, so a slow CI run throws an unhandled error. Filed as an issue.
+- **CI flake on `main`, not this PR's:** `file-download.ts` revokes a blob URL after 10 s. `GraphScreen.test.tsx` un-stubs `URL`, and jsdom's `URL` has no `revokeObjectURL`, so a slow CI run throws an unhandled error. Filed as #182, fixed by #183.
 
 ## 2026-10-19 (wrap-up) — Every open PR is on `main`
 

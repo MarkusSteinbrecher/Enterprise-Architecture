@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { stubDownloads } from '@/test/downloads'
 import { smallWorkspace } from '@/test/fixtures'
 import { ModelStore, ModelStoreContext, type ModelStoreContextValue, type TabRole } from '@/store'
 import { useSaveWorkspace } from './use-save-workspace'
@@ -12,8 +13,7 @@ import { useSaveWorkspace } from './use-save-workspace'
  * up without one.
  */
 
-let createObjectURL: ReturnType<typeof vi.fn>
-let click: ReturnType<typeof vi.fn>
+let downloads: ReturnType<typeof stubDownloads>
 
 function wrapper(role: TabRole, store: ModelStore) {
   const value = {
@@ -35,20 +35,12 @@ function wrapper(role: TabRole, store: ModelStore) {
 }
 
 function downloadedName(): string | undefined {
-  return click.mock.instances[0] instanceof HTMLAnchorElement
-    ? (click.mock.instances[0] as HTMLAnchorElement).download
-    : undefined
+  const anchor: unknown = downloads.click.mock.instances[0]
+  return anchor instanceof HTMLAnchorElement ? anchor.download : undefined
 }
 
 beforeEach(() => {
-  createObjectURL = vi.fn(() => 'blob:test')
-  vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
-  click = vi.fn()
-  HTMLAnchorElement.prototype.click = click
-})
-
-afterEach(() => {
-  vi.unstubAllGlobals()
+  downloads = stubDownloads()
 })
 
 describe('useSaveWorkspace', () => {
@@ -60,7 +52,7 @@ describe('useSaveWorkspace', () => {
     const { result } = renderHook(() => useSaveWorkspace(), { wrapper: wrapper('writer', store) })
     expect(result.current.saveFile()).toEqual({ kind: 'downloaded', fileName: 'renamed.json' })
 
-    expect(createObjectURL).toHaveBeenCalled()
+    expect(downloads.createObjectURL).toHaveBeenCalled()
     expect(downloadedName()).toBe('renamed.json')
     // The whole point of the owner: nothing here may claim the model is safe.
     expect(store.dirty).toBe(1)
@@ -73,8 +65,8 @@ describe('useSaveWorkspace', () => {
     const { result } = renderHook(() => useSaveWorkspace(), { wrapper: wrapper('reader', store) })
     expect(result.current.saveFile()).toEqual({ kind: 'read-only' })
 
-    expect(createObjectURL).not.toHaveBeenCalled()
-    expect(click).not.toHaveBeenCalled()
+    expect(downloads.createObjectURL).not.toHaveBeenCalled()
+    expect(downloads.click).not.toHaveBeenCalled()
     expect(store.dirty).toBe(1)
   })
 
