@@ -1,5 +1,15 @@
 # Session Log
 
+## 2026-10-19 — #133 finished: PR #178 (bend-points, Manhattan router, label position)
+
+- **PR #178**, stacked on #173 (`feat/145-drop-draws-relationships`). The WIP from 2026-10-16 is finished. Nothing merged.
+- **Archi oracle:** `editedClaims` now shapes lines with the canvas's own `insertBendpoint`, `moveBendpoint`, `removeBendpoint` and `straightened`, and sets one line's label position. Archi 5.10 re-saved the export (`/Applications/Archi.app`). Every bend-point came back as drawn, and a new test reads them out of Archi's save. The label position is the one new difference: carried only, since the exchange format has no place for it.
+- **e2e journey 16** (`view-bendpoints.spec.ts`): add, move, undo, redo and double-click remove with Chromium's pointer, then Manhattan: all 40 lines orthogonal, no handles, still Manhattan after a reload. Lines are pressed with `getPointAtLength` + `getScreenCTM`, because a bounding box's centre is not on a bent line.
+- **Probes:** 23 guards broken one at a time. Two were missed at first (an out-of-range segment index, a bend-point dragged back to its own pixel); `bendpoints.test.ts` and a canvas test now catch both.
+- **Verified:** 1525 unit tests on Node 25 and Node 24; lint, typecheck, format, build; full e2e 32 passed, 1 skipped (#32).
+- **For the sponsor** (also in the PR): one bend-point per segment drag (Archi's GEF), not the issue's two; the Manhattan route is a port of diagram-js's `connectRectangles` (MIT notice kept), not the dependency; #174 and #178 both bump the schema to 4, so the second to merge takes 5.
+- **Review order now:** #167; #174; #169; #175; #172 → #176; #168 → #173 → #178. Then #134–#137, #132.
+
 ## 2026-10-16 — Branch sweep, manual scripts, four backlog lanes (#95, #138, #97, #165, #164, #146, #145)
 
 - **Branches:** deleted 36 merged remote branches and 9 local ones. Each was checked to have nothing outside `main` (`feat/147-shared-folder-lock` held only #162's merge, both of whose parents are on `main`). Kept: `assets/77-notation`, `assets/79-view-canvas` and `assets/80-model-tree` (merged PRs show screenshots from them), and the unmerged `spike/78-diagram-engine` and `claude/research-tech-radars-2pWYb`.
