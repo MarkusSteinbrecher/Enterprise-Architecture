@@ -196,3 +196,117 @@ test('a model in a shared folder is locked, saved, lost to a colleague and saved
   expect(await files.read(copy!)).toContain('Unsaved idea')
   expect(await files.read('Landscape.json')).not.toContain('Unsaved idea')
 })
+
+/**
+ * Journey 14 — an unlock is logged under the profile's Web Lock (#165). Two
+ * tabs of one profile share a log, and the Web Lock is what keeps their
+ * appends apart. jsdom has no Web Locks, so the unit tests use a stand-in;
+ * this runs the append against Chromium's own `navigator.locks`. The recording
+ * calls the browser's method on the object it was called on, so a call that
+ * loses its `this` fails here as it would without the recording.
+ */
+test('an unlock is written to the log under the profile’s Web Lock (#165)', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'showDirectoryPicker', {
+      configurable: true,
+      value: async () =>
+        (await navigator.storage.getDirectory()).getDirectoryHandle('Locked', { create: true }),
+    })
+    const requested: string[] = []
+    Object.defineProperty(window, 'requestedLocks', { value: requested })
+    const request = LockManager.prototype.request as (...args: unknown[]) => Promise<unknown>
+    LockManager.prototype.request = function (this: LockManager, ...args: unknown[]) {
+      requested.push(String(args[0]))
+      return request.apply(this, args)
+    } as typeof LockManager.prototype.request
+  })
+  await openApp(page, 'folder')
+
+  const inFolder = {
+    write: (name: string, text: string) =>
+      page.evaluate(
+        async ([file, content]) => {
+          const folder = await (
+            await navigator.storage.getDirectory()
+          ).getDirectoryHandle('Locked', { create: true })
+          const writable = await (
+            await folder.getFileHandle(file!, { create: true })
+          ).createWritable()
+          await writable.write(content!)
+          await writable.close()
+        },
+        [name, text],
+      ),
+    names: () =>
+      page.evaluate(async () => {
+        const folder = await (await navigator.storage.getDirectory()).getDirectoryHandle('Locked')
+        const names: string[] = []
+        for await (const [name] of (
+          folder as unknown as { entries(): AsyncIterable<[string]> }
+        ).entries())
+          names.push(name)
+        return names.sort()
+      }),
+    read: (name: string) =>
+      page.evaluate(async (file) => {
+        const folder = await (await navigator.storage.getDirectory()).getDirectoryHandle('Locked')
+        return (await (await folder.getFileHandle(file)).getFile()).text()
+      }, name),
+  }
+
+  await inFolder.write(
+    'Landscape.json',
+    JSON.stringify({
+      schemaVersion: 3,
+      id: 'ws-locked',
+      name: 'Landscape',
+      elements: [
+        { id: 'ac-1', type: 'ApplicationComponent', name: 'Claims Engine', properties: {} },
+      ],
+      relationships: [],
+      views: [],
+      folders: [],
+      reports: [],
+      tagGroups: [],
+    }),
+  )
+  await inFolder.write(
+    'Landscape.json.lock',
+    JSON.stringify({
+      appVersion: '0.2.0',
+      displayName: 'Ana',
+      heartbeatAt: '2026-10-07T08:00:00.000Z',
+      heartbeatSeq: 0,
+      schemaVersion: 1,
+      since: '2026-10-07T08:00:00.000Z',
+      token: 'ana-1',
+    }),
+  )
+
+  await page.getByRole('button', { name: 'Open folder…' }).click()
+  const form = page.getByRole('form', { name: 'Your name on the lock' })
+  await form.getByLabel(/Your name/).fill('Markus')
+  await form.getByRole('button', { name: 'Continue' }).click()
+  await page.getByRole('button', { name: 'Open Landscape.json' }).click()
+
+  const banner = page.getByRole('region', { name: 'Shared model' })
+  await expect(banner.getByRole('status')).toContainText('Ana is editing it')
+  await banner.getByRole('button', { name: 'Unlock…' }).click()
+  await banner.getByRole('button', { name: 'Unlock', exact: true }).click()
+  await expect(banner.getByRole('button', { name: 'Edit' })).toBeVisible()
+
+  const names = await inFolder.names()
+  expect(names).toContain('Landscape.json')
+  expect(names).not.toContain('Landscape.json.lock')
+  const log = names.find((name) => name.startsWith('.archipelago-log-'))
+  expect(log).toBeDefined()
+  expect(JSON.parse((await inFolder.read(log!)).trim())).toMatchObject({
+    action: 'unlock',
+    displayName: 'Markus',
+    model: 'Landscape.json',
+    previousOwner: 'Ana',
+  })
+  expect(
+    await page.evaluate(() => (window as unknown as { requestedLocks: string[] }).requestedLocks),
+  ).toContain('archipelago.audit-log')
+})

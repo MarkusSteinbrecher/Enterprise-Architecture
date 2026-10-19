@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SyncWorld, type SyncedClient } from '@/test/sync-world'
 import { encodeText } from './folder'
 import { parseLock, serialiseLock, LOCK_SCHEMA_VERSION, type LockRecord } from './lock-file'
-import { LockManager, systemClock, type Clock } from './lock-manager'
+import { LockManager, systemClock, UNWATCHED_AFTER_POLLS, type Clock } from './lock-manager'
 import { memoryStore, type KeyedStore, type LockObservation } from './memory'
 
 /**
@@ -12,6 +12,7 @@ import { memoryStore, type KeyedStore, type LockObservation } from './memory'
 
 const SETTLE = 10_000
 const STALE = 30 * 60_000
+const POLL = 15_000
 const LOCK = 'Landscape.json.lock'
 
 beforeEach(() => vi.useFakeTimers({ now: new Date('2026-10-07T08:00:00Z') }))
@@ -38,7 +39,7 @@ function manager(
     model: 'Landscape.json',
     displayName: name,
     appVersion: '0.2.0',
-    settings: { settleMs: SETTLE, staleAfterMs: STALE },
+    settings: { settleMs: SETTLE, staleAfterMs: STALE, pollMs: POLL },
     observations,
     clock,
     newToken: () => `${name}-${(n += 1)}`,
@@ -61,6 +62,18 @@ function foreign(overrides: Partial<LockRecord> = {}): Uint8Array {
     token: 'ana-1',
     ...overrides,
   })
+}
+
+/** Look at the lock every poll for `ms`, as a visible reader does. Returns the last look. */
+async function watch(lock: LockManager, ms: number) {
+  let view = await lock.look()
+  for (let waited = 0; waited < ms;) {
+    const step = Math.min(POLL, ms - waited)
+    await vi.advanceTimersByTimeAsync(step)
+    waited += step
+    view = await lock.look()
+  }
+  return view
 }
 
 /** Take the lock on `folder`, running the settle delay. */
@@ -174,10 +187,51 @@ describe('a lock someone else holds (spec §5, §5.3)', () => {
     await folder.write(LOCK, foreign({ heartbeatSeq: 1 }))
     const lock = manager(folder)
     expect(await lock.look()).toMatchObject({ stale: false, quietForMs: 0 })
-    await vi.advanceTimersByTimeAsync(STALE - 1)
-    expect(await lock.look()).toMatchObject({ stale: false, quietForMs: STALE - 1 })
+    expect(await watch(lock, STALE - 1)).toMatchObject({ stale: false, quietForMs: STALE - 1 })
     await vi.advanceTimersByTimeAsync(1)
     expect(await lock.look()).toMatchObject({ stale: true, quietForMs: STALE })
+  })
+
+  it('does not count time nobody here watched, as a laptop asleep (#165)', async () => {
+    // The review's probe: seen just before a two-hour sleep, the lock was stale
+    // on the first look after waking, before sync had delivered the newer heartbeats.
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    await folder.write(LOCK, foreign())
+    const lock = manager(folder)
+    await watch(lock, STALE - POLL)
+    await vi.advanceTimersByTimeAsync(2 * 60 * 60_000)
+    expect(await lock.look()).toMatchObject({ stale: false, quietForMs: 0 })
+    // The watch starts again from the first look after the gap.
+    expect(await watch(lock, STALE)).toMatchObject({ stale: true, quietForMs: STALE })
+  })
+
+  it('counts a gap of up to four polls as watched, and a longer one as not', async () => {
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    await folder.write(LOCK, foreign())
+    const lock = manager(folder)
+    const gap = UNWATCHED_AFTER_POLLS * POLL
+    expect(gap).toBe(60_000)
+    await lock.look()
+    await vi.advanceTimersByTimeAsync(gap)
+    expect(await lock.look()).toMatchObject({ quietForMs: gap })
+    await vi.advanceTimersByTimeAsync(gap + 1)
+    expect(await lock.look()).toMatchObject({ quietForMs: 0 })
+  })
+
+  it('counts an observation remembered without a last look as watched by no one', async () => {
+    // What a version before #165 stored in IndexedDB: the lock and since when.
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    await folder.write(LOCK, foreign())
+    const observations = memoryStore<LockObservation>()
+    await observations.set(['folder-1', 'Landscape.json'], {
+      token: 'ana-1',
+      heartbeatSeq: 3,
+      since: Date.now() - STALE,
+    })
+    expect(await manager(folder, { observations }).look()).toMatchObject({
+      stale: false,
+      quietForMs: 0,
+    })
   })
 
   it('restarts the watch whenever the counter moves, whatever the remote clock says', async () => {
@@ -197,8 +251,7 @@ describe('a lock someone else holds (spec §5, §5.3)', () => {
     const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
     const lock = manager(folder)
     await folder.write(LOCK, foreign({ token: 'ana-1', heartbeatSeq: 0 }))
-    await lock.look()
-    await vi.advanceTimersByTimeAsync(STALE)
+    await watch(lock, STALE)
     await folder.write(LOCK, foreign({ token: 'ana-2', heartbeatSeq: 0 }))
     expect(await lock.look()).toMatchObject({ stale: false, quietForMs: 0 })
   })
@@ -207,10 +260,13 @@ describe('a lock someone else holds (spec §5, §5.3)', () => {
     const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
     const observations = memoryStore<LockObservation>()
     await folder.write(LOCK, foreign())
-    await manager(folder, { observations }).look()
-    await vi.advanceTimersByTimeAsync(STALE)
-    // A new page load: a new manager over the same remembered observations.
-    expect(await manager(folder, { observations }).look()).toMatchObject({ stale: true })
+    await watch(manager(folder, { observations }), STALE - 1)
+    // A new page load, seconds long: a new manager over the same remembered observations.
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(await manager(folder, { observations }).look()).toMatchObject({
+      stale: true,
+      quietForMs: STALE - 1 + 5000,
+    })
     // Without them, a lock first seen now cannot be stale yet.
     expect(await manager(folder).look()).toMatchObject({ stale: false })
   })
@@ -220,8 +276,7 @@ describe('a lock someone else holds (spec §5, §5.3)', () => {
     const one = world.client('Markus')
     const observations = memoryStore<LockObservation>()
     await one.write(LOCK, foreign())
-    await manager(one, { observations, folderKey: 'library-1' }).look()
-    await vi.advanceTimersByTimeAsync(STALE)
+    await watch(manager(one, { observations, folderKey: 'library-1' }), STALE)
     expect(await manager(one, { observations, folderKey: 'library-1' }).look()).toMatchObject({
       stale: true,
     })
@@ -234,8 +289,7 @@ describe('a lock someone else holds (spec §5, §5.3)', () => {
     const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
     await folder.write(LOCK, foreign())
     const lock = manager(folder)
-    await lock.look()
-    await vi.advanceTimersByTimeAsync(STALE)
+    await watch(lock, STALE)
     expect(await take(lock)).toMatchObject({ kind: 'reader', why: 'held', view: { stale: true } })
     expect((await lockIn(folder))?.token).toBe('ana-1')
     expect(await take(lock, true)).toEqual({ kind: 'writer' })

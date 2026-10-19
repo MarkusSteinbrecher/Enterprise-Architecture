@@ -17,7 +17,7 @@ sees it and makes conflict copies as OneDrive does.
 | `save-guard.ts`                       | The two checks before every write, and save as copy.                                                                                                                                          |
 | `session.ts`                          | One open model: load, acquire, the writer's and the reader's tick, save, overwrite (logged first), unlock, close. `diverged` is what the save-state indicator reads beside the dirty counter. |
 | `conflict-copies.ts`, `file-names.ts` | Possible conflict copies (`Landscape-PC.json`, `Landscape.json-PC.lock`); copy names safe for Windows and SharePoint; the lock and log names.                                                 |
-| `audit-log.ts`                        | One log per browser profile; takeovers, unlocks and overwrites.                                                                                                                               |
+| `audit-log.ts`                        | One log per browser profile, changed only under the profile's Web Lock; takeovers, unlocks and overwrites, and taking back a takeover that did not happen.                                    |
 | `settings.ts`                         | The timings and the display name, guarded on the way in.                                                                                                                                      |
 | `memory.ts`                           | What is remembered per `[folderKey, fileName]` pair: lock observations, dismissed copies.                                                                                                     |
 

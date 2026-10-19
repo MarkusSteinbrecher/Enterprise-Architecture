@@ -112,6 +112,7 @@ On `visibilitychange` back to visible (after sleep), run the heartbeat at once r
 
 - While a reader watches a lock, it records the local time whenever `heartbeatSeq` changes. When it has been unchanged for `staleAfterMs` (default 30 minutes, the sponsor's choice; §14), the lock is **stale**.
 - The observation (token, `heartbeatSeq`, local time first seen at that value) is kept in IndexedDB per model, so a reload on the same machine continues the watch instead of restarting it.
+- Only watched time counts. The observation also keeps the local time of the last look, and a look more than four `pollMs` after it starts the watch again. A laptop that slept had no sync client running either, so on waking it still shows the heartbeat from before the sleep; judged across the gap, a live lock would look stale before the newer heartbeats arrive (#165). A reload, seconds long, continues the watch.
 - A lock with no recorded observation cannot be judged stale until it has been watched for `staleAfterMs`. Show it as "held" in the meantime. An "Unlock" action with confirmation covers the urgent case.
 - Stale locks are offered for takeover ("Markus's lock looks abandoned: no sign of life for 17 minutes. Take over?"), never taken silently. Taking over runs the acquire procedure. The prompt says that an offline colleague may still be editing, and that their work would then come back as a conflict copy.
 
@@ -125,6 +126,10 @@ On `visibilitychange` back to visible (after sleep), run the heartbeat at once r
 Takeover is available for any foreign lock, from the reader screen. It shows owner, since and last heartbeat seen, requires an explicit confirm, then runs acquire.
 
 Takeovers, unlocks and overwrites (§6.2) are logged. Each browser profile writes **its own** log file, `.archipelago-log-<clientId>.jsonl`, where `clientId` is a `crypto.randomUUID()` stored once in IndexedDB. Appending through `createWritable` rewrites the whole file, so a single shared log written from several machines would itself produce conflict copies. Per-client files have one writer each. Anything that shows the history reads all of them and orders by time.
+
+One writer is a profile, not a tab: the tabs of one profile share a client id, and two appends that each read the file before either wrote it keep one line. Every change to a log is therefore made under one Web Lock, which all tabs of the origin in that profile share (#165).
+
+An action is logged before it is done, and not done if the line cannot be written. A takeover's lock write is the takeover, so its line comes first; a takeover that then ends as a reader (the write failed, or another lock won the settle delay) takes its line back out of the log. If that fails too, the user is told that the log records a takeover that did not happen.
 
 A line holds time, display name, action, model file name and previous owner. Canonical JSON per line; values escaped by JSON, never joined by hand.
 
