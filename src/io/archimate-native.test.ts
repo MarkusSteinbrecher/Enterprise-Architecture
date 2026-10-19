@@ -401,10 +401,12 @@ describe('choosing the reader (#13)', () => {
     expect(result.problems[0]!.message).not.toMatch(/Archi model saved/)
   })
 
-  it('explains an Archi model saved as an archive with images', async () => {
+  it('reads a zip named .archimate as Archi’s archive, and says why a damaged one is refused', async () => {
+    // Archi's own archives are read in archimate-archive.test.ts (#97).
     const result = await readWorkspaceFile(file('with-images.archimate', 'PK\u0003\u0004rest'))
     expect(result.ok).toBe(false)
-    expect(result.problems.map((p) => p.code)).toEqual(['archimate.archive-unsupported'])
+    expect(result.problems.map((p) => p.code)).toEqual(['archimate.archive-truncated'])
+    expect(result.problems[0]!.message).toMatch(/is a zip archive, which is how Archi saves/)
   })
 })
 
@@ -601,6 +603,6 @@ describe('the follow-ups from the #102 review (#103)', () => {
 
   it('knows an Archi zip whose name has trailing space', async () => {
     const result = await readWorkspaceFile(file('m.archimate ', 'PK\u0003\u0004rest'))
-    expect(result.problems.map((p) => p.code)).toEqual(['archimate.archive-unsupported'])
+    expect(result.problems.map((p) => p.code)).toEqual(['archimate.archive-truncated'])
   })
 })

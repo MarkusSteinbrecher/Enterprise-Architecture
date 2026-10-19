@@ -67,3 +67,5 @@ cd "$DIR/../../.."
 npx vite-node scripts/fixtures/build-edited-claims.ts
 ARCHI="$ARCHI" scripts/fixtures/archi-roundtrip.sh "$DIR/claims-edited.xml" \
   "$DIR/claims-edited.archi.archimate" "$DIR/claims-edited.archi.xml"
+# A model saved with images, which Archi saves as a zip archive (#97).
+ARCHI="$ARCHI" scripts/fixtures/archive-with-archi.sh

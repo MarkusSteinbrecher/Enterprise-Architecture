@@ -64,6 +64,19 @@ if (typeof Blob !== 'undefined' && typeof Blob.prototype.text !== 'function') {
   }
 }
 
+// Nor arrayBuffer(), which readWorkspaceFile reads first, to tell a zipped
+// Archi model from text (#97). The e2e journey reads one in a real browser.
+if (typeof Blob !== 'undefined' && typeof Blob.prototype.arrayBuffer !== 'function') {
+  Blob.prototype.arrayBuffer = function arrayBuffer(this: Blob) {
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as ArrayBuffer)
+      reader.onerror = () => reject(reader.error)
+      reader.readAsArrayBuffer(this)
+    })
+  }
+}
+
 // jsdom has no layout, so it implements no scrolling APIs.
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {}

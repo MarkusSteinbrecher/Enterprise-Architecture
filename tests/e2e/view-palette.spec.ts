@@ -1,6 +1,12 @@
 import { fileURLToPath } from 'node:url'
 import type { Locator, Page } from '@playwright/test'
-import { test, expect, importWorkspaceFile, startEmpty, waitForPersistedWorkspace } from './support'
+import {
+  test,
+  expect,
+  importWithNothingToReport,
+  startEmpty,
+  waitForPersistedWorkspace,
+} from './support'
 
 /**
  * Journey 14 — the palette collapses (#146), in a 1280 px window, where the
@@ -35,10 +41,8 @@ test('the palette collapses to glyphs, the canvas widens, and nothing moves on s
   page,
 }) => {
   await startEmpty(page)
-  await importWorkspaceFile(page, FIXTURE)
-  const report = page.getByRole('dialog', { name: 'Import' })
-  await report.getByRole('button', { name: 'Done' }).click()
-  await expect(report).toBeHidden()
+  // Nothing to report since relationship documentation is read (#95).
+  await importWithNothingToReport(page, FIXTURE, { elements: CLAIMS_ELEMENTS, relationships: 48 })
   await openLandscape(page)
 
   const palette = page.getByRole('region', { name: 'Palette' })

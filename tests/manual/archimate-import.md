@@ -25,8 +25,9 @@
    the Claims Engine in its blue fill and bold font.
 5. Compare one bent connection (Payment Calculation → Payment Service) with Archi — expected:
    it bends at the same corners.
-6. Open your own Archi model, if you have one with images in it — expected: a clear message
-   that models saved with images cannot be opened yet, and what to do instead.
+6. Import `src/io/fixtures/archi-images.archimate`, or your own Archi model with images in
+   it — expected: it opens, and the report names each shape and specialization that showed
+   an image, and the images the archive holds, since images are not carried yet.
 7. Now the way back. Import the fixture again (step 2), click **Export** and save the XML.
    In Archi, choose **File → Import → Open Exchange XML Model…** and pick it — expected: the
    same 39 elements, 48 relationships and views as the original, in the same folders, and

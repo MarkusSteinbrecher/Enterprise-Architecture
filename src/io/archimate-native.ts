@@ -146,7 +146,7 @@ const UNDRAWN_NODE_ATTRIBUTES: ReadonlySet<string> = new Set([
   'type',
   'borderType',
   'borderColor',
-  'imagePath',
+  // Where an image sits; the image itself (`imagePath`) is reported per shape (#97).
   'imagePosition',
   'locked',
 ])
@@ -970,11 +970,28 @@ function readProfiles(model: RawNode): Map<string, { name: string; raw: RawNode 
   return out
 }
 
-/** A specialization no imported concept uses has nowhere to go: Archipelago has none (#101). */
+/**
+ * A specialization no imported concept uses has nowhere to go: Archipelago has
+ * none (#101). One that is used is kept as a property, without the image Archi
+ * draws on every shape of a concept with it (#97), which is reported once.
+ */
 function reportUnusedProfiles(model: RawNode, reader: Reader): void {
   reader.ledger.use(model, 'profile')
   for (const { name, raw } of reader.profiles.values()) {
-    if (reader.ledger.isUsed(raw, '@id')) continue
+    if (reader.ledger.isUsed(raw, '@id')) {
+      const image = asString(raw['@imagePath'])
+      if (image === undefined) continue
+      reader.problems.push(
+        problem(
+          'warning',
+          'archimate.specialization-image-dropped',
+          `The specialization “${name}” has the image “${image}”, which Archi draws on the shapes of what it specializes. Archipelago keeps the specialization as a property and does not draw the image yet.`,
+          { ...reader.where, subject: asString(raw['@id']) ?? '' },
+        ),
+      )
+      reader.ledger.use(raw, '@imagePath')
+      continue
+    }
     reader.ledger.lose(model, `an unused specialization (“${name}”)`)
     reader.ledger.skip(raw)
   }
@@ -1118,6 +1135,15 @@ function readView(member: Member, context: ViewContext): View | undefined {
         }
         if (parent) node.parent = parent.id
         checkViewContent(child, node, reader)
+        // An image on a kept shape (#97): reported where it was, as an image box is.
+        const image = asString(child['@imagePath'])
+        if (image !== undefined) {
+          skip(
+            'archimate.image-not-drawn',
+            `shape "${node.id}" shows the image “${image}”, which Archipelago does not draw yet. The shape was imported without it.`,
+          )
+          reader.ledger.use(child, '@imagePath')
+        }
         reader.ledger.use(child, '@xsi:type', '@id', ...NESTED)
         boxes.set(node.id, box)
         nodesById.set(node.id, node)
@@ -1217,6 +1243,15 @@ function readNode(
         node = { ...base, kind: 'note', text: target ?? '' }
       }
       break
+    }
+    case 'DiagramModelImage': {
+      // An image box, named with the image it shows, so a report says which (#97).
+      const image = asString(raw['@imagePath'])
+      skip(
+        'archimate.node-type-unsupported',
+        `shape "${id}" is a DiagramModelImage ${image === undefined ? 'with no image in it' : `showing the image “${image}”`}, which Archipelago does not draw yet. It was skipped; anything nested in it was kept.`,
+      )
+      return undefined
     }
     default:
       skip(
