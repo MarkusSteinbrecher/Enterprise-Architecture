@@ -154,6 +154,30 @@ describe('opening a model from a shared folder (criteria 2, 3)', () => {
     expect(text('.archipelago-log-client-markus.jsonl')).toContain('"action":"takeover"')
   })
 
+  it('says so when a takeover that did not happen cannot be taken back out of the log (#165)', async () => {
+    const log = '.archipelago-log-client-markus.jsonl'
+    put(LOCK, anasLock())
+    const user = await openModel()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Take over…' })).toBeVisible(), {
+      timeout: 3000,
+    })
+    await user.click(screen.getByRole('button', { name: 'Take over…' }))
+    await user.click(within(banner()).getByRole('button', { name: 'Take over' }))
+    // The line is written before the lock. Then, inside the settle delay, Ben's
+    // lock replaces ours and the log cannot be rewritten.
+    await waitFor(() => expect(parseLock(dir.files.get(LOCK)!)?.displayName).toBe('Markus'))
+    expect(text(log)).toContain('"action":"takeover"')
+    dir.rejectNextClose = log
+    put(LOCK, serialiseLock({ ...parseLock(anasLock())!, displayName: 'Ben', token: 'ben-1' }))
+    await waitFor(() =>
+      expect(screen.getByText(/Ben took “Landscape.json” for editing first/)).toBeVisible(),
+    )
+    expect(
+      screen.getByText(/The takeover did not happen, but the folder’s log still records it/),
+    ).toBeVisible()
+    expect(status()).toHaveTextContent('Ben took it over')
+  })
+
   it('unlocks after a confirmation, logged, and then offers Edit', async () => {
     put(LOCK, anasLock())
     const user = await openModel()

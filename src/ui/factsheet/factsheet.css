@@ -358,6 +358,15 @@
   padding: 0;
 }
 
+/* A row and the relationship's documentation under it (#95) share one rule. */
+.relation-entry {
+  border-bottom: 1px solid var(--bd);
+}
+
+.relation-entry:last-child {
+  border-bottom: 0;
+}
+
 .relation-row {
   display: flex;
   align-items: center;
@@ -367,12 +376,18 @@
   padding: 0 12px;
   background: transparent;
   border: 0;
-  border-bottom: 1px solid var(--bd);
   text-align: left;
 }
 
-.relation-row:last-child {
-  border-bottom: 0;
+/* Indented to the badge: 12px padding, the 14px direction glyph, a 9px gap. */
+.relation-entry__doc {
+  margin: 0;
+  padding: 0 12px 10px 35px;
+  max-width: 66ch;
+  font: 400 12px/1.5 var(--font-ui);
+  color: var(--ink2);
+  white-space: pre-line;
+  text-wrap: pretty;
 }
 
 .relation-row:hover {

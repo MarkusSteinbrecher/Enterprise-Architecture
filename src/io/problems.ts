@@ -64,25 +64,6 @@ export function summariseProblems(problems: readonly ImportProblem[]): string {
 }
 
 /**
- * Relationships have no documentation field yet, so both readers say which
- * descriptions they could not keep rather than losing them quietly (#13). Only
- * relationships that were imported are named: a skipped one was reported as
- * skipped already (#100).
- */
-export function relationshipDocumentationSkipped(
-  ids: readonly string[],
-  where: { file?: string },
-): ImportProblem {
-  const count = ids.length
-  return problem(
-    'warning',
-    'import.relationship-documentation-skipped',
-    `${count} relationship${count === 1 ? ' has' : 's have'} documentation (${quotedList(ids)}), which Archipelago cannot hold on a relationship yet. It was not imported.`,
-    count === 1 && ids[0] !== undefined ? { ...where, subject: ids[0] } : where,
-  )
-}
-
-/**
  * A property key that appears twice on one object. Both formats allow it and
  * the model holds a key once, so the first value is kept and this says so (#100).
  */

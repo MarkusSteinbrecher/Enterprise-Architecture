@@ -58,6 +58,8 @@ function comparable(workspace: Workspace): unknown {
     folder: path(item.folder),
   })
   return {
+    // Archi's export writes the purpose as the model's documentation (#95).
+    documentation: workspace.documentation,
     elements: sorted(workspace.elements).map(refile),
     relationships: sorted(workspace.relationships).map(refile),
     views: sorted(workspace.views).map((view: View) => ({
@@ -289,10 +291,6 @@ describe('what it cannot hold, it says (#13)', () => {
     expect(found('archimate.appearance-unsupported')[0]?.message).toMatch(/gradient/)
     expect(found('archimate.specialization-as-property')).toHaveLength(1)
     expect(found('archimate.folder-properties-skipped')[0]?.message).toMatch(/Actors/)
-    expect(found('import.relationship-documentation-skipped')[0]?.message).toMatch(
-      /^1 relationship/,
-    )
-    expect(found('archimate.model-purpose-skipped')).toHaveLength(1)
   })
 
   it('reports nothing else', () => {
@@ -302,13 +300,11 @@ describe('what it cannot hold, it says (#13)', () => {
       'archimate.dangling-relationship',
       'archimate.default-size',
       'archimate.folder-properties-skipped',
-      'archimate.model-purpose-skipped',
       'archimate.node-type-unsupported',
       'archimate.specialization-as-property',
       'archimate.view-type-unsupported',
-      'import.relationship-documentation-skipped',
     ])
-    expect(codes(claimsNative)).toEqual(['archimate.model-purpose-skipped'])
+    expect(codes(claimsNative)).toEqual([])
   })
 
   it('reads a Manhattan view’s router, and reports none for it (#133)', () => {
@@ -388,10 +384,14 @@ describe('choosing the reader (#13)', () => {
 
   it('reads an Archi model whatever it is called, and an exchange file called .archimate', async () => {
     const asXml = await readWorkspaceFile(file('model.xml', claimsNative))
-    expect(asXml.problems.map((p) => p.code)).toEqual(['archimate.model-purpose-skipped'])
+    expect(asXml.problems).toEqual([])
     expect(asXml.workspace?.views).toHaveLength(3)
     const named = await readWorkspaceFile(file('model.archimate', claimsExchange))
-    expect(named.problems.map((p) => p.code)).toEqual(['exchange.model-documentation-skipped'])
+    expect(named.problems).toEqual([])
+    // Each reader read the file it was given: only the exchange reader makes up folder ids.
+    expect(named.workspace?.folders.map((f) => f.id)).not.toEqual(
+      asXml.workspace?.folders.map((f) => f.id),
+    )
   })
 
   // #99: the choice was a substring search over the first 4 KB, so any of these
@@ -555,11 +555,32 @@ describe('the branches only a damaged or unusual file reaches (#13)', () => {
   })
 })
 
-describe('the exchange reader says what Archi’s export carried and it could not keep (#13)', () => {
-  it('reports relationship documentation and the model’s documentation', () => {
-    const found = importExchangeXml(coverageExchange).problems.map((p) => p.code)
-    expect(found).toContain('import.relationship-documentation-skipped')
-    expect(found).toContain('exchange.model-documentation-skipped')
+describe('relationship and model documentation, as Archi writes them (#95)', () => {
+  // Both used to be reported as not imported (#13). Archi's own files carry them.
+  const native = read(coverageNative)
+  const exported = exchange(coverageExchange)
+  const influence = (workspace: Workspace) =>
+    workspace.relationships.find((relationship) => relationship.id === 'r-influence')
+
+  it('reads a relationship’s documentation from both of Archi’s files', () => {
+    expect(influence(native)?.documentation).toBe('Cost pressure drives speed.')
+    expect(influence(exported)?.documentation).toBe('Cost pressure drives speed.')
+  })
+
+  it('reads the purpose of the model as the documentation Archi’s export makes of it', () => {
+    expect(native.documentation).toBe(
+      'Edge cases for the .archimate reader (#13). Original test model for Archipelago (MIT).',
+    )
+    expect(exported.documentation).toBe(native.documentation)
+  })
+
+  it('carries both through canonical JSON and the exchange format unchanged', () => {
+    const viaJson = fromCanonicalJson(toCanonicalJson(native)).workspace!
+    expect(influence(viaJson)?.documentation).toBe(influence(native)?.documentation)
+    expect(viaJson.documentation).toBe(native.documentation)
+    const viaXml = exchange(exportExchange(native).xml)
+    expect(influence(viaXml)?.documentation).toBe(influence(native)?.documentation)
+    expect(viaXml.documentation).toBe(native.documentation)
   })
 })
 

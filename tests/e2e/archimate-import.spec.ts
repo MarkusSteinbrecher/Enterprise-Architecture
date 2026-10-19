@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { test, expect, importWorkspaceFile, startEmpty } from './support'
+import { test, expect, importWithNothingToReport, startEmpty } from './support'
 
 /**
  * Journey 9 — an Archi model file opens in a real browser (#13).
@@ -26,17 +26,8 @@ test('an Archi .archimate file imports, files its folders and draws its views', 
   page,
 }) => {
   await startEmpty(page)
-  await importWorkspaceFile(page, FIXTURE)
-
-  // The report says what was read and what was not: the model's purpose text.
-  const dialog = page.getByRole('dialog', { name: 'Import' })
-  await expect(dialog).toContainText('An Archi model (.archimate)')
-  await expect(dialog).toContainText(
-    `${MODEL.elements} elements · ${MODEL.relationships} relationships`,
-  )
-  await expect(dialog).toContainText('purpose text was not imported')
-  await dialog.getByRole('button', { name: 'Done' }).click()
-  await expect(dialog).toBeHidden()
+  // Nothing to report since the purpose became the model's documentation (#95).
+  await importWithNothingToReport(page, FIXTURE, MODEL)
 
   const tree = page.getByRole('tree', { name: 'Model tree' })
   const item = (name: string) => tree.getByRole('treeitem', { name, exact: true })

@@ -97,9 +97,6 @@ interface StyleDefaults {
   font?: Rgb
 }
 
-/** For a style Archipelago wrote: every value in it is an override. */
-const NO_DEFAULTS: StyleDefaults = {}
-
 function nodeDefaults(node: ViewNode, elements: ReadonlyMap<string, Element>): StyleDefaults {
   switch (node.kind) {
     case 'group':
@@ -134,27 +131,111 @@ const CONNECTION_DEFAULTS: StyleDefaults = { line: BLACK, font: BLACK }
  *
  * - **Text alignment, text position, strikethrough and a connection's label
  *   position** (#133), which the format's style has no attribute for.
- * - **`literal`**: this `<style>` was written by Archipelago and holds only real
- *   overrides. The reader normally drops values equal to Archi's defaults,
- *   because Archi writes its whole style on every object; on a style we wrote,
- *   that would discard an override someone chose — black text, say, which is
- *   Archi's default and not ours in a dark theme.
+ * - **`literal`**: what the `<style>` Archipelago wrote says, field by field
+ *   (`{"fontColor":"#000000"}`). The reader normally drops values equal to
+ *   Archi's defaults, because Archi writes its whole style on every object; on
+ *   a style we wrote, that would discard an override someone chose — black
+ *   text, say, which is Archi's default and not ours in a dark theme. The
+ *   marker names the values rather than vouching for the whole `<style>`,
+ *   because Archi keeps the property when it re-exports the model and writes
+ *   its whole computed style beside it (#138): a value the file holds is read
+ *   as ours only when the marker names that same value for that field.
  */
 export const STYLE_KEY = 'archipelago.style'
 
 interface CarriedStyle {
-  literal?: true
+  literal?: StyleSays
   textAlignment?: TextAlignment
   textPosition?: TextPosition
   labelPosition?: LabelPosition
   strikethrough?: true
 }
 
+/** The appearance fields `<style>` can say. Text alignment, text position and strikethrough are carried instead. */
+type StyleField =
+  'fillColor' | 'fontColor' | 'fontName' | 'fontSize' | 'fontStyle' | 'lineColor' | 'lineWidth'
+type StyleSays = Pick<Appearance, StyleField>
+const STYLE_FIELDS: readonly StyleField[] = [
+  'fillColor',
+  'fontColor',
+  'fontName',
+  'fontSize',
+  'fontStyle',
+  'lineColor',
+  'lineWidth',
+]
+
+/**
+ * What the `<style>` written for `appearance` says, in the values the reader
+ * reads back from it: colours as `hex` spells them (an alpha byte moved to the
+ * nearest whole percent, none on the font colour), the font size in half points,
+ * a line width as a whole number above 1. The writer writes exactly this, and the
+ * `literal` marker records exactly this, so the two cannot drift apart.
+ */
+function styleSays(appearance: Appearance): StyleSays {
+  const says: StyleSays = {}
+  const fill = appearance.fillColor === undefined ? undefined : parseHex(appearance.fillColor)
+  if (fill) says.fillColor = hex(fill)
+  const line = appearance.lineColor === undefined ? undefined : parseHex(appearance.lineColor)
+  if (line) says.lineColor = hex(line)
+  if (appearance.lineWidth !== undefined && Number.isFinite(appearance.lineWidth)) {
+    const width = Math.max(1, Math.round(appearance.lineWidth))
+    if (width !== 1) says.lineWidth = width
+  }
+  if (appearance.fontName) says.fontName = appearance.fontName
+  if (appearance.fontSize !== undefined && Number.isFinite(appearance.fontSize)) {
+    // The format's font size is in half points.
+    const size = Math.round(appearance.fontSize * 2) / 2
+    if (size > 0) says.fontSize = size
+  }
+  const styles = (appearance.fontStyle ?? []).filter((s) => s !== 'strikethrough')
+  if (styles.length) says.fontStyle = styles
+  const font = appearance.fontColor === undefined ? undefined : parseHex(appearance.fontColor)
+  if (font) says.fontColor = hex({ rgb: font.rgb, alpha: 100 })
+  return says
+}
+
+/**
+ * A carried `literal` marker as the values it vouches for, or `undefined` when
+ * it cannot be read as one. The guard fails closed: a marker it cannot check
+ * against the file — an older Archipelago's `true`, which vouched for the whole
+ * `<style>` and so for whatever Archi wrote there since, or any field or value
+ * this build does not write — vouches for nothing, and the caller reports it.
+ */
+function vouchedStyle(marker: unknown): StyleSays | undefined {
+  if (marker === null || typeof marker !== 'object' || Array.isArray(marker)) return undefined
+  const says: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(marker as Record<string, unknown>)) {
+    switch (key) {
+      case 'fillColor':
+      case 'fontColor':
+      case 'lineColor':
+        if (typeof value !== 'string' || !parseHex(value)) return undefined
+        break
+      case 'fontName':
+        if (typeof value !== 'string') return undefined
+        break
+      case 'fontSize':
+      case 'lineWidth':
+        if (typeof value !== 'number' || !Number.isFinite(value)) return undefined
+        break
+      case 'fontStyle':
+        if (!Array.isArray(value) || !value.every((s) => typeof s === 'string')) return undefined
+        break
+      default:
+        return undefined
+    }
+    says[key] = value
+  }
+  return says as StyleSays
+}
+
 function carriedStyle(item: ViewNode | ViewConnection): CarriedStyle | undefined {
   const appearance = item.appearance
   if (!appearance) return undefined
   const carried: CarriedStyle = {}
-  if (writeStyle(appearance, '').length) carried.literal = true
+  const says = styleSays(appearance)
+  if (Object.keys(says).length) carried.literal = says
   if (appearance.textAlignment) carried.textAlignment = appearance.textAlignment
   if (appearance.textPosition) carried.textPosition = appearance.textPosition
   if (appearance.labelPosition) carried.labelPosition = appearance.labelPosition
@@ -173,14 +254,12 @@ function carriedStyleJson(
   }
   if (!entries.length) return undefined
   entries.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
-  return JSON.stringify(entries, [
-    'id',
-    'labelPosition',
-    'literal',
-    'strikethrough',
-    'textAlignment',
-    'textPosition',
-  ])
+  // The list is every key at every depth, in the order written: sorted, so the
+  // property is canonical (ADR 0004). `literal` holds the style's own fields.
+  return JSON.stringify(
+    entries,
+    ['id', 'labelPosition', 'literal', 'strikethrough', 'textAlignment', 'textPosition', ...STYLE_FIELDS].sort(),
+  )
 }
 
 /** Whether a view carries a style property, so its definition can be declared up front. */
@@ -225,12 +304,17 @@ export function applyCarriedStyle(
     [...view.nodes, ...view.connections].map((item) => [item.id, item]),
   )
   let unread = carried.unread
+  let unverifiable = 0
   for (const [id, record] of carried.entries) {
     const item = items.get(id)
     if (!item) {
       unread += 1
       continue
     }
+    // Counted here, over the shapes and lines the view kept, so a skipped or
+    // duplicate one is not counted (#106 review). The reader already read its
+    // style without the marker's help (`vouchedStyle`).
+    if (record.literal !== undefined && !vouchedStyle(record.literal)) unverifiable += 1
     const appearance: Appearance = { ...item.appearance }
     if ((TEXT_ALIGNMENTS as readonly unknown[]).includes(record.textAlignment)) {
       appearance.textAlignment = record.textAlignment as TextAlignment
@@ -245,6 +329,16 @@ export function applyCarriedStyle(
       appearance.fontStyle = [...(appearance.fontStyle ?? []), 'strikethrough']
     }
     if (Object.keys(appearance).length) item.appearance = appearance
+  }
+  if (unverifiable) {
+    problems.push(
+      problem(
+        'warning',
+        'exchange.style-unverifiable',
+        `View "${view.name}": ${unverifiable} style${unverifiable === 1 ? ' is' : 's are'} marked as Archipelago's in a form this build cannot check against the file (an older Archipelago marked its styles "literal": true). ${unverifiable === 1 ? 'It was' : 'They were'} read as another tool's, so a colour or font equal to Archi's default was read as no override.`,
+        at,
+      ),
+    )
   }
   if (unread) {
     problems.push(
@@ -417,7 +511,7 @@ function readView(
   const { [STYLE_KEY]: carriedRaw, ...properties } = context.readProperties(raw)
   view.properties = properties
   const carried = readCarriedStyle(carriedRaw)
-  const literal = (itemId: string) => carried.entries.get(itemId)?.literal === true
+  const vouched = (itemId: string) => vouchedStyle(carried.entries.get(itemId)?.literal)
   const documentation = langString(raw.documentation)
   if (documentation) view.documentation = documentation
   const viewpoint = asString(raw['@viewpoint'])
@@ -439,7 +533,7 @@ function readView(
   const walk = (raws: RawNode[], parent: Anchor | undefined) => {
     for (const rawNode of raws) {
       let anchor = parent
-      const node = readNode(rawNode, parent, viewIds, font, literal, tally, context, skip)
+      const node = readNode(rawNode, parent, viewIds, font, vouched, tally, context, skip)
       if (node && nodesById.has(node.id)) {
         skip(
           'exchange.duplicate-node-id',
@@ -463,7 +557,7 @@ function readView(
       nodesById,
       fileConnectionIds,
       font,
-      literal,
+      vouched,
       tally,
       context,
       skip,
@@ -502,7 +596,7 @@ function readNode(
   parent: Anchor | undefined,
   viewIds: ReadonlyMap<string, string>,
   font: FontKey | undefined,
-  literal: (id: string) => boolean,
+  vouched: (id: string) => StyleSays | undefined,
   tally: Tally,
   context: ViewReadContext,
   skip: (code: string, message: string) => void,
@@ -612,9 +706,7 @@ function readNode(
     height: height !== undefined && height > 0 ? height : size.height,
   }
 
-  const appearance = literal(id)
-    ? readStyle(raw, NO_DEFAULTS, undefined, sink)
-    : readStyle(raw, nodeDefaults(node, context.elements), font, sink)
+  const appearance = readStyle(raw, nodeDefaults(node, context.elements), font, vouched(id), sink)
   if (appearance) node.appearance = appearance
   return node
 }
@@ -624,7 +716,7 @@ function readConnection(
   nodesById: ReadonlyMap<string, ViewNode>,
   fileConnectionIds: ReadonlySet<string>,
   font: FontKey | undefined,
-  literal: (id: string) => boolean,
+  vouched: (id: string) => StyleSays | undefined,
   tally: Tally,
   context: ViewReadContext,
   skip: (code: string, message: string) => void,
@@ -707,9 +799,7 @@ function readConnection(
     }
   }
   if (bendpoints.length) connection.bendpoints = bendpoints
-  const appearance = literal(id)
-    ? readStyle(raw, NO_DEFAULTS, undefined, sink)
-    : readStyle(raw, CONNECTION_DEFAULTS, font, sink)
+  const appearance = readStyle(raw, CONNECTION_DEFAULTS, font, vouched(id), sink)
   if (appearance) connection.appearance = appearance
   return connection
 }
@@ -757,53 +847,102 @@ function fontKey(font: RawNode): FontKey {
 /**
  * A node's or connection's `<style>`. A colour or font equal to the default is
  * read, as no override; that is still a read (#101).
+ *
+ * **Which values are ours** (#138). `vouched` is what the `literal` marker says
+ * Archipelago wrote. A value the file holds is kept as written, default or not,
+ * when the marker names that same value for that field: it is the override we
+ * wrote. Every other value — one the marker does not name, because Archi wrote
+ * its computed style beside ours on a re-export, or one that differs from what
+ * the marker names, because another tool changed it — is read as any tool's
+ * value is, and dropped when it is Archi's default. With no marker, or one that
+ * `vouchedStyle` could not read, that is the whole style.
  */
 function readStyle(
   owner: RawNode,
   defaults: StyleDefaults,
   font: FontKey | undefined,
+  vouched: StyleSays | undefined,
   sink: ValueSink,
 ): Appearance | undefined {
+  const read = readStyleSays(owner, sink)
+  if (!read) return undefined
+  const { says, colours, fontKey: key } = read
+  const plain: StyleSays = { ...says }
+  if (colours.fill && isDefault(colours.fill, defaults.fill)) delete plain.fillColor
+  if (colours.line && isDefault(colours.line, defaults.line)) delete plain.lineColor
+  if (colours.font && isDefault(colours.font, defaults.font)) delete plain.fontColor
+  // The file's dominant font is its tool's default, read as no override.
+  if (key !== undefined && key === font) {
+    delete plain.fontName
+    delete plain.fontSize
+  }
+  const appearance: Record<string, unknown> = {}
+  for (const field of STYLE_FIELDS) {
+    const ours = vouched !== undefined && sameValue(says[field], vouched[field])
+    const value = ours ? says[field] : plain[field]
+    if (value !== undefined) appearance[field] = value
+  }
+  return Object.keys(appearance).length ? (appearance as Appearance) : undefined
+}
+
+function sameValue(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
+/** What a `<style>` says, every value as written, and the colours and font it says it with. */
+interface ReadStyleSays {
+  says: StyleSays
+  colours: { fill?: Colour; line?: Colour; font?: Colour }
+  fontKey?: FontKey
+}
+
+function readStyleSays(owner: RawNode, sink: ValueSink): ReadStyleSays | undefined {
   const { ledger } = sink
   ledger.first(owner, 'style')
   const style = list(owner.style)[0]
   if (!style) return undefined
-  const appearance: Appearance = {}
+  const says: StyleSays = {}
+  const colours: ReadStyleSays['colours'] = {}
   ledger.first(style, 'fillColor')
   ledger.first(style, 'lineColor')
   ledger.first(style, 'font')
 
   const fill = readColour(list(style.fillColor)[0], sink)
-  if (fill && !isDefault(fill, defaults.fill)) appearance.fillColor = hex(fill)
+  if (fill) {
+    colours.fill = fill
+    says.fillColor = hex(fill)
+  }
   const line = readColour(list(style.lineColor)[0], sink)
-  if (line && !isDefault(line, defaults.line)) appearance.lineColor = hex(line)
+  if (line) {
+    colours.line = line
+    says.lineColor = hex(line)
+  }
   const lineWidth = measured(style, 'lineWidth', sink)
   // The schema's lineWidth is a positive integer; 0 or less is not one (#107).
   if (lineWidth !== undefined && lineWidth <= 0) bump(sink.tally.malformed, 'lineWidth')
-  if (lineWidth !== undefined && lineWidth !== 1 && lineWidth > 0) appearance.lineWidth = lineWidth
+  if (lineWidth !== undefined && lineWidth !== 1 && lineWidth > 0) says.lineWidth = lineWidth
 
   const rawFont = list(style.font)[0]
-  if (rawFont) {
-    // The file's dominant font is its tool's default, read as no override.
-    ledger.use(rawFont, '@name', '@size', '@style')
-    ledger.first(rawFont, 'color')
-    if (fontKey(rawFont) !== font) {
-      const name = asString(rawFont['@name'])
-      const size = measured(rawFont, 'size', sink)
-      if (name) appearance.fontName = name
-      if (size !== undefined && size > 0) appearance.fontSize = size
-    }
-    const styles: FontStyle[] = []
-    for (const token of (asString(rawFont['@style']) ?? '').split(/\s+/).filter(Boolean)) {
-      if (token === 'bold' || token === 'italic' || token === 'underline') styles.push(token)
-      // `plain` is the schema's word for none; anything else it does not allow (#107).
-      else if (token !== 'plain') bump(sink.tally.malformed, 'style')
-    }
-    if (styles.length) appearance.fontStyle = styles
-    const colour = readColour(list(rawFont.color)[0], sink)
-    if (colour && !isDefault(colour, defaults.font)) appearance.fontColor = hex(colour)
+  if (!rawFont) return { says, colours }
+  ledger.use(rawFont, '@name', '@size', '@style')
+  ledger.first(rawFont, 'color')
+  const name = asString(rawFont['@name'])
+  const size = measured(rawFont, 'size', sink)
+  if (name) says.fontName = name
+  if (size !== undefined && size > 0) says.fontSize = size
+  const styles: FontStyle[] = []
+  for (const token of (asString(rawFont['@style']) ?? '').split(/\s+/).filter(Boolean)) {
+    if (token === 'bold' || token === 'italic' || token === 'underline') styles.push(token)
+    // `plain` is the schema's word for none; anything else it does not allow (#107).
+    else if (token !== 'plain') bump(sink.tally.malformed, 'style')
   }
-  return Object.keys(appearance).length ? appearance : undefined
+  if (styles.length) says.fontStyle = styles
+  const colour = readColour(list(rawFont.color)[0], sink)
+  if (colour) {
+    colours.font = colour
+    says.fontColor = hex(colour)
+  }
+  return { says, colours, fontKey: fontKey(rawFont) }
 }
 
 interface Colour {
@@ -1331,10 +1470,12 @@ function writeView(
 
 /**
  * `<style>`. Text alignment, text position and strikethrough have no place in
- * it; they travel in the view's `archipelago.textStyle` property instead.
+ * it; they travel in the view's `archipelago.style` property instead. What it
+ * says is `styleSays`, which the `literal` marker records.
  */
 function writeStyle(appearance: Appearance | undefined, pad: string): string[] {
   if (!appearance) return []
+  const says = styleSays(appearance)
 
   const inner: string[] = []
   const colour = (name: string, value: string | undefined) => {
@@ -1344,16 +1485,15 @@ function writeStyle(appearance: Appearance | undefined, pad: string): string[] {
     const a = parsed.alpha === 100 ? '' : ` a="${parsed.alpha}"`
     inner.push(`${pad}    <${name} r="${r}" g="${g}" b="${b}"${a} />`)
   }
-  colour('fillColor', appearance.fillColor)
-  colour('lineColor', appearance.lineColor)
+  colour('fillColor', says.fillColor)
+  colour('lineColor', says.lineColor)
 
-  const styles = (appearance.fontStyle ?? []).filter((s) => s !== 'strikethrough')
-  const fontColour = appearance.fontColor === undefined ? undefined : parseHex(appearance.fontColor)
-  if (appearance.fontName || appearance.fontSize || styles.length || fontColour) {
+  const styles = says.fontStyle ?? []
+  const fontColour = says.fontColor === undefined ? undefined : parseHex(says.fontColor)
+  if (says.fontName || says.fontSize || styles.length || fontColour) {
     const fontAttrs = [
-      appearance.fontName ? ` name="${attr(appearance.fontName)}"` : '',
-      // The format's font size is in half points.
-      appearance.fontSize ? ` size="${Math.round(appearance.fontSize * 2) / 2}"` : '',
+      says.fontName ? ` name="${attr(says.fontName)}"` : '',
+      says.fontSize ? ` size="${says.fontSize}"` : '',
       styles.length ? ` style="${styles.join(' ')}"` : '',
     ].join('')
     if (fontColour) {
@@ -1365,10 +1505,7 @@ function writeStyle(appearance: Appearance | undefined, pad: string): string[] {
       )
     } else inner.push(`${pad}    <font${fontAttrs} />`)
   }
-  const lineWidth =
-    appearance.lineWidth && appearance.lineWidth !== 1
-      ? ` lineWidth="${Math.max(1, Math.round(appearance.lineWidth))}"`
-      : ''
+  const lineWidth = says.lineWidth ? ` lineWidth="${says.lineWidth}"` : ''
   if (!inner.length && !lineWidth) return []
   return [`${pad}  <style${lineWidth}>`, ...inner, `${pad}  </style>`]
 }

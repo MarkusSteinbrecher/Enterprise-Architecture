@@ -67,6 +67,12 @@ export function editedClaims(): Workspace {
       return resizeNode(v, id, change(node.bounds))
     })
 
+  // A relationship documented (#95): Archi has to read it back from our file.
+  store.updateRelationship('r-handle-register', (relationship) => ({
+    ...relationship,
+    documentation: 'Every claim is registered before it is assessed.',
+  }))
+
   // Move, and resize from the far corner.
   move(['o-customer'], 30, 10)
   resize('o-claim-bo', (b) => ({ ...b, width: 170, height: 70 }))

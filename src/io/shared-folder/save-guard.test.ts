@@ -23,7 +23,7 @@ async function writer(folder: SyncedClient): Promise<LockManager> {
     model: MODEL,
     displayName: 'Markus',
     appVersion: '0.2.0',
-    settings: { settleMs: 10, staleAfterMs: 1_000_000 },
+    settings: { settleMs: 10, staleAfterMs: 1_000_000, pollMs: 1000 },
     observations: memoryStore<LockObservation>(),
     newToken: () => 'markus-1',
   })

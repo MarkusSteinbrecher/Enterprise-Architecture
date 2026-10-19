@@ -9,6 +9,13 @@ import { decodeText, encodeText, type Folder } from './folder'
  * Appending through the File System Access API rewrites the whole file, so one
  * log written from several machines would itself turn into conflict copies; a
  * file per client has one writer. Reading the history means reading them all.
+ *
+ * One writer per file is a profile, not a tab: two tabs of one profile share a
+ * client id, so they share a log, and two appends that each read the file
+ * before either wrote it would keep one line (#165). Every change to a log is
+ * therefore made under one Web Lock, `AUDIT_LOCK`, which every tab and worker
+ * of this origin in this profile shares, and no other profile sees. Profiles
+ * have their own client ids, so their logs never meet.
  */
 export interface AuditEntry {
   readonly action: 'takeover' | 'unlock' | 'overwrite'
@@ -20,17 +27,61 @@ export interface AuditEntry {
   readonly previousOwner?: string
 }
 
+/** The Web Lock under which this profile reads and rewrites its logs. */
+export const AUDIT_LOCK = 'archipelago.audit-log'
+
 /** Add one line, canonical JSON, to this client's log. Throws when the log cannot be written. */
-export async function appendAudit(
-  folder: Folder,
-  clientId: string,
-  entry: AuditEntry,
-): Promise<void> {
-  const name = logFileName(clientId)
-  const existing = await folder.read(name)
-  const before = existing ? decodeText(existing) : ''
-  const separator = before === '' || before.endsWith('\n') ? '' : '\n'
-  await folder.write(name, encodeText(`${before}${separator}${JSON.stringify(entry, sortKeys)}\n`))
+export function appendAudit(folder: Folder, clientId: string, entry: AuditEntry): Promise<void> {
+  return exclusively(async () => {
+    const name = logFileName(clientId)
+    const existing = await folder.read(name)
+    const before = existing ? decodeText(existing) : ''
+    const separator = before === '' || before.endsWith('\n') ? '' : '\n'
+    await folder.write(name, encodeText(`${before}${separator}${line(entry)}\n`))
+  })
+}
+
+/**
+ * Take back the line `appendAudit` wrote for `entry`, for an action logged
+ * before it was attempted that then did not happen. Only the last line that is
+ * exactly this entry goes; a log that no longer holds it is left as it is.
+ * Throws when the log cannot be read or rewritten.
+ */
+export function retractAudit(folder: Folder, clientId: string, entry: AuditEntry): Promise<void> {
+  return exclusively(async () => {
+    const name = logFileName(clientId)
+    const existing = await folder.read(name)
+    const lines = existing ? decodeText(existing).split('\n') : []
+    const at = lines.lastIndexOf(line(entry))
+    // No log, or not this line: nothing says more than happened.
+    if (at === -1) return
+    lines.splice(at, 1)
+    await folder.write(name, encodeText(lines.join('\n')))
+  })
+}
+
+function line(entry: AuditEntry): string {
+  return JSON.stringify(entry, sortKeys)
+}
+
+/** The fallback's queue: this tab's changes to a log, one after another. */
+let queue: Promise<unknown> = Promise.resolve()
+
+/**
+ * Run `work` while no other change to a log runs in this profile.
+ *
+ * Every browser that hands out folders (Chromium) has Web Locks. Without them
+ * (a test runner, a browser without the API) the changes made in this tab
+ * still run one at a time, and two tabs are not kept apart: the line lost then
+ * is the one #165 found, no worse than before.
+ */
+function exclusively<T>(work: () => Promise<T>): Promise<T> {
+  // Typed as always there; jsdom, and a browser without the API, leave it out.
+  const locks: Navigator['locks'] | undefined = navigator.locks
+  if (locks) return locks.request(AUDIT_LOCK, work)
+  const run = queue.then(work)
+  queue = run.catch(() => undefined)
+  return run
 }
 
 /**
