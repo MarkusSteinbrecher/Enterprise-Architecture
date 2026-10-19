@@ -70,6 +70,74 @@ describe('canonical JSON', () => {
   })
 })
 
+describe('documentation on a relationship and on the model (#95)', () => {
+  const read = (fields: { model?: unknown; relationship?: unknown }) =>
+    fromCanonicalJson(
+      JSON.stringify({
+        schemaVersion: SCHEMA_VERSION,
+        id: 'ws',
+        name: 'W',
+        ...(fields.model !== undefined ? { documentation: fields.model } : {}),
+        elements: [
+          { id: 'a', type: 'Goal', name: 'A' },
+          { id: 'b', type: 'Goal', name: 'B' },
+        ],
+        relationships: [
+          {
+            id: 'r',
+            type: 'Association',
+            source: 'a',
+            target: 'b',
+            ...(fields.relationship !== undefined ? { documentation: fields.relationship } : {}),
+          },
+        ],
+      }),
+    )
+
+  it('writes both and reads both back, byte for byte', () => {
+    const json = toCanonicalJson(smallWorkspace())
+    expect(JSON.parse(json)).toMatchObject({
+      documentation: 'A small insurance landscape for tests.',
+    })
+    const restored = fromCanonicalJson(json)
+    expect(restored.problems).toEqual([])
+    expect(restored.workspace!.documentation).toBe('A small insurance landscape for tests.')
+    expect(restored.workspace!.relationships.find((r) => r.id === 'rel-app-proc')).toMatchObject({
+      documentation: 'Every claim is registered and assessed in the Claims Engine.',
+    })
+    expect(toCanonicalJson(restored.workspace!)).toBe(json)
+  })
+
+  it('keeps text exactly as written, line breaks and spaces included', () => {
+    const text = '  First line.\r\nSecond line.  '
+    const workspace = read({ model: text, relationship: text }).workspace!
+    expect(workspace.documentation).toBe(text)
+    expect(workspace.relationships[0]!.documentation).toBe(text)
+  })
+
+  it('writes no key for a model or relationship without documentation', () => {
+    const json = toCanonicalJson(read({}).workspace!)
+    expect(json).toContain('"relationships"')
+    expect(json).not.toContain('documentation')
+  })
+
+  it.each([
+    ['a number', 42],
+    ['a list', ['a']],
+    ['null', null],
+  ])('reports documentation that is %s, rather than dropping it quietly', (_, value) => {
+    const model = read({ model: value })
+    expect(model.workspace).not.toHaveProperty('documentation')
+    expect(model.problems).toMatchObject([{ code: 'json.invalid-documentation' }])
+
+    const relationship = read({ relationship: value })
+    expect(relationship.workspace!.relationships[0]).not.toHaveProperty('documentation')
+    expect(relationship.problems).toMatchObject([
+      { code: 'json.invalid-documentation', subject: 'r' },
+    ])
+  })
+})
+
 describe('canonical JSON import problems', () => {
   it('reports unparseable JSON without throwing', () => {
     const result = fromCanonicalJson('{ not json', 'broken.json')

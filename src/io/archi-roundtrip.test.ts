@@ -50,6 +50,18 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
     expect(archiSaveInput.trim(), UNSAVED).toBe(hash)
   })
 
+  it('keeps the documentation we wrote on a relationship and on the model (#95)', () => {
+    const documented = (workspace: Workspace) =>
+      workspace.relationships.find((r) => r.id === 'r-handle-register')?.documentation
+    expect(documented(ours)).toBe('Every claim is registered before it is assessed.')
+    expect(documented(archi)).toBe(documented(ours))
+    // Archi reads the model's documentation as its purpose, which is where the
+    // .archimate reader finds it.
+    expect(ours.documentation).toMatch(/\S/)
+    expect(archiSave).toContain(`<purpose>${ours.documentation}</purpose>`)
+    expect(archi.documentation).toBe(ours.documentation)
+  })
+
   it('reads all of Archi’s save, so nothing in it is left out of the comparison', () => {
     expect(archi.views.length).toBeGreaterThan(0)
     expect(readProblems).toEqual([])

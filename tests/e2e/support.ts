@@ -258,6 +258,24 @@ export async function importWorkspaceFile(page: Page, source: string): Promise<v
   await (await chooser).setFiles(source)
 }
 
+/**
+ * Import a file with nothing to report, whose dialog closes on its own. Archi's
+ * fixtures are such files since #95 kept the model's purpose. Presence first:
+ * the counts say the model landed, and only then does the closed dialog say
+ * there was nothing to report.
+ */
+export async function importWithNothingToReport(
+  page: Page,
+  source: string,
+  counts: { elements: number; relationships: number },
+): Promise<void> {
+  await importWorkspaceFile(page, source)
+  await expect(modelCounts(page)).toContainText(
+    `${counts.elements} elements · ${counts.relationships} relations`,
+  )
+  await expect(page.getByRole('dialog', { name: 'Import' })).toBeHidden()
+}
+
 // ── Browser storage ──────────────────────────────────────────────────────────
 
 /**

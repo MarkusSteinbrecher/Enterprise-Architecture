@@ -78,6 +78,35 @@ describe('sections', () => {
     expect(document.querySelectorAll('.relation-row__direction').length).toBeGreaterThan(0)
   })
 
+  it('shows a relationship’s documentation under its own relation row only (#95)', async () => {
+    const workspace = demo()
+    const relations = workspace.relationships.filter(
+      (r) => r.source === 'app-policy-ha' || r.target === 'app-policy-ha',
+    )
+    const [documented, plain] = relations
+    if (!documented || !plain) throw new Error('the demo application has two relations')
+    documented.documentation = '  Renewals are priced here.\nNew business is not.  '
+    const nameOf = (relationship: typeof documented) => {
+      const other =
+        relationship.source === 'app-policy-ha' ? relationship.target : relationship.source
+      return workspace.elements.find((element) => element.id === other)!.name
+    }
+
+    renderApp(workspace, { route: APP })
+    const entryOf = (name: string) =>
+      within(document.querySelector('.relations') as HTMLElement)
+        .getAllByRole('button', { name })[0]!
+        .closest('.relation-entry') as HTMLElement
+    const doc = within(entryOf(nameOf(documented))).getByText(/Renewals are priced here/)
+    expect(doc.textContent).toBe('Renewals are priced here.\nNew business is not.')
+    expect(entryOf(nameOf(plain)).querySelector('.relation-entry__doc')).toBeNull()
+    expect(document.querySelectorAll('.relation-entry__doc')).toHaveLength(1)
+
+    // Still there while the fact sheet is being edited.
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Edit' }))
+    expect(screen.getByText(/Renewals are priced here/)).toBeInTheDocument()
+  })
+
   it('opens a related element from a relation row', async () => {
     renderApp(demo(), { route: APP })
     const user = userEvent.setup()
