@@ -22,10 +22,22 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>): void {
     // Deliberately not filtered on `offsetParent`: jsdom reports null for every
     // element, so that check empties the trap in exactly the environment the
     // tests run in — a guard that only works where it is never exercised. The
-    // selector already excludes the disabled and the untabbable.
+    // selector already excludes the disabled and the untabbable, and that
+    // includes a button at `tabindex="-1"`: the browser's Tab skips it, so a
+    // trap that counted it as an end let ⇧Tab from a roving item walk out of
+    // the dialog (#181 review, the magic connector's menu).
     const focusable = () => [
       ...container.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        [
+          'a[href]',
+          'button:not([disabled])',
+          'input:not([disabled])',
+          'select:not([disabled])',
+          'textarea:not([disabled])',
+          '[tabindex]',
+        ]
+          .map((selector) => `${selector}:not([tabindex="-1"])`)
+          .join(', '),
       ),
     ]
 
