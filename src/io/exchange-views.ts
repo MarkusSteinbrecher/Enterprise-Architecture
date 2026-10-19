@@ -258,7 +258,15 @@ function carriedStyleJson(
   // property is canonical (ADR 0004). `literal` holds the style's own fields.
   return JSON.stringify(
     entries,
-    ['id', 'labelPosition', 'literal', 'strikethrough', 'textAlignment', 'textPosition', ...STYLE_FIELDS].sort(),
+    [
+      'id',
+      'labelPosition',
+      'literal',
+      'strikethrough',
+      'textAlignment',
+      'textPosition',
+      ...STYLE_FIELDS,
+    ].sort(),
   )
 }
 

@@ -308,6 +308,8 @@ describe('Archi’s export of the model it saved, read by the exchange reader (#
       .map((d) => `${d.drawing} ${d.field}: ${reason(d.why)}`)
     expect(named.sort()).toEqual(
       [
+        // Our export carries it; Archi's own save never drew it (#133).
+        'c-crm-cust appearance.labelPosition: carried only',
         'o-g-apps appearance.textAlignment: carried only',
         'o-g-business appearance.textAlignment: carried only',
         'o-g-platform appearance.textAlignment: carried only',
