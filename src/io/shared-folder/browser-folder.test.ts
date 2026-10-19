@@ -44,6 +44,47 @@ describe('a folder over a directory handle (spec §4)', () => {
     expect(decodeText(dir.files.get('a.json')!)).toBe('kept')
   })
 
+  it('abandons a write that fails before close(), and passes the failure on', async () => {
+    const dir = new FakeDirectoryHandle('F', { 'a.json': 'kept' })
+    const aborted: string[] = []
+    const real = dir.getFileHandle.bind(dir)
+    vi.spyOn(dir, 'getFileHandle').mockImplementation(async (name, options) => {
+      const handle = await real(name, options)
+      return {
+        ...handle,
+        createWritable: async () => ({
+          write: async () => {
+            throw new DOMException('quota', 'QuotaExceededError')
+          },
+          close: async () => {
+            throw new Error('a failed write must not be closed into place')
+          },
+          abort: async () => {
+            aborted.push(name)
+            // An abort that fails too must not hide why the write failed.
+            throw new DOMException('gone', 'InvalidStateError')
+          },
+        }),
+      }
+    })
+    await expect(browserFolder(dir.handle).write('a.json', encodeText('lost'))).rejects.toThrow(
+      'quota',
+    )
+    expect(aborted).toEqual(['a.json'])
+    expect(decodeText(dir.files.get('a.json')!)).toBe('kept')
+  })
+
+  it('passes on a delete that fails for any reason but a missing file', async () => {
+    const dir = new FakeDirectoryHandle('F', { 'a.json': 'kept' })
+    vi.spyOn(dir, 'removeEntry').mockRejectedValue(
+      new DOMException('in use', 'NoModificationAllowedError'),
+    )
+    await expect(browserFolder(dir.handle).remove('a.json')).rejects.toThrow('in use')
+    vi.spyOn(dir, 'removeEntry').mockRejectedValue(new TypeError('not a DOMException'))
+    await expect(browserFolder(dir.handle).remove('a.json')).rejects.toThrow('not a DOMException')
+    expect(dir.files.has('a.json')).toBe(true)
+  })
+
   it('passes on any other failure, which is not a missing file', async () => {
     const dir = new FakeDirectoryHandle('F')
     vi.spyOn(dir, 'getFileHandle').mockRejectedValue(new DOMException('denied', 'NotAllowedError'))
@@ -60,6 +101,15 @@ describe('permission to write into the folder', () => {
     expect(dir.requests).toBe(0)
     expect(await folderPermission(dir.handle, { request: true })).toBe('granted')
     expect(dir.requests).toBe(1)
+  })
+
+  it('counts a handle that cannot be asked as granted, and one that cannot ask as it stands', async () => {
+    // The permission methods are outside TypeScript's DOM library and not
+    // promised on every handle; without them, the adapter does not ask.
+    const silent = {} as unknown as FileSystemDirectoryHandle
+    expect(await folderPermission(silent, { request: true })).toBe('granted')
+    const mute = { queryPermission: async () => 'prompt' } as unknown as FileSystemDirectoryHandle
+    expect(await folderPermission(mute, { request: true })).toBe('prompt')
   })
 
   it('reports a refusal', async () => {

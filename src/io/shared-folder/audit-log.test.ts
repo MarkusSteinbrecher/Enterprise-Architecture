@@ -160,3 +160,20 @@ describe('taking a line back (#165)', () => {
     expect((await readAudit(folder)).entries).toEqual([entry('Markus')])
   })
 })
+
+describe('reading the history', () => {
+  it('orders every log’s lines by time, and keeps lines of the same time in the order read', async () => {
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    const at = (hour: number) => `2026-10-07T0${hour}:00:00.000Z`
+    await appendAudit(folder, 'a', entry('a at 9', at(9)))
+    await appendAudit(folder, 'a', entry('a at 8', at(8)))
+    await appendAudit(folder, 'b', entry('b at 8', at(8)))
+    await appendAudit(folder, 'b', entry('b at 7', at(7)))
+    expect((await readAudit(folder)).entries.map((e) => e.displayName)).toEqual([
+      'b at 7',
+      'a at 8',
+      'b at 8',
+      'a at 9',
+    ])
+  })
+})

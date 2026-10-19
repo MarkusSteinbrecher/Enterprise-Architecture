@@ -84,10 +84,9 @@ export async function freeCopyFileName(
   displayName: string,
   at: Date,
 ): Promise<string> {
-  for (let attempt = 1; ; attempt += 1) {
-    const name = copyFileName(model, displayName, at, attempt)
-    if (!(await folder.has(name))) return name
-  }
+  let attempt = 1
+  while (await folder.has(copyFileName(model, displayName, at, attempt))) attempt += 1
+  return copyFileName(model, displayName, at, attempt)
 }
 
 /** Is `name` a copy this app wrote? Those are never reported as conflict copies. */

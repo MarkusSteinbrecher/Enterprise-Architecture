@@ -100,6 +100,24 @@ describe('taking a free lock (spec §5.1)', () => {
     })
   })
 
+  it('makes its tokens random UUIDs and keeps the system clock when given neither', async () => {
+    const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
+    const lock = new LockManager({
+      folder,
+      folderKey: 'folder-1',
+      model: 'Landscape.json',
+      displayName: 'Markus',
+      appVersion: '0.2.0',
+      settings: { settleMs: SETTLE, staleAfterMs: STALE, pollMs: POLL },
+      observations: memoryStore<LockObservation>(),
+    })
+    expect(await take(lock)).toEqual({ kind: 'writer' })
+    expect((await lockIn(folder))?.token).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    )
+    expect((await lockIn(folder))?.since).toBe('2026-10-07T08:00:00.000Z')
+  })
+
   it('writes a fresh token each time it is taken', async () => {
     const folder = new SyncWorld({ delayMs: 0 }).client('Markus')
     const lock = manager(folder)

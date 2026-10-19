@@ -89,9 +89,31 @@ describe('opening a model (criteria 2, 3)', () => {
     const world = await worldWith(0, 'Markus')
     const s = session(world, 'Markus')
     expect(await open(s)).toEqual({ outcome: { kind: 'writer' } })
+    expect(s.model).toBe(MODEL)
     expect(s.role).toBe('writer')
     expect(await s.close()).toBe('released')
     expect(await world.client('Markus').has(`${MODEL}.lock`)).toBe(false)
+  })
+
+  it('takes the lock with a random token when given no way to make one', async () => {
+    const world = await worldWith(0, 'Markus')
+    const s = new SharedModelSession({
+      folder: world.client('Markus'),
+      folderKey: 'library',
+      model: MODEL,
+      clientId: 'client-Markus',
+      appVersion: '0.2.0',
+      settings: { ...DEFAULT_SETTINGS, displayName: 'Markus' },
+      observations: memoryStore<LockObservation>(),
+      dismissed: memoryStore<readonly string[]>(),
+    })
+    expect(await open(s)).toEqual({ outcome: { kind: 'writer' } })
+    const lock = JSON.parse(text(await world.client('Markus').read(`${MODEL}.lock`))!) as {
+      token: string
+    }
+    expect(lock.token).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    )
   })
 
   it('opens a model someone else holds read-only, naming them', async () => {
