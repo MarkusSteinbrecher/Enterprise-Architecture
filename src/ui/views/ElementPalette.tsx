@@ -17,6 +17,12 @@ import { paletteFor, toolKey, toolLabel, toolMatches, type Tool } from './create
  *
  * The link at the foot opens the ArchiMate guide (#149): at the armed type's
  * entry when an element tool is armed, at the element reference otherwise.
+ *
+ * It collapses to a column of glyphs (#146), so a 1280 px window leaves the
+ * canvas room. Collapsed, each tool keeps its name as its tooltip and its
+ * accessible name, and still arms on a click and places on Enter or Space.
+ * The type filter does not fit, so its button opens the palette with the
+ * filter focused, as "New element in view…" does.
  */
 export interface ElementPaletteProps {
   viewpoint: string | undefined
@@ -25,6 +31,11 @@ export interface ElementPaletteProps {
   onArm: (tool: Tool | null) => void
   /** Place `tool` in the middle of the visible canvas. */
   onPlace: (tool: Tool) => void
+  /** Drawn as glyphs only (#146). */
+  collapsed: boolean
+  onCollapse: (collapsed: boolean) => void
+  /** Open the palette, if it is collapsed, and focus the type filter. */
+  onFind: () => void
 }
 
 /**
@@ -34,7 +45,7 @@ export interface ElementPaletteProps {
  */
 export const ElementPalette = memo(
   forwardRef<HTMLInputElement, ElementPaletteProps>(function ElementPalette(
-    { viewpoint, armed, onArm, onPlace },
+    { viewpoint, armed, onArm, onPlace, collapsed, onCollapse, onFind },
     filterRef,
   ) {
     const [query, setQuery] = useState('')
@@ -51,30 +62,59 @@ export const ElementPalette = memo(
     const first = shown[0]?.tools[0]
     const armedKey = armed ? toolKey(armed) : null
     const armedType = armed?.kind === 'element' ? armed.type : undefined
+    const guideText = armed && armedType ? `About ${toolLabel(armed)}` : 'What these types mean'
 
     return (
-      <section className="view-palette" aria-label="Palette">
-        <input
-          ref={filterRef}
-          className="view-palette__filter"
-          type="search"
-          placeholder="Find a type…"
-          aria-label="Find an element type to place"
-          aria-description="Enter places the first match in the middle of the view."
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && first) {
-              event.preventDefault()
-              setQuery('')
-              onPlace(first)
-            } else if (event.key === 'Escape' && query) {
-              event.stopPropagation()
-              setQuery('')
-            }
-          }}
-        />
-        {viewpoint && (
+      <section
+        className={`view-palette${collapsed ? ' view-palette--collapsed' : ''}`}
+        aria-label="Palette"
+      >
+        <div className="view-palette__top">
+          {/* First in both forms, so the button that was pressed keeps the focus. */}
+          <button
+            type="button"
+            className="view-palette__toggle"
+            aria-label={collapsed ? 'Expand palette' : 'Collapse palette'}
+            title={collapsed ? 'Expand palette' : 'Collapse palette'}
+            aria-expanded={!collapsed}
+            onClick={() => onCollapse(!collapsed)}
+          >
+            <span aria-hidden="true">{collapsed ? '»' : '«'}</span>
+          </button>
+          {collapsed ? (
+            <button
+              type="button"
+              className="view-palette__toggle"
+              aria-label="Find an element type to place"
+              title="Find a type"
+              onClick={onFind}
+            >
+              <FindGlyph />
+            </button>
+          ) : (
+            <input
+              ref={filterRef}
+              className="view-palette__filter"
+              type="search"
+              placeholder="Find a type…"
+              aria-label="Find an element type to place"
+              aria-description="Enter places the first match in the middle of the view."
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && first) {
+                  event.preventDefault()
+                  setQuery('')
+                  onPlace(first)
+                } else if (event.key === 'Escape' && query) {
+                  event.stopPropagation()
+                  setQuery('')
+                }
+              }}
+            />
+          )}
+        </div>
+        {viewpoint && !collapsed && (
           <p className="view-palette__viewpoint">
             Viewpoint: <span className="view-palette__viewpoint-name">{viewpoint}</span>
           </p>
@@ -95,6 +135,8 @@ export const ElementPalette = memo(
                       className={`view-palette__tool${armedKey === key ? ' view-palette__tool--armed' : ''}`}
                       data-tool={key}
                       aria-pressed={armedKey === key}
+                      // Collapsed, the glyph is all there is to see: the name is its accessible name.
+                      aria-label={collapsed ? label : undefined}
                       title={label}
                       onClick={() => onArm(armedKey === key ? null : tool)}
                       onKeyDown={(event) => {
@@ -105,7 +147,7 @@ export const ElementPalette = memo(
                       }}
                     >
                       <ToolGlyph tool={tool} />
-                      <span className="view-palette__label">{label}</span>
+                      {!collapsed && <span className="view-palette__label">{label}</span>}
                     </button>
                   )
                 })}
@@ -113,13 +155,28 @@ export const ElementPalette = memo(
             </section>
           ))}
         </div>
-        <Link className="view-palette__guide" to={guideHref(armedType)}>
-          {armed && armedType ? `About ${toolLabel(armed)}` : 'What these types mean'}
+        <Link
+          className="view-palette__guide"
+          to={guideHref(armedType)}
+          aria-label={collapsed ? guideText : undefined}
+          title={collapsed ? guideText : undefined}
+        >
+          {collapsed ? <span aria-hidden="true">?</span> : guideText}
         </Link>
       </section>
     )
   }),
 )
+
+/** A magnifier, drawn: the collapsed palette's way to the type filter. */
+function FindGlyph() {
+  return (
+    <svg width={14} height={14} viewBox="0 0 14 14" aria-hidden="true">
+      <circle cx={6} cy={6} r={4.25} fill="none" stroke="currentColor" strokeWidth={1.3} />
+      <path d="M9.2,9.2L12.5,12.5" stroke="currentColor" strokeWidth={1.3} />
+    </svg>
+  )
+}
 
 /** The tool in its notation, at palette size. */
 function ToolGlyph({ tool }: { tool: Tool }) {

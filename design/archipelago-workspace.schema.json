@@ -16,7 +16,7 @@
     "schemaVersion": {
       "type": "integer",
       "minimum": 1,
-      "description": "Format version. This build writes 3."
+      "description": "Format version. This build writes 4."
     },
     "id": {
       "type": "string",
@@ -24,6 +24,10 @@
     },
     "name": {
       "type": "string"
+    },
+    "documentation": {
+      "type": "string",
+      "description": "What the model is for. The exchange format's model documentation, where Archi writes a model's purpose."
     },
     "elements": {
       "type": "array",
@@ -226,6 +230,9 @@
           "description": "id of the target element"
         },
         "name": {
+          "type": "string"
+        },
+        "documentation": {
           "type": "string"
         },
         "isDirected": {

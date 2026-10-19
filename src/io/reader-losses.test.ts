@@ -317,17 +317,21 @@ describe('the .archimate reader reports what it cannot carry (#100)', () => {
     })
   })
 
-  it('12: names the documented relationships it imported, and counts no skipped one', () => {
+  it('12: keeps a relationship’s documentation as written, and not a skipped twin’s (#95)', () => {
     const result = importArchimate(
-      archi(`<element xsi:type="archimate:ServingRelationship" id="kept" source="a" target="b"><documentation>d</documentation></element>
+      archi(`<element xsi:type="archimate:ServingRelationship" id="kept" source="a" target="b"><documentation>  d
+</documentation></element>
         <element xsi:type="archimate:ServingRelationship" id="kept" source="a" target="b"><documentation>twin</documentation></element>
         <element xsi:type="archimate:ServingRelationship" id="dangling" source="a" target="nowhere"><documentation>d</documentation></element>`),
     )
-    expect(found(result, 'import.relationship-documentation-skipped')).toMatchObject([
-      {
-        subject: 'kept',
-        message: expect.stringMatching(/^1 relationship has documentation \("kept"\)/),
-      },
+    const relationships = workspaceOf(result).relationships
+    expect(relationships.filter((r) => r.id !== 'r')).toEqual([
+      expect.objectContaining({ id: 'kept', documentation: '  d\n' }),
+    ])
+    // Each skipped one is reported as skipped, and what it carried with it.
+    expect(result.problems.map((p) => p.code).sort()).toEqual([
+      'archimate.dangling-relationship',
+      'archimate.duplicate-id',
     ])
   })
 })
@@ -371,20 +375,23 @@ describe('the exchange reader reports what it cannot carry (#100)', () => {
     })
   })
 
-  it('12: names the documented relationships it imported, and counts no skipped one', () => {
+  it('12: keeps a relationship’s documentation as written, and not a skipped twin’s (#95)', () => {
     const result = importExchangeXml(
       exchange({
         relationships: `
-          <relationship identifier="kept" xsi:type="Serving" source="a" target="b"><documentation xml:lang="en">d</documentation></relationship>
+          <relationship identifier="kept" xsi:type="Serving" source="a" target="b"><documentation xml:lang="en"> d </documentation></relationship>
+          <relationship identifier="kept" xsi:type="Serving" source="a" target="b"><documentation xml:lang="en">twin</documentation></relationship>
           <relationship identifier="dangling" xsi:type="Serving" source="a" target="nowhere"><documentation xml:lang="en">d</documentation></relationship>`,
       }),
     )
-    expect(found(result, 'import.relationship-documentation-skipped')).toMatchObject([
-      {
-        subject: 'kept',
-        message: expect.stringMatching(/^1 relationship has documentation \("kept"\)/),
-      },
+    const relationships = workspaceOf(result).relationships
+    expect(relationships.filter((r) => r.id === 'kept')).toEqual([
+      expect.objectContaining({ documentation: ' d ' }),
     ])
+    expect(relationships.map((r) => r.id)).not.toContain('dangling')
+    expect(found(result, 'exchange.duplicate-relationship-id')).toHaveLength(1)
+    expect(found(result, 'exchange.dangling-relationship')).toHaveLength(1)
+    expect(found(result, 'import.content-unread')).toEqual([])
   })
 })
 

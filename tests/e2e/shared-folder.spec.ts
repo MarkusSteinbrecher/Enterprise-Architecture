@@ -129,7 +129,7 @@ test('a model in a shared folder is locked, saved, lost to a colleague and saved
   await files.write(
     'Landscape.json',
     JSON.stringify({
-      schemaVersion: 3,
+      schemaVersion: 4,
       id: 'ws-shared',
       name: 'Landscape',
       elements: [
@@ -151,6 +151,10 @@ test('a model in a shared folder is locked, saved, lost to a colleague and saved
 
   const status = page.getByRole('region', { name: 'Shared model' }).getByRole('status')
   await expect(status).toContainText('Taking Landscape.json for editing')
+  // The banner says "Taking" before the lock is written, and the settle delay
+  // starts only once the write lands: running the clock any sooner passes the
+  // delay before its timer exists, and the lock is never taken (seen on CI).
+  await expect.poll(async () => (await files.read('Landscape.json.lock')) ?? '').toContain('Markus')
   await page.clock.runFor(11_000)
   await expect(status).toContainText('Editing Landscape.json in Team')
   expect(JSON.parse((await files.read('Landscape.json.lock'))!)).toMatchObject({

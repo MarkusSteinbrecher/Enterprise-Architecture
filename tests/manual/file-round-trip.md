@@ -31,8 +31,11 @@
    diff first.json second.json && echo "identical"
    ```
 8. Click **Export** (next to Import) and save the XML — expected: an ArchiMate Model Exchange
-   Format file. Open it in [Archi](https://www.archimatetool.com/) if you have it: the 29
-   elements and their relationships come through; diagrams and folders do not, by design.
+   Format file. Open it in [Archi](https://www.archimatetool.com/) if you have it (**File →
+   Import → Open Exchange XML Model…**): the 29 elements and 47 relationships come through.
+   The demo has no views or folders, so this step cannot check those. Views and folders do
+   round-trip; [`archimate-import.md`](archimate-import.md) step 7 checks them with a model
+   that has both.
 9. Now the failure path. In the editor, break `first.json` — delete a `}` — save it as
    `broken.json`, and import it — expected: the dialog **stays open** and says nothing could
    be read from that file, naming the problem. The model you had open is untouched.

@@ -18,8 +18,11 @@ import type { Layer } from './layers'
  * - 3: `Relationship.isDirected` and `Relationship.modifier` (#84). No shape
  *   change for older data; the bump is so a schema-2 build warns that it drops
  *   them rather than losing them quietly.
+ * - 4: `Relationship.documentation` and `Workspace.documentation` (#95). No
+ *   shape change for older data either; a schema-3 build warns that it drops
+ *   them.
  */
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
 
 /** ArchiMate properties are string-valued in the exchange format; numbers and
  *  booleans are allowed here and serialise as their string form. */
@@ -65,6 +68,11 @@ export interface Relationship {
   source: string
   target: string
   name?: string
+  /**
+   * What the relationship means, in the author's words: the exchange format's
+   * `<documentation>` on a relationship, Archi's on any relationship (#95).
+   */
+  documentation?: string
   properties: Record<string, PropertyValue>
   profile?: RelationshipProfile
   /**
@@ -299,6 +307,12 @@ export interface TagGroup {
 export interface Workspace {
   id: string
   name: string
+  /**
+   * What the model is for: the exchange format's model `<documentation>`, which
+   * is where Archi's export writes a model's purpose, and where its import reads
+   * it back from (#95).
+   */
+  documentation?: string
   schemaVersion: number
   elements: Element[]
   relationships: Relationship[]
