@@ -195,9 +195,7 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
 
   it('keeps the bend-points the canvas added, moved and removed, as drawn (#133)', () => {
     const points = (w: Workspace, id: string) =>
-      w.views
-        .find((v) => v.id === 'v-landscape')!
-        .connections.find((c) => c.id === id)?.bendpoints
+      w.views.find((v) => v.id === 'v-landscape')!.connections.find((c) => c.id === id)?.bendpoints
     // Ours first, so the comparison is not of two absences: two added, rounded
     // to whole pixels; one of two removed; one moved; and one route straightened.
     expect(points(ours, 'c-cust-as')).toEqual([

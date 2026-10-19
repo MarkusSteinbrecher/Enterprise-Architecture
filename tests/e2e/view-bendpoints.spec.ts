@@ -120,18 +120,16 @@ test('a line is bent, moved and straightened by hand, and a Manhattan view draws
 
   // Manhattan: some line is diagonal first, so the check below can fail.
   const routes = () =>
-    canvas
-      .locator('[data-connection]')
-      .evaluateAll((lines) =>
-        lines.map((line) =>
-          line
-            .querySelector('path')!
-            .getAttribute('d')!
-            .slice(1)
-            .split('L')
-            .map((pair) => pair.split(',').map(Number)),
-        ),
-      )
+    canvas.locator('[data-connection]').evaluateAll((lines) =>
+      lines.map((line) =>
+        line
+          .querySelector('path')!
+          .getAttribute('d')!
+          .slice(1)
+          .split('L')
+          .map((pair) => pair.split(',').map(Number)),
+      ),
+    )
   const diagonal = (route: number[][]) =>
     route.some((p, i) => i > 0 && p[0] !== route[i - 1]![0] && p[1] !== route[i - 1]![1])
   expect((await routes()).some(diagonal)).toBe(true)
