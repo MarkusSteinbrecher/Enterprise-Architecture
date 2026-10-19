@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { emptyWorkspace } from '@/model'
 import { loadDemoWorkspace } from '@/io'
+import { stubDownloads } from '@/test/downloads'
 import { renderApp } from '@/test/render'
 
 function demo() {
@@ -58,17 +59,13 @@ describe('report chrome', () => {
   })
 
   it('exports the current graph as an SVG file', async () => {
-    const createObjectURL = vi.fn(() => 'blob:test')
-    vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
-    HTMLAnchorElement.prototype.click = vi.fn()
+    const { createObjectURL } = stubDownloads()
 
     renderApp(demo(), { route: '/graph' })
     await nodes()
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: 'Export SVG' }))
     expect(createObjectURL).toHaveBeenCalled()
-
-    vi.unstubAllGlobals()
   })
 })
 

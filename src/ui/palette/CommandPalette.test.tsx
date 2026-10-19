@@ -1,9 +1,10 @@
 import { fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { emptyWorkspace } from '@/model'
 import { loadDemoWorkspace } from '@/io'
 import { pressOutside } from '@/test/dialogs'
+import { stubDownloads } from '@/test/downloads'
 import { renderApp } from '@/test/render'
 import { applyTheme } from '@/app/theme'
 import { isTypingTarget } from './typing-target'
@@ -183,9 +184,7 @@ describe('running a result', () => {
   })
 
   it('runs Save file through the one save owner, which does not clear the counter', async () => {
-    const createObjectURL = vi.fn(() => 'blob:test')
-    vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL: vi.fn() })
-    HTMLAnchorElement.prototype.click = vi.fn()
+    const { createObjectURL } = stubDownloads()
 
     renderApp(emptyWorkspace('ws-empty', 'Empty'))
     const user = userEvent.setup()
@@ -201,8 +200,6 @@ describe('running a result', () => {
     // reader guard lives too (covered in use-save-workspace.test.tsx).
     expect(createObjectURL).toHaveBeenCalled()
     expect(screen.getByText('LOCAL · 1 UNSAVED')).toBeInTheDocument()
-
-    vi.unstubAllGlobals()
   })
 })
 
