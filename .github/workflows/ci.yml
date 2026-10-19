@@ -32,8 +32,11 @@ jobs:
       - name: Format check
         run: npm run format:check
 
-      - name: Test
-        run: npm test
+      # Every unit test, with the coverage gate: 100% of branches, functions,
+      # lines and statements in src/io/shared-folder, the lock and save
+      # protocol (#164). Thresholds are in vite.config.ts.
+      - name: Test, with the coverage gate
+        run: npm run test:coverage
 
       - name: Build
         run: npm run build
