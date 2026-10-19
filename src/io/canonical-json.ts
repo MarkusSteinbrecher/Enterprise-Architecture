@@ -61,6 +61,7 @@ export function toCanonicalJson(workspace: Workspace): string {
     schemaVersion: workspace.schemaVersion || SCHEMA_VERSION,
     id: workspace.id,
     name: workspace.name,
+    documentation: workspace.documentation,
     elements: [...workspace.elements].sort(byId).map(canonicalElement),
     relationships: [...workspace.relationships].sort(byId).map(canonicalRelationship),
     views: [...workspace.views].sort(byId).map(canonicalView),
@@ -255,6 +256,8 @@ export function fromCanonicalJson(text: string, file?: string): ImportResult {
     reports,
     tagGroups,
   }
+  const documentation = readDocumentation(raw.documentation, 'The model', problems, where)
+  if (documentation !== undefined) workspace.documentation = documentation
   const propertyTypes = readPropertyTypes(raw.propertyTypes, problems, where)
   if (propertyTypes) workspace.propertyTypes = propertyTypes
   const language = readLanguage(raw.language, problems, where)
@@ -288,6 +291,7 @@ function canonicalRelationship(relationship: Relationship): Record<string, unkno
     source: relationship.source,
     target: relationship.target,
     name: relationship.name,
+    documentation: relationship.documentation,
     isDirected: relationship.isDirected,
     modifier: relationship.modifier,
     properties: emptyToUndefined(relationship.properties),
@@ -472,6 +476,13 @@ function readRelationship(
     properties: readProperties(candidate.properties),
   }
   if (typeof candidate.name === 'string') relationship.name = candidate.name
+  const documentation = readDocumentation(
+    candidate.documentation,
+    `Relationship "${id}"`,
+    problems,
+    { ...where, subject: id },
+  )
+  if (documentation !== undefined) relationship.documentation = documentation
   const folder = readFolderRef(candidate.folder, `Relationship "${id}"`, folderIds, problems, {
     ...where,
     subject: id,
@@ -691,6 +702,28 @@ function readPropertyTypes(
     )
   }
   return Object.keys(out).length ? out : undefined
+}
+
+/**
+ * A relationship's or the model's documentation (#95). Anything but text is
+ * reported rather than dropped quietly: the next save would lose it for good.
+ */
+function readDocumentation(
+  candidate: unknown,
+  owner: string,
+  problems: ImportProblem[],
+  where: { file?: string; subject?: string },
+): string | undefined {
+  if (candidate === undefined || typeof candidate === 'string') return candidate
+  problems.push(
+    problem(
+      'warning',
+      'json.invalid-documentation',
+      `${owner} has documentation that is ${candidate === null ? 'null' : Array.isArray(candidate) ? 'a list' : `a ${typeof candidate}`}, not text, so it was dropped.`,
+      where,
+    ),
+  )
+  return undefined
 }
 
 /** The workspace's language, held only as a tag the exchange format allows (#111). */

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import Ajv2020 from 'ajv/dist/2020'
 import addFormats from 'ajv-formats'
-import { validate, type Relationship, type Workspace } from '@/model'
+import { SCHEMA_VERSION, validate, type Relationship, type Workspace } from '@/model'
 import { fromCanonicalJson, toCanonicalJson } from './canonical-json'
 import { exportExchange, importExchangeXml } from './exchange-format'
 import { buildWorkspaceJsonSchema } from './json-schema'
@@ -17,8 +17,7 @@ import archiXml from './fixtures/relationship-attributes.xml?raw'
 function fromArchi(): Workspace {
   const result = importExchangeXml(archiXml, 'relationship-attributes.xml')
   if (!result.workspace) throw new Error('fixture did not import')
-  // The model's purpose, which Archi exports as its documentation, is all it reports.
-  expect(result.problems.map((p) => p.code)).toEqual(['exchange.model-documentation-skipped'])
+  expect(result.problems).toEqual([])
   return result.workspace
 }
 
@@ -183,7 +182,7 @@ describe('canonical JSON guards (#84)', () => {
   function readOne(relationship: Record<string, unknown>) {
     return fromCanonicalJson(
       JSON.stringify({
-        schemaVersion: 3,
+        schemaVersion: SCHEMA_VERSION,
         id: 'ws',
         name: 'W',
         elements: [
@@ -229,7 +228,7 @@ describe('canonical JSON guards (#84)', () => {
     addFormats(ajv)
     const check = ajv.compile(buildWorkspaceJsonSchema())
     const doc = (relationship: Record<string, unknown>) => ({
-      schemaVersion: 3,
+      schemaVersion: SCHEMA_VERSION,
       id: 'ws',
       name: 'W',
       elements: [

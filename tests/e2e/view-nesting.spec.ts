@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { test, expect, importWorkspaceFile, startEmpty } from './support'
+import { test, expect, importWithNothingToReport, startEmpty } from './support'
 
 /**
  * Journey 11 — nesting asks what it means (#131), in a real browser: a shape
@@ -18,10 +18,7 @@ test('a shape dropped into an element’s shape asks which relationship it means
   page,
 }) => {
   await startEmpty(page)
-  await importWorkspaceFile(page, FIXTURE)
-  const report = page.getByRole('dialog', { name: 'Import' })
-  await report.getByRole('button', { name: 'Done' }).click()
-  await expect(report).toBeHidden()
+  await importWithNothingToReport(page, FIXTURE, { elements: 39, relationships: 48 })
 
   const tree = page.getByRole('tree', { name: 'Model tree' })
   await tree.getByRole('treeitem', { name: 'Views', exact: true }).click()

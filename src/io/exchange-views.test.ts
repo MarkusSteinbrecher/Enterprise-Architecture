@@ -44,10 +44,7 @@ describe('an exchange file exported by Archi 5.10 (#76)', () => {
   const workspace = read(claimsXml)
 
   it('imports with nothing to report', () => {
-    // Only the model's purpose, which Archipelago has no place for yet.
-    expect(importExchangeXml(claimsXml).problems.map((p) => p.code)).toEqual([
-      'exchange.model-documentation-skipped',
-    ])
+    expect(importExchangeXml(claimsXml).problems).toEqual([])
     expect(validate(workspace).findings).toEqual([])
   })
 

@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { test, expect, importWorkspaceFile, startEmpty } from './support'
+import { test, expect, importWithNothingToReport, startEmpty } from './support'
 
 /**
  * Journey 8 — an Archi model's folders in the model tree, in a real browser (#80).
@@ -12,18 +12,14 @@ import { test, expect, importWorkspaceFile, startEmpty } from './support'
  */
 
 const FIXTURE = fileURLToPath(new URL('../../src/io/fixtures/claims-platform.xml', import.meta.url))
+const CLAIMS = { elements: 39, relationships: 48 } as const
 
 test('the model tree shows folders, moves by drag and drop, and follows the selection', async ({
   page,
 }) => {
   await startEmpty(page)
-  await importWorkspaceFile(page, FIXTURE)
-  // Archi exports the model's purpose as its documentation, which has nowhere
-  // to go yet, so the report stays open to say so (#13).
-  const dialog = page.getByRole('dialog', { name: 'Import' })
-  await expect(dialog).toContainText('documentation was not imported')
-  await dialog.getByRole('button', { name: 'Done' }).click()
-  await expect(dialog).toBeHidden()
+  // Archi exports the model's purpose as its documentation, kept since #95.
+  await importWithNothingToReport(page, FIXTURE, CLAIMS)
 
   const tree = page.getByRole('tree', { name: 'Model tree' })
   const item = (name: string | RegExp) => tree.getByRole('treeitem', { name, exact: true })

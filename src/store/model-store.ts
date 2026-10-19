@@ -90,6 +90,7 @@ export class ModelStore {
   // because TypeScript cannot see a definite assignment through a method call.
   #id = ''
   #name = ''
+  #documentation: string | undefined
   #schemaVersion = SCHEMA_VERSION
   #elements = new Map<string, Element>()
   #relationships = new Map<string, Relationship>()
@@ -338,6 +339,7 @@ export class ModelStore {
     return {
       id: this.#id,
       name: this.#name,
+      ...(this.#documentation !== undefined ? { documentation: this.#documentation } : {}),
       schemaVersion: this.#schemaVersion,
       elements: [...this.#elements.values()],
       relationships: [...this.#relationships.values()],
@@ -949,6 +951,7 @@ export class ModelStore {
   #adopt(workspace: Workspace): void {
     this.#id = workspace.id
     this.#name = workspace.name
+    this.#documentation = workspace.documentation
     this.#schemaVersion = workspace.schemaVersion || SCHEMA_VERSION
     this.#reports = [...workspace.reports]
     this.#folders = new Map(workspace.folders.map((folder) => [folder.id, folder]))

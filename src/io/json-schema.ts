@@ -50,6 +50,11 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
       },
       id: { type: 'string', minLength: 1 },
       name: { type: 'string' },
+      documentation: {
+        type: 'string',
+        description:
+          "What the model is for. The exchange format's model documentation, where Archi writes a model's purpose.",
+      },
       elements: { type: 'array', items: { $ref: '#/$defs/element' } },
       relationships: { type: 'array', items: { $ref: '#/$defs/relationship' } },
       views: {
@@ -113,6 +118,7 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           source: { type: 'string', description: 'id of the source element' },
           target: { type: 'string', description: 'id of the target element' },
           name: { type: 'string' },
+          documentation: { type: 'string' },
           isDirected: {
             type: 'boolean',
             description:

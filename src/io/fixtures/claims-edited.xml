@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" identifier="m-claims">
   <name xml:lang="en">Claims platform</name>
+  <documentation xml:lang="en">An original test model for Archipelago (MIT). Not ArchiSurance.</documentation>
   <elements>
     <element identifier="bp-handle" xsi:type="BusinessProcess">
       <name xml:lang="en">Handle Claim</name>
@@ -144,8 +145,6 @@
     </relationship>
     <relationship identifier="r-handle-pay" source="bp-handle" target="bs-payment" xsi:type="Realization">
     </relationship>
-    <relationship identifier="r-handle-register" source="bp-handle" target="bp-register" xsi:type="Composition">
-    </relationship>
     <relationship identifier="r-handle-accept" source="bp-handle" target="bp-accept" xsi:type="Composition">
     </relationship>
     <relationship identifier="r-handle-valuate" source="bp-handle" target="bp-valuate" xsi:type="Composition">
@@ -235,6 +234,9 @@
     <relationship identifier="r-db-customer" source="ts-database" target="ac-customer" xsi:type="Serving">
     </relationship>
     <relationship identifier="r-cics-host" source="ss-cics" target="ac-host" xsi:type="Serving">
+    </relationship>
+    <relationship identifier="r-handle-register" source="bp-handle" target="bp-register" xsi:type="Composition">
+      <documentation xml:lang="en">Every claim is registered before it is assessed.</documentation>
     </relationship>
     <relationship identifier="r-fraud-valuate" source="ac-fraud" target="bp-valuate" xsi:type="Serving">
     </relationship>
@@ -357,7 +359,6 @@
       <item identifierRef="r-cust-ins" />
       <item identifierRef="r-handle-reg" />
       <item identifierRef="r-handle-pay" />
-      <item identifierRef="r-handle-register" />
       <item identifierRef="r-handle-accept" />
       <item identifierRef="r-handle-valuate" />
       <item identifierRef="r-handle-pay2" />
@@ -391,6 +392,7 @@
       <item identifierRef="r-engine-req" />
       <item identifierRef="r-req-goal" />
       <item identifierRef="r-wp-engine" />
+      <item identifierRef="r-handle-register" />
       <item identifierRef="r-fraud-valuate" />
       <item identifierRef="r-hub-payment" />
       <item identifierRef="r-calc-customer" />
