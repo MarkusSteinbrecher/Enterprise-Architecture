@@ -1,5 +1,18 @@
 # Session Log
 
+## 2026-10-19 (wrap-up 2) — #181 and #183 on `main`
+
+- **On `main`:** #181 (#132, magic connector) and #183 (#182, revoke-timer flake), both merged by the sponsor. #132 and #182 are closed. CI on `2db32b0` (the #181 merge) was still running at wrap-up, so check it first next session.
+- **#181's review** ran in the session that wrote it (`/review-pr 181 high`). The code-review layer ran in a fresh subagent and found 4 of the 5 blockers. All five were fixed with tests proven to fail without their fix. Harvest: `useFocusTrap` counts only tabbable items as its ends, and two CLAUDE.md lines were sharpened (prove a guard by removing its call, not a shared helper; a hover is an action that can unmount what holds focus).
+- **Still open for the sponsor on #132** (recorded in the #181 description):
+  - A release on a group keeps #129's plain line; Archi would create the element inside the group.
+  - ⌘ to list element types first is not built.
+  - Focus after a create goes to the name field.
+  - Reverse-direction types on a shape are not offered.
+- **Flake to watch:** e2e journey 16 (bend-points, #133) failed once in a full run, and one other full run lost a test it didn't name. Neither came back on rerun.
+- **Branches to delete** (both on `main`, checked): `feat/132-magic-connector`, `feat/182-revoke-timer-flake`. The #183 session's worktree is `.claude/worktrees/elegant-volhard-df53f9`; archiving that session cleans it up.
+- **Next:** M2's remaining issues #134–#137, and #171 (waiting on the sponsor's call on where documentation is edited).
+
 ## 2026-10-19 — #182: a download's revoke timer no longer outlives its test
 
 - **Branch `feat/182-revoke-timer-flake`.** Nothing merged. Production code is unchanged.
