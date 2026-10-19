@@ -36,7 +36,7 @@ export interface LockManagerOptions {
   readonly model: string
   readonly displayName: string
   readonly appVersion: string
-  readonly settings: Pick<SharedFolderSettings, 'settleMs' | 'staleAfterMs'>
+  readonly settings: Pick<SharedFolderSettings, 'settleMs' | 'staleAfterMs' | 'pollMs'>
   readonly observations: KeyedStore<LockObservation>
   readonly clock?: Clock
   readonly newToken?: () => string
@@ -55,6 +55,13 @@ export interface LockManagerOptions {
  * heartbeat unchanged; `stale` is that against the stale time. A lock first seen
  * just now is quiet for 0 ms, so it cannot be stale until it has been watched
  * for the whole stale time, here or before a reload (spec §5.3).
+ *
+ * Watched means looked at: time in which nobody here looked does not count. A
+ * laptop that slept for two hours had no sync client running either, so on
+ * waking its folder still shows the heartbeat from before the sleep, and the
+ * newer ones are still on their way (#165). A look more than
+ * `UNWATCHED_AFTER_POLLS` polls after the last one starts the watch again; a
+ * reload, seconds long, continues it.
  */
 export type LockView =
   | { kind: 'free' }
@@ -78,6 +85,14 @@ export type HeartbeatOutcome =
   /** This heartbeat failed; the lock is still ours until fencing says otherwise. */
   | { kind: 'retry'; message: string }
   | { kind: 'not-holding' }
+
+/**
+ * How many poll intervals may pass between two looks before the time between
+ * them counts as unwatched. A visible reader looks every poll; four leaves room
+ * for a slow tick and a reload, and is far shorter than any stale time the
+ * settings allow (at least four heartbeats).
+ */
+export const UNWATCHED_AFTER_POLLS = 4
 
 export class LockManager {
   readonly #options: LockManagerOptions
@@ -126,16 +141,21 @@ export class LockManager {
     if (lock.token === this.#written) return { kind: 'ours' }
     const now = this.#clock.now()
     const seen = await this.#options.observations.get(this.#key)
-    let since = now
-    if (seen && seen.token === lock.token && seen.heartbeatSeq === lock.heartbeatSeq) {
-      since = seen.since
-    } else {
-      await this.#options.observations.set(this.#key, {
-        token: lock.token,
-        heartbeatSeq: lock.heartbeatSeq,
-        since: now,
-      })
-    }
+    // The watch continues only on the same lock at the same counter, looked at
+    // recently enough that the time since was watched.
+    const continues =
+      seen !== undefined &&
+      seen.token === lock.token &&
+      seen.heartbeatSeq === lock.heartbeatSeq &&
+      seen.lookedAt !== undefined &&
+      now - seen.lookedAt <= UNWATCHED_AFTER_POLLS * this.#options.settings.pollMs
+    const since = continues ? seen.since : now
+    await this.#options.observations.set(this.#key, {
+      token: lock.token,
+      heartbeatSeq: lock.heartbeatSeq,
+      since,
+      lookedAt: now,
+    })
     const quietForMs = Math.max(0, now - since)
     return {
       kind: 'held',

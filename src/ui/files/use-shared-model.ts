@@ -149,11 +149,17 @@ export function useSharedModel(store: ModelStore, notify: (message: string) => v
             ? { kind: 'lost', ...(outcome.winner ? { by: outcome.winner } : {}) }
             : { kind: 'unknown', message: outcome.message }
       update({ phase: 'reader', reader })
-      if (outcome.why === 'lost') {
-        notify(
-          `${outcome.winner?.displayName ?? 'Someone else'} took “${s.model}” for editing first. It is open read-only.`,
-        )
-      }
+      // A display message, never compared, so joining its sentences is safe.
+      const said = [
+        outcome.why === 'lost'
+          ? `${outcome.winner?.displayName ?? 'Someone else'} took “${s.model}” for editing first. It is open read-only.`
+          : undefined,
+        // Only a takeover that did not happen leaves a line it could not take back.
+        result.logNotRetracted
+          ? `The takeover did not happen, but the folder’s log still records it: ${result.logNotRetracted}`
+          : undefined,
+      ].filter((sentence) => sentence !== undefined)
+      if (said.length > 0) notify(said.join(' '))
     },
     [apply, notify, rememberBase, store, update],
   )
