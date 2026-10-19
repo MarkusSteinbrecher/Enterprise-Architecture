@@ -5,13 +5,21 @@ import {
   absoluteBounds,
   type Bounds,
   type Element,
+  type ElementNode,
   type Point,
   type RelationshipType,
   type View,
+  type ViewConnection,
   type ViewNode,
   type Workspace,
 } from '@/model'
 import { ModelStore } from '@/store/model-store'
+import {
+  insertBendpoint,
+  moveBendpoint,
+  removeBendpoint,
+  straightened,
+} from '@/ui/views/bendpoints'
 import { connectChoice } from '@/ui/views/connect'
 import {
   newDrawingNode,
@@ -21,6 +29,7 @@ import {
   toolSize,
   type Tool,
 } from '@/ui/views/create'
+import { withDrop } from '@/ui/views/drop'
 import { moveSelection, resizeNode } from '@/ui/views/edit'
 import { nestingEdit, nestingFor, withNewElement } from '@/ui/views/nesting'
 
@@ -79,20 +88,18 @@ export function editedClaims(): Workspace {
   const claim = bounds('o-do-claim')
   move(['o-do-claim'], engine.x + 230 - claim.x, engine.y + 10 - claim.y, { into: 'o-engine' })
 
-  // Bend-points: one added, one route straightened, one corner moved.
-  store.updateConnection(view, 'c-cust-as', (connection) => ({
-    ...connection,
-    bendpoints: [{ x: 715, y: 470 }],
-  }))
-  store.updateConnection(view, 'c-info-ins', (connection) => {
-    const straight = { ...connection }
-    delete straight.bendpoints
-    return straight
-  })
-  store.updateConnection(view, 'c-engine-claim', (connection) => ({
-    ...connection,
-    bendpoints: [{ x: 700, y: 455 }],
-  }))
+  // Bend-points (#133), through the canvas's own edits, one command each: two
+  // added to a straight line, the second on the segment the first one made;
+  // one route straightened; one corner moved; one of two removed.
+  const bend = (id: string, change: (c: ViewConnection) => ViewConnection) =>
+    store.updateConnection(view, id, change)
+  bend('c-cust-as', (c) => insertBendpoint(c, 0, { x: 715, y: 470 }))
+  bend('c-cust-as', (c) => insertBendpoint(c, 1, { x: 760.4, y: 470.6 }))
+  bend('c-info-ins', straightened)
+  bend('c-engine-claim', (c) => moveBendpoint(c, 0, { x: 700, y: 455 }))
+  bend('c-split-pay', (c) => removeBendpoint(c, 0))
+  // Where a line's label sits (#133), which the exchange format has no place for.
+  bend('c-crm-cust', (c) => ({ ...c, appearance: { labelPosition: 'source' } }))
 
   // Appearance: what the exchange format carries, and what it cannot.
   store.updateNode(view, 'o-goal', (node) => ({ ...node, appearance: { fillColor: '#ffe9a8' } }))
@@ -266,7 +273,9 @@ export function editedClaims(): Workspace {
  * A view made from scratch (#130), as the editor makes one: in a new folder
  * of Views, with a viewpoint, and shapes placed where the palette's
  * `placement` puts them, so a shape placed inside a group is nested in it.
- * New elements and elements the model already holds, drawn and connected.
+ * New elements and elements the model already holds, drawn and connected, and
+ * one dropped from the tree with its relationships drawn, as the canvas's drop
+ * draws them (#145).
  */
 function scratchView(store: ModelStore) {
   const id = 'v-scratch'
@@ -341,4 +350,27 @@ function scratchView(store: ModelStore) {
   connect('s-engine-intake', 'o-s-engine', 'o-s-intake', 'Realization')
   connect('s-intake-valuate', 'o-s-intake', 'o-s-valuate', 'Serving')
   connect('s-event-valuate', 'o-s-event', 'o-s-valuate', 'Triggering')
+
+  // Dropped from the model tree (#145): Rules Evaluation, drawn with a line
+  // from each of the two drawings of the engine that is assigned to it.
+  const rules: ElementNode = {
+    id: 'o-s-rules',
+    kind: 'element',
+    element: 'af-rules',
+    ...placement(
+      store.view(id)!,
+      { x: 190, y: 420 },
+      defaultNodeSize('element', 'ApplicationFunction'),
+      isJunction,
+    ),
+  }
+  const lineIds = ['c-s-engine-rules', 'c-s-engine-2-rules']
+  store.updateView(id, (v) =>
+    withDrop(v, rules, store.relationshipsOf('af-rules'), () => {
+      const next = lineIds.shift()
+      if (!next) throw new Error('the drop drew more lines than it was given ids for')
+      return next
+    }),
+  )
+  if (lineIds.length) throw new Error(`the drop drew fewer lines than expected: ${lineIds}`)
 }

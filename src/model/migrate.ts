@@ -16,6 +16,8 @@ import { SCHEMA_VERSION, type Workspace } from './workspace'
  *   `isDirected` and `modifier`, which a schema-2 workspace never has.
  * - **3 → 4** (#95): only the version moves. Relationships and the workspace
  *   gained an optional `documentation`, which a schema-3 workspace never has.
+ * - **4 → 5** (#133): only the version moves. Views gained an optional
+ *   `router`, and a connection's appearance an optional `labelPosition`.
  */
 export function migrateWorkspace(stored: Workspace): Workspace {
   const version = stored.schemaVersion || SCHEMA_VERSION

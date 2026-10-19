@@ -356,6 +356,7 @@ const APPEARANCE_FIELDS: readonly (keyof Appearance)[] = [
   'fontStyle',
   'textAlignment',
   'textPosition',
+  'labelPosition',
 ]
 
 function compareAppearance(
@@ -398,6 +399,11 @@ export function explainDifference(
     return difference.archi === defaults[node.kind] ? CARRIED_ONLY : undefined
   }
   if (field === 'appearance.fontStyle' && onlyStrikethroughLost(difference)) return CARRIED_ONLY
+  // A line's label position (#133): Archi's import leaves textPosition at its
+  // default, the middle, which our reader of its save holds as no value.
+  if (field === 'appearance.labelPosition' && mine && !node && difference.archi === undefined) {
+    return CARRIED_ONLY
+  }
   if (field === 'appearance.lineWidth' && node && difference.archi === undefined) {
     return NODE_LINE_WIDTH
   }
@@ -436,7 +442,7 @@ const ARCHI_TEXT_POSITION: Partial<Record<ViewNodeKind, string | undefined>> = {
 }
 
 export const CARRIED_ONLY =
-  'The exchange format has no text alignment, text position or strikethrough. Archipelago carries them in archipelago.style, which Archi keeps and does not draw, so Archi shows its own default: the text visibly moves.'
+  'The exchange format has no text alignment, text position, strikethrough or label position. Archipelago carries them in archipelago.style, which Archi keeps and does not draw, so Archi shows its own default: the text visibly moves.'
 export const NODE_LINE_WIDTH =
   "Archi's exchange import does not read a shape's lineWidth: XMLModelImporter.addNodeStyle reads fillColor, lineColor and font only (addConnectionStyle does read it)."
 export const DEFAULT_FONT_NAME =

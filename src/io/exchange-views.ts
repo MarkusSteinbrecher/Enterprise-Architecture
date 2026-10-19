@@ -3,6 +3,7 @@ import {
   FOLDER_ROOT_LABELS,
   TEXT_ALIGNMENTS,
   TEXT_POSITIONS,
+  isLabelPosition,
   absoluteBounds,
   defaultFolderRoot,
   drawsRelationshipEnds,
@@ -17,6 +18,7 @@ import {
   type Relationship,
   type TextAlignment,
   type TextPosition,
+  type LabelPosition,
   type View,
   type ViewConnection,
   type ViewNode,
@@ -127,8 +129,8 @@ const CONNECTION_DEFAULTS: StyleDefaults = { line: BLACK, font: BLACK }
  * answer #36 gave saved reports. A tool that does not know Archipelago shows
  * one extra property on the view and hands it back untouched. Two things go in it:
  *
- * - **Text alignment, text position and strikethrough**, which the format's
- *   style has no attribute for.
+ * - **Text alignment, text position, strikethrough and a connection's label
+ *   position** (#133), which the format's style has no attribute for.
  * - **`literal`**: what the `<style>` Archipelago wrote says, field by field
  *   (`{"fontColor":"#000000"}`). The reader normally drops values equal to
  *   Archi's defaults, because Archi writes its whole style on every object; on
@@ -145,6 +147,7 @@ interface CarriedStyle {
   literal?: StyleSays
   textAlignment?: TextAlignment
   textPosition?: TextPosition
+  labelPosition?: LabelPosition
   strikethrough?: true
 }
 
@@ -235,6 +238,7 @@ function carriedStyle(item: ViewNode | ViewConnection): CarriedStyle | undefined
   if (Object.keys(says).length) carried.literal = says
   if (appearance.textAlignment) carried.textAlignment = appearance.textAlignment
   if (appearance.textPosition) carried.textPosition = appearance.textPosition
+  if (appearance.labelPosition) carried.labelPosition = appearance.labelPosition
   if (appearance.fontStyle?.includes('strikethrough')) carried.strikethrough = true
   return Object.keys(carried).length ? carried : undefined
 }
@@ -254,7 +258,15 @@ function carriedStyleJson(
   // property is canonical (ADR 0004). `literal` holds the style's own fields.
   return JSON.stringify(
     entries,
-    ['id', 'literal', 'strikethrough', 'textAlignment', 'textPosition', ...STYLE_FIELDS].sort(),
+    [
+      'id',
+      'labelPosition',
+      'literal',
+      'strikethrough',
+      'textAlignment',
+      'textPosition',
+      ...STYLE_FIELDS,
+    ].sort(),
   )
 }
 
@@ -318,6 +330,9 @@ export function applyCarriedStyle(
     if ((TEXT_POSITIONS as readonly unknown[]).includes(record.textPosition)) {
       appearance.textPosition = record.textPosition as TextPosition
     }
+    if (isLabelPosition(record.labelPosition)) appearance.labelPosition = record.labelPosition
+    // A value this build cannot draw is counted, not ignored (#133).
+    else if (record.labelPosition !== undefined) unread += 1
     if (record.strikethrough === true) {
       appearance.fontStyle = [...(appearance.fontStyle ?? []), 'strikethrough']
     }
@@ -1246,6 +1261,19 @@ function writeView(
     `      <view identifier="${attr(context.of(view.id))}" xsi:type="Diagram"${viewpoint}>`,
   )
   lines.push(`        <name xml:lang="${context.language}">${text(view.name)}</name>`)
+  // The format has no router: Archi's own export of a Manhattan view writes
+  // none (`archi-coverage.xml`, v-edges, saved with connectionRouterType="2"),
+  // so the view opens elsewhere with its lines through their bend-points (#133).
+  if (view.router === 'manhattan') {
+    problems.push(
+      problem(
+        'warning',
+        'exchange.router-not-written',
+        `View "${view.name}" routes its connections Manhattan-style, which the exchange format cannot say. It will open in other tools with its lines drawn through their bend-points.`,
+        subject,
+      ),
+    )
+  }
   if (view.documentation) {
     lines.push(
       `        <documentation xml:lang="${context.language}">${text(view.documentation)}</documentation>`,

@@ -3,6 +3,8 @@ import {
   TEXT_ALIGNMENTS,
   TEXT_POSITIONS,
   isFolderRoot,
+  isLabelPosition,
+  isViewRouter,
   type Appearance,
   type Bounds,
   type Folder,
@@ -38,6 +40,7 @@ export function canonicalView(view: View): Record<string, unknown> {
     name: view.name,
     documentation: view.documentation,
     viewpoint: view.viewpoint,
+    router: view.router,
     folder: view.folder,
     properties: emptyToUndefined(view.properties),
     nodes: [...view.nodes].sort(byId).map(canonicalNode),
@@ -175,6 +178,20 @@ function readView(
   if (typeof candidate.documentation === 'string') view.documentation = candidate.documentation
   if (typeof candidate.viewpoint === 'string' && candidate.viewpoint) {
     view.viewpoint = candidate.viewpoint
+  }
+  // Through the guard (#133). `manual` is the default and is never written, so
+  // one that is read is the same view without it.
+  if (candidate.router !== undefined) {
+    if (!isViewRouter(candidate.router)) {
+      problems.push(
+        problem(
+          'warning',
+          'json.invalid-view-router',
+          `View "${id}": the router ${JSON.stringify(candidate.router)} is not one Archipelago knows, so its connections are drawn through their bend-points.`,
+          at,
+        ),
+      )
+    } else if (candidate.router === 'manhattan') view.router = 'manhattan'
   }
   const folder = readFolderRef(candidate.folder, `View "${id}"`, references.folders, problems, at)
   if (folder !== undefined) view.folder = folder
@@ -481,6 +498,10 @@ function readAppearance(
           if ((TEXT_POSITIONS as readonly unknown[]).includes(value)) {
             appearance.textPosition = value as TextPosition
           } else dropped.push(key)
+          break
+        case 'labelPosition':
+          if (isLabelPosition(value)) appearance.labelPosition = value
+          else dropped.push(key)
           break
         default:
           dropped.push(key)

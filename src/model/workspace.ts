@@ -21,8 +21,10 @@ import type { Layer } from './layers'
  * - 4: `Relationship.documentation` and `Workspace.documentation` (#95). No
  *   shape change for older data either; a schema-3 build warns that it drops
  *   them.
+ * - 5: `View.router` and a connection's `Appearance.labelPosition` (#133). No
+ *   shape change for older data either.
  */
-export const SCHEMA_VERSION = 4
+export const SCHEMA_VERSION = 5
 
 /** ArchiMate properties are string-valued in the exchange format; numbers and
  *  booleans are allowed here and serialise as their string form. */
@@ -142,6 +144,32 @@ export const TEXT_POSITIONS = ['top', 'middle', 'bottom'] as const
 export type TextPosition = (typeof TEXT_POSITIONS)[number]
 
 /**
+ * Where a connection's label sits along it: Archi's `textPosition` on a
+ * connection (`IDiagramModelConnection.CONNECTION_TEXT_POSITION_*`: 0 source,
+ * 1 middle, 2 target), whose default is the middle.
+ */
+export const LABEL_POSITIONS = ['source', 'middle', 'target'] as const
+export type LabelPosition = (typeof LABEL_POSITIONS)[number]
+
+export function isLabelPosition(value: unknown): value is LabelPosition {
+  return (LABEL_POSITIONS as readonly unknown[]).includes(value)
+}
+
+/**
+ * How a view routes its connections: Archi's `connectionRouterType`. `manual`
+ * (0, the default) runs each line through its bend-points; `manhattan` (2)
+ * draws every line in horizontal and vertical segments and ignores its
+ * bend-points, as Archi's `ManhattanConnectionRouter` does. Archi retired the
+ * shortest-path router (1).
+ */
+export const VIEW_ROUTERS = ['manual', 'manhattan'] as const
+export type ViewRouter = (typeof VIEW_ROUTERS)[number]
+
+export function isViewRouter(value: unknown): value is ViewRouter {
+  return (VIEW_ROUTERS as readonly unknown[]).includes(value)
+}
+
+/**
  * Per-object overrides of the notation's default look. Every field is optional:
  * absent means "as the notation draws it", so a model that never touched
  * appearance carries none of this. Colours are `#rrggbb`, or `#rrggbbaa` with an
@@ -156,7 +184,10 @@ export interface Appearance {
   fontColor?: string
   fontStyle?: FontStyle[]
   textAlignment?: TextAlignment
+  /** A shape's text, top to bottom. */
   textPosition?: TextPosition
+  /** A connection's label, along the line (#133). */
+  labelPosition?: LabelPosition
 }
 
 interface ViewNodeBase {
@@ -228,6 +259,8 @@ export interface View {
   documentation?: string
   /** ArchiMate viewpoint name, as the exchange format spells it. Enforced in M3. */
   viewpoint?: string
+  /** Absent means `manual`, Archi's default, so only `manhattan` is ever stored (#133). */
+  router?: Exclude<ViewRouter, 'manual'>
   folder?: string
   properties: Record<string, PropertyValue>
   nodes: ViewNode[]
