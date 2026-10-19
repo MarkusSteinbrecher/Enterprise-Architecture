@@ -361,6 +361,7 @@ describe('a workspace survives the store intact', () => {
       ],
       propertyTypes: { goLive: 'date', licence: 'currency' },
       language: 'de',
+      documentation: 'What the model is for.',
     }
   }
 

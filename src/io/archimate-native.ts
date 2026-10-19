@@ -66,7 +66,6 @@ import {
   failed,
   problem,
   propertyRepeated,
-  relationshipDocumentationSkipped,
   succeeded,
   type ImportProblem,
   type ImportResult,
@@ -250,8 +249,6 @@ interface Tally {
   viewContent: Map<string, number>
   routers: number
   specializations: number
-  /** Ids of imported relationships that have documentation. */
-  relationshipDocs: string[]
   /** Legacy type name → how many were read under Archi 5.10's name (#105). */
   renamed: Map<string, number>
   /** Connections that named their relationship in the legacy `relationship` attribute. */
@@ -378,7 +375,6 @@ export function importArchimate(xml: string, file?: string): ImportResult {
       viewContent: new Map(),
       routers: 0,
       specializations: 0,
-      relationshipDocs: [],
       renamed: new Map(),
       legacyConnections: 0,
       orJunctions: [],
@@ -423,9 +419,6 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     relationshipsById.set(relationship.id, relationship)
     relationships.push(relationship)
     countConversions(member, reader)
-    // Counted only once kept: a skipped relationship's documentation is not lost here (#100).
-    if (textOf(member.raw.documentation)) reader.tally.relationshipDocs.push(relationship.id)
-    ledger.whole(member.raw, 'documentation')
   }
 
   const diagrams = members.filter((member) => classify(member.type) === 'diagram')
@@ -489,18 +482,9 @@ export function importArchimate(xml: string, file?: string): ImportResult {
   const tagGroups = carried(modelProperties[TAG_GROUPS_KEY], isTagGroup, 'tag groups', reader)
   reportForeignModelProperties(modelProperties, problems, where)
   reportUnusedProfiles(model, reader)
-  // An empty purpose is no purpose: nothing is lost.
-  ledger.whole(model, 'purpose')
-  if (textOf(model.purpose)) {
-    problems.push(
-      problem(
-        'info',
-        'archimate.model-purpose-skipped',
-        'The model’s purpose text was not imported — Archipelago has no place for it yet.',
-        where,
-      ),
-    )
-  }
+  // The model's documentation: Archi's export writes the purpose there (#95).
+  const purpose = textOf(model.purpose)
+  ledger.text(model, 'purpose')
   reportTally(reader)
   ledger.use(model, '@id', '@name')
   readUnheldFeatures(model, reader)
@@ -526,6 +510,7 @@ export function importArchimate(xml: string, file?: string): ImportResult {
     reports: reports ?? [],
     tagGroups: tagGroups ?? [DEFAULT_TAG_GROUP],
   }
+  if (purpose) workspace.documentation = purpose
   return succeeded(workspace, problems)
 }
 
@@ -836,7 +821,10 @@ function readRelationship(
   }
   const name = asString(raw['@name'])
   if (name) relationship.name = name
+  const documentation = textOf(raw.documentation)
+  if (documentation) relationship.documentation = documentation
   reader.ledger.use(raw, '@xsi:type', '@id', '@name', '@source', '@target')
+  reader.ledger.text(raw, 'documentation')
   const profile = read.profile ?? {}
 
   if (type === 'Access') {
@@ -1828,9 +1816,6 @@ function reportTally(reader: Reader): void {
         where,
       ),
     )
-  }
-  if (tally.relationshipDocs.length) {
-    problems.push(relationshipDocumentationSkipped(tally.relationshipDocs, where))
   }
   if (tally.specializations) {
     problems.push(

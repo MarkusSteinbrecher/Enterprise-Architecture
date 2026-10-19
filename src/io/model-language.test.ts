@@ -180,14 +180,21 @@ describe('a text in another language than the model’s (#111)', () => {
     expect(workspaceOf(importExchangeXml(other)).language).toBe('de')
   })
 
-  it('does not count a text the model does not keep', () => {
-    // Relationship documentation is reported as not imported (#95), so the
-    // export does not relabel it: it does not write it at all.
+  it('counts a relationship’s documentation, which the model keeps since #95', () => {
+    // Until #95 it was not imported, so it was not counted. Kept, the export
+    // writes it in the model's language, so the relabelling is said.
     const result = importExchangeXml(
       model({ extra: '\n      <documentation xml:lang="fr">Meldung</documentation>' }),
     )
-    expect(codes(result)).toContain('import.relationship-documentation-skipped')
-    expect(relabelled(result)).toEqual([])
+    const workspace = workspaceOf(result)
+    expect(workspace.relationships[0]?.documentation).toBe('Meldung')
+    expect(workspace.language).toBe('de')
+    expect(relabelled(result).map((p) => p.message)).toEqual([
+      expect.stringMatching(/^1 text .*fr \(1\)/),
+    ])
+    const xml = exportExchange(workspace).xml
+    expect(xml).toContain('<documentation xml:lang="de">Meldung</documentation>')
+    expect(Object.keys(languages(xml))).toEqual(['de'])
   })
 
   it('does not count a second language, which is reported on its own', () => {

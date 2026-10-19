@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" identifier="m-claims">
   <name xml:lang="en">Claims platform</name>
+  <documentation xml:lang="en">An original test model for Archipelago (MIT). Not ArchiSurance.</documentation>
   <elements>
     <element identifier="bp-handle" xsi:type="BusinessProcess">
       <name xml:lang="en">Handle Claim</name>
@@ -141,7 +142,6 @@
     <relationship identifier="r-cust-ins" source="ba-customer" target="br-insurant" xsi:type="Assignment" />
     <relationship identifier="r-handle-reg" source="bp-handle" target="bs-registration" xsi:type="Realization" />
     <relationship identifier="r-handle-pay" source="bp-handle" target="bs-payment" xsi:type="Realization" />
-    <relationship identifier="r-handle-register" source="bp-handle" target="bp-register" xsi:type="Composition" />
     <relationship identifier="r-handle-accept" source="bp-handle" target="bp-accept" xsi:type="Composition" />
     <relationship identifier="r-handle-valuate" source="bp-handle" target="bp-valuate" xsi:type="Composition" />
     <relationship identifier="r-handle-pay2" source="bp-handle" target="bp-pay" xsi:type="Composition" />
@@ -179,6 +179,9 @@
     <relationship identifier="r-engine-req" source="ac-engine" target="r-rules" xsi:type="Realization" />
     <relationship identifier="r-req-goal" source="r-rules" target="g-settle" xsi:type="Realization" />
     <relationship identifier="r-wp-engine" source="wp-rollout" target="ac-engine" xsi:type="Realization" />
+    <relationship identifier="r-handle-register" source="bp-handle" target="bp-register" xsi:type="Composition">
+      <documentation xml:lang="en">Every claim is registered before it is assessed.</documentation>
+    </relationship>
     <relationship identifier="r-fraud-valuate" source="ac-fraud" target="bp-valuate" xsi:type="Serving" />
     <relationship identifier="r-hub-payment" source="ac-customer" target="as-payment" xsi:type="Serving" />
     <relationship identifier="r-calc-customer" source="af-calc" target="do-customer" xsi:type="Access" accessType="Write" />
@@ -298,7 +301,6 @@
       <item identifierRef="r-cust-ins" />
       <item identifierRef="r-handle-reg" />
       <item identifierRef="r-handle-pay" />
-      <item identifierRef="r-handle-register" />
       <item identifierRef="r-handle-accept" />
       <item identifierRef="r-handle-valuate" />
       <item identifierRef="r-handle-pay2" />
@@ -332,6 +334,7 @@
       <item identifierRef="r-engine-req" />
       <item identifierRef="r-req-goal" />
       <item identifierRef="r-wp-engine" />
+      <item identifierRef="r-handle-register" />
       <item identifierRef="r-fraud-valuate" />
       <item identifierRef="r-hub-payment" />
       <item identifierRef="r-calc-customer" />
@@ -375,7 +378,7 @@
         <documentation xml:lang="en">Business, application and platform layers of the claims platform.</documentation>
         <properties>
           <property propertyDefinitionRef="propid-1">
-            <value xml:lang="en">[{"id":"c-note-split","literal":true},{"id":"c-pay-ins","literal":true},{"id":"c-req-goal","literal":true},{"id":"o-crm","literal":true},{"id":"o-engine","literal":true},{"id":"o-g-apps","textAlignment":"center"},{"id":"o-g-business","literal":true,"textAlignment":"center"},{"id":"o-g-platform","textAlignment":"center"},{"id":"o-goal","literal":true},{"id":"o-handle","textAlignment":"left"},{"id":"o-note-biz","textAlignment":"center"},{"id":"o-req","literal":true},{"id":"o-rollout","strikethrough":true,"textAlignment":"right"}]</value>
+            <value xml:lang="en">[{"id":"c-note-split","literal":{"lineColor":"#999999"}},{"id":"c-pay-ins","literal":{"lineColor":"#7a7a7a"}},{"id":"c-req-goal","literal":{"lineColor":"#8c1e5a","lineWidth":2}},{"id":"o-crm","literal":{"fillColor":"#e0e0e0a1"}},{"id":"o-engine","literal":{"fillColor":"#c9e7f7","fontColor":"#0b2e4a","fontName":"Arial","fontSize":11,"fontStyle":["bold"],"lineColor":"#1d5c8c","lineWidth":2}},{"id":"o-g-apps","textAlignment":"center"},{"id":"o-g-business","literal":{"fillColor":"#fff5d6"},"textAlignment":"center"},{"id":"o-g-platform","textAlignment":"center"},{"id":"o-goal","literal":{"fillColor":"#ffe9a8"}},{"id":"o-handle","textAlignment":"left"},{"id":"o-note-biz","textAlignment":"center"},{"id":"o-req","literal":{"fontColor":"#5a1e8c","fontSize":12,"fontStyle":["bold"]}},{"id":"o-rollout","strikethrough":true,"textAlignment":"right"}]</value>
           </property>
         </properties>
         <node identifier="o-g-business" x="20" y="20" w="1180" h="300" xsi:type="Container">
