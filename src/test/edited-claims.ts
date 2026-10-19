@@ -9,10 +9,17 @@ import {
   type Point,
   type RelationshipType,
   type View,
+  type ViewConnection,
   type ViewNode,
   type Workspace,
 } from '@/model'
 import { ModelStore } from '@/store/model-store'
+import {
+  insertBendpoint,
+  moveBendpoint,
+  removeBendpoint,
+  straightened,
+} from '@/ui/views/bendpoints'
 import { connectChoice } from '@/ui/views/connect'
 import {
   newDrawingNode,
@@ -75,20 +82,18 @@ export function editedClaims(): Workspace {
   const claim = bounds('o-do-claim')
   move(['o-do-claim'], engine.x + 230 - claim.x, engine.y + 10 - claim.y, { into: 'o-engine' })
 
-  // Bend-points: one added, one route straightened, one corner moved.
-  store.updateConnection(view, 'c-cust-as', (connection) => ({
-    ...connection,
-    bendpoints: [{ x: 715, y: 470 }],
-  }))
-  store.updateConnection(view, 'c-info-ins', (connection) => {
-    const straight = { ...connection }
-    delete straight.bendpoints
-    return straight
-  })
-  store.updateConnection(view, 'c-engine-claim', (connection) => ({
-    ...connection,
-    bendpoints: [{ x: 700, y: 455 }],
-  }))
+  // Bend-points (#133), through the canvas's own edits, one command each: two
+  // added to a straight line, the second on the segment the first one made;
+  // one route straightened; one corner moved; one of two removed.
+  const bend = (id: string, change: (c: ViewConnection) => ViewConnection) =>
+    store.updateConnection(view, id, change)
+  bend('c-cust-as', (c) => insertBendpoint(c, 0, { x: 715, y: 470 }))
+  bend('c-cust-as', (c) => insertBendpoint(c, 1, { x: 760.4, y: 470.6 }))
+  bend('c-info-ins', straightened)
+  bend('c-engine-claim', (c) => moveBendpoint(c, 0, { x: 700, y: 455 }))
+  bend('c-split-pay', (c) => removeBendpoint(c, 0))
+  // Where a line's label sits (#133), which the exchange format has no place for.
+  bend('c-crm-cust', (c) => ({ ...c, appearance: { labelPosition: 'source' } }))
 
   // Appearance: what the exchange format carries, and what it cannot.
   store.updateNode(view, 'o-goal', (node) => ({ ...node, appearance: { fillColor: '#ffe9a8' } }))
