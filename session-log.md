@@ -1,5 +1,13 @@
 # Session Log
 
+## 2026-10-19 (wrap-up) — Every open PR is on `main`
+
+- **On `main`:** #167, #174, #169, #172, #168, #175, #179 (re-land of #176) and #180 (re-land of #173 and #178). Issues #95, #97, #133, #145 and #164 are closed. No PRs are open.
+- **CI on `main`:** running on `735a839` (the #180 merge) at wrap-up. Every merged branch was green locally on its merged state, but this run had not finished. Check it first next session.
+- **Branches to delete** (all on `main`, checked): `chore/manual-scripts-refresh`, `feat/95-documentation-fields`, `feat/138-literal-style-marker`, `feat/97-archimate-zip`, `feat/164-coverage-gate`, `feat/145-drop-draws-relationships`, `feat/133-bendpoints-router`. Also `feat/165-shared-folder-followups` and `feat/146-collapsible-palette`: each holds only the stranded merge commit of #176 and #173, both of whose parents are on `main`.
+- **HQ** (`a82aef5`): two lessons in `web-deploy-and-repos.md`. Retarget stacked PRs to `main` before a hand merge, and typecheck and run e2e on the merged state, because a merge with no text conflict can still break.
+- **Next:** M2's remaining issues: #134–#137, #132, and #171 (where documentation is edited, waiting on the sponsor).
+
 ## 2026-10-19 (cont.) — Merge round: six PRs on `main`, three re-opened
 
 - **Sponsor's calls on #178:** one bend-point per segment drag (Archi's); the ported Manhattan route stays; #174 takes schema 4 and #133 takes 5. Recorded on #178 and #133.
