@@ -12,7 +12,7 @@ import {
 } from './support'
 
 /**
- * Journey 17 — layout aids (#136), in a real browser: the grid with Archi's
+ * Journey 19 — layout aids (#136), in a real browser: the grid with Archi's
  * defaults, a guide that snaps a shape and only within its threshold, align,
  * and z-order, each one command; then the arranged model saved, imported and
  * saved again byte for byte, with the drawing order in the file. The canvas is
