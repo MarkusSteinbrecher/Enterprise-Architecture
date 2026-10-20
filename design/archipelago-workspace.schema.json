@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://markussteinbrecher.github.io/Enterprise-Architecture/schema/archipelago-workspace.schema.json",
+  "$id": "https://stein-clankers.github.io/Enterprise-Architecture/schema/archipelago-workspace.schema.json",
   "title": "Archipelago workspace",
   "description": "Canonical native format of an Archipelago workspace: an ArchiMate 3.2 model plus the portfolio profile overlay. Written with sorted keys and deterministic array order so that two exports of the same model are byte-identical.",
   "type": "object",
