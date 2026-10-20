@@ -1257,7 +1257,8 @@ function readNode(
       context.reader.ledger.use(raw, '@name')
       // Archi draws no text on a legend and shows no field for one, but keeps
       // what is there; this model has no place for it.
-      if (raw.content !== undefined) bump(context.reader.tally.viewContent, 'text on a legend')
+      // Empty content is no text, as on a note (#187 review).
+      if (textOf(raw.content)) bump(context.reader.tally.viewContent, 'text on a legend')
       context.reader.ledger.whole(raw, 'content')
       break
     }

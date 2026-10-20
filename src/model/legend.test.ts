@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_LEGEND_OPTIONS,
+  ELEMENT_TYPES,
   legendEntries,
   legendRows,
   legendWidthOffset,
@@ -85,6 +86,53 @@ describe('a legend’s entries (#134)', () => {
       'Junction',
       'Location',
     ])
+  })
+
+  it('orders all 61 element types as Archi does, by its class hierarchy: Material with technology (#187 review)', () => {
+    // Archi's order, worked out apart from the code under test: each type's rank
+    // from `archimate.ecore` at release_5.10.0 by `LegendGraphics.update`'s
+    // `isSuperTypeOf` tests, then by label.
+    // prettier-ignore
+    const archi = [
+      'Capability', 'CourseOfAction', 'Resource', 'ValueStream',
+      'BusinessActor', 'BusinessCollaboration', 'BusinessEvent', 'BusinessFunction',
+      'BusinessInteraction', 'BusinessInterface', 'BusinessObject', 'BusinessProcess',
+      'BusinessRole', 'BusinessService', 'Contract', 'Product', 'Representation',
+      'ApplicationCollaboration', 'ApplicationComponent', 'ApplicationEvent',
+      'ApplicationFunction', 'ApplicationInteraction', 'ApplicationInterface',
+      'ApplicationProcess', 'ApplicationService', 'DataObject',
+      'Artifact', 'CommunicationNetwork', 'Device', 'Material', 'Node', 'Path',
+      'SystemSoftware', 'TechnologyCollaboration', 'TechnologyEvent', 'TechnologyFunction',
+      'TechnologyInteraction', 'TechnologyInterface', 'TechnologyProcess', 'TechnologyService',
+      'DistributionNetwork', 'Equipment', 'Facility',
+      'Assessment', 'Constraint', 'Driver', 'Goal', 'Meaning', 'Outcome', 'Principle',
+      'Requirement', 'Stakeholder', 'Value',
+      'Deliverable', 'Gap', 'ImplementationEvent', 'Plateau', 'WorkPackage',
+      'Grouping', 'Junction', 'Location',
+    ]
+    expect(archi).toHaveLength(ELEMENT_TYPES.length)
+    const all: View = {
+      id: 'v',
+      name: 'V',
+      properties: {},
+      // Drawn in reverse, so the order is the legend's own.
+      nodes: [...ELEMENT_TYPES].reverse().map((meta) => ({
+        id: `n-${meta.type}`,
+        kind: 'element',
+        element: meta.type,
+        bounds: box,
+      })),
+      connections: [],
+    }
+    const types = legendEntries(all, DEFAULT_LEGEND_OPTIONS, {
+      elementType: (id) => id as ElementType,
+      relationshipType: () => undefined,
+    }).map((entry) => entry.type)
+    expect(types).toEqual(archi)
+    // The one type our catalogue files elsewhere: physical, but Archi's technology.
+    expect(types.slice(types.indexOf('Device'), types.indexOf('Equipment') + 1)).toContain(
+      'Material',
+    )
   })
 
   it('orders elements by label alone when sorted by name, relationships still last', () => {

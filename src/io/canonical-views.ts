@@ -482,7 +482,9 @@ function readLegendOptions(
     const value = record[key]
     const clamped = isFiniteNumber(value) ? clamp(value) : undefined
     if (clamped !== undefined) options[key] = clamped
-    if (isRecord(raw) && clamped !== value) dropped.push(key)
+    // Absent is reported too: there `clamped` and `value` are both undefined,
+    // and agree (#187 review).
+    if (isRecord(raw) && (clamped === undefined || clamped !== value)) dropped.push(key)
   }
   count('rowsPerColumn', legendRows)
   count('widthOffset', legendWidthOffset)

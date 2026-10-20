@@ -1,5 +1,4 @@
-import { LAYERS, type Layer } from './layers'
-import { findElementType, typeLabel, type ElementType } from './element-types'
+import { typeLabel, type ElementType } from './element-types'
 import { findRelationshipType, type RelationshipType } from './relationship-types'
 import { LEGEND_ROWS, LEGEND_WIDTH_OFFSET, type LegendOptions, type View } from './workspace'
 
@@ -19,9 +18,8 @@ import { LEGEND_ROWS, LEGEND_WIDTH_OFFSET, type LegendOptions, type View } from 
  *   `specializedRelations`; Archipelago has no specializations yet, so every
  *   concept is listed by its type and those two options change nothing.
  * - **Order.** Elements first and relationships last. With `sort` `category`,
- *   elements go by layer, in Archi's order (strategy, business, application,
- *   technology, physical, motivation, implementation and migration, then the
- *   rest), and by label within one; with `name`, by label alone. Archi compares
+ *   elements go by Archi's category (`ARCHI_LEGEND_RANK`), and by label within
+ *   one; with `name`, by label alone. Archi compares
  *   labels with the platform's `Collator`; here the locale is English, so the
  *   order does not change from one machine to the next.
  * - **Labels** are Archi's default names: an element type's label, and
@@ -43,12 +41,41 @@ export interface LegendLookups {
   relationshipType(id: string): RelationshipType | undefined
 }
 
-/** Archi's category rank (`LegendGraphics.update`): the layers in order, then the rest at 10, relationships last at 50. */
+/**
+ * Archi's category rank for each element type (`LegendGraphics.update`): the
+ * first of strategy 0, business 1, application 2, technology 3, physical 4,
+ * motivation 5 and implementation and migration 6 whose class `isSuperTypeOf`
+ * the type's, else 10. Derived from Archi's class hierarchy (`archimate.ecore`
+ * at `release_5.10.0`), not from our catalogue's layers, because they differ
+ * once: Material is a `PhysicalElement` and a `TechnologyObject`, so a
+ * `TechnologyElement`, and Archi tests technology first (#187 review).
+ */
+// One row per rank: kept off the formatter so the table stays readable.
+// prettier-ignore
+export const ARCHI_LEGEND_RANK: Readonly<Record<ElementType, number>> = {
+  Resource: 0, Capability: 0, CourseOfAction: 0, ValueStream: 0,
+  BusinessActor: 1, BusinessRole: 1, BusinessCollaboration: 1, BusinessInterface: 1,
+  BusinessProcess: 1, BusinessFunction: 1, BusinessInteraction: 1, BusinessEvent: 1,
+  BusinessService: 1, BusinessObject: 1, Contract: 1, Representation: 1, Product: 1,
+  ApplicationComponent: 2, ApplicationCollaboration: 2, ApplicationInterface: 2,
+  ApplicationFunction: 2, ApplicationInteraction: 2, ApplicationProcess: 2,
+  ApplicationEvent: 2, ApplicationService: 2, DataObject: 2,
+  Node: 3, Device: 3, SystemSoftware: 3, TechnologyCollaboration: 3, TechnologyInterface: 3,
+  Path: 3, CommunicationNetwork: 3, TechnologyFunction: 3, TechnologyProcess: 3,
+  TechnologyInteraction: 3, TechnologyEvent: 3, TechnologyService: 3, Artifact: 3,
+  Material: 3,
+  Equipment: 4, Facility: 4, DistributionNetwork: 4,
+  Stakeholder: 5, Driver: 5, Assessment: 5, Goal: 5, Outcome: 5, Principle: 5,
+  Requirement: 5, Constraint: 5, Meaning: 5, Value: 5,
+  WorkPackage: 6, Deliverable: 6, ImplementationEvent: 6, Plateau: 6, Gap: 6,
+  Location: 10, Grouping: 10, Junction: 10,
+}
+
+/** Where an entry sorts: Archi's category rank, with relationships last at 50. */
 function rank(entry: LegendEntry, options: LegendOptions): number {
   if (entry.kind === 'relationship') return 50
   if (options.sort === 'name') return 0
-  const layer = findElementType(entry.type)?.layer
-  return layer === undefined || layer === 'other' ? 10 : LAYERS.indexOf(layer as Layer)
+  return ARCHI_LEGEND_RANK[entry.type as ElementType]
 }
 
 export function legendEntries(

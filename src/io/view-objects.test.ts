@@ -138,6 +138,17 @@ describe('Archi’s save of notes, groups, references and legends (#134)', () =>
     expect(text.problems[0]!.message).toContain('text on a legend (1)')
   })
 
+  it('reports no text on a legend whose content is empty', () => {
+    const empty = importArchimate(
+      variant(
+        `<feature name="legend" value="${DEFAULT_FEATURE}"/>`,
+        `<feature name="legend" value="${DEFAULT_FEATURE}"/>\n        <content></content>`,
+      ),
+    )
+    expect(node(workspaceOf(empty), 'v-main', 'o-legend')).toMatchObject({ kind: 'legend' })
+    expect(empty.problems).toEqual([])
+  })
+
   it('reads options Archi would not write as Archi reads them, and says so', () => {
     const odd = importArchimate(variant(DEFAULT_FEATURE, 'display=15,rows=abc'))
     expect((node(workspaceOf(odd), 'v-main', 'o-legend') as LegendNode).options).toEqual(
@@ -241,6 +252,14 @@ describe('legends in canonical JSON (#134)', () => {
     })
     expect(fraction.options).toEqual(DEFAULT_LEGEND_OPTIONS)
     expect(fraction.result.problems[0]!.message).toContain('widthOffset, colours')
+    // Each count missing on its own is named, as every other option is.
+    for (const key of ['rowsPerColumn', 'widthOffset'] as const) {
+      const { [key]: _gone, ...rest } = DEFAULT_LEGEND_OPTIONS
+      const missing = withOptions(rest)
+      expect(missing.options).toEqual(DEFAULT_LEGEND_OPTIONS)
+      expect(codes(missing.result)).toEqual(['json.invalid-legend-options'])
+      expect(missing.result.problems[0]!.message).toContain(`option ${key} could not be read`)
+    }
     const none = withOptions(undefined)
     expect(none.options).toEqual(DEFAULT_LEGEND_OPTIONS)
     expect(codes(none.result)).toEqual(['json.invalid-legend-options'])

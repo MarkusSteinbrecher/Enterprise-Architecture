@@ -199,7 +199,7 @@ describe('a group’s name and documentation (#134)', () => {
   })
 
   it('keeps what was typed when a press on another shape takes the panel away first', async () => {
-    const { dispatch, user, view, nodeEl } = setup()
+    const { dispatch, user, surface, view, nodeEl } = setup()
     await click(user, nodeEl('o-g-business'), IN_BUSINESS_GROUP)
     await user.type(field('Documentation'), 'Not lost')
     // A press on a shape selects it at once, and the panel goes before focus moves.
@@ -207,6 +207,9 @@ describe('a group’s name and documentation (#134)', () => {
     expect(screen.queryByRole('textbox', { name: 'Documentation' })).not.toBeInTheDocument()
     expect(group(view).documentation).toBe('Not lost')
     expect(dispatch).toHaveBeenCalledTimes(1)
+    // The field went with the panel: focus is on the canvas the press landed on,
+    // not dropped to <body> (#187 review).
+    expect(surface).toHaveFocus()
   })
 
   it('shows a reader the documentation, with nothing to edit', async () => {
