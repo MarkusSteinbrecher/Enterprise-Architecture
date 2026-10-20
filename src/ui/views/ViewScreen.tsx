@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import {
   VIEWPOINTS,
   findViewpoint,
+  legendEntries,
   isLabelPosition,
   isViewRouter,
   nestedConnections,
@@ -18,6 +19,7 @@ import {
   type View,
   type ViewConnection,
   type ViewNode,
+  type ViewReferenceNode,
 } from '@/model'
 import { downloadBlob, downloadText } from '@/io'
 import {
@@ -71,6 +73,7 @@ import {
 } from './nesting'
 import {
   ELEMENT_DRAG_TYPE,
+  VIEW_DRAG_TYPE,
   newDrawingNode,
   newElement,
   placement,
@@ -939,7 +942,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     const node = newDrawingNode(chosen, spot)
     if (!store.addNode(view.id, node)) return
     choose([node.id], store.view(view.id))
-    setEditing(node.id)
+    // A legend has no text to type (#134): the canvas keeps the keys, as for a junction.
+    if (editableText(node) !== undefined) setEditing(node.id)
+    else release()
   }
 
   /** The middle of the canvas on screen, in view coordinates: where the keyboard places. */
@@ -989,6 +994,26 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       choose([node.id], store.view(view.id))
       release()
     })
+  }
+
+  /**
+   * Draw a reference to the view `viewId`, dragged in from the model tree
+   * (#134): one command, placed at Archi's default size inside whatever
+   * container is there, as a palette shape is. A view dropped on itself draws
+   * nothing, as in Archi; so does a view the model no longer holds.
+   */
+  const drawReference = (viewId: string, at: Point) => {
+    if (viewId === view.id || !store.view(viewId)) return
+    auto.current = false
+    const node: ViewReferenceNode = {
+      id: newId('node'),
+      kind: 'view-ref',
+      view: viewId,
+      ...placement(view, at, defaultNodeSize('view-ref'), isJunction),
+    }
+    if (!store.addNode(view.id, node)) return
+    choose([node.id], store.view(view.id))
+    release()
   }
 
   /**
@@ -1628,28 +1653,39 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             else if (editable && node && editableText(node) !== undefined) setEditing(node.id)
           }}
           onDragOver={(event) => {
-            // An element row from the model tree (#130); anything else is not ours to take.
-            if (!editable || !event.dataTransfer.types.includes(ELEMENT_DRAG_TYPE)) return
+            // An element row from the model tree (#130), or a view row (#134);
+            // anything else is not ours to take.
+            if (!editable) return
+            const { types } = event.dataTransfer
+            if (types.includes(VIEW_DRAG_TYPE)) {
+              event.preventDefault()
+              event.dataTransfer.dropEffect = 'copy'
+              return
+            }
+            if (!types.includes(ELEMENT_DRAG_TYPE)) return
             event.preventDefault()
             // The copy key draws the shape alone (#145); the cursor says which drop this is.
             event.dataTransfer.dropEffect = heldCopyKey(event) ? 'copy' : 'move'
           }}
           onDrop={(event) => {
             // No role check: a browser sends `drop` only where `dragover` accepted, and that refuses a reader.
+            const at = toView({ x: event.clientX, y: event.clientY })
+            const viewId = event.dataTransfer.getData(VIEW_DRAG_TYPE)
+            if (viewId) {
+              event.preventDefault()
+              drawReference(viewId, at)
+              return
+            }
             const elementId = event.dataTransfer.getData(ELEMENT_DRAG_TYPE)
             if (!elementId) return
             event.preventDefault()
-            drawExisting(
-              elementId,
-              toView({ x: event.clientX, y: event.clientY }),
-              !heldCopyKey(event),
-            )
+            drawExisting(elementId, at, !heldCopyKey(event))
           }}
         >
           {empty ? (
             <p className="view-screen__notice">
               {editable
-                ? 'This view is empty. Pick a type in the palette and click here to place it, or drag an element in from the model tree.'
+                ? 'This view is empty. Pick a type in the palette and click here to place it, or drag an element or a view in from the model tree.'
                 : 'This view is empty.'}
             </p>
           ) : (
@@ -1896,9 +1932,14 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         </div>
         {panelNode && (
           <SelectionPanel
+            // Keyed on the node, so a field's typing never carries to the next one (CLAUDE.md).
+            key={panelNode.id}
             node={panelNode}
+            view={view}
             store={store}
             editable={editable}
+            onUpdate={(change) => store.updateNode(view.id, panelNode.id, change)}
+            onDone={release}
             onRemove={() => {
               // As the Delete key: from the view only, with what is nested in it.
               const ids = new Set([panelNode.id])
@@ -2025,15 +2066,23 @@ function handlePoint(b: Bounds, h: Handle): Point {
 
 function SelectionPanel({
   node,
+  view,
   store,
   editable,
+  onUpdate,
+  onDone,
   onRemove,
   onDelete,
   onClose,
 }: {
   node: ViewNode
+  view: View
   store: ModelStore
   editable: boolean
+  /** Change the selected node, as one command; one that changes nothing makes none. */
+  onUpdate: (change: (node: ViewNode) => ViewNode) => void
+  /** A field's Enter or Escape is done with it: focus goes back to the canvas. */
+  onDone: () => void
   onRemove: () => void
   onDelete: (element: string) => void
   onClose: () => void
@@ -2133,14 +2182,147 @@ function SelectionPanel({
     )
   }
 
+  if (node.kind === 'legend') {
+    const entries = legendEntries(view, node.options, {
+      elementType: (id) => store.element(id)?.type,
+      relationshipType: (id) => store.relationship(id)?.type,
+    })
+    return (
+      <aside className="view-panel" aria-label="Selected legend">
+        <div className="view-panel__kind">Legend</div>
+        <p className="view-panel__text">
+          {entries.length
+            ? `Lists the ${entries.length} element and relationship type${entries.length === 1 ? '' : 's'} this view draws.`
+            : 'This view draws no elements or relationships yet, so the legend lists nothing.'}
+        </p>
+        <div className="view-panel__actions">{close}</div>
+      </aside>
+    )
+  }
+
+  if (node.kind === 'group' && editable) {
+    return (
+      <aside className="view-panel" aria-label="Selected group">
+        <div className="view-panel__kind">Group</div>
+        <PanelTextField
+          // Remounted when the stored value changes, so an undone edit shows.
+          key={`name ${node.name}`}
+          label="Name"
+          value={node.name}
+          onCommit={(value) => {
+            const name = value.trim()
+            // An empty name is a slip, as on the canvas: the group keeps its own.
+            onUpdate((n) => (n.kind === 'group' && name && name !== n.name ? { ...n, name } : n))
+          }}
+          onDone={onDone}
+        />
+        <PanelTextField
+          key={`documentation ${node.documentation ?? ''}`}
+          label="Documentation"
+          multiline
+          value={node.documentation ?? ''}
+          onCommit={(value) =>
+            onUpdate((n) => {
+              if (n.kind !== 'group' || value === (n.documentation ?? '')) return n
+              const next = { ...n }
+              // Cleared is absent, as on a group never documented.
+              if (value === '') delete next.documentation
+              else next.documentation = value
+              return next
+            })
+          }
+          onDone={onDone}
+        />
+        <div className="view-panel__actions">{close}</div>
+      </aside>
+    )
+  }
+
   return (
     <aside className="view-panel" aria-label={`Selected ${node.kind}`}>
       <div className="view-panel__kind">{node.kind === 'note' ? 'Note' : 'Group'}</div>
       <p className="view-panel__text view-panel__text--pre">
         {node.kind === 'note' ? node.text : node.name}
       </p>
+      {node.kind === 'group' && node.documentation && (
+        <p className="view-panel__text view-panel__text--pre">{node.documentation}</p>
+      )}
       <div className="view-panel__actions">{close}</div>
     </aside>
+  )
+}
+
+/**
+ * A text field in the selection panel (#134): it commits once, when the typing
+ * is done, never per keystroke, so each edit is one command. Leaving the field
+ * commits; so does Enter on a one-line field, and ⌘/Ctrl+Enter on a multi-line
+ * one, where Enter is a new line. Escape puts the stored value back. Both keys
+ * hand focus to the canvas; leaving does not, since that is the user putting
+ * focus somewhere (CLAUDE.md).
+ *
+ * The browser keeps its own undo of the typing while the field has focus: the
+ * global ⌘Z stands down in a text field (`hasNativeUndo`).
+ *
+ * A press on another shape changes the selection before the browser moves
+ * focus, and this field unmounts with the panel while it still has focus,
+ * which sends no `blur`. So what was typed and not yet committed is committed
+ * as the field unmounts, or a click elsewhere on the canvas would lose it.
+ */
+function PanelTextField({
+  label,
+  value,
+  multiline = false,
+  onCommit,
+  onDone,
+}: {
+  label: string
+  value: string
+  multiline?: boolean
+  onCommit: (value: string) => void
+  onDone: () => void
+}) {
+  /** What is typed and not yet committed, or `null` when the field holds the stored value. */
+  const pending = useRef<string | null>(null)
+  const latest = useRef({ onCommit, value })
+  latest.current = { onCommit, value }
+  const input = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
+  const commit = () => {
+    const typed = pending.current
+    pending.current = null
+    if (typed === null) return
+    latest.current.onCommit(typed)
+    // The field shows what is stored: a commit that changed it remounts the
+    // field with the new value, and one that was refused, an empty name, puts
+    // the old one back rather than leaving the slip on show.
+    if (input.current) input.current.value = latest.current.value
+  }
+  useEffect(() => () => commit(), [])
+  const props = {
+    ref: input,
+    className: `view-panel__input${multiline ? ' view-panel__input--multiline' : ''}`,
+    defaultValue: value,
+    onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      pending.current = event.currentTarget.value
+    },
+    onBlur: commit,
+    onKeyDown: (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.currentTarget.value = value
+        pending.current = null
+        onDone()
+      } else if (event.key === 'Enter' && (!multiline || event.metaKey || event.ctrlKey)) {
+        event.preventDefault()
+        commit()
+        onDone()
+      }
+    },
+  }
+  return (
+    <label className="view-panel__field">
+      <span className="view-panel__stat-key">{label}</span>
+      {multiline ? <textarea rows={4} {...props} /> : <input {...props} />}
+    </label>
   )
 }
 
@@ -2179,6 +2361,7 @@ function LinePanel({
     if (node.kind === 'element') return store.element(node.element)?.name ?? node.element
     if (node.kind === 'note') return 'Note'
     if (node.kind === 'group') return node.name
+    if (node.kind === 'legend') return 'Legend'
     return store.view(node.view)?.name ?? 'View reference'
   }
   const relationship =

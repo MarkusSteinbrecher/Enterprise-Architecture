@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="View objects" id="m-view-objects" version="5.0.0">
+  <folder name="Strategy" id="f-strategy" type="strategy">
+    <element xsi:type="archimate:Capability" name="Claims handling" id="e-capability"/>
+  </folder>
+  <folder name="Business" id="f-business" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Customer" id="e-actor"/>
+  </folder>
+  <folder name="Application" id="f-application" type="application">
+    <element xsi:type="archimate:ApplicationComponent" name="Claims app" id="e-app"/>
+  </folder>
+  <folder name="Technology &amp; Physical" id="f-technology" type="technology"/>
+  <folder name="Motivation" id="f-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="f-implementation" type="implementation_migration"/>
+  <folder name="Other" id="f-other" type="other"/>
+  <folder name="Relations" id="f-relations" type="relations">
+    <element xsi:type="archimate:ServingRelationship" id="r-serving" source="e-app" target="e-actor"/>
+  </folder>
+  <folder name="Views" id="f-diagrams" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Main" id="v-main">
+      <child xsi:type="archimate:DiagramObject" id="o-actor" archimateElement="e-actor">
+        <bounds x="24" y="24" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:Group" id="o-group" name="Front office" textAlignment="1">
+        <bounds x="200" y="24" width="240" height="140"/>
+        <child xsi:type="archimate:DiagramObject" id="o-app" archimateElement="e-app">
+          <bounds x="40" y="40" width="120" height="55"/>
+          <sourceConnection xsi:type="archimate:Connection" id="c-serving" source="o-app" target="o-actor" archimateRelationship="r-serving"/>
+        </child>
+        <documentation>Everything the customer touches.</documentation>
+      </child>
+      <child xsi:type="archimate:Note" id="o-note" textAlignment="1">
+        <bounds x="24" y="200" width="185" height="80"/>
+        <sourceConnection id="c-line" source="o-note" target="o-actor"/>
+        <content>First line
+Second line</content>
+      </child>
+      <child xsi:type="archimate:DiagramModelReference" id="o-ref" model="v-detail">
+        <bounds x="240" y="200" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:Note" id="o-legend" name="Legend" textAlignment="1">
+        <bounds x="480" y="24" width="200" height="120"/>
+        <feature name="legend" value="display=15,rows=15,offset=0,color=1,sort=1"/>
+      </child>
+    </element>
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Detail" id="v-detail">
+      <child xsi:type="archimate:DiagramObject" id="o-detail-capability" archimateElement="e-capability">
+        <bounds x="24" y="24" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:Note" id="o-detail-legend" name="Legend" textAlignment="1">
+        <bounds x="200" y="24" width="200" height="120"/>
+        <feature name="legend" value="display=5,rows=3,offset=20,color=0,sort=0"/>
+      </child>
+    </element>
+  </folder>
+</archimate:model>

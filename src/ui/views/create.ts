@@ -1,5 +1,6 @@
 import { defaultNodeSize } from '@/io/default-sizes'
 import {
+  DEFAULT_LEGEND_OPTIONS,
   LAYERS,
   LAYER_LABELS,
   absoluteBounds,
@@ -25,11 +26,12 @@ import { dropTarget } from './edit'
  * fixture (`edited-claims.ts`) all place shapes with the same function.
  */
 
-/** What the palette can place: an element of a type, a note, or a visual group. */
+/** What the palette can place: an element of a type, a note, a visual group, or a legend (#134). */
 export type Tool =
   | { kind: 'element'; type: ElementType; junctionKind?: JunctionKind }
   | { kind: 'note' }
   | { kind: 'group' }
+  | { kind: 'legend' }
 
 export interface ToolGroup {
   /** A layer, or `view` for the drawing aids that are not model elements. */
@@ -42,6 +44,7 @@ export interface ToolGroup {
 export function toolLabel(tool: Tool): string {
   if (tool.kind === 'note') return 'Note'
   if (tool.kind === 'group') return 'Group'
+  if (tool.kind === 'legend') return 'Legend'
   if (tool.type === 'Junction') return tool.junctionKind === 'or' ? 'Or junction' : 'And junction'
   return typeLabel(tool.type)
 }
@@ -70,7 +73,7 @@ export function toolKey(tool: Tool): string {
 
 /**
  * The palette for a view: every element type, grouped by layer in catalogue
- * order, then note, group and the two junctions. A viewpoint leaves out the
+ * order, then note, group, legend and the two junctions, in Archi's order. A viewpoint leaves out the
  * element types it does not allow, and a layer it leaves empty goes too.
  */
 export function paletteFor(viewpoint: string | undefined): ToolGroup[] {
@@ -85,10 +88,11 @@ export function paletteFor(viewpoint: string | undefined): ToolGroup[] {
   }
   groups.push({
     id: 'view',
-    label: 'Notes, groups, junctions',
+    label: 'Notes, groups, legends, junctions',
     tools: [
       { kind: 'note' },
       { kind: 'group' },
+      { kind: 'legend' },
       { kind: 'element', type: 'Junction' },
       { kind: 'element', type: 'Junction', junctionKind: 'or' },
     ],
@@ -135,15 +139,30 @@ export function newElement(tool: Extract<Tool, { kind: 'element' }>): Element {
   return element
 }
 
-/** The node a note or group tool creates. */
+/** What Archi names a new legend (`ArchimateDiagramModelFactory_0`). */
+export const LEGEND_NAME = 'Legend'
+
+/**
+ * The node a note, group or legend tool creates. A legend starts with Archi's
+ * default options and its name, as Archi's palette makes one.
+ */
 export function newDrawingNode(
-  tool: Extract<Tool, { kind: 'note' | 'group' }>,
+  tool: Extract<Tool, { kind: 'note' | 'group' | 'legend' }>,
   place: { parent?: string; bounds: Bounds },
 ): ViewNode {
+  const id = newId('node')
   const node: ViewNode =
     tool.kind === 'note'
-      ? { id: newId('node'), kind: 'note', text: '', bounds: place.bounds }
-      : { id: newId('node'), kind: 'group', name: 'Group', bounds: place.bounds }
+      ? { id, kind: 'note', text: '', bounds: place.bounds }
+      : tool.kind === 'group'
+        ? { id, kind: 'group', name: 'Group', bounds: place.bounds }
+        : {
+            id,
+            kind: 'legend',
+            name: LEGEND_NAME,
+            options: { ...DEFAULT_LEGEND_OPTIONS },
+            bounds: place.bounds,
+          }
   if (place.parent !== undefined) node.parent = place.parent
   return node
 }
@@ -170,3 +189,10 @@ export function newView(folder?: string): View {
  * itself, never a copy.
  */
 export const ELEMENT_DRAG_TYPE = 'application/x-archipelago-element'
+
+/**
+ * The drag data a model-tree view row carries (#134). Dropped on another view's
+ * canvas, it draws a reference to that view; dropped on the view itself it does
+ * nothing, as in Archi (`ArchimateDNDEditPolicy`: "not the same diagram").
+ */
+export const VIEW_DRAG_TYPE = 'application/x-archipelago-view'

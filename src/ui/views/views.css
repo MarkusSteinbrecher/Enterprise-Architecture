@@ -375,6 +375,28 @@
   gap: 8px;
 }
 
+/* A group's name and documentation, typed in the panel (#134). */
+.view-panel__input {
+  height: 26px;
+  padding: 0 6px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--bd);
+  font: 400 12.5px/1.2 var(--font-ui);
+}
+
+.view-panel__input:focus {
+  border-color: var(--accent);
+  outline: 0;
+}
+
+.view-panel__input--multiline {
+  height: auto;
+  min-height: 72px;
+  padding: 6px;
+  resize: vertical;
+}
+
 .view-panel__name--mono {
   font-family: var(--font-mono);
   font-weight: 500;

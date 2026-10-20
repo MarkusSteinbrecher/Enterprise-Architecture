@@ -246,9 +246,9 @@ describe('the palette and the viewpoint (#130)', () => {
       if (meta.type === 'Junction') continue
       expect(tool(meta.label)).toBeInTheDocument()
     }
-    // Every type but the junction, which has two entries, and note and group.
+    // Every type but the junction, which has two entries, and note, group and legend (#134).
     const palette = screen.getByRole('region', { name: 'Palette' })
-    expect(palette.querySelectorAll('[data-tool]')).toHaveLength(ELEMENT_TYPES.length - 1 + 4)
+    expect(palette.querySelectorAll('[data-tool]')).toHaveLength(ELEMENT_TYPES.length - 1 + 5)
   })
 
   it('takes no viewpoint it does not know from the select, as the guard on the write path', () => {

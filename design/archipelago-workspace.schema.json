@@ -626,7 +626,7 @@
     },
     "viewNode": {
       "type": "object",
-      "description": "A diagram object: a drawn element, a note, a group or a view reference.",
+      "description": "A diagram object: a drawn element, a note, a group, a view reference or a legend.",
       "required": [
         "id",
         "kind",
@@ -643,7 +643,8 @@
             "element",
             "note",
             "group",
-            "view-ref"
+            "view-ref",
+            "legend"
           ]
         },
         "bounds": {
@@ -666,7 +667,7 @@
         },
         "name": {
           "type": "string",
-          "description": "kind 'group'"
+          "description": "kind 'group'; kind 'legend', which draws it nowhere"
         },
         "documentation": {
           "type": "string",
@@ -675,6 +676,9 @@
         "view": {
           "type": "string",
           "description": "kind 'view-ref': id of the view referenced"
+        },
+        "options": {
+          "$ref": "#/$defs/legendOptions"
         }
       },
       "additionalProperties": false,
@@ -734,8 +738,74 @@
               "view"
             ]
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "legend"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "options"
+            ]
+          }
         }
       ]
+    },
+    "legendOptions": {
+      "type": "object",
+      "description": "kind 'legend': what it lists and how, as Archi's ILegendOptions. Its entries are not stored; they follow the view.",
+      "required": [
+        "elements",
+        "relations",
+        "specializedElements",
+        "specializedRelations",
+        "rowsPerColumn",
+        "widthOffset",
+        "colours",
+        "sort"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "elements": {
+          "type": "boolean"
+        },
+        "relations": {
+          "type": "boolean"
+        },
+        "specializedElements": {
+          "type": "boolean"
+        },
+        "specializedRelations": {
+          "type": "boolean"
+        },
+        "rowsPerColumn": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "widthOffset": {
+          "type": "integer",
+          "minimum": -200,
+          "maximum": 200
+        },
+        "colours": {
+          "enum": [
+            "none",
+            "core",
+            "user"
+          ]
+        },
+        "sort": {
+          "enum": [
+            "name",
+            "category"
+          ]
+        }
+      }
     },
     "viewConnection": {
       "type": "object",

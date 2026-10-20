@@ -77,6 +77,7 @@ describe('fixtures said to be saved by Archi hold only what Archi writes (#100)'
         './fixtures/claims-platform.archimate',
         './fixtures/relationship-attributes.archimate',
         './fixtures/text-position.archimate',
+        './fixtures/view-objects.archimate',
       ]),
     )
   })

@@ -18,6 +18,7 @@ UI reference: `design/specs/open-ea-repository-ui-spec.md` §3.1, §2.2.
 | `completeness.ts` | completeness scoring and model health |
 | `workspace.ts` | `Element`, `Relationship`, `View`, `Folder`, `ReportDefinition`, `Workspace` |
 | `views.ts` | pure view operations: node removal with lifting, absolute bounds |
+| `legend.ts` | what a legend lists, worked out from its view as Archi does (#134) |
 | `migrate.ts` | bringing a stored workspace from an earlier schema forward |
 | `validate.ts` | whole-model validation |
 | `validate-views.ts` | referential integrity of views and folders |

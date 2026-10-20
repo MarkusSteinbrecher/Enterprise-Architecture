@@ -16,6 +16,8 @@ export function defaultNodeSize(
 ): { width: number; height: number } {
   if (kind === 'group') return { width: 400, height: 140 }
   if (kind === 'note') return { width: 185, height: 80 }
+  // A legend is a note to Archi, drawn larger (`NoteUIProvider.getDefaultSize`, #134).
+  if (kind === 'legend') return { width: 210, height: 320 }
   if (elementType === 'Junction') return { width: 15, height: 15 }
   if (elementType === 'Grouping') return { width: 400, height: 140 }
   return { width: 120, height: 55 }
