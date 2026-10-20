@@ -489,6 +489,14 @@ holds that for one edited view, and every editor slice extends it.
   `placement` puts them: a new element inside a group, so nested in it, another
   new element, and elements the model held, one of them drawn twice. They are
   connected through the connect menu.
+- Copy and paste (#137) add three pastes, each made as the canvas makes them.
+  Handle Claim, pasted into the landscape that draws it, comes back as copies:
+  new elements named " (copy)" and new relationships among them, with its
+  nesting kept. A Paste Special in the landscape draws the goal and its
+  requirement a second time. The Kubernetes cluster, pasted into `v-scratch`,
+  draws the same elements and relationships again, the lines that its nesting
+  hides included. Archi's save must hold each pasted shape, what it draws, its
+  parent and its lines.
 - Archi's command line cannot run its validator. The test runs Archi's check
   as `validity.ts` carries it (Archi's matrix and junction rules, ADR 0009)
   over Archi's save, and requires no relationship to fail it.

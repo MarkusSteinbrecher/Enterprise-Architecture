@@ -88,6 +88,15 @@ import {
   straightened,
 } from './bendpoints'
 import { InlineName } from './InlineName'
+import {
+  clipboardChord,
+  clipboardFor,
+  copySelection,
+  nextOffset,
+  pasteInto,
+  type ClipboardChord,
+  type Snapshot,
+} from './clipboard'
 import { useScreenActions } from '@/ui/palette/context'
 import type { PaletteAction } from '@/ui/palette/CommandPalette'
 import { defaultNodeSize } from '@/io/default-sizes'
@@ -531,6 +540,13 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const pointer = useRef<Point>({ x: 0, y: 0 })
   const space = useRef(false)
   const scrolling = useRef<number | null>(null)
+  /**
+   * Where the canvas was last pressed, in view coordinates, since the last copy
+   * or paste: a paste puts the copied shapes there (#137). Archi's
+   * `PasteAction` keeps the same point from a mouse listener on the canvas and
+   * forgets it after a copy or a paste.
+   */
+  const pressed = useRef<Point | null>(null)
 
   /** A screen (client) point in view coordinates. */
   const toView = useCallback((client: Point): Point => {
@@ -1071,6 +1087,44 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     nudgeRun.current = after ? { ...next, last: after } : null
   }
 
+  /**
+   * Paste `snapshot` into this view as one command (#137): the copies it makes,
+   * if any, and the drawings. The pasted top-level shapes are selected
+   * afterwards, as Archi selects them. `undefined` when nothing pastes.
+   */
+  const pasteHere = (snapshot: Snapshot, offset: Point, special: boolean) => {
+    const made = pasteInto(store, view.id, snapshot, { offset, special, mint: newId })
+    if (!made) return undefined
+    auto.current = false
+    choose([...made.pasted], made.view)
+    return made
+  }
+
+  /** Run a clipboard chord; `true` when it did something, so the browser's own action is kept away. */
+  const runChord = (chord: ClipboardChord): boolean => {
+    const clipboard = clipboardFor(store)
+    if (chord === 'copy') {
+      const snapshot = copySelection(view, selected, store)
+      if (!snapshot) return false
+      clipboard.copy(snapshot)
+      pressed.current = null
+      return true
+    }
+    if (chord === 'duplicate') {
+      // Copy and paste with no pointer, so at 10, 10 from the original; the clipboard is left alone.
+      const snapshot = copySelection(view, selected, store)
+      if (!snapshot) return false
+      return pasteHere(snapshot, nextOffset(snapshot, { x: 0, y: 0 }, null), false) !== undefined
+    }
+    const snapshot = clipboard.snapshot
+    if (!snapshot) return false
+    const offset = nextOffset(snapshot, clipboard.offset, pressed.current)
+    if (!pasteHere(snapshot, offset, chord === 'paste-special')) return false
+    clipboard.pastedAt(offset)
+    pressed.current = null
+    return true
+  }
+
   const zoomBy = (factor: number) =>
     steer(zoomAround(vp, vp.zoom * factor, { x: size.width / 2, y: size.height / 2 }))
 
@@ -1276,7 +1330,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           aria-label={`View ${view.name}`}
           aria-description={
             editable
-              ? 'Drag shapes to move them, drag empty space to select, arrow keys to nudge. Drag from a selected shape’s connect handle to another shape to connect them. Delete removes from the view with everything inside; Shift+Delete keeps what is inside. Space and drag to pan.'
+              ? 'Drag shapes to move them, drag empty space to select, arrow keys to nudge. Drag from a selected shape’s connect handle to another shape to connect them. Delete removes from the view with everything inside; Shift+Delete keeps what is inside. Space and drag to pan. Command or Ctrl+C copies the selected shapes, Command or Ctrl+V pastes them where you last clicked, with Shift it draws the same elements again, and Command or Ctrl+D duplicates.'
               : undefined
           }
           onKeyDown={(event) => {
@@ -1294,6 +1348,11 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               return
             }
             if (!editable || gesture.current) return
+            const chord = clipboardChord(event)
+            if (chord) {
+              if (runChord(chord)) event.preventDefault()
+              return
+            }
             if (event.key === 'F2' && single) {
               // Archi's rename in place.
               if (editableText(view.nodes.find((n) => n.id === single)) !== undefined) {
@@ -1340,8 +1399,10 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             space.current = false
           }}
           onPointerDown={(event) => {
-            if (event.button !== 0 && event.button !== 1) return
             const start = { x: event.clientX, y: event.clientY }
+            // Any press, on a shape or not, as Archi's `PasteAction` listens to the whole canvas.
+            pressed.current = toView(start)
+            if (event.button !== 0 && event.button !== 1) return
             pointer.current = start
             const {
               node,

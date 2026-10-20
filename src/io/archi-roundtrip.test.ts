@@ -238,6 +238,73 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
     for (const id of ['o-s-check', 'o-s-serve']) expect(at(archi, id), id).toEqual(at(ours, id))
   })
 
+  it('keeps what each paste drew: copies, the same elements again, and the nesting (#137)', () => {
+    /** Each pasted shape as `parent: Type “name”`, the parent by id and the element by what it is. */
+    const shapes = (w: Workspace, viewId: string, name: string) =>
+      w.views
+        .find((v) => v.id === viewId)!
+        .nodes.filter((n) => n.id.startsWith(`${name}-node-`))
+        .map((n) => {
+          const e = n.kind === 'element' ? w.elements.find((x) => x.id === n.element) : undefined
+          return `${n.id} in ${n.parent ?? 'the view'}: ${e ? `${e.id} ${e.type} “${e.name}”` : n.kind}`
+        })
+        .sort()
+    const lines = (w: Workspace, viewId: string, name: string) =>
+      w.views
+        .find((v) => v.id === viewId)!
+        .connections.filter((c) => c.id.startsWith(`${name}-conn-`))
+        .map((c) => {
+          const r =
+            c.kind === 'relationship'
+              ? w.relationships.find((x) => x.id === c.relationship)
+              : undefined
+          return `${c.source} → ${c.target}: ${r ? `${r.id} ${r.type} ${r.source} → ${r.target}` : c.kind}`
+        })
+        .sort()
+    // Present in ours first, so the comparison is not of two absences.
+    // Paste in the view the process is drawn in: copies, named as Archi names them.
+    expect(shapes(ours, 'v-landscape', 'copy')).toEqual([
+      'copy-node-1 in the view: copy-el-1 BusinessProcess “Handle Claim (copy)”',
+      'copy-node-2 in copy-node-1: copy-el-2 BusinessProcess “Register (copy)”',
+      'copy-node-3 in copy-node-1: copy-el-3 BusinessProcess “Accept (copy)”',
+      'copy-node-4 in copy-node-1: copy-el-4 Junction “Junction (copy)”',
+      'copy-node-5 in copy-node-1: copy-el-5 BusinessProcess “Valuate (copy)”',
+      'copy-node-6 in copy-node-1: copy-el-6 BusinessProcess “Pay (copy)”',
+    ])
+    expect(lines(ours, 'v-landscape', 'copy')).toHaveLength(5)
+    expect(lines(ours, 'v-landscape', 'copy')).toContain(
+      'copy-node-2 → copy-node-3: copy-rel-1 Triggering copy-el-2 → copy-el-3',
+    )
+    // Paste Special in the same view: the goal and its requirement drawn again.
+    expect(shapes(ours, 'v-landscape', 'special')).toEqual([
+      'special-node-1 in the view: g-settle Goal “Settle claims within five days”',
+      'special-node-2 in the view: r-rules Requirement “Assessment is rules-driven”',
+    ])
+    expect(lines(ours, 'v-landscape', 'special')).toEqual([
+      'special-node-2 → special-node-1: r-req-goal Realization r-rules → g-settle',
+    ])
+    // Paste into a view that drew none of the cluster: drawn again, with what is
+    // nested in it and the line the nesting hides.
+    expect(shapes(ours, 'v-scratch', 'again')).toEqual([
+      'again-node-1 in the view: n-k8s Node “Kubernetes Cluster”',
+      'again-node-2 in again-node-1: ss-runtime SystemSoftware “Claims Runtime”',
+      'again-node-3 in again-node-1: ss-postgres SystemSoftware “PostgreSQL”',
+      'again-node-4 in again-node-1: ss-batch SystemSoftware “Claims Batch”',
+    ])
+    expect(lines(ours, 'v-scratch', 'again')).toEqual([
+      'again-node-1 → again-node-2: r-k8s-runtime Composition n-k8s → ss-runtime',
+      'again-node-1 → again-node-4: r-k8s-batch Composition n-k8s → ss-batch',
+    ])
+    for (const [viewId, name] of [
+      ['v-landscape', 'copy'],
+      ['v-landscape', 'special'],
+      ['v-scratch', 'again'],
+    ] as const) {
+      expect(shapes(archi, viewId, name), name).toEqual(shapes(ours, viewId, name))
+      expect(lines(archi, viewId, name), name).toEqual(lines(ours, viewId, name))
+    }
+  })
+
   it('keeps the bend-points the canvas added, moved and removed, as drawn (#133)', () => {
     const points = (w: Workspace, id: string) =>
       w.views.find((v) => v.id === 'v-landscape')!.connections.find((c) => c.id === id)?.bendpoints
@@ -275,6 +342,9 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
         'o-rollout appearance.textAlignment: carried only',
         // The view made from scratch (#130): a new group, read as the others are.
         'o-s-group appearance.textAlignment: carried only',
+        // Pasted (#137): each keeps the look of the shape it was copied from.
+        'copy-node-1 appearance.textAlignment: carried only',
+        'special-node-2 appearance.fontName: default font name',
       ].sort(),
     )
     // Archi's ids for the connections it added are its own, so they are named by what they draw.
@@ -294,6 +364,8 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
         'relationship r-handle-valuate o-handle → o-valuate: nested connection',
         'relationship r-k8s-pg o-k8s → o-postgres: nested connection',
         'relationship r-mf-cics o-mainframe → o-cics: nested connection',
+        // Pasted (#137): the cluster drawn again, and Archi adds the same line for it.
+        'relationship r-k8s-pg again-node-1 → again-node-3: nested connection',
       ].sort(),
     )
   })
@@ -352,6 +424,9 @@ describe('Archi’s export of the model it saved, read by the exchange reader (#
         'o-rollout appearance.fontStyle: carried only',
         'o-rollout appearance.textAlignment: carried only',
         'o-s-group appearance.textAlignment: carried only',
+        // Pasted (#137): each keeps the look of the shape it was copied from.
+        'copy-node-1 appearance.textAlignment: carried only',
+        'special-node-2 appearance.fontName: default font name',
       ].sort(),
     )
     // Archi's export leaves out every connection between nested shapes
@@ -376,6 +451,10 @@ describe('Archi’s export of the model it saved, read by the exchange reader (#
         'r-k8s-pg: nested connection',
         'r-k8s-runtime: nested connection',
         'r-mf-cics: nested connection',
+        // Pasted (#137): the cluster drawn again in the scratch view, nested as before.
+        'r-k8s-batch: nested connection',
+        'r-k8s-pg: nested connection',
+        'r-k8s-runtime: nested connection',
       ].sort(),
     )
   })
