@@ -47,7 +47,7 @@ the script, there is no time for the change (convention §7).
 | -------------- | ----------------------------------------------------------------------------------- |
 | `local`        | `npm run dev` → http://localhost:5173/Enterprise-Architecture/                      |
 | `preview`      | `npm run build && npm run preview` → http://localhost:4173/Enterprise-Architecture/ |
-| `github-pages` | https://stein-clankers.github.io/Enterprise-Architecture/                       |
+| `github-pages` | https://stein-clankers.github.io/Enterprise-Architecture/                           |
 
 Prefer `preview` or `github-pages`: the dev server does not exercise the production bundle
 or the deep-link redirect. Every script starts from an **empty browser profile** — a fresh
