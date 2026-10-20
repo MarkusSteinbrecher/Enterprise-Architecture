@@ -30,6 +30,21 @@
     <element identifier="bp-check-cover" xsi:type="BusinessProcess">
       <name xml:lang="en">Check cover</name>
     </element>
+    <element identifier="copy-el-1" xsi:type="BusinessProcess">
+      <name xml:lang="en">Handle Claim (copy)</name>
+    </element>
+    <element identifier="copy-el-2" xsi:type="BusinessProcess">
+      <name xml:lang="en">Register (copy)</name>
+    </element>
+    <element identifier="copy-el-3" xsi:type="BusinessProcess">
+      <name xml:lang="en">Accept (copy)</name>
+    </element>
+    <element identifier="copy-el-5" xsi:type="BusinessProcess">
+      <name xml:lang="en">Valuate (copy)</name>
+    </element>
+    <element identifier="copy-el-6" xsi:type="BusinessProcess">
+      <name xml:lang="en">Pay (copy)</name>
+    </element>
     <element identifier="ba-customer" xsi:type="BusinessActor">
       <name xml:lang="en">Customer</name>
       <documentation xml:lang="en">A policy holder making a claim.</documentation>
@@ -143,6 +158,9 @@
     <element identifier="j-serve" xsi:type="AndJunction">
       <name xml:lang="en" />
     </element>
+    <element identifier="copy-el-4" xsi:type="OrJunction">
+      <name xml:lang="en">Junction (copy)</name>
+    </element>
   </elements>
   <relationships>
     <relationship identifier="r-cust-ins" source="ba-customer" target="br-insurant" xsi:type="Assignment" />
@@ -203,6 +221,13 @@
     <relationship identifier="r-s-event-valuate" source="be-claim-in" target="bp-valuate" xsi:type="Triggering" />
     <relationship identifier="r-s-event-check" source="be-claim-in" target="bp-check-cover" xsi:type="Triggering" />
     <relationship identifier="r-s-intake-serve" source="as-intake" target="j-serve" xsi:type="Serving" />
+    <relationship identifier="copy-rel-1" source="copy-el-2" target="copy-el-3" xsi:type="Triggering" />
+    <relationship identifier="copy-rel-2" source="copy-el-3" target="copy-el-4" xsi:type="Triggering" />
+    <relationship identifier="copy-rel-3" source="copy-el-4" target="copy-el-5" xsi:type="Triggering" />
+    <relationship identifier="copy-rel-4" source="copy-el-4" target="copy-el-6" xsi:type="Triggering">
+      <name xml:lang="en">fast track</name>
+    </relationship>
+    <relationship identifier="copy-rel-5" source="copy-el-5" target="copy-el-6" xsi:type="Triggering" />
     <relationship identifier="r-ins-reg" source="bs-registration" target="br-insurant" xsi:type="Serving" />
     <relationship identifier="r-ins-info" source="bs-information" target="br-insurant" xsi:type="Serving" />
     <relationship identifier="r-ins-pay" source="bs-payment" target="br-insurant" xsi:type="Serving" />
@@ -235,6 +260,11 @@
       <item identifierRef="bo-claim" />
       <item identifierRef="be-claim-in" />
       <item identifierRef="bp-check-cover" />
+      <item identifierRef="copy-el-1" />
+      <item identifierRef="copy-el-2" />
+      <item identifierRef="copy-el-3" />
+      <item identifierRef="copy-el-5" />
+      <item identifierRef="copy-el-6" />
     </item>
     <item>
       <label xml:lang="en">Application</label>
@@ -291,6 +321,7 @@
       <item identifierRef="j-split" />
       <item identifierRef="j-intake" />
       <item identifierRef="j-serve" />
+      <item identifierRef="copy-el-4" />
     </item>
     <item>
       <label xml:lang="en">Relations</label>
@@ -360,6 +391,11 @@
       <item identifierRef="r-s-event-valuate" />
       <item identifierRef="r-s-event-check" />
       <item identifierRef="r-s-intake-serve" />
+      <item identifierRef="copy-rel-1" />
+      <item identifierRef="copy-rel-2" />
+      <item identifierRef="copy-rel-3" />
+      <item identifierRef="copy-rel-4" />
+      <item identifierRef="copy-rel-5" />
     </item>
     <item>
       <label xml:lang="en">Views</label>
@@ -390,7 +426,7 @@
         <documentation xml:lang="en">Business, application and platform layers of the claims platform.</documentation>
         <properties>
           <property propertyDefinitionRef="propid-1">
-            <value xml:lang="en">[{"id":"c-crm-cust","labelPosition":"source"},{"id":"c-note-split","literal":{"lineColor":"#999999"}},{"id":"c-pay-ins","literal":{"lineColor":"#7a7a7a"}},{"id":"c-req-goal","literal":{"lineColor":"#8c1e5a","lineWidth":2}},{"id":"o-crm","literal":{"fillColor":"#e0e0e0a1"}},{"id":"o-engine","literal":{"fillColor":"#c9e7f7","fontColor":"#0b2e4a","fontName":"Arial","fontSize":11,"fontStyle":["bold"],"lineColor":"#1d5c8c","lineWidth":2}},{"id":"o-g-apps","textAlignment":"center"},{"id":"o-g-business","literal":{"fillColor":"#fff5d6"},"textAlignment":"center"},{"id":"o-g-platform","textAlignment":"center"},{"id":"o-goal","literal":{"fillColor":"#ffe9a8"}},{"id":"o-handle","textAlignment":"left"},{"id":"o-note-biz","textAlignment":"center"},{"id":"o-req","literal":{"fontColor":"#5a1e8c","fontSize":12,"fontStyle":["bold"]}},{"id":"o-rollout","strikethrough":true,"textAlignment":"right"}]</value>
+            <value xml:lang="en">[{"id":"c-crm-cust","labelPosition":"source"},{"id":"c-note-split","literal":{"lineColor":"#999999"}},{"id":"c-pay-ins","literal":{"lineColor":"#7a7a7a"}},{"id":"c-req-goal","literal":{"lineColor":"#8c1e5a","lineWidth":2}},{"id":"copy-node-1","textAlignment":"left"},{"id":"o-crm","literal":{"fillColor":"#e0e0e0a1"}},{"id":"o-engine","literal":{"fillColor":"#c9e7f7","fontColor":"#0b2e4a","fontName":"Arial","fontSize":11,"fontStyle":["bold"],"lineColor":"#1d5c8c","lineWidth":2}},{"id":"o-g-apps","textAlignment":"center"},{"id":"o-g-business","literal":{"fillColor":"#fff5d6"},"textAlignment":"center"},{"id":"o-g-platform","textAlignment":"center"},{"id":"o-goal","literal":{"fillColor":"#ffe9a8"}},{"id":"o-handle","textAlignment":"left"},{"id":"o-note-biz","textAlignment":"center"},{"id":"o-req","literal":{"fontColor":"#5a1e8c","fontSize":12,"fontStyle":["bold"]}},{"id":"o-rollout","strikethrough":true,"textAlignment":"right"},{"id":"special-conn-1","literal":{"lineColor":"#8c1e5a","lineWidth":2}},{"id":"special-node-1","literal":{"fillColor":"#ffe9a8"}},{"id":"special-node-2","literal":{"fontColor":"#5a1e8c","fontSize":12,"fontStyle":["bold"]}}]</value>
           </property>
         </properties>
         <node identifier="o-g-business" x="20" y="20" w="1180" h="300" xsi:type="Container">
@@ -833,6 +869,78 @@ for claims under 500.</label>
             </font>
           </style>
         </node>
+        <node identifier="copy-node-1" elementRef="copy-el-1" xsi:type="Element" x="20" y="1060" w="760" h="140">
+          <style>
+            <fillColor r="255" g="255" b="181" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <node identifier="copy-node-2" elementRef="copy-el-2" xsi:type="Element" x="40" y="1110" w="120" h="55">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="copy-node-3" elementRef="copy-el-3" xsi:type="Element" x="200" y="1110" w="120" h="55">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="copy-node-4" elementRef="copy-el-4" xsi:type="Element" x="360" y="1130" w="15" h="15">
+            <style>
+              <fillColor r="0" g="0" b="0" a="100" />
+              <lineColor r="0" g="0" b="0" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="copy-node-5" elementRef="copy-el-5" xsi:type="Element" x="420" y="1090" w="120" h="50">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="copy-node-6" elementRef="copy-el-6" xsi:type="Element" x="620" y="1110" w="120" h="55">
+            <style>
+              <fillColor r="255" g="255" b="181" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+        </node>
+        <node identifier="special-node-1" elementRef="g-settle" xsi:type="Element" x="1240" y="1060" w="170" h="60">
+          <style>
+            <fillColor r="255" g="233" b="168" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="special-node-2" elementRef="r-rules" xsi:type="Element" x="1240" y="1180" w="170" h="60">
+          <style>
+            <fillColor r="204" g="204" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12" style="bold">
+              <color r="90" g="30" b="140" />
+            </font>
+          </style>
+        </node>
         <connection identifier="c-cust-ins" relationshipRef="r-cust-ins" xsi:type="Relationship" source="o-customer" target="o-insurant">
           <style>
             <lineColor r="0" g="0" b="0" />
@@ -1230,6 +1338,55 @@ for claims under 500.</label>
             </font>
           </style>
         </connection>
+        <connection identifier="copy-conn-1" relationshipRef="copy-rel-1" xsi:type="Relationship" source="copy-node-2" target="copy-node-3">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="copy-conn-2" relationshipRef="copy-rel-2" xsi:type="Relationship" source="copy-node-3" target="copy-node-4">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="copy-conn-3" relationshipRef="copy-rel-3" xsi:type="Relationship" source="copy-node-4" target="copy-node-5">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="copy-conn-4" relationshipRef="copy-rel-4" xsi:type="Relationship" source="copy-node-4" target="copy-node-6">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <bendpoint x="680" y="1180" />
+        </connection>
+        <connection identifier="copy-conn-5" relationshipRef="copy-rel-5" xsi:type="Relationship" source="copy-node-5" target="copy-node-6">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="special-conn-1" relationshipRef="r-req-goal" xsi:type="Relationship" source="special-node-2" target="special-node-1">
+          <style lineWidth="2">
+            <lineColor r="140" g="30" b="90" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
       </view>
       <view identifier="v-scratch" xsi:type="Diagram" viewpoint="Business Process Cooperation">
         <name xml:lang="en">Claim intake (draft)</name>
@@ -1314,6 +1471,42 @@ for claims under 500.</label>
               <color r="0" g="0" b="0" />
             </font>
           </style>
+        </node>
+        <node identifier="again-node-1" elementRef="n-k8s" xsi:type="Element" x="40" y="560" w="580" h="150">
+          <style>
+            <fillColor r="201" g="231" b="183" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+          <node identifier="again-node-2" elementRef="ss-runtime" xsi:type="Element" x="100" y="610" w="150" h="55">
+            <style>
+              <fillColor r="201" g="231" b="183" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="again-node-3" elementRef="ss-postgres" xsi:type="Element" x="420" y="610" w="150" h="55">
+            <style>
+              <fillColor r="201" g="231" b="183" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
+          <node identifier="again-node-4" elementRef="ss-batch" xsi:type="Element" x="275" y="630" w="120" h="55">
+            <style>
+              <fillColor r="201" g="231" b="183" a="100" />
+              <lineColor r="92" g="92" b="92" a="100" />
+              <font name="Lucida Grande" size="12">
+                <color r="0" g="0" b="0" />
+              </font>
+            </style>
+          </node>
         </node>
         <connection identifier="c-s-intake-valuate" relationshipRef="r-s-intake-valuate" xsi:type="Relationship" source="o-s-intake" target="o-s-valuate">
           <style>
