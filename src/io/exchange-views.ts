@@ -1,6 +1,7 @@
 import {
   FOLDER_ROOTS,
   FOLDER_ROOT_LABELS,
+  FONT_STYLES,
   TEXT_ALIGNMENTS,
   TEXT_POSITIONS,
   isLabelPosition,
@@ -134,6 +135,10 @@ const CONNECTION_DEFAULTS: StyleDefaults = { line: BLACK, font: BLACK }
  *
  * - **Text alignment, text position, strikethrough and a connection's label
  *   position** (#133), which the format's style has no attribute for.
+ * - **Underline** (#135), which the format says and Archi does not hold: its
+ *   import reads bold and italic only (`XMLModelImporter.addFont`), so without
+ *   a copy here an underline is gone after a pass through Archi. `<style>`
+ *   still says it, for every other tool.
  * - **`literal`**: what the `<style>` Archipelago wrote says, field by field
  *   (`{"fontColor":"#000000"}`). The reader normally drops values equal to
  *   Archi's defaults, because Archi writes its whole style on every object; on
@@ -160,6 +165,7 @@ interface CarriedStyle {
   textPosition?: TextPosition
   labelPosition?: LabelPosition
   strikethrough?: true
+  underline?: true
 }
 
 /** The appearance fields `<style>` can say. Text alignment, text position and strikethrough are carried instead. */
@@ -255,6 +261,7 @@ function carriedStyle(item: ViewNode | ViewConnection): CarriedStyle | undefined
   if (appearance.textPosition) carried.textPosition = appearance.textPosition
   if (appearance.labelPosition) carried.labelPosition = appearance.labelPosition
   if (appearance.fontStyle?.includes('strikethrough')) carried.strikethrough = true
+  if (appearance.fontStyle?.includes('underline')) carried.underline = true
   return Object.keys(carried).length ? carried : undefined
 }
 
@@ -282,6 +289,7 @@ function carriedStyleJson(
       'strikethrough',
       'textAlignment',
       'textPosition',
+      'underline',
       ...STYLE_FIELDS,
     ].sort(),
   )
@@ -350,8 +358,12 @@ export function applyCarriedStyle(
     if (isLabelPosition(record.labelPosition)) appearance.labelPosition = record.labelPosition
     // A value this build cannot draw is counted, not ignored (#133).
     else if (record.labelPosition !== undefined) unread += 1
-    if (record.strikethrough === true) {
-      appearance.fontStyle = [...(appearance.fontStyle ?? []), 'strikethrough']
+    if (record.strikethrough === true || record.underline === true) {
+      // `<style>` may say the underline too: one style, once, in its fixed order.
+      const styles = new Set<FontStyle>(appearance.fontStyle)
+      if (record.strikethrough === true) styles.add('strikethrough')
+      if (record.underline === true) styles.add('underline')
+      appearance.fontStyle = FONT_STYLES.filter((style) => styles.has(style))
     }
     if (Object.keys(appearance).length) item.appearance = appearance
     // Last, as it replaces the note it turns, appearance and all.
@@ -1544,7 +1556,8 @@ function writeView(
 
 /**
  * `<style>`. Text alignment, text position and strikethrough have no place in
- * it; they travel in the view's `archipelago.style` property instead. What it
+ * it; they travel in the view's `archipelago.style` property instead, and so
+ * does a copy of an underline, which Archi's import drops. What it
  * says is `styleSays`, which the `literal` marker records.
  */
 function writeStyle(appearance: Appearance | undefined, pad: string): string[] {

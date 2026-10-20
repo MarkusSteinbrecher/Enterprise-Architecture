@@ -4,6 +4,7 @@ import {
   ELEMENT_TYPE_NAMES,
   FOLDER_ROOTS,
   FONT_STYLES,
+  HEX_COLOUR_PATTERN,
   INFLUENCE_STRENGTHS,
   JUNCTION_KINDS,
   LANGUAGE_TAG_PATTERN,
@@ -272,7 +273,7 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           },
         },
       },
-      colour: { type: 'string', pattern: '^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$' },
+      colour: { type: 'string', pattern: HEX_COLOUR_PATTERN },
       viewNode: {
         type: 'object',
         description:

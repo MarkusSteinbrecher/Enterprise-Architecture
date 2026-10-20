@@ -1,0 +1,168 @@
+/* ── Appearance (#135) ───────────────────────────────────────────────────── */
+
+.appearance {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bd);
+}
+
+.appearance__field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.appearance__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* A colour, a font name or a size: what is typed is data, so it is set in mono. */
+.appearance__input {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  padding: 0 6px;
+  background: var(--paper);
+  border: 1px solid var(--bd);
+  color: var(--ink);
+  font: 400 12px/1 var(--font-mono);
+}
+
+.appearance__input::placeholder {
+  color: var(--ink3);
+}
+
+.appearance__input[aria-invalid='true'] {
+  border-color: var(--lc-eol);
+}
+
+.appearance__select {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+}
+
+.appearance__swatch {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 1px;
+  background: var(--paper);
+  border: 1px solid var(--bd);
+  cursor: pointer;
+}
+
+.appearance__swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.appearance__swatch::-webkit-color-swatch {
+  border: 0;
+}
+
+/* No override, or a mix: the swatch is a picker, not a claim about the colour drawn. */
+.appearance__swatch--unset {
+  opacity: 0.35;
+}
+
+.appearance__reset {
+  flex: none;
+  height: 26px;
+  padding: 0 6px;
+  background: transparent;
+  border: 1px solid var(--bd);
+  color: var(--ink2);
+  font: 500 8.5px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.appearance__reset:disabled {
+  color: var(--ink3);
+  border-color: transparent;
+  cursor: default;
+}
+
+.appearance__error {
+  color: var(--lc-eol);
+  font: 400 11px/1.3 var(--font-ui);
+}
+
+.appearance__styles {
+  display: flex;
+}
+
+.appearance__style {
+  width: 30px;
+  height: 26px;
+  margin-left: -1px;
+  background: var(--paper);
+  border: 1px solid var(--bd);
+  color: var(--ink2);
+  font: 400 12px/1 var(--font-ui);
+  cursor: pointer;
+}
+
+.appearance__style:first-child {
+  margin-left: 0;
+}
+
+.appearance__style[aria-pressed='true'] {
+  background: var(--panel2);
+  border-color: var(--bd2);
+  color: var(--ink);
+}
+
+/* Some of the selection has the style and some does not. */
+.appearance__style[aria-pressed='mixed'] {
+  background: linear-gradient(to top right, var(--paper) 50%, var(--panel2) 50%);
+  color: var(--ink);
+}
+
+.appearance__style--bold {
+  font-weight: 700;
+}
+
+.appearance__style--italic {
+  font-style: italic;
+}
+
+.appearance__style--underline {
+  text-decoration: underline;
+}
+
+.appearance__style--strikethrough {
+  text-decoration: line-through;
+}
+
+/* ── Format painter (#135) ───────────────────────────────────────────────── */
+
+.view-screen__canvas--paint,
+.view-screen__canvas--paint:active,
+.view-screen__canvas--paint [data-node],
+.view-screen__canvas--paint [data-line-hit] {
+  cursor: copy;
+}
+
+.view-painter {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  padding: 6px 6px 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  font: 400 12.5px/1.3 var(--font-ui);
+  color: var(--ink);
+}

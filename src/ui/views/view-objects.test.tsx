@@ -220,7 +220,13 @@ describe('a group’s name and documentation (#134)', () => {
     await click(user, nodeEl('o-g-business'), IN_BUSINESS_GROUP)
     const panel = screen.getByRole('complementary', { name: 'Selected group' })
     expect(panel).toHaveTextContent('Read me.')
-    expect(within(panel).queryByRole('textbox')).not.toBeInTheDocument()
+    expect(within(panel).queryByRole('textbox', { name: 'Name' })).not.toBeInTheDocument()
+    expect(within(panel).queryByRole('textbox', { name: 'Documentation' })).not.toBeInTheDocument()
+    // The appearance section (#135) shows a reader its values, in fields that are
+    // all disabled: still nothing to edit.
+    const fields = within(panel).getAllByRole('textbox')
+    expect(fields.length).toBeGreaterThan(0)
+    for (const field of fields) expect(field).toBeDisabled()
   })
 })
 
