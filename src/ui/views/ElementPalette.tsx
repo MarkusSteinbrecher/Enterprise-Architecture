@@ -6,7 +6,7 @@ import { paletteFor, toolKey, toolLabel, toolMatches, type Tool } from './create
 
 /**
  * The editor's palette (#130): every element type, grouped by layer and drawn
- * in its ArchiMate notation (#77), then note, group and the two junctions. A
+ * in its ArchiMate notation (#77), then note, group, legend (#134) and the two junctions. A
  * view with a viewpoint offers only the types the viewpoint allows.
  *
  * A click arms a tool, and the next click on the canvas places it there, as
@@ -185,7 +185,20 @@ function ToolGlyph({ tool }: { tool: Tool }) {
   let shape
   if (tool.kind === 'note') shape = <NoteShape width={w} height={h} text="" />
   else if (tool.kind === 'group') shape = <GroupShape width={w} height={h} name="" />
-  else if (tool.type === 'Junction') {
+  else if (tool.kind === 'legend') {
+    // A box listing two entries, each a symbol and a line of text.
+    shape = (
+      <g data-shape="legend">
+        <rect width={w} height={h} fill="var(--surface)" stroke="var(--bd2)" />
+        {[5, 12].map((y) => (
+          <g key={y}>
+            <rect x={4} y={y} width={5} height={4} fill="var(--panel)" stroke="var(--ink2)" />
+            <path d={`M12,${y + 2}H28`} stroke="var(--ink2)" />
+          </g>
+        ))}
+      </g>
+    )
+  } else if (tool.type === 'Junction') {
     shape = (
       <g transform={`translate(${w / 2 - 6} ${h / 2 - 6})`}>
         <ElementShape

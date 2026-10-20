@@ -1,9 +1,11 @@
 import { memo } from 'react'
 import {
+  legendEntries,
   nestedConnections,
   type Bounds,
   type ElementType,
   type JunctionKind,
+  type LegendEntry,
   type Point,
   type Relationship,
   type View,
@@ -13,6 +15,7 @@ import {
 import {
   ElementShape,
   GroupShape,
+  LegendShape,
   MissingShape,
   NoteShape,
   RelationshipLine,
@@ -69,6 +72,12 @@ export const ViewDrawing = memo(function ViewDrawing({
   }
   visit(undefined)
   const hidden = nestedConnections(view)
+  // A legend lists what the view draws (#134), so it is worked out from the view
+  // it is drawn in, the preview mid-gesture included.
+  const legendLookups = {
+    elementType: (id: string) => lookups.element(id)?.type,
+    relationshipType: (id: string) => lookups.relationship(id)?.type,
+  }
   return (
     <g data-view-drawing={view.id}>
       <g>
@@ -79,6 +88,9 @@ export const ViewDrawing = memo(function ViewDrawing({
             at={bounds.get(node.id) ?? node.bounds}
             element={node.kind === 'element' ? lookups.element(node.element) : undefined}
             viewName={node.kind === 'view-ref' ? lookups.viewName(node.view) : undefined}
+            entries={
+              node.kind === 'legend' ? legendEntries(view, node.options, legendLookups) : undefined
+            }
           />
         ))}
       </g>
@@ -111,6 +123,17 @@ type ResolvedRelationship = ReturnType<DrawingLookups['relationship']>
 const sameBox = (a: Bounds, b: Bounds) =>
   a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height
 
+/** Entries are worked out anew on every render; a legend redraws only when they changed. */
+const sameEntries = (
+  a: readonly LegendEntry[] | undefined,
+  b: readonly LegendEntry[] | undefined,
+) =>
+  a === b ||
+  (a !== undefined &&
+    b !== undefined &&
+    a.length === b.length &&
+    a.every((entry, i) => entry.type === b[i]!.type && entry.kind === b[i]!.kind))
+
 /**
  * One node, redrawn only when something it shows changed: its own object, where
  * it sits, or the element or view name it draws. The store keeps the identity
@@ -123,11 +146,13 @@ const DrawnNode = memo(
     at,
     element,
     viewName,
+    entries,
   }: {
     node: ViewNode
     at: Bounds
     element: ResolvedElement
     viewName: string | undefined
+    entries: readonly LegendEntry[] | undefined
   }) {
     return (
       <g
@@ -142,6 +167,7 @@ const DrawnNode = memo(
           height={node.bounds.height}
           element={element}
           viewName={viewName}
+          entries={entries}
         />
       </g>
     )
@@ -150,7 +176,8 @@ const DrawnNode = memo(
     a.node === b.node &&
     sameBox(a.at, b.at) &&
     a.element === b.element &&
-    a.viewName === b.viewName,
+    a.viewName === b.viewName &&
+    sameEntries(a.entries, b.entries),
 )
 
 const DrawnConnection = memo(
@@ -207,12 +234,14 @@ function NodeBody({
   height,
   element,
   viewName,
+  entries,
 }: {
   node: ViewNode
   width: number
   height: number
   element: ResolvedElement
   viewName: string | undefined
+  entries: readonly LegendEntry[] | undefined
 }) {
   switch (node.kind) {
     case 'element': {
@@ -242,6 +271,16 @@ function NodeBody({
           width={width}
           height={height}
           name={viewName}
+          appearance={node.appearance}
+        />
+      )
+    case 'legend':
+      return (
+        <LegendShape
+          width={width}
+          height={height}
+          entries={entries ?? []}
+          options={node.options}
           appearance={node.appearance}
         />
       )

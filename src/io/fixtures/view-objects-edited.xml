@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" identifier="m-view-objects">
+  <name xml:lang="en">View objects</name>
+  <elements>
+    <element identifier="e-capability" xsi:type="Capability">
+      <name xml:lang="en">Claims handling</name>
+    </element>
+    <element identifier="e-actor" xsi:type="BusinessActor">
+      <name xml:lang="en">Customer</name>
+    </element>
+    <element identifier="e-app" xsi:type="ApplicationComponent">
+      <name xml:lang="en">Claims app</name>
+    </element>
+    <element identifier="e-goal" xsi:type="Goal">
+      <name xml:lang="en">Goal</name>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="r-serving" source="e-app" target="e-actor" xsi:type="Serving">
+    </relationship>
+  </relationships>
+  <propertyDefinitions>
+    <propertyDefinition identifier="propid-1" type="string">
+      <name xml:lang="en">archipelago.style</name>
+    </propertyDefinition>
+  </propertyDefinitions>
+  <views>
+    <diagrams>
+      <view identifier="v-detail" xsi:type="Diagram">
+        <name xml:lang="en">Detail</name>
+        <properties>
+          <property propertyDefinitionRef="propid-1">
+            <value xml:lang="en">[{"id":"o-detail-legend","legend":"display=5,rows=3,offset=20,color=0,sort=0","name":"Legend","textAlignment":"left"}]</value>
+          </property>
+        </properties>
+        <node identifier="o-detail-capability" x="24" y="24" w="120" h="55" xsi:type="Element" elementRef="e-capability">
+        </node>
+        <node identifier="o-detail-legend" x="200" y="24" w="200" h="120" xsi:type="Label">
+        </node>
+        <node identifier="o-ref-main" x="24" y="160" w="120" h="55" xsi:type="Label">
+          <label xml:lang="en">Main</label>
+          <viewRef ref="v-main" />
+        </node>
+      </view>
+      <view identifier="v-main" xsi:type="Diagram">
+        <name xml:lang="en">Main</name>
+        <properties>
+          <property propertyDefinitionRef="propid-1">
+            <value xml:lang="en">[{"id":"o-group","textAlignment":"left"},{"id":"o-legend","legend":"display=15,rows=15,offset=0,color=1,sort=1","name":"Legend","textAlignment":"left"},{"id":"o-new-legend","legend":"display=15,rows=15,offset=0,color=1,sort=1","name":"Legend"},{"id":"o-note","textAlignment":"left"}]</value>
+          </property>
+        </properties>
+        <node identifier="o-actor" x="24" y="24" w="120" h="55" xsi:type="Element" elementRef="e-actor">
+        </node>
+        <node identifier="o-group" x="200" y="24" w="240" h="140" xsi:type="Container">
+          <label xml:lang="en">Front of house</label>
+          <documentation xml:lang="en">Line one.
+Line two.</documentation>
+          <node identifier="o-app" x="240" y="64" w="120" h="55" xsi:type="Element" elementRef="e-app">
+          </node>
+        </node>
+        <node identifier="o-note" x="24" y="200" w="185" h="80" xsi:type="Label">
+          <label xml:lang="en">Edited
+three
+lines</label>
+        </node>
+        <node identifier="o-ref" x="240" y="200" w="120" h="55" xsi:type="Label">
+          <label xml:lang="en">Detail</label>
+          <viewRef ref="v-detail" />
+        </node>
+        <node identifier="o-legend" x="480" y="24" w="200" h="120" xsi:type="Label">
+        </node>
+        <node identifier="o-new-note" x="24" y="320" w="185" h="80" xsi:type="Label">
+          <label xml:lang="en">A note made here,
+on two lines</label>
+        </node>
+        <node identifier="o-new-group" x="24" y="440" w="400" h="140" xsi:type="Container">
+          <label xml:lang="en">Back office</label>
+          <documentation xml:lang="en">Made in Archipelago.</documentation>
+          <node identifier="o-new-note-in-group" x="64" y="480" w="185" h="80" xsi:type="Label">
+            <label xml:lang="en">Inside</label>
+          </node>
+          <node identifier="o-ref-detail-in-group" x="300" y="480" w="120" h="55" xsi:type="Label">
+            <label xml:lang="en">Detail</label>
+            <viewRef ref="v-detail" />
+          </node>
+        </node>
+        <node identifier="o-new-legend" x="720" y="24" w="210" h="320" xsi:type="Label">
+        </node>
+        <node identifier="o-goal" x="480" y="200" w="120" h="55" xsi:type="Element" elementRef="e-goal">
+        </node>
+        <connection identifier="c-serving" xsi:type="Relationship" relationshipRef="r-serving" source="o-app" target="o-actor">
+        </connection>
+        <connection identifier="c-line" xsi:type="Line" source="o-note" target="o-actor">
+        </connection>
+        <connection identifier="c-note-legend" xsi:type="Line" source="o-new-note" target="o-new-legend">
+        </connection>
+      </view>
+    </diagrams>
+  </views>
+</model>

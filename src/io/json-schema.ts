@@ -13,6 +13,10 @@ import {
   TEXT_ALIGNMENTS,
   TEXT_POSITIONS,
   LABEL_POSITIONS,
+  LEGEND_COLOURS,
+  LEGEND_ROWS,
+  LEGEND_SORTS,
+  LEGEND_WIDTH_OFFSET,
   TIME_CLASSIFICATIONS,
   TYPE_SPECIFIC_ATTRIBUTES,
 } from '@/model'
@@ -271,19 +275,24 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
       colour: { type: 'string', pattern: '^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$' },
       viewNode: {
         type: 'object',
-        description: 'A diagram object: a drawn element, a note, a group or a view reference.',
+        description:
+          'A diagram object: a drawn element, a note, a group, a view reference or a legend.',
         required: ['id', 'kind', 'bounds'],
         properties: {
           id: { type: 'string', minLength: 1, description: 'Unique within its view.' },
-          kind: { enum: ['element', 'note', 'group', 'view-ref'] },
+          kind: { enum: ['element', 'note', 'group', 'view-ref', 'legend'] },
           bounds: { $ref: '#/$defs/bounds' },
           parent: { type: 'string', description: 'id of the enclosing node in the same view' },
           appearance: { $ref: '#/$defs/appearance' },
           element: { type: 'string', description: "kind 'element': id of the element drawn" },
           text: { type: 'string', description: "kind 'note'" },
-          name: { type: 'string', description: "kind 'group'" },
+          name: {
+            type: 'string',
+            description: "kind 'group'; kind 'legend', which draws it nowhere",
+          },
           documentation: { type: 'string', description: "kind 'group'" },
           view: { type: 'string', description: "kind 'view-ref': id of the view referenced" },
+          options: { $ref: '#/$defs/legendOptions' },
         },
         additionalProperties: false,
         allOf: [
@@ -291,7 +300,38 @@ export function buildWorkspaceJsonSchema(): Record<string, unknown> {
           requiredForKind('note', 'text'),
           requiredForKind('group', 'name'),
           requiredForKind('view-ref', 'view'),
+          requiredForKind('legend', 'options'),
         ],
+      },
+      legendOptions: {
+        type: 'object',
+        description:
+          "kind 'legend': what it lists and how, as Archi's ILegendOptions. Its entries are not stored; they follow the view.",
+        required: [
+          'elements',
+          'relations',
+          'specializedElements',
+          'specializedRelations',
+          'rowsPerColumn',
+          'widthOffset',
+          'colours',
+          'sort',
+        ],
+        additionalProperties: false,
+        properties: {
+          elements: { type: 'boolean' },
+          relations: { type: 'boolean' },
+          specializedElements: { type: 'boolean' },
+          specializedRelations: { type: 'boolean' },
+          rowsPerColumn: { type: 'integer', minimum: LEGEND_ROWS.min, maximum: LEGEND_ROWS.max },
+          widthOffset: {
+            type: 'integer',
+            minimum: LEGEND_WIDTH_OFFSET.min,
+            maximum: LEGEND_WIDTH_OFFSET.max,
+          },
+          colours: { enum: [...LEGEND_COLOURS] },
+          sort: { enum: [...LEGEND_SORTS] },
+        },
       },
       viewConnection: {
         type: 'object',

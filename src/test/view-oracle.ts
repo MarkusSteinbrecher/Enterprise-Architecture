@@ -1,5 +1,6 @@
 import { importArchimate } from '@/io/archimate-native'
 import { STYLE_KEY } from '@/io/exchange-views'
+import { legendFeatureValue } from '@/io/legend-feature'
 import type { ImportProblem } from '@/io/problems'
 import {
   absoluteBounds,
@@ -323,6 +324,8 @@ function describeNode(node: ViewNode): string {
       return JSON.stringify(['group', node.name, node.documentation ?? null])
     case 'view-ref':
       return JSON.stringify(['view-ref', node.view])
+    case 'legend':
+      return JSON.stringify(['legend', node.name ?? null, legendFeatureValue(node.options)])
   }
 }
 
@@ -422,6 +425,9 @@ export function explainDifference(
     return ALPHA_PERCENT
   }
   if (field === 'extra' && isNestedConnection(difference, archi)) return NESTED_CONNECTION
+  if (field === 'draws' && node?.kind === 'legend' && difference.archi === EMPTY_NOTE) {
+    return LEGEND_AS_NOTE
+  }
   return undefined
 }
 
@@ -435,6 +441,8 @@ const ARCHI_TEXT_ALIGNMENT: Partial<Record<ViewNodeKind, string | undefined>> = 
   element: undefined,
   group: 'left',
   note: 'left',
+  // A legend is a note to Archi: `view-objects-edited.archi.archimate` (#134).
+  legend: 'left',
 }
 /** The same for text position: Archi writes none, which is its default, top. */
 const ARCHI_TEXT_POSITION: Partial<Record<ViewNodeKind, string | undefined>> = {
@@ -451,6 +459,10 @@ export const ALPHA_PERCENT =
   'The exchange format holds alpha as a whole percent, and Archi reads it as round(a × 255 / 100), so an alpha byte comes back as the nearest byte a percent can name.'
 export const NESTED_CONNECTION =
   "Archi's exchange import draws every relationship between a shape and the shape it is nested in (XMLModelImporter.addNestedConnections). Archi hides such connections when drawing; #96 does the same."
+
+export const LEGEND_AS_NOTE =
+  "The exchange format has no legend. Archi's exchange import makes a Label with no viewRef and no children a plain note (XMLModelImporter: `new ArchimateDiagramModelFactory(getDiagramModelNote())`, with no legend type), and Archi's own export writes its legends as such Labels. Archipelago carries the legend in archipelago.style, which Archi keeps."
+const EMPTY_NOTE = JSON.stringify(['note', ''])
 
 function drawingIn(
   workspace: Workspace,
