@@ -1,5 +1,26 @@
 # Session Log
 
+## 2026-10-20 (wrap-up) — M2's four issues on `main`
+
+- **On `main`:** #184 (repo move), #185 (#137 copy/paste), #187 (#134 notes, groups, legends, view refs), #190 (review harvest), #188 (#136 grid/align/z-order) and #186 (#135 appearance/format painter), merged by the sponsor in that order. #134–#137 are closed. CI on `d950f14` (the #186 merge) was still running at wrap-up, so check it first next session.
+- **Reviews** ran in four fresh sessions in parallel (`/review-pr … high`). #188 was approved. #185, #186 and #187 got small blocking fixes, made by their implementing sessions and proven by removing each fix. Harvests were proposed in the review bodies and consolidated into #190: four sharpened CLAUDE.md lines and three skill bullets. That kept four parallel reviews from colliding on `CLAUDE.md`.
+- **Merge prep:** each later PR merged `main` in and re-verified on the merged state. #188 regenerated the `claims-edited.*` oracle through Archi after #185, rather than hand-merging it.
+- **Sponsor decision:** snapping stays on by default, as in Archi (recorded on #188).
+- **Still open:**
+  - #187's reply to its review was never posted, because `gh pr comment` was denied in that session.
+  - #189: the workspace schema isn't served at its `$id`.
+  - The four guide links in `src/ui/guide/sources.ts` still point at the old owner (they redirect).
+  - The app's sync tool still pins the old `MarkusSteinbrecher/Enterprise-Architecture` remote (seen by the #186 session).
+- **Follow-up candidates from the PRs' questions:**
+  - a legend ADR, now that the PRs are merged;
+  - an editor for legend options;
+  - a shape's line width through Archi (carry it, or hide the control);
+  - cross-workspace paste;
+  - snapping on palette placement and paste;
+  - arrange shortcuts.
+- **Branches to delete** (all on `main`, checked): `chore/move-to-stein-clankers`, `chore/harvest-m2-reviews`, `feat/134-notes-groups-legends`, `feat/135-appearance-format-painter`, `feat/136-grid-align-zorder`, `feat/137-copy-paste`.
+- **Next:** M2 is done. Remaining under #74: M3. Also #171 (where documentation is edited, waiting on the sponsor).
+
 ## 2026-10-20 — M2 built in parallel: #185, #186, #187, #188 open
 
 - **Four sessions, one per issue, each in its own worktree and on its own e2e port.** Nothing merged. #137 → PR #185, #135 → PR #186, #134 → PR #187, #136 → PR #188. Each PR checks off its criteria with evidence and lists questions for the sponsor (#185: 8, #186: 7, #187: 10, #188: 6). No PR bumps the schema version.
