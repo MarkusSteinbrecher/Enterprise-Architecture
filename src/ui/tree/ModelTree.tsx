@@ -15,7 +15,7 @@ import { destinationRoot, findRelationshipType, type Folder, type FolderDestinat
 import { newId, useModelSelector, useModelStore, useModelStoreContext } from '@/store'
 import { TypeCodeBadge } from '@/ui/common/TypeCodeBadge'
 import { LIST_WINDOW } from '@/ui/inventory/list-window'
-import { ELEMENT_DRAG_TYPE } from '@/ui/views/create'
+import { ELEMENT_DRAG_TYPE, VIEW_DRAG_TYPE } from '@/ui/views/create'
 import { useCreateView } from '@/ui/views/use-create-view'
 import {
   ancestorKeys,
@@ -396,6 +396,10 @@ export function ModelTree({ id }: { id?: string }) {
       if (row.item.kind === 'element') {
         // Onto a view's canvas, it draws this element there (#130): a copy of the drawing, not a move.
         event.dataTransfer.setData(ELEMENT_DRAG_TYPE, row.item.id)
+        event.dataTransfer.effectAllowed = 'copyMove'
+      } else if (row.item.kind === 'view') {
+        // Onto another view's canvas, it draws a reference to this one (#134).
+        event.dataTransfer.setData(VIEW_DRAG_TYPE, row.item.id)
         event.dataTransfer.effectAllowed = 'copyMove'
       } else event.dataTransfer.effectAllowed = 'move'
     },

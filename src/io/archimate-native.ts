@@ -76,6 +76,7 @@ import {
   readRelationshipProfile,
   stripProfileKeys,
 } from './profile-properties'
+import { LEGEND_FEATURE, parseLegendFeature } from './legend-feature'
 import { setKey } from './records'
 import { ARCHI_NAMESPACE, isArchiNamespace, rootUnreadable, xmlRoot } from './xml-root'
 
@@ -252,6 +253,8 @@ interface Tally {
   malformed: Map<string, number>
   /** What a view object carried that it cannot hold here → how many times. */
   viewContent: Map<string, number>
+  /** Legends whose options Archi would not write as they stand (#134). */
+  legendOptions: number
   routers: number
   specializations: number
   /** Legacy type name → how many were read under Archi 5.10's name (#105). */
@@ -378,6 +381,7 @@ export function importArchimate(xml: string, file?: string): ImportResult {
       unsupported: new Map(),
       malformed: new Map(),
       viewContent: new Map(),
+      legendOptions: 0,
       routers: 0,
       specializations: 0,
       renamed: new Map(),
@@ -1235,10 +1239,29 @@ function readNode(
       context.reader.ledger.text(raw, 'documentation')
       break
     }
-    case 'Note':
-      node = { ...base, kind: 'note', text: textOf(raw.content) ?? '' }
-      context.reader.ledger.text(raw, 'content')
+    case 'Note': {
+      // A legend is a note with a `legend` feature to Archi (#134). The first
+      // one is the one Archi reads (`IFeatures.getString`); any other is left
+      // to `checkViewContent`, as another feature would be.
+      const legend = list(raw.feature).find((f) => asString(f['@name']) === LEGEND_FEATURE)
+      if (legend === undefined) {
+        node = { ...base, kind: 'note', text: textOf(raw.content) ?? '' }
+        context.reader.ledger.text(raw, 'content')
+        break
+      }
+      const { options, asWritten } = parseLegendFeature(asString(legend['@value']) ?? '')
+      if (!asWritten) context.reader.tally.legendOptions += 1
+      node = { ...base, kind: 'legend', options }
+      const name = asString(raw['@name'])
+      if (name !== undefined) node.name = name
+      context.reader.ledger.use(raw, '@name')
+      // Archi draws no text on a legend and shows no field for one, but keeps
+      // what is there; this model has no place for it.
+      // Empty content is no text, as on a note (#187 review).
+      if (textOf(raw.content)) bump(context.reader.tally.viewContent, 'text on a legend')
+      context.reader.ledger.whole(raw, 'content')
       break
+    }
     case 'DiagramModelReference': {
       const ref = asString(raw['@model'])
       // Kept as a reference, or reported and kept as a note.
@@ -1279,7 +1302,8 @@ function readNode(
     (node.kind === 'element' && context.elements.get(node.element)?.type === 'Grouping')
   const appearance = readAppearance(raw, context.reader, {
     node: true,
-    centred: grouped || node.kind === 'note',
+    // A legend is a note to Archi, so its alignment defaults as a note's does.
+    centred: grouped || node.kind === 'note' || node.kind === 'legend',
     leftAligned: grouped && context.reader.compatibility.leftAlignedGroups,
   })
   if (appearance) node.appearance = appearance
@@ -1652,6 +1676,7 @@ const VIEW_OBJECT_LABELS: Record<ViewNode['kind'] | ViewConnection['kind'], stri
   group: 'a group',
   note: 'a note',
   'view-ref': 'a view reference',
+  legend: 'a legend',
   relationship: 'a relationship’s connection',
   line: 'a line',
 }
@@ -1668,8 +1693,14 @@ function checkViewContent(raw: RawNode, object: ViewNode | ViewConnection, reade
   if (raw.documentation !== undefined && object.kind !== 'group') {
     bump(reader.tally.viewContent, `documentation on ${on}`)
   }
+  // A legend's own feature was read with it (#134): the first, which is Archi's.
+  let legendRead = object.kind !== 'legend'
   for (const feature of list(raw.feature)) {
     const name = asString(feature['@name']) ?? ''
+    if (!legendRead && name === LEGEND_FEATURE) {
+      legendRead = true
+      continue
+    }
     if (!isAppearanceFeature(name))
       bump(reader.tally.viewContent, `${describeFeature(name)} on ${on}`)
   }
@@ -1806,6 +1837,16 @@ function reportTally(reader: Reader): void {
         'warning',
         'archimate.value-malformed',
         `Some shapes and lines hold values Archi does not write (${listed(names)}). A malformed position or bendpoint offset was read as 0, a size as Archi's default, and a colour, opacity, line width or text placement as not set, except an outline opacity that Archi replaces with the fill opacity as it opens the model, which was replaced the same way.`,
+        where,
+      ),
+    )
+  }
+  if (tally.legendOptions) {
+    problems.push(
+      problem(
+        'warning',
+        'archimate.legend-options-malformed',
+        `${tally.legendOptions} legend${tally.legendOptions === 1 ? ' holds' : 's hold'} options Archi does not write. Each was read as Archi reads it: a missing or unreadable option at Archi's default, and a number beyond Archi's bounds at the nearest one.`,
         where,
       ),
     )

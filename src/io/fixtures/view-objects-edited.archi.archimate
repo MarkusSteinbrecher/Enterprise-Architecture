@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="View objects" id="m-view-objects" version="5.0.0">
+  <folder name="Strategy" id="id-19bb795ad3284fd09ad0e19e7c19578c" type="strategy">
+    <element xsi:type="archimate:Capability" name="Claims handling" id="e-capability"/>
+  </folder>
+  <folder name="Business" id="id-4d890d5960b74d83a238c06b1dd4b33a" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Customer" id="e-actor"/>
+  </folder>
+  <folder name="Application" id="id-1b488e251e3f4b958c73ba47d131bbd3" type="application">
+    <element xsi:type="archimate:ApplicationComponent" name="Claims app" id="e-app"/>
+  </folder>
+  <folder name="Technology &amp; Physical" id="id-4915ab9e620f4cae88ce07c74b6a0413" type="technology"/>
+  <folder name="Motivation" id="id-ec16e547601b42b2898e2704e298007a" type="motivation">
+    <element xsi:type="archimate:Goal" name="Goal" id="e-goal"/>
+  </folder>
+  <folder name="Implementation &amp; Migration" id="id-451d6eaa609040a8b238e1dd53bf94eb" type="implementation_migration"/>
+  <folder name="Other" id="id-7b97fa0e2f0847979a52bba0ae707101" type="other"/>
+  <folder name="Relations" id="id-3936353d04a34071aa73db50a153a84d" type="relations">
+    <element xsi:type="archimate:ServingRelationship" id="r-serving" source="e-app" target="e-actor"/>
+  </folder>
+  <folder name="Views" id="id-e5cb5ace209943a392d201ae5dc30346" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Detail" id="v-detail">
+      <child xsi:type="archimate:DiagramObject" id="o-detail-capability" archimateElement="e-capability">
+        <bounds x="24" y="24" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:Note" id="o-detail-legend" textAlignment="1">
+        <bounds x="200" y="24" width="200" height="120"/>
+      </child>
+      <child xsi:type="archimate:DiagramModelReference" id="o-ref-main" model="v-main">
+        <bounds x="24" y="160" width="120" height="55"/>
+      </child>
+      <property key="archipelago.style" value="[{&quot;id&quot;:&quot;o-detail-legend&quot;,&quot;legend&quot;:&quot;display=5,rows=3,offset=20,color=0,sort=0&quot;,&quot;name&quot;:&quot;Legend&quot;,&quot;textAlignment&quot;:&quot;left&quot;}]"/>
+    </element>
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Main" id="v-main">
+      <child xsi:type="archimate:DiagramObject" id="o-actor" targetConnections="c-serving c-line" archimateElement="e-actor">
+        <bounds x="24" y="24" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:Group" id="o-group" name="Front of house" textAlignment="1">
+        <bounds x="200" y="24" width="240" height="140"/>
+        <child xsi:type="archimate:DiagramObject" id="o-app" archimateElement="e-app">
+          <bounds x="40" y="40" width="120" height="55"/>
+          <sourceConnection xsi:type="archimate:Connection" id="c-serving" source="o-app" target="o-actor" archimateRelationship="r-serving"/>
+        </child>
+        <documentation>Line one.
+Line two.</documentation>
+      </child>
+      <child xsi:type="archimate:Note" id="o-note" textAlignment="1">
+        <bounds x="24" y="200" width="185" height="80"/>
+        <sourceConnection id="c-line" source="o-note" target="o-actor"/>
+        <content>Edited
+three
+lines</content>
+      </child>
+      <child xsi:type="archimate:DiagramModelReference" id="o-ref" model="v-detail">
+        <bounds x="240" y="200" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:Note" id="o-legend" textAlignment="1">
+        <bounds x="480" y="24" width="200" height="120"/>
+      </child>
+      <child xsi:type="archimate:Note" id="o-new-note" textAlignment="1">
+        <bounds x="24" y="320" width="185" height="80"/>
+        <sourceConnection id="c-note-legend" source="o-new-note" target="o-new-legend"/>
+        <content>A note made here,
+on two lines</content>
+      </child>
+      <child xsi:type="archimate:Group" id="o-new-group" name="Back office" textAlignment="1">
+        <bounds x="24" y="440" width="400" height="140"/>
+        <child xsi:type="archimate:Note" id="o-new-note-in-group" textAlignment="1">
+          <bounds x="40" y="40" width="185" height="80"/>
+          <content>Inside</content>
+        </child>
+        <child xsi:type="archimate:DiagramModelReference" id="o-ref-detail-in-group" model="v-detail">
+          <bounds x="276" y="40" width="120" height="55"/>
+        </child>
+        <documentation>Made in Archipelago.</documentation>
+      </child>
+      <child xsi:type="archimate:Note" id="o-new-legend" targetConnections="c-note-legend" textAlignment="1">
+        <bounds x="720" y="24" width="210" height="320"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="o-goal" archimateElement="e-goal">
+        <bounds x="480" y="200" width="120" height="55"/>
+      </child>
+      <property key="archipelago.style" value="[{&quot;id&quot;:&quot;o-group&quot;,&quot;textAlignment&quot;:&quot;left&quot;},{&quot;id&quot;:&quot;o-legend&quot;,&quot;legend&quot;:&quot;display=15,rows=15,offset=0,color=1,sort=1&quot;,&quot;name&quot;:&quot;Legend&quot;,&quot;textAlignment&quot;:&quot;left&quot;},{&quot;id&quot;:&quot;o-new-legend&quot;,&quot;legend&quot;:&quot;display=15,rows=15,offset=0,color=1,sort=1&quot;,&quot;name&quot;:&quot;Legend&quot;},{&quot;id&quot;:&quot;o-note&quot;,&quot;textAlignment&quot;:&quot;left&quot;}]"/>
+    </element>
+  </folder>
+</archimate:model>
