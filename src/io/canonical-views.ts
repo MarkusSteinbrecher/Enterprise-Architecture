@@ -3,6 +3,7 @@ import {
   TEXT_ALIGNMENTS,
   TEXT_POSITIONS,
   isFolderRoot,
+  isHexColour,
   isLabelPosition,
   isViewRouter,
   type Appearance,
@@ -442,13 +443,6 @@ function readBounds(raw: unknown): Bounds | undefined {
 function readPoint(raw: unknown): Point | undefined {
   if (!isRecord(raw) || !isFiniteNumber(raw.x) || !isFiniteNumber(raw.y)) return undefined
   return { x: raw.x, y: raw.y }
-}
-
-const HEX_COLOUR = /^#[0-9a-f]{6}([0-9a-f]{2})?$/i
-
-/** `#rrggbb` or `#rrggbbaa`. The write-path guard for appearance colours. */
-export function isHexColour(value: unknown): value is string {
-  return typeof value === 'string' && HEX_COLOUR.test(value)
 }
 
 function readAppearance(

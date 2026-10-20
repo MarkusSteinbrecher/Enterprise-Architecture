@@ -6,12 +6,14 @@ import {
   isLabelPosition,
   isViewRouter,
   nestedConnections,
+  paintFormat,
   removeNodes,
   typeLabel,
   type Bounds,
   type Element,
   type ElementNode,
   type ElementType,
+  type Format,
   type LabelPosition,
   type Point,
   type RelationshipType,
@@ -88,6 +90,7 @@ import {
   straightened,
 } from './bendpoints'
 import { InlineName } from './InlineName'
+import { DrawingAppearance, MultiSelectionPanel, PainterBanner } from './AppearanceSection'
 import { useScreenActions } from '@/ui/palette/context'
 import type { PaletteAction } from '@/ui/palette/CommandPalette'
 import { defaultNodeSize } from '@/io/default-sizes'
@@ -290,6 +293,8 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const [exportError, setExportError] = useState<string | null>(null)
   /** The palette tool the next press on the canvas places (#130). */
   const [tool, setTool] = useState<Tool | null>(null)
+  /** The format the painter picked up (#135): while held, a press on a drawing paints it. */
+  const [painter, setPainter] = useState<Format | null>(null)
   /** The node whose name is being typed on the canvas. */
   const [editing, setEditing] = useState<string | null>(null)
   /** The element whose deletion from the model is waiting on confirmation. */
@@ -890,6 +895,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const placeFromPalette = useCallback((chosen: Tool) => latestPlace.current(chosen), [])
   const arm = useCallback((next: Tool | null) => {
     setTool(next)
+    if (next) setPainter(null)
     // The canvas takes the next press, and Escape there disarms.
     if (next) canvas.current?.focus()
   }, [])
@@ -1101,6 +1107,25 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const selectedNode = single ? view.nodes.find((n) => n.id === single) : undefined
   const panelNode = pressing ? undefined : selectedNode
   const panelLine = pressing || panelNode ? undefined : selectedLine
+  const panelMany = pressing || selected.length < 2 ? undefined : selected
+  /** The selection's appearance (#135), in whichever panel shows the selection. */
+  const appearance = (ids: readonly string[]) => (
+    <DrawingAppearance
+      // A new selection is a new section: a draft typed for one drawing never lands on another.
+      key={JSON.stringify(ids)}
+      store={store}
+      view={view}
+      ids={ids}
+      editable={editable}
+      isJunction={isJunction}
+      painting={painter !== null}
+      onPainter={(format) => {
+        if (format) setTool(null)
+        setPainter(format)
+      }}
+      onDone={release}
+    />
+  )
   const route = (connection: ViewConnection) => connectionRoute(connection, bounds, shown.router)
   const pathOf = (points: Point[]) => `M${points.map((p) => `${p.x},${p.y}`).join('L')}`
   const choice = pending ? connectChoice(store, view, pending.source, pending.target) : undefined
@@ -1255,7 +1280,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       )}
 
       <div
-        className={`view-screen__body${panelNode || panelLine ? ' view-screen__body--panel' : ''}${editable ? ' view-screen__body--palette' : ''}${editable && collapsed ? ' view-screen__body--collapsed' : ''}`}
+        className={`view-screen__body${panelNode || panelLine || panelMany ? ' view-screen__body--panel' : ''}${editable ? ' view-screen__body--palette' : ''}${editable && collapsed ? ' view-screen__body--collapsed' : ''}`}
       >
         {editable && (
           <ElementPalette
@@ -1271,7 +1296,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         )}
         <div
           ref={canvas}
-          className={`view-screen__canvas${editable ? ' view-screen__canvas--edit' : ''}${tool ? ' view-screen__canvas--place' : ''}`}
+          className={`view-screen__canvas${editable ? ' view-screen__canvas--edit' : ''}${tool ? ' view-screen__canvas--place' : ''}${painter ? ' view-screen__canvas--paint' : ''}`}
           tabIndex={0}
           aria-label={`View ${view.name}`}
           aria-description={
@@ -1289,6 +1314,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               // As GEF does: Escape cancels a drag in progress, then an armed
               // palette tool, and only then the selection.
               if (gesture.current) cancelGesture()
+              else if (painter) setPainter(null)
               else if (tool) setTool(null)
               else choose([])
               return
@@ -1359,6 +1385,13 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             const from = toView(start)
             if (tool) {
               gesture.current = { kind: 'place', start, from, tool, moved: false }
+              return
+            }
+            if (painter) {
+              // Archi's format painter (#135): a press on a shape or a line paints
+              // it, one command each, and selects nothing; anywhere else does nothing.
+              const at = node ?? hit
+              if (at) store.updateView(view.id, (v) => paintFormat(v, at, painter, isJunction))
               return
             }
             if (linking && single) {
@@ -1681,6 +1714,14 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
                 />
               )
             })()}
+          {painter && (
+            <PainterBanner
+              onDone={() => {
+                setPainter(null)
+                release()
+              }}
+            />
+          )}
           {drawing && viewport && size.width > 0 && (
             <Minimap
               drawing={drawing}
@@ -1708,7 +1749,20 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               choose([])
               release()
             }}
-          />
+          >
+            {appearance([panelNode.id])}
+          </SelectionPanel>
+        )}
+        {panelMany && (
+          <MultiSelectionPanel
+            count={panelMany.length}
+            onClose={() => {
+              choose([])
+              release()
+            }}
+          >
+            {appearance(panelMany)}
+          </MultiSelectionPanel>
         )}
         {panelLine && (
           <LinePanel
@@ -1744,7 +1798,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
                 return next
               })
             }
-          />
+          >
+            {appearance([panelLine.id])}
+          </LinePanel>
         )}
       </div>
       {nesting && <NestingDialog nesting={nesting.ask} onDone={nesting.commit} />}
@@ -1827,6 +1883,7 @@ function SelectionPanel({
   onRemove,
   onDelete,
   onClose,
+  children,
 }: {
   node: ViewNode
   store: ModelStore
@@ -1834,6 +1891,8 @@ function SelectionPanel({
   onRemove: () => void
   onDelete: (element: string) => void
   onClose: () => void
+  /** The drawing's appearance (#135), below its actions. */
+  children?: React.ReactNode
 }) {
   const navigate = useNavigate()
   const close = (
@@ -1852,6 +1911,7 @@ function SelectionPanel({
             This shape draws <code>{node.element}</code>, which is not in the model.
           </p>
           <div className="view-panel__actions">{close}</div>
+          {children}
         </aside>
       )
     }
@@ -1904,6 +1964,7 @@ function SelectionPanel({
           )}
           {close}
         </div>
+        {children}
       </aside>
     )
   }
@@ -1926,6 +1987,7 @@ function SelectionPanel({
           )}
           {close}
         </div>
+        {children}
       </aside>
     )
   }
@@ -1937,6 +1999,7 @@ function SelectionPanel({
         {node.kind === 'note' ? node.text : node.name}
       </p>
       <div className="view-panel__actions">{close}</div>
+      {children}
     </aside>
   )
 }
@@ -1956,6 +2019,7 @@ function LinePanel({
   onClose,
   onStraighten,
   onLabelPosition,
+  children,
 }: {
   connection: ViewConnection
   view: View
@@ -1967,6 +2031,8 @@ function LinePanel({
   /** Remove every bend-point (#133). */
   onStraighten: () => void
   onLabelPosition: (position: LabelPosition) => void
+  /** The line's appearance (#135), below its actions. */
+  children?: React.ReactNode
 }) {
   // A Manhattan view ignores bend-points, so there is nothing to remove (#133).
   const manual = view.router !== 'manhattan'
@@ -2039,6 +2105,7 @@ function LinePanel({
           Close
         </button>
       </div>
+      {children}
     </aside>
   )
 }
