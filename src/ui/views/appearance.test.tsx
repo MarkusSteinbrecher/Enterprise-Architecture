@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { act, fireEvent, screen, within } from '@testing-library/react'
 import { toCanonicalJson } from '@/io/canonical-json'
-import type { Appearance, ViewConnection, ViewNode, Workspace } from '@/model'
+import {
+  DEFAULT_LEGEND_OPTIONS,
+  type Appearance,
+  type ViewConnection,
+  type ViewNode,
+  type Workspace,
+} from '@/model'
 import { LANDSCAPE, click, setup } from '@/test/view-editor'
 
 /**
@@ -91,6 +97,38 @@ describe('the appearance section (#135)', () => {
     expect(dispatch).toHaveBeenCalledTimes(2)
     expect(appearance('o-goal')).toEqual({ textAlignment: 'left' })
     expect(appearance('o-req')).toEqual({ textAlignment: 'left' })
+  })
+
+  it('is there for a legend, without alignment, position or style, and for a group being edited', async () => {
+    const { select, section, user, nodeEl, appearance } = harness('writer', {
+      prepare: (store) =>
+        store.addNode(LANDSCAPE, {
+          id: 'o-legend',
+          kind: 'legend',
+          options: DEFAULT_LEGEND_OPTIONS,
+          bounds: { x: 1500, y: 60, width: 210, height: 320 },
+        }),
+    })
+    await click(user, nodeEl('o-legend'), { x: 1510, y: 70 })
+    expect(screen.getByRole('complementary', { name: 'Selected legend' })).toBeInTheDocument()
+    const labels = within(section())
+      .getAllByText(/./, { selector: 'label' })
+      .map((label) => label.textContent)
+    expect(labels).toEqual([
+      'Fill',
+      'Line colour',
+      'Line width',
+      'Font',
+      'Font size',
+      'Font colour',
+    ])
+    await user.type(within(section()).getByLabelText('Fill'), '#123456{Enter}')
+    expect(appearance('o-legend')).toEqual({ fillColor: '#123456' })
+    // A group, whose panel edits its name and documentation (#134).
+    await select('o-engine')
+    await click(user, nodeEl('o-g-platform'), { x: 30, y: 730 })
+    expect(screen.getByRole('complementary', { name: 'Selected group' })).toBeInTheDocument()
+    expect(within(section()).getByLabelText('Alignment')).toBeInTheDocument()
   })
 
   it('offers a shape and a junction together only the fields a junction has', async () => {

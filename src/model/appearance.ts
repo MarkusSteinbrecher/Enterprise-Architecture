@@ -97,6 +97,21 @@ const SHAPE_FIELDS: readonly AppearanceField[] = [
   'textAlignment',
   'textPosition',
 ]
+/**
+ * A legend lists the view's types and shows no text of its own: Archi drops a
+ * note's text alignment and position once it is a legend
+ * (`NoteUIProvider.unsupportedLegendFeatures`). Its font has no style here
+ * either, because the legend draws its entries in the font's name, size and
+ * colour only (`LegendShape`), so a style would change nothing on the canvas.
+ */
+const LEGEND_FIELDS: readonly AppearanceField[] = [
+  'fillColor',
+  'lineColor',
+  'lineWidth',
+  'fontName',
+  'fontSize',
+  'fontColor',
+]
 /** A junction has no text: Archi exposes its fill, line colour and line width only (`JunctionUIProvider`). */
 const JUNCTION_FIELDS: readonly AppearanceField[] = ['fillColor', 'lineColor', 'lineWidth']
 const LINE_FIELDS: readonly AppearanceField[] = [
@@ -124,6 +139,7 @@ export function appearanceFields(
   isJunction: (elementId: string) => boolean,
 ): readonly AppearanceField[] {
   if (isConnection(drawing)) return LINE_FIELDS
+  if (drawing.kind === 'legend') return LEGEND_FIELDS
   return isJunctionDrawing(drawing, isJunction) ? JUNCTION_FIELDS : SHAPE_FIELDS
 }
 

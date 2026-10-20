@@ -1,15 +1,22 @@
 import {
+  DEFAULT_LEGEND_OPTIONS,
   FONT_STYLES,
+  drawingOrder,
   TEXT_ALIGNMENTS,
   TEXT_POSITIONS,
   isFolderRoot,
   isHexColour,
   isLabelPosition,
+  isLegendColours,
+  isLegendSort,
   isViewRouter,
+  legendRows,
+  legendWidthOffset,
   type Appearance,
   type Bounds,
   type Folder,
   type FontStyle,
+  type LegendOptions,
   type Point,
   type TextAlignment,
   type TextPosition,
@@ -23,10 +30,15 @@ import { asArray, byId, emptyToUndefined, isRecord, prune, readProperties } from
 /**
  * Hand-drawn views and folders in canonical JSON (#75, ADR 0004).
  *
- * Writing: views, nodes, connections and folders are each sorted by id, so the
- * file does not depend on the order anything was drawn in. Bend-points are the
- * exception — their order *is* the route — and font styles are written in
- * declaration order, so `[italic, bold]` and `[bold, italic]` are one file.
+ * Writing: views, connections and folders are each sorted by id, so the file
+ * does not depend on the order anything was made in. Nodes are written in
+ * drawing order instead (`drawingOrder`): a container's children are drawn in
+ * their order, later over earlier, so that order is the z-order (#136), and
+ * sorting by id would lose it. The order of nodes under *different* parents
+ * means nothing, and the tree walk writes one order for it whatever
+ * `view.nodes` holds. Bend-points keep their order too — their order *is* the
+ * route — and font styles are written in declaration order, so
+ * `[italic, bold]` and `[bold, italic]` are one file.
  *
  * Reading: every reference is checked against what the file actually contains,
  * and anything that cannot be carried is dropped with a problem saying so —
@@ -44,7 +56,7 @@ export function canonicalView(view: View): Record<string, unknown> {
     router: view.router,
     folder: view.folder,
     properties: emptyToUndefined(view.properties),
-    nodes: [...view.nodes].sort(byId).map(canonicalNode),
+    nodes: drawingOrder(view).map(canonicalNode),
     connections: [...view.connections].sort(byId).map(canonicalConnection),
   })
 }
@@ -67,6 +79,9 @@ function canonicalNode(node: ViewNode): Record<string, unknown> {
       return { ...prune({ ...base, documentation: node.documentation }), name: node.name }
     case 'view-ref':
       return prune({ ...base, view: node.view })
+    case 'legend':
+      // Every option, as Archi writes every one (#134).
+      return prune({ ...base, name: node.name, options: { ...node.options } })
   }
 }
 
@@ -302,6 +317,20 @@ function readNode(
       }
       return { ...base, kind: 'view-ref', view: raw.view }
     }
+    case 'legend': {
+      const legend: ViewNode = {
+        ...base,
+        kind: 'legend',
+        options: readLegendOptions(
+          raw.options,
+          `Legend "${raw.id}" in view "${viewId}"`,
+          problems,
+          at,
+        ),
+      }
+      if (typeof raw.name === 'string') legend.name = raw.name
+      return legend
+    }
     default:
       return skip(`"${raw.id}" has kind "${String(raw.kind)}", which this build does not know.`)
   }
@@ -428,6 +457,62 @@ function readConnection(
     default:
       return skip(`"${raw.id}" has kind "${String(raw.kind)}", which this build does not know.`)
   }
+}
+
+/**
+ * A legend's options (#134), each through its guard. One that is missing or
+ * cannot be read takes Archi's default and is named in a problem; a number
+ * outside Archi's bounds is clamped into them, as Archi clamps it, and named too.
+ */
+function readLegendOptions(
+  raw: unknown,
+  subject: string,
+  problems: ImportProblem[],
+  at: Where & { subject: string },
+): LegendOptions {
+  const options: LegendOptions = { ...DEFAULT_LEGEND_OPTIONS }
+  const record = isRecord(raw) ? raw : {}
+  const dropped: string[] = isRecord(raw) ? [] : ['options']
+  const flag = (key: 'elements' | 'relations' | 'specializedElements' | 'specializedRelations') => {
+    const value = record[key]
+    if (typeof value === 'boolean') options[key] = value
+    else if (isRecord(raw)) dropped.push(key)
+  }
+  flag('elements')
+  flag('relations')
+  flag('specializedElements')
+  flag('specializedRelations')
+  const count = (
+    key: 'rowsPerColumn' | 'widthOffset',
+    clamp: (n: number) => number | undefined,
+  ) => {
+    const value = record[key]
+    const clamped = isFiniteNumber(value) ? clamp(value) : undefined
+    if (clamped !== undefined) options[key] = clamped
+    // Absent is reported too: there `clamped` and `value` are both undefined,
+    // and agree (#187 review).
+    if (isRecord(raw) && (clamped === undefined || clamped !== value)) dropped.push(key)
+  }
+  count('rowsPerColumn', legendRows)
+  count('widthOffset', legendWidthOffset)
+  if (isLegendColours(record.colours)) options.colours = record.colours
+  else if (isRecord(raw)) dropped.push('colours')
+  if (isLegendSort(record.sort)) options.sort = record.sort
+  else if (isRecord(raw)) dropped.push('sort')
+  for (const key of Object.keys(record)) {
+    if (!(key in DEFAULT_LEGEND_OPTIONS)) dropped.push(key)
+  }
+  if (dropped.length) {
+    problems.push(
+      problem(
+        'warning',
+        'json.invalid-legend-options',
+        `${subject}: legend option${dropped.length === 1 ? '' : 's'} ${dropped.join(', ')} could not be read as written; ${dropped.length === 1 ? 'it takes' : 'they take'} Archi's default, or the nearest value Archi allows.`,
+        at,
+      ),
+    )
+  }
+  return options
 }
 
 function readBounds(raw: unknown): Bounds | undefined {

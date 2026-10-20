@@ -18,7 +18,7 @@ import {
   withField,
   type Drawing,
 } from './appearance'
-import type { View } from './workspace'
+import { DEFAULT_LEGEND_OPTIONS, type View } from './workspace'
 
 /** Appearance editing (#135), as pure operations on a view. */
 
@@ -77,6 +77,23 @@ describe('the fields each drawing has (#135)', () => {
       'fillColor',
       'lineColor',
       'lineWidth',
+    ])
+  })
+
+  it('gives a legend no text box and no style, as Archi and as the legend draws (#186 merge)', () => {
+    const legend: Drawing = {
+      id: 'n-legend',
+      kind: 'legend',
+      options: DEFAULT_LEGEND_OPTIONS,
+      bounds: { x: 0, y: 0, width: 210, height: 320 },
+    }
+    expect(appearanceFields(legend, noJunctions)).toEqual([
+      'fillColor',
+      'lineColor',
+      'lineWidth',
+      'fontName',
+      'fontSize',
+      'fontColor',
     ])
   })
 

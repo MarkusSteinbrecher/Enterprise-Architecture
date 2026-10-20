@@ -28,6 +28,7 @@ import { isExchangeSafeId } from '@/store/ids'
 import type { Ledger } from './consumption'
 import { problem, type ImportProblem } from './problems'
 import { defaultNodeSize } from './default-sizes'
+import { legendFeatureValue, parseLegendFeature } from './legend-feature'
 import {
   asString,
   attr,
@@ -102,7 +103,9 @@ function nodeDefaults(node: ViewNode, elements: ReadonlyMap<string, Element>): S
   switch (node.kind) {
     case 'group':
       return { fill: GROUP_FILL, line: NODE_LINE, font: BLACK }
+    // A legend is a note to Archi, and Archi's export paints it as one (#134).
     case 'note':
+    case 'legend':
       return { fill: NOTE_FILL, line: NODE_LINE, font: BLACK }
     case 'view-ref':
       return { fill: VIEW_REF_FILL, line: NODE_LINE, font: BLACK }
@@ -145,11 +148,19 @@ const CONNECTION_DEFAULTS: StyleDefaults = { line: BLACK, font: BLACK }
  *   because Archi keeps the property when it re-exports the model and writes
  *   its whole computed style beside it (#138): a value the file holds is read
  *   as ours only when the marker names that same value for that field.
+ * - **A legend** (#134): the format has none, and Archi's own export writes one
+ *   as an empty `Label`, so it opens elsewhere as an empty note. Its options
+ *   travel here as `legend`, in the spelling of Archi's own `legend` feature,
+ *   and its name as `name`; either reader turns the note back into a legend.
  */
 export const STYLE_KEY = 'archipelago.style'
 
 interface CarriedStyle {
   literal?: StyleSays
+  /** A legend's options, in Archi's own spelling (`legendFeatureValue`, #134). */
+  legend?: string
+  /** A legend's name, which a note in the format has no place for. */
+  name?: string
   textAlignment?: TextAlignment
   textPosition?: TextPosition
   labelPosition?: LabelPosition
@@ -237,9 +248,13 @@ function vouchedStyle(marker: unknown): StyleSays | undefined {
 }
 
 function carriedStyle(item: ViewNode | ViewConnection): CarriedStyle | undefined {
-  const appearance = item.appearance
-  if (!appearance) return undefined
   const carried: CarriedStyle = {}
+  if (item.kind === 'legend') {
+    carried.legend = legendFeatureValue(item.options)
+    if (item.name !== undefined) carried.name = item.name
+  }
+  const appearance = item.appearance
+  if (!appearance) return carried.legend === undefined ? undefined : carried
   const says = styleSays(appearance)
   if (Object.keys(says).length) carried.literal = says
   if (appearance.textAlignment) carried.textAlignment = appearance.textAlignment
@@ -268,7 +283,9 @@ function carriedStyleJson(
     [
       'id',
       'labelPosition',
+      'legend',
       'literal',
+      'name',
       'strikethrough',
       'textAlignment',
       'textPosition',
@@ -349,6 +366,9 @@ export function applyCarriedStyle(
       appearance.fontStyle = FONT_STYLES.filter((style) => styles.has(style))
     }
     if (Object.keys(appearance).length) item.appearance = appearance
+    // Last, as it replaces the note it turns, appearance and all.
+    const legend = record.legend !== undefined || record.name !== undefined
+    if (legend && !carryLegend(view, item, record)) unread += 1
   }
   if (unverifiable) {
     problems.push(
@@ -370,6 +390,34 @@ export function applyCarriedStyle(
       ),
     )
   }
+}
+
+/**
+ * Turn the empty note a legend was written as back into the legend (#134),
+ * keeping its place and appearance. Only an empty note is turned: one that holds
+ * text was written in another tool since, and the text would be lost, so it
+ * stays a note. A value the parser does not read back exactly as written fails
+ * closed too. A shape that already is a legend is one Archi saved itself, and
+ * its own options win. `false` when the entry could not be applied.
+ */
+function carryLegend(
+  view: View,
+  item: ViewNode | ViewConnection,
+  record: Record<string, unknown>,
+): boolean {
+  if (typeof record.legend !== 'string') return false
+  if (record.name !== undefined && typeof record.name !== 'string') return false
+  const { options, asWritten } = parseLegendFeature(record.legend)
+  if (!asWritten) return false
+  if (item.kind === 'legend') {
+    return legendFeatureValue(item.options) === record.legend && item.name === record.name
+  }
+  if (item.kind !== 'note' || item.text !== '') return false
+  const { text: _text, kind: _kind, ...rest } = item
+  const legend: ViewNode = { ...rest, kind: 'legend', options }
+  if (typeof record.name === 'string') legend.name = record.name
+  view.nodes[view.nodes.indexOf(item)] = legend
+  return true
 }
 
 // ── Reading ──────────────────────────────────────────────────────────────────
@@ -1387,7 +1435,7 @@ function writeView(
     const seen = new Set<string>()
     while (
       parent &&
-      (parent.kind === 'note' || parent.kind === 'view-ref') &&
+      (parent.kind === 'note' || parent.kind === 'view-ref' || parent.kind === 'legend') &&
       !seen.has(parent.id)
     ) {
       seen.add(parent.id)
@@ -1402,6 +1450,7 @@ function writeView(
     children.set(parent, [...(children.get(parent) ?? []), node])
   }
 
+  let legends = 0
   const writeNode = (node: ViewNode, depth: number) => {
     const pad = ' '.repeat(8 + depth * 2)
     const bounds = absolute.get(node.id) ?? node.bounds
@@ -1436,6 +1485,13 @@ function writeView(
         lines.push(...writeStyle(node.appearance, pad))
         if (names.has(node.view))
           lines.push(`${pad}  <viewRef ref="${attr(context.of(node.view))}" />`)
+        break
+      case 'legend':
+        // As Archi's export writes one: a label with no text (#134). What makes
+        // it a legend is in the carried style.
+        lines.push(`${pad}<node ${head} xsi:type="Label">`)
+        lines.push(...writeStyle(node.appearance, pad))
+        legends += 1
         break
     }
     for (const child of children.get(node.id) ?? []) writeNode(child, depth + 1)
@@ -1475,12 +1531,22 @@ function writeView(
       ),
     )
   }
+  if (legends) {
+    problems.push(
+      problem(
+        'warning',
+        'exchange.legend-carried',
+        `View "${view.name}": the exchange format has no legend, so other tools, Archi among them, open ${legends === 1 ? 'its legend as an empty note' : `its ${legends} legends as empty notes`}. Archipelago reads ${legends === 1 ? 'it' : 'them'} back as ${legends === 1 ? 'a legend' : 'legends'} from the view's ${STYLE_KEY} property.`,
+        subject,
+      ),
+    )
+  }
   if (flattened) {
     problems.push(
       problem(
         'warning',
         'exchange.nesting-flattened',
-        `View "${view.name}": ${flattened} shape${flattened === 1 ? ' was' : 's were'} nested in a note or view reference, which the format cannot express. ${flattened === 1 ? 'It was' : 'They were'} written in the nearest enclosing shape instead, at the same position.`,
+        `View "${view.name}": ${flattened} shape${flattened === 1 ? ' was' : 's were'} nested in a note, view reference or legend, which the format cannot express. ${flattened === 1 ? 'It was' : 'They were'} written in the nearest enclosing shape instead, at the same position.`,
         subject,
       ),
     )

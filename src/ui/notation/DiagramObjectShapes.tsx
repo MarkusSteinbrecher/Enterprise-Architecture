@@ -1,12 +1,14 @@
-import { memo } from 'react'
-import type { Appearance } from '@/model'
+import { memo, useSyncExternalStore } from 'react'
+import type { Appearance, ElementType, LegendEntry, LegendOptions, RelationshipType } from '@/model'
+import { ElementShape } from './ElementShape'
 import { emptyTabWidth, labelInTab, tabbedLabel } from './label-box'
 import { NotationText } from './NotationText'
-import { UI_FAMILY, measureText } from './text'
+import { RelationshipLine } from './RelationshipLine'
+import { UI_FAMILY, getFontsVersion, measureText, quoteFamily, subscribeFonts } from './text'
 
 /**
- * The diagram objects that are not model elements (#75): notes, visual groups
- * and view references. Drawn at the origin into `width` × `height`, like
+ * The diagram objects that are not model elements (#75): notes, visual groups,
+ * view references and legends (#134). Drawn at the origin into `width` × `height`, like
  * `ElementShape`. Their default colours are the neutral tokens; an appearance
  * override wins.
  */
@@ -127,6 +129,113 @@ export const ViewReferenceShape = memo(function ViewReferenceShape({
     </g>
   )
 })
+
+/** Archi's legend layout (`LegendGraphics`): margins, the icon's column, the first row and the row pitch. */
+const LEGEND = { left: 5, icon: 26, top: 5, row: 22 } as const
+/** An entry's symbol: the palette's glyph (34 × 20) at this scale. */
+const LEGEND_ICON_SCALE = 0.6
+
+/**
+ * A legend (#134): a plain box listing `entries`, each with its symbol and its
+ * label, in columns of `options.rowsPerColumn`, as Archi's `LegendGraphics
+ * .drawLegend` lays them out. A column starts after the widest label of the one
+ * before it, plus the margins and the legend's own offset. The entries are the
+ * caller's (`legendEntries`); this only draws them. With `colours` `none` the
+ * symbols are drawn unfilled; `core` and `user` both take the notation's colours,
+ * since Archipelago has no per-user default fill for Archi's `user` to mean.
+ * What overflows the box is clipped, as Archi's figure clips it.
+ */
+export const LegendShape = memo(function LegendShape({
+  width: w,
+  height: h,
+  entries,
+  options,
+  appearance,
+}: ObjectProps & { entries: readonly LegendEntry[]; options: LegendOptions }) {
+  // Column widths are measured, so they change when the web font arrives.
+  useSyncExternalStore(subscribeFonts, getFontsVersion, getFontsVersion)
+  const p = paint(appearance, 'var(--surface)')
+  const size = appearance?.fontSize ?? 12
+  const family = appearance?.fontName
+    ? `${quoteFamily(appearance.fontName)}, ${UI_FAMILY}`
+    : UI_FAMILY
+  const font = `${size}px ${family}`
+  const pitch = Math.max(Math.round(size * 1.25), LEGEND.row)
+  const rows = Math.max(1, options.rowsPerColumn)
+  const placed: { entry: LegendEntry; x: number; y: number }[] = []
+  let x = LEGEND.left
+  let widest = 0
+  entries.forEach((entry, index) => {
+    if (index !== 0 && index % rows === 0) {
+      x += widest + LEGEND.left + LEGEND.icon + options.widthOffset
+      widest = 0
+    }
+    widest = Math.max(widest, measureText(entry.label, font))
+    placed.push({ entry, x, y: LEGEND.top + (index % rows) * pitch })
+  })
+  const unfilled = options.colours === 'none'
+  return (
+    <g data-shape="legend">
+      <rect width={w} height={h} {...p} />
+      <svg width={Math.max(w, 0)} height={Math.max(h, 0)} overflow="hidden">
+        {placed.map(({ entry, x: at, y }) => (
+          <g key={`${entry.kind} ${entry.type}`} data-legend-entry={entry.type}>
+            <g transform={`translate(${at} ${y + (pitch - 20 * LEGEND_ICON_SCALE) / 2})`}>
+              <LegendSymbol entry={entry} unfilled={unfilled} />
+            </g>
+            <text
+              x={at + LEGEND.icon}
+              y={y + pitch / 2}
+              dominantBaseline="central"
+              fontFamily={family}
+              fontSize={size}
+              fill={appearance?.fontColor ?? 'var(--ink)'}
+            >
+              {entry.label}
+            </text>
+          </g>
+        ))}
+      </svg>
+    </g>
+  )
+})
+
+function LegendSymbol({ entry, unfilled }: { entry: LegendEntry; unfilled: boolean }) {
+  const w = 34
+  const h = 20
+  if (entry.kind === 'relationship') {
+    return (
+      <g transform={`scale(${LEGEND_ICON_SCALE})`}>
+        <RelationshipLine
+          type={entry.type as RelationshipType}
+          points={[
+            { x: 0, y: h / 2 },
+            { x: w, y: h / 2 },
+          ]}
+        />
+      </g>
+    )
+  }
+  const type = entry.type as ElementType
+  if (type === 'Junction') {
+    return (
+      <g transform={`translate(${(w / 2 - 6) * LEGEND_ICON_SCALE} 0) scale(${LEGEND_ICON_SCALE})`}>
+        <ElementShape type="Junction" name="" width={12} height={12} />
+      </g>
+    )
+  }
+  return (
+    <g transform={`scale(${LEGEND_ICON_SCALE})`}>
+      <ElementShape
+        type={type}
+        name=""
+        width={w}
+        height={h}
+        {...(unfilled ? { appearance: { fillColor: 'none' } } : {})}
+      />
+    </g>
+  )
+}
 
 /** What a diagram draws for a node whose element is missing from the model. */
 export const MissingShape = memo(function MissingShape({

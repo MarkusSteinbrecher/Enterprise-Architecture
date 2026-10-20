@@ -1,5 +1,18 @@
 # Session Log
 
+## 2026-10-20 — M2 built in parallel: #185, #186, #187, #188 open
+
+- **Four sessions, one per issue, each in its own worktree and on its own e2e port.** Nothing merged. #137 → PR #185, #135 → PR #186, #134 → PR #187, #136 → PR #188. Each PR checks off its criteria with evidence and lists questions for the sponsor (#185: 8, #186: 7, #187: 10, #188: 6). No PR bumps the schema version.
+- **#184** (repo moved to the Stein-Clankers organization): its CI failed on Prettier padding in `tests/manual/README.md`. Fixed and green. The local `origin` now points at `Stein-Clankers/Enterprise-Architecture`.
+- **Merge collisions, dry-run on `main`:**
+  - #185 and #188 both regenerate the Archi oracle's `claims-edited.*` fixtures from `src/test/edited-claims.ts`. The second to merge re-runs `build-edited-claims.ts` and `archi-roundtrip.sh` on the merged state. Never hand-merge the fixtures.
+  - #186 and #187 both edit `export-with-archi.sh`, `src/io/README.md` and `src/model/index.ts`. These are small text conflicts.
+  - All four edit `ViewScreen.tsx`.
+  - e2e journey numbers collide: #186 and #188 both use 17, and #185 uses 18.
+  - #187 + #188 merge with no conflict. On that merged state: typecheck clean, 1798 unit tests, and both journeys pass.
+- **Watch on merge:** #188 turns snap-to-grid and snap-to-guides on by default (Archi's defaults). Its harnesses (`view-editor.tsx`, `tests/e2e/support.ts`) switch snapping off, but a test that drags without them would land on the grid.
+- **Next:** `/review-pr` each of #185–#188 at `high`, then answer the sponsor questions. Suggested merge order: #184, #187, #188, #186, #185. Retarget nothing, since all four are already based on `main`. After each merge, merge `main` into the next PR, re-verify the merged state (and regenerate the oracle for #185), then merge.
+
 ## 2026-10-19 (wrap-up 2) — #181 and #183 on `main`
 
 - **On `main`:** #181 (#132, magic connector) and #183 (#182, revoke-timer flake), both merged by the sponsor. #132 and #182 are closed. CI on `2db32b0` (the #181 merge) was still running at wrap-up, so check it first next session.

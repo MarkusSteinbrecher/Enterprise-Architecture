@@ -134,6 +134,58 @@ export function absoluteBounds(view: View, nodeId: string): Bounds | undefined {
   return { ...node.bounds, x, y }
 }
 
+/**
+ * Child nodes per parent id, in drawing order; `undefined` holds the top level.
+ * Siblings are drawn in their order in `view.nodes`, later over earlier, as
+ * Archi paints a container's children (#136): that order *is* the z-order.
+ *
+ * A node whose ancestor chain is broken — a parent missing from the view, or a
+ * parent cycle — is drawn at the top level at its absolute position rather than
+ * vanishing: hiding part of someone's diagram would be silent loss. The view
+ * validator reports the broken chain itself.
+ */
+export function childrenByParent(view: View): Map<string | undefined, ViewNode[]> {
+  const byId = new Map(view.nodes.map((node) => [node.id, node]))
+  const sound = (node: ViewNode): boolean => {
+    const seen = new Set([node.id])
+    let parent = node.parent
+    while (parent !== undefined) {
+      const next = byId.get(parent)
+      if (!next || seen.has(parent)) return false
+      seen.add(parent)
+      parent = next.parent
+    }
+    return true
+  }
+  const out = new Map<string | undefined, ViewNode[]>()
+  for (const node of view.nodes) {
+    const parent = sound(node) ? node.parent : undefined
+    const list = out.get(parent)
+    if (list) list.push(node)
+    else out.set(parent, [node])
+  }
+  return out
+}
+
+/**
+ * Every node once, in the order the view is drawn: a parent, then its children
+ * in their order, then the next sibling. Two views whose containers hold the
+ * same children in the same order give the same list, however their nodes
+ * interleave in `view.nodes`, which is why canonical JSON writes this order.
+ */
+export function drawingOrder(view: View): ViewNode[] {
+  const children = childrenByParent(view)
+  const ordered: ViewNode[] = []
+  const visit = (parent: string | undefined) => {
+    for (const node of children.get(parent) ?? []) {
+      ordered.push(node)
+      visit(node.id)
+    }
+  }
+  visit(undefined)
+  return ordered
+}
+
 /** Element ids a view draws, each once. */
 export function elementsInView(view: View): Set<string> {
   const ids = new Set<string>()

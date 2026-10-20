@@ -224,7 +224,78 @@ export interface ViewReferenceNode extends ViewNodeBase {
   view: string
 }
 
-export type ViewNode = ElementNode | NoteNode | GroupNode | ViewReferenceNode
+/**
+ * A legend (#134): a box listing the element and relationship types the view
+ * draws, each with its symbol. Archi 5.10 saves one as a note carrying a
+ * `legend` feature (`IDiagramModelNote.FEATURE_LEGEND`); here it is a kind of
+ * its own, because it shows no text and holds no text to edit. The entries are
+ * never stored: they are worked out from the view each time it is drawn
+ * (`legendEntries`), as Archi's `LegendGraphics.update` does.
+ */
+export interface LegendNode extends ViewNodeBase {
+  kind: 'legend'
+  /**
+   * Archi names a new legend "Legend" (`ArchimateDiagramModelFactory`) and
+   * draws the name nowhere. Kept so a legend comes back out as it came in.
+   */
+  name?: string
+  options: LegendOptions
+}
+
+/** Which colour a legend paints its symbols in: Archi's `ILegendOptions.COLORS_*` (0, 1, 2). */
+export const LEGEND_COLOURS = ['none', 'core', 'user'] as const
+export type LegendColours = (typeof LEGEND_COLOURS)[number]
+
+/** How a legend orders its element entries: Archi's `ILegendOptions.SORT_*` (0, 1). */
+export const LEGEND_SORTS = ['name', 'category'] as const
+export type LegendSort = (typeof LEGEND_SORTS)[number]
+
+/** Archi's bounds on a legend's rows per column and its column offset (`ILegendOptions`). */
+export const LEGEND_ROWS = { min: 1, max: 100 } as const
+export const LEGEND_WIDTH_OFFSET = { min: -200, max: 200 } as const
+
+/**
+ * What a legend shows and how: Archi's `ILegendOptions`, field for field. Every
+ * field is stored, as Archi writes every one of them.
+ */
+export interface LegendOptions {
+  /** List the view's element types. */
+  elements: boolean
+  /** List the view's relationship types. */
+  relations: boolean
+  /** List specializations of elements, by the specialization's name. */
+  specializedElements: boolean
+  /** List specializations of relationships, by the specialization's name. */
+  specializedRelations: boolean
+  /** Entries per column, `LEGEND_ROWS.min` to `LEGEND_ROWS.max`. */
+  rowsPerColumn: number
+  /** Extra space between columns, in pixels, within `LEGEND_WIDTH_OFFSET`. */
+  widthOffset: number
+  colours: LegendColours
+  sort: LegendSort
+}
+
+/** A new legend's options: Archi 5.10's defaults (`ILegendOptions`, `PreferenceInitializer`). */
+export const DEFAULT_LEGEND_OPTIONS: Readonly<LegendOptions> = {
+  elements: true,
+  relations: true,
+  specializedElements: true,
+  specializedRelations: true,
+  rowsPerColumn: 15,
+  widthOffset: 0,
+  colours: 'core',
+  sort: 'category',
+}
+
+export function isLegendColours(value: unknown): value is LegendColours {
+  return (LEGEND_COLOURS as readonly unknown[]).includes(value)
+}
+
+export function isLegendSort(value: unknown): value is LegendSort {
+  return (LEGEND_SORTS as readonly unknown[]).includes(value)
+}
+
+export type ViewNode = ElementNode | NoteNode | GroupNode | ViewReferenceNode | LegendNode
 export type ViewNodeKind = ViewNode['kind']
 
 interface ViewConnectionBase {

@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   VIEWPOINTS,
   findViewpoint,
+  legendEntries,
   isLabelPosition,
   isViewRouter,
   nestedConnections,
@@ -20,6 +21,7 @@ import {
   type View,
   type ViewConnection,
   type ViewNode,
+  type ViewReferenceNode,
 } from '@/model'
 import { downloadBlob, downloadText } from '@/io'
 import {
@@ -73,6 +75,7 @@ import {
 } from './nesting'
 import {
   ELEMENT_DRAG_TYPE,
+  VIEW_DRAG_TYPE,
   newDrawingNode,
   newElement,
   placement,
@@ -91,6 +94,19 @@ import {
 } from './bendpoints'
 import { InlineName } from './InlineName'
 import { DrawingAppearance, MultiSelectionPanel, PainterBanner } from './AppearanceSection'
+import { ArrangeBar, type ArrangeAction } from './ArrangeBar'
+import { align, arrangeable, canMatch, canReorder, distribute, matchSize, reorder } from './arrange'
+import { GUIDE_THRESHOLD, snapMove, snapResize, type Guide, type SnapSettings } from './snap'
+import { readGridPreferences, writeGridPreferences, type GridPreferences } from './grid-preferences'
+import {
+  clipboardChord,
+  clipboardFor,
+  copySelection,
+  nextOffset,
+  pasteInto,
+  type ClipboardChord,
+  type Snapshot,
+} from './clipboard'
 import { useScreenActions } from '@/ui/palette/context'
 import type { PaletteAction } from '@/ui/palette/CommandPalette'
 import { defaultNodeSize } from '@/io/default-sizes'
@@ -157,6 +173,8 @@ function writePaletteCollapsed(collapsed: boolean) {
 const CLICK_SLOP = 3
 const NONE: string[] = []
 const ZOOM_STEP = 1.2
+/** Below this many screen pixels between lines the grid is a grey wash, so it is not drawn. */
+const MIN_GRID_SPACING = 4
 /** A drag this close to the canvas edge scrolls the view, faster the closer it gets. */
 const EDGE = 24
 const EDGE_SPEED = 12
@@ -291,6 +309,18 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   }, [refocus])
   const release = () => setRefocus((n) => n + 1)
   const [exportError, setExportError] = useState<string | null>(null)
+  /** The grid and snapping this viewer chose (#136): a preference, kept in localStorage. */
+  const [grid, setGrid] = useState(readGridPreferences)
+  const changeGrid = useCallback((change: Partial<GridPreferences>) => {
+    setGrid((current) => {
+      const next = { ...current, ...change }
+      writeGridPreferences(next)
+      return next
+    })
+  }, [])
+  /** The alignment guides a drag in progress is snapped to. */
+  const [guides, setGuides] = useState<Guide[]>([])
+  const gridPattern = useId()
   /** The palette tool the next press on the canvas places (#130). */
   const [tool, setTool] = useState<Tool | null>(null)
   /**
@@ -539,6 +569,13 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const pointer = useRef<Point>({ x: 0, y: 0 })
   const space = useRef(false)
   const scrolling = useRef<number | null>(null)
+  /**
+   * Where the canvas was last pressed, in view coordinates, since the last copy
+   * or paste: a paste puts the copied shapes there (#137). Archi's
+   * `PasteAction` keeps the same point from a mouse listener on the canvas and
+   * forgets it after a copy or a paste.
+   */
+  const pressed = useRef<Point | null>(null)
 
   /** A screen (client) point in view coordinates. */
   const toView = useCallback((client: Point): Point => {
@@ -591,18 +628,55 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
    * before a release can be handled; building on the store's is simply the
    * honest base for a command whose `before` is the store's.
    */
-  const outcome = useCallback(
-    (base: View, g: Extract<Gesture, { kind: 'move' | 'resize' }>, client: Point): View => {
+  const snapping = useCallback(
+    (): SnapSettings => ({
+      grid: grid.snap ? grid.size : null,
+      guides: grid.guides,
+      threshold: GUIDE_THRESHOLD / vpRef.current.zoom,
+    }),
+    [grid],
+  )
+  const arranged = useCallback(
+    (
+      base: View,
+      g: Extract<Gesture, { kind: 'move' | 'resize' }>,
+      client: Point,
+    ): { view: View; guides: Guide[] } => {
       const at = toView(client)
-      const dx = Math.round(at.x - g.from.x)
-      const dy = Math.round(at.y - g.from.y)
       if (g.kind === 'move') {
-        return moveSelection(base, g.ids, dx, dy, { into: dropFor(base, g, client) })
+        // Snapped as Archi snaps (#136): the shape under the pointer, in the container it goes into.
+        const into = dropFor(base, g, client)
+        const snap = snapMove(
+          base,
+          g.ids,
+          g.node,
+          into,
+          at.x - g.from.x,
+          at.y - g.from.y,
+          snapping(),
+        )
+        const view = moveSelection(base, g.ids, Math.round(snap.dx), Math.round(snap.dy), { into })
+        return { view, guides: snap.guides }
       }
       const node = base.nodes.find((n) => n.id === g.node)
-      return node ? resizeNode(base, g.node, resized(node.bounds, g.handle, dx, dy)) : base
+      if (!node) return { view: base, guides: [] }
+      const dx = Math.round(at.x - g.from.x)
+      const dy = Math.round(at.y - g.from.y)
+      const snap = snapResize(
+        base,
+        g.node,
+        g.handle,
+        resized(node.bounds, g.handle, dx, dy),
+        snapping(),
+      )
+      return { view: resizeNode(base, g.node, snap.bounds), guides: snap.guides }
     },
-    [toView, dropFor],
+    [toView, dropFor, snapping],
+  )
+  const outcome = useCallback(
+    (base: View, g: Extract<Gesture, { kind: 'move' | 'resize' }>, client: Point): View =>
+      arranged(base, g, client).view,
+    [arranged],
   )
 
   /** `base` with the dragged bend-point at `client`: a new one, or one moved (#133). */
@@ -641,7 +715,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         })
         return
       }
-      setPreview(outcome(view, g, client))
+      const next = arranged(view, g, client)
+      setPreview(next.view)
+      setGuides(next.guides)
       if (g.kind === 'move') {
         // Outlined only when the drop would change where the selection lives.
         const into = dropFor(view, g, client)
@@ -651,7 +727,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         setDropInto(into !== undefined && !(parents.size === 1 && parents.has(into)) ? into : null)
       }
     },
-    [view, bounds, toView, outcome, dropFor, bent],
+    [view, bounds, toView, arranged, dropFor, bent],
   )
 
   /** Scroll while a drag rests near the canvas edge, carrying the gesture along. */
@@ -711,6 +787,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     setLasso(null)
     setDropInto(null)
     setRubber(null)
+    setGuides([])
   }
 
   /** Select one connection, and no shape. */
@@ -873,7 +950,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     const node = newDrawingNode(chosen, spot)
     if (!store.addNode(view.id, node)) return
     choose([node.id], store.view(view.id))
-    setEditing(node.id)
+    // A legend has no text to type (#134): the canvas keeps the keys, as for a junction.
+    if (editableText(node) !== undefined) setEditing(node.id)
+    else release()
   }
 
   /** The middle of the canvas on screen, in view coordinates: where the keyboard places. */
@@ -927,6 +1006,26 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   }
 
   /**
+   * Draw a reference to the view `viewId`, dragged in from the model tree
+   * (#134): one command, placed at Archi's default size inside whatever
+   * container is there, as a palette shape is. A view dropped on itself draws
+   * nothing, as in Archi; so does a view the model no longer holds.
+   */
+  const drawReference = (viewId: string, at: Point) => {
+    if (viewId === view.id || !store.view(viewId)) return
+    auto.current = false
+    const node: ViewReferenceNode = {
+      id: newId('node'),
+      kind: 'view-ref',
+      view: viewId,
+      ...placement(view, at, defaultNodeSize('view-ref'), isJunction),
+    }
+    if (!store.addNode(view.id, node)) return
+    choose([node.id], store.view(view.id))
+    release()
+  }
+
+  /**
    * Commit what was typed into the inline editor: one command, or none when
    * nothing changed. Enter hands focus to the canvas, so the keyboard goes on
    * editing. A blur does not: it is the user putting focus somewhere else, and
@@ -977,6 +1076,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     setLasso(null)
     setDropInto(null)
     setRubber(null)
+    setGuides([])
     if (!g) return
     if (g.kind === 'place') {
       // Where the press was, as Archi places on a click; a drag does not size it yet.
@@ -1078,6 +1178,76 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         : moveSelection(current, ids, dx, dy),
     )
     nudgeRun.current = after ? { ...next, last: after } : null
+  }
+
+  /** Whether an arrange action would change anything for the selection (#136). */
+  const applies = (action: ArrangeAction): boolean => {
+    switch (action.kind) {
+      case 'align':
+        return arrangeable(view, selected, 2) !== undefined
+      case 'distribute':
+        return arrangeable(view, selected, 3) !== undefined
+      case 'match':
+        return canMatch(view, selected)
+      case 'order':
+        return canReorder(view, selected, action.order)
+    }
+  }
+
+  /** An arrange action, as one command; the selection stays, so the next one applies to it too. */
+  const arrangeSelection = (action: ArrangeAction) => {
+    auto.current = false
+    const ids = [...selected]
+    store.updateView(view.id, (current) => {
+      switch (action.kind) {
+        case 'align':
+          return align(current, ids, action.alignment)
+        case 'distribute':
+          return distribute(current, ids, action.axis)
+        case 'match':
+          return matchSize(current, ids, action.dimension)
+        case 'order':
+          return reorder(current, ids, action.order)
+      }
+    })
+  }
+
+  /**
+   * Paste `snapshot` into this view as one command (#137): the copies it makes,
+   * if any, and the drawings. The pasted top-level shapes are selected
+   * afterwards, as Archi selects them. `undefined` when nothing pastes.
+   */
+  const pasteHere = (snapshot: Snapshot, offset: Point, special: boolean) => {
+    const made = pasteInto(store, view.id, snapshot, { offset, special, mint: newId })
+    if (!made) return undefined
+    auto.current = false
+    choose([...made.pasted], made.view)
+    return made
+  }
+
+  /** Run a clipboard chord; `true` when it did something, so the browser's own action is kept away. */
+  const runChord = (chord: ClipboardChord): boolean => {
+    const clipboard = clipboardFor(store)
+    if (chord === 'copy') {
+      const snapshot = copySelection(view, selected, store)
+      if (!snapshot) return false
+      clipboard.copy(snapshot)
+      pressed.current = null
+      return true
+    }
+    if (chord === 'duplicate') {
+      // Copy and paste with no pointer, so at 10, 10 from the original; the clipboard is left alone.
+      const snapshot = copySelection(view, selected, store)
+      if (!snapshot) return false
+      return pasteHere(snapshot, nextOffset(snapshot, { x: 0, y: 0 }, null), false) !== undefined
+    }
+    const snapshot = clipboard.snapshot
+    if (!snapshot) return false
+    const offset = nextOffset(snapshot, clipboard.offset, pressed.current)
+    if (!pasteHere(snapshot, offset, chord === 'paste-special')) return false
+    clipboard.pastedAt(offset)
+    pressed.current = null
+    return true
   }
 
   const zoomBy = (factor: number) =>
@@ -1280,6 +1450,14 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           </button>
         </div>
       </header>
+      {editable && (
+        <ArrangeBar
+          grid={grid}
+          onGrid={changeGrid}
+          applies={applies}
+          onArrange={arrangeSelection}
+        />
+      )}
       {exportError && (
         <p role="alert" className="view-screen__error">
           PNG export failed: {exportError}
@@ -1308,7 +1486,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           aria-label={`View ${view.name}`}
           aria-description={
             editable
-              ? 'Drag shapes to move them, drag empty space to select, arrow keys to nudge. Drag from a selected shape’s connect handle to another shape to connect them. Delete removes from the view with everything inside; Shift+Delete keeps what is inside. Space and drag to pan.'
+              ? 'Drag shapes to move them, drag empty space to select, arrow keys to nudge. Drag from a selected shape’s connect handle to another shape to connect them. Delete removes from the view with everything inside; Shift+Delete keeps what is inside. Space and drag to pan. Command or Ctrl+C copies the selected shapes, Command or Ctrl+V pastes them where you last clicked, with Shift it draws the same elements again, and Command or Ctrl+D duplicates.'
               : undefined
           }
           onKeyDown={(event) => {
@@ -1327,6 +1505,11 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               return
             }
             if (!editable || gesture.current) return
+            const chord = clipboardChord(event)
+            if (chord) {
+              if (runChord(chord)) event.preventDefault()
+              return
+            }
             if (event.key === 'F2' && single) {
               // Archi's rename in place.
               if (editableText(view.nodes.find((n) => n.id === single)) !== undefined) {
@@ -1373,8 +1556,10 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             space.current = false
           }}
           onPointerDown={(event) => {
-            if (event.button !== 0 && event.button !== 1) return
             const start = { x: event.clientX, y: event.clientY }
+            // Any press, on a shape or not, as Archi's `PasteAction` listens to the whole canvas.
+            pressed.current = toView(start)
+            if (event.button !== 0 && event.button !== 1) return
             pointer.current = start
             const {
               node,
@@ -1509,33 +1694,70 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
             else if (editable && node && editableText(node) !== undefined) setEditing(node.id)
           }}
           onDragOver={(event) => {
-            // An element row from the model tree (#130); anything else is not ours to take.
-            if (!editable || !event.dataTransfer.types.includes(ELEMENT_DRAG_TYPE)) return
+            // An element row from the model tree (#130), or a view row (#134);
+            // anything else is not ours to take.
+            if (!editable) return
+            const { types } = event.dataTransfer
+            if (types.includes(VIEW_DRAG_TYPE)) {
+              event.preventDefault()
+              event.dataTransfer.dropEffect = 'copy'
+              return
+            }
+            if (!types.includes(ELEMENT_DRAG_TYPE)) return
             event.preventDefault()
             // The copy key draws the shape alone (#145); the cursor says which drop this is.
             event.dataTransfer.dropEffect = heldCopyKey(event) ? 'copy' : 'move'
           }}
           onDrop={(event) => {
             // No role check: a browser sends `drop` only where `dragover` accepted, and that refuses a reader.
+            const at = toView({ x: event.clientX, y: event.clientY })
+            const viewId = event.dataTransfer.getData(VIEW_DRAG_TYPE)
+            if (viewId) {
+              event.preventDefault()
+              drawReference(viewId, at)
+              return
+            }
             const elementId = event.dataTransfer.getData(ELEMENT_DRAG_TYPE)
             if (!elementId) return
             event.preventDefault()
-            drawExisting(
-              elementId,
-              toView({ x: event.clientX, y: event.clientY }),
-              !heldCopyKey(event),
-            )
+            drawExisting(elementId, at, !heldCopyKey(event))
           }}
         >
           {empty ? (
             <p className="view-screen__notice">
               {editable
-                ? 'This view is empty. Pick a type in the palette and click here to place it, or drag an element in from the model tree.'
+                ? 'This view is empty. Pick a type in the palette and click here to place it, or drag an element or a view in from the model tree.'
                 : 'This view is empty.'}
             </p>
           ) : (
             <svg ref={drawingRef} className="view-screen__svg" data-testid="view-canvas">
               <g transform={`translate(${vp.x} ${vp.y}) scale(${vp.zoom})`}>
+                {/* The grid (#136), under the drawing and outside it, so no export draws it. */}
+                {editable && grid.visible && grid.size * vp.zoom >= MIN_GRID_SPACING && (
+                  <g data-testid="grid">
+                    <defs>
+                      <pattern
+                        id={gridPattern}
+                        width={grid.size}
+                        height={grid.size}
+                        patternUnits="userSpaceOnUse"
+                      >
+                        <path
+                          className="view-screen__grid-line"
+                          d={`M${grid.size},0L0,0L0,${grid.size}`}
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      </pattern>
+                    </defs>
+                    <rect
+                      x={-vp.x / vp.zoom}
+                      y={-vp.y / vp.zoom}
+                      width={size.width / vp.zoom}
+                      height={size.height / vp.zoom}
+                      fill={`url(#${gridPattern})`}
+                    />
+                  </g>
+                )}
                 <ViewDrawing view={shown} bounds={bounds} children={children} lookups={lookups} />
                 {/* Lines are thin; a wider, invisible stroke over each is what a press finds. */}
                 <g data-testid="line-hits">
@@ -1614,14 +1836,31 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
                     vectorEffect="non-scaling-stroke"
                   />
                 )}
-                {selected.map((id) => {
+                {guides.map((guide, i) => (
+                  <line
+                    key={i}
+                    className="view-screen__guide"
+                    data-testid="guide"
+                    data-axis={guide.axis}
+                    data-at={guide.at}
+                    x1={guide.axis === 'x' ? guide.at : guide.from}
+                    y1={guide.axis === 'x' ? guide.from : guide.at}
+                    x2={guide.axis === 'x' ? guide.at : guide.to}
+                    y2={guide.axis === 'x' ? guide.to : guide.at}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ))}
+                {selected.map((id, i) => {
                   const b = bounds.get(id)
+                  // The primary selection, which align and match go by, as Archi marks it (#136).
+                  const primary = selected.length > 1 && i === selected.length - 1
                   return b ? (
                     <rect
                       key={id}
-                      className="view-screen__selection"
+                      className={`view-screen__selection${primary ? ' view-screen__selection--primary' : ''}`}
                       data-testid="selection"
                       data-selected={id}
+                      data-primary={primary || undefined}
                       {...box(b, 2)}
                       vectorEffect="non-scaling-stroke"
                     />
@@ -1742,9 +1981,14 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         </div>
         {panelNode && (
           <SelectionPanel
+            // Keyed on the node, so a field's typing never carries to the next one (CLAUDE.md).
+            key={panelNode.id}
             node={panelNode}
+            view={view}
             store={store}
             editable={editable}
+            onUpdate={(change) => store.updateNode(view.id, panelNode.id, change)}
+            onDone={release}
             onRemove={() => {
               // As the Delete key: from the view only, with what is nested in it.
               const ids = new Set([panelNode.id])
@@ -1886,16 +2130,24 @@ function handlePoint(b: Bounds, h: Handle): Point {
 
 function SelectionPanel({
   node,
+  view,
   store,
   editable,
+  onUpdate,
+  onDone,
   onRemove,
   onDelete,
   onClose,
   children,
 }: {
   node: ViewNode
+  view: View
   store: ModelStore
   editable: boolean
+  /** Change the selected node, as one command; one that changes nothing makes none. */
+  onUpdate: (change: (node: ViewNode) => ViewNode) => void
+  /** A field's Enter or Escape is done with it: focus goes back to the canvas. */
+  onDone: () => void
   onRemove: () => void
   onDelete: (element: string) => void
   onClose: () => void
@@ -2000,15 +2252,150 @@ function SelectionPanel({
     )
   }
 
+  if (node.kind === 'legend') {
+    const entries = legendEntries(view, node.options, {
+      elementType: (id) => store.element(id)?.type,
+      relationshipType: (id) => store.relationship(id)?.type,
+    })
+    return (
+      <aside className="view-panel" aria-label="Selected legend">
+        <div className="view-panel__kind">Legend</div>
+        <p className="view-panel__text">
+          {entries.length
+            ? `Lists the ${entries.length} element and relationship type${entries.length === 1 ? '' : 's'} this view draws.`
+            : 'This view draws no elements or relationships yet, so the legend lists nothing.'}
+        </p>
+        <div className="view-panel__actions">{close}</div>
+        {children}
+      </aside>
+    )
+  }
+
+  if (node.kind === 'group' && editable) {
+    return (
+      <aside className="view-panel" aria-label="Selected group">
+        <div className="view-panel__kind">Group</div>
+        <PanelTextField
+          // Remounted when the stored value changes, so an undone edit shows.
+          key={`name ${node.name}`}
+          label="Name"
+          value={node.name}
+          onCommit={(value) => {
+            const name = value.trim()
+            // An empty name is a slip, as on the canvas: the group keeps its own.
+            onUpdate((n) => (n.kind === 'group' && name && name !== n.name ? { ...n, name } : n))
+          }}
+          onDone={onDone}
+        />
+        <PanelTextField
+          key={`documentation ${node.documentation ?? ''}`}
+          label="Documentation"
+          multiline
+          value={node.documentation ?? ''}
+          onCommit={(value) =>
+            onUpdate((n) => {
+              if (n.kind !== 'group' || value === (n.documentation ?? '')) return n
+              const next = { ...n }
+              // Cleared is absent, as on a group never documented.
+              if (value === '') delete next.documentation
+              else next.documentation = value
+              return next
+            })
+          }
+          onDone={onDone}
+        />
+        <div className="view-panel__actions">{close}</div>
+        {children}
+      </aside>
+    )
+  }
+
   return (
     <aside className="view-panel" aria-label={`Selected ${node.kind}`}>
       <div className="view-panel__kind">{node.kind === 'note' ? 'Note' : 'Group'}</div>
       <p className="view-panel__text view-panel__text--pre">
         {node.kind === 'note' ? node.text : node.name}
       </p>
+      {node.kind === 'group' && node.documentation && (
+        <p className="view-panel__text view-panel__text--pre">{node.documentation}</p>
+      )}
       <div className="view-panel__actions">{close}</div>
       {children}
     </aside>
+  )
+}
+
+/**
+ * A text field in the selection panel (#134): it commits once, when the typing
+ * is done, never per keystroke, so each edit is one command. Leaving the field
+ * commits; so does Enter on a one-line field, and ⌘/Ctrl+Enter on a multi-line
+ * one, where Enter is a new line. Escape puts the stored value back. Both keys
+ * hand focus to the canvas; leaving does not, since that is the user putting
+ * focus somewhere (CLAUDE.md).
+ *
+ * The browser keeps its own undo of the typing while the field has focus: the
+ * global ⌘Z stands down in a text field (`hasNativeUndo`).
+ *
+ * A press on another shape changes the selection before the browser moves
+ * focus, and this field unmounts with the panel while it still has focus,
+ * which sends no `blur`. So what was typed and not yet committed is committed
+ * as the field unmounts, or a click elsewhere on the canvas would lose it.
+ */
+function PanelTextField({
+  label,
+  value,
+  multiline = false,
+  onCommit,
+  onDone,
+}: {
+  label: string
+  value: string
+  multiline?: boolean
+  onCommit: (value: string) => void
+  onDone: () => void
+}) {
+  /** What is typed and not yet committed, or `null` when the field holds the stored value. */
+  const pending = useRef<string | null>(null)
+  const latest = useRef({ onCommit, value })
+  latest.current = { onCommit, value }
+  const input = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
+  const commit = () => {
+    const typed = pending.current
+    pending.current = null
+    if (typed === null) return
+    latest.current.onCommit(typed)
+    // The field shows what is stored: a commit that changed it remounts the
+    // field with the new value, and one that was refused, an empty name, puts
+    // the old one back rather than leaving the slip on show.
+    if (input.current) input.current.value = latest.current.value
+  }
+  useEffect(() => () => commit(), [])
+  const props = {
+    ref: input,
+    className: `view-panel__input${multiline ? ' view-panel__input--multiline' : ''}`,
+    defaultValue: value,
+    onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      pending.current = event.currentTarget.value
+    },
+    onBlur: commit,
+    onKeyDown: (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.currentTarget.value = value
+        pending.current = null
+        onDone()
+      } else if (event.key === 'Enter' && (!multiline || event.metaKey || event.ctrlKey)) {
+        event.preventDefault()
+        commit()
+        onDone()
+      }
+    },
+  }
+  return (
+    <label className="view-panel__field">
+      <span className="view-panel__stat-key">{label}</span>
+      {multiline ? <textarea rows={4} {...props} /> : <input {...props} />}
+    </label>
   )
 }
 
@@ -2050,6 +2437,7 @@ function LinePanel({
     if (node.kind === 'element') return store.element(node.element)?.name ?? node.element
     if (node.kind === 'note') return 'Note'
     if (node.kind === 'group') return node.name
+    if (node.kind === 'legend') return 'Legend'
     return store.view(node.view)?.name ?? 'View reference'
   }
   const relationship =

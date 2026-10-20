@@ -4,8 +4,9 @@
 # writes (a hand edit once left one at Archi's default, which Archi omits; #100),
 # then write the Open Group exchange format with the folder structure.
 # claims-platform (#76, and in German for #111), relationship-attributes (#84),
-# archi-coverage (#13) and text-position (#108, saved only). ARCHI defaults to
-# ~/Applications/Archi.app, then /Applications; Archi 5.10.0 produced the checked-in files.
+# archi-coverage (#13), text-position (#108, saved only) and view-objects (#134,
+# saved only). ARCHI defaults to ~/Applications/Archi.app, then /Applications;
+# Archi 5.10.0 produced the checked-in files.
 # archi-coverage fails Archi's own XSD check after export, on purpose: it holds
 # shapes left at their default size, which Archi exports as w="-1" (#13).
 set -eu
@@ -36,6 +37,12 @@ done
 "$ARCHI" -application com.archimatetool.commandline.app -consoleLog -nosplash \
   --loadModel "$DIR/text-position.archimate" \
   --saveModel "$DIR/text-position.archimate"
+# A note, a group, a view reference and two legends (#134), saved only: Archi
+# keeps a legend as a note with a `legend` feature, and its exchange export
+# drops that, so the export is not the evidence.
+"$ARCHI" -application com.archimatetool.commandline.app -consoleLog -nosplash \
+  --loadModel "$DIR/view-objects.archimate" \
+  --saveModel "$DIR/view-objects.archimate"
 # Archi's version-keyed compatibility handlers (#118). The model is saved as it
 # is, then opened under each version just below and at a handler's threshold
 # (and with none, which Archi reads as "" and so as older than every one), and
@@ -67,6 +74,11 @@ cd "$DIR/../../.."
 npx vite-node scripts/fixtures/build-edited-claims.ts
 ARCHI="$ARCHI" scripts/fixtures/archi-roundtrip.sh "$DIR/claims-edited.xml" \
   "$DIR/claims-edited.archi.archimate" "$DIR/claims-edited.archi.xml"
+# Notes, groups, view references and legends after an editing session (#134),
+# the same oracle, starting from view-objects.archimate saved above.
+npx vite-node scripts/fixtures/build-edited-view-objects.ts
+ARCHI="$ARCHI" scripts/fixtures/archi-roundtrip.sh "$DIR/view-objects-edited.xml" \
+  "$DIR/view-objects-edited.archi.archimate" "$DIR/view-objects-edited.archi.xml"
 # The same for an edited appearance (#135), an oracle of its own.
 npx vite-node scripts/fixtures/build-edited-appearance.ts
 ARCHI="$ARCHI" scripts/fixtures/archi-roundtrip.sh "$DIR/appearance-edited.xml" \

@@ -7,6 +7,7 @@ import { importExchangeXml } from '@/io'
 import type { Point, View } from '@/model'
 import { ModelStore, ModelStoreContext, type ModelStoreContextValue, type TabRole } from '@/store'
 import { ViewScreen } from '@/ui/views/ViewScreen'
+import { readGridPreferences, writeGridPreferences } from '@/ui/views/grid-preferences'
 
 /**
  * The view editor's harness (#128, #129): the claims landscape on the canvas,
@@ -32,8 +33,24 @@ export const SCREEN = { width: 2000, height: 1500 }
 
 export function setup(
   role: TabRole = 'writer',
-  { prepare, viewId = LANDSCAPE }: { prepare?: (store: ModelStore) => void; viewId?: string } = {},
+  {
+    prepare,
+    viewId = LANDSCAPE,
+    snapping = false,
+  }: {
+    prepare?: (store: ModelStore) => void
+    viewId?: string
+    /**
+     * Keep the viewer's grid and guide snapping (#136), Archi's defaults when
+     * nothing is stored. Off unless asked: the gesture tests measure a drag to
+     * the pixel, and snapping would move where it lands. `snap.test.tsx`
+     * drives the defaults.
+     */
+    snapping?: boolean
+  } = {},
 ) {
+  // Through the editor's own writer, which survives a test that blocks storage.
+  if (!snapping) writeGridPreferences({ ...readGridPreferences(), snap: false, guides: false })
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
     this: HTMLElement,
   ) {

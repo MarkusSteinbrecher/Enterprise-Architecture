@@ -143,6 +143,24 @@
     <element identifier="j-serve" xsi:type="AndJunction">
       <name xml:lang="en"></name>
     </element>
+    <element identifier="copy-el-1" xsi:type="BusinessProcess">
+      <name xml:lang="en">Handle Claim (copy)</name>
+    </element>
+    <element identifier="copy-el-2" xsi:type="BusinessProcess">
+      <name xml:lang="en">Register (copy)</name>
+    </element>
+    <element identifier="copy-el-3" xsi:type="BusinessProcess">
+      <name xml:lang="en">Accept (copy)</name>
+    </element>
+    <element identifier="copy-el-4" xsi:type="OrJunction">
+      <name xml:lang="en">Junction (copy)</name>
+    </element>
+    <element identifier="copy-el-5" xsi:type="BusinessProcess">
+      <name xml:lang="en">Valuate (copy)</name>
+    </element>
+    <element identifier="copy-el-6" xsi:type="BusinessProcess">
+      <name xml:lang="en">Pay (copy)</name>
+    </element>
   </elements>
   <relationships>
     <relationship identifier="r-cust-ins" source="ba-customer" target="br-insurant" xsi:type="Assignment">
@@ -274,6 +292,17 @@
     </relationship>
     <relationship identifier="r-s-intake-serve" source="as-intake" target="j-serve" xsi:type="Serving">
     </relationship>
+    <relationship identifier="copy-rel-1" source="copy-el-2" target="copy-el-3" xsi:type="Triggering">
+    </relationship>
+    <relationship identifier="copy-rel-2" source="copy-el-3" target="copy-el-4" xsi:type="Triggering">
+    </relationship>
+    <relationship identifier="copy-rel-3" source="copy-el-4" target="copy-el-5" xsi:type="Triggering">
+    </relationship>
+    <relationship identifier="copy-rel-4" source="copy-el-4" target="copy-el-6" xsi:type="Triggering">
+      <name xml:lang="en">fast track</name>
+    </relationship>
+    <relationship identifier="copy-rel-5" source="copy-el-5" target="copy-el-6" xsi:type="Triggering">
+    </relationship>
   </relationships>
   <organizations>
     <item>
@@ -295,6 +324,11 @@
       <item identifierRef="bo-claim" />
       <item identifierRef="be-claim-in" />
       <item identifierRef="bp-check-cover" />
+      <item identifierRef="copy-el-1" />
+      <item identifierRef="copy-el-2" />
+      <item identifierRef="copy-el-3" />
+      <item identifierRef="copy-el-5" />
+      <item identifierRef="copy-el-6" />
     </item>
     <item>
       <label xml:lang="en">Application</label>
@@ -351,6 +385,7 @@
       <item identifierRef="j-split" />
       <item identifierRef="j-intake" />
       <item identifierRef="j-serve" />
+      <item identifierRef="copy-el-4" />
     </item>
     <item>
       <label xml:lang="en">Relations</label>
@@ -420,6 +455,11 @@
       <item identifierRef="r-s-event-valuate" />
       <item identifierRef="r-s-event-check" />
       <item identifierRef="r-s-intake-serve" />
+      <item identifierRef="copy-rel-1" />
+      <item identifierRef="copy-rel-2" />
+      <item identifierRef="copy-rel-3" />
+      <item identifierRef="copy-rel-4" />
+      <item identifierRef="copy-rel-5" />
     </item>
     <item>
       <label xml:lang="en">Views</label>
@@ -475,7 +515,7 @@
         <documentation xml:lang="en">Business, application and platform layers of the claims platform.</documentation>
         <properties>
           <property propertyDefinitionRef="propid-1">
-            <value xml:lang="en">[{"id":"c-crm-cust","labelPosition":"source"},{"id":"c-note-split","literal":{"lineColor":"#999999"}},{"id":"c-pay-ins","literal":{"lineColor":"#7a7a7a"}},{"id":"c-req-goal","literal":{"lineColor":"#8c1e5a","lineWidth":2}},{"id":"o-crm","literal":{"fillColor":"#e0e0e0a1"}},{"id":"o-engine","literal":{"fillColor":"#c9e7f7","fontColor":"#0b2e4a","fontName":"Arial","fontSize":11,"fontStyle":["bold"],"lineColor":"#1d5c8c","lineWidth":2}},{"id":"o-g-apps","textAlignment":"center"},{"id":"o-g-business","literal":{"fillColor":"#fff5d6"},"textAlignment":"center"},{"id":"o-g-platform","textAlignment":"center"},{"id":"o-goal","literal":{"fillColor":"#ffe9a8"}},{"id":"o-handle","textAlignment":"left"},{"id":"o-note-biz","textAlignment":"center"},{"id":"o-req","literal":{"fontColor":"#5a1e8c","fontSize":12,"fontStyle":["bold"]}},{"id":"o-rollout","strikethrough":true,"textAlignment":"right"}]</value>
+            <value xml:lang="en">[{"id":"c-crm-cust","labelPosition":"source"},{"id":"c-note-split","literal":{"lineColor":"#999999"}},{"id":"c-pay-ins","literal":{"lineColor":"#7a7a7a"}},{"id":"c-req-goal","literal":{"lineColor":"#8c1e5a","lineWidth":2}},{"id":"copy-node-1","textAlignment":"left"},{"id":"o-crm","literal":{"fillColor":"#e0e0e0a1"}},{"id":"o-engine","literal":{"fillColor":"#c9e7f7","fontColor":"#0b2e4a","fontName":"Arial","fontSize":11,"fontStyle":["bold"],"lineColor":"#1d5c8c","lineWidth":2}},{"id":"o-g-apps","textAlignment":"center"},{"id":"o-g-business","literal":{"fillColor":"#fff5d6"},"textAlignment":"center"},{"id":"o-g-platform","textAlignment":"center"},{"id":"o-goal","literal":{"fillColor":"#ffe9a8"}},{"id":"o-handle","textAlignment":"left"},{"id":"o-note-biz","textAlignment":"center"},{"id":"o-req","literal":{"fontColor":"#5a1e8c","fontSize":12,"fontStyle":["bold"]}},{"id":"o-rollout","strikethrough":true,"textAlignment":"right"},{"id":"special-conn-1","literal":{"lineColor":"#8c1e5a","lineWidth":2}},{"id":"special-node-1","literal":{"fillColor":"#ffe9a8"}},{"id":"special-node-2","literal":{"fontColor":"#5a1e8c","fontSize":12,"fontStyle":["bold"]}}]</value>
           </property>
         </properties>
         <node identifier="o-g-business" x="20" y="20" w="1180" h="300" xsi:type="Container">
@@ -498,11 +538,11 @@
           <node identifier="o-handle" x="200" y="150" w="760" h="140" xsi:type="Element" elementRef="bp-handle">
             <node identifier="o-register" x="220" y="200" w="120" h="55" xsi:type="Element" elementRef="bp-register">
             </node>
-            <node identifier="o-accept" x="380" y="200" w="120" h="55" xsi:type="Element" elementRef="bp-accept">
+            <node identifier="o-accept" x="413" y="200" w="120" h="55" xsi:type="Element" elementRef="bp-accept">
             </node>
             <node identifier="o-split" x="540" y="220" w="15" h="15" xsi:type="Element" elementRef="j-split">
             </node>
-            <node identifier="o-valuate" x="600" y="180" w="120" h="50" xsi:type="Element" elementRef="bp-valuate">
+            <node identifier="o-valuate" x="607" y="202" w="120" h="50" xsi:type="Element" elementRef="bp-valuate">
             </node>
             <node identifier="o-pay" x="800" y="200" w="120" h="55" xsi:type="Element" elementRef="bp-pay">
             </node>
@@ -514,17 +554,38 @@
 for claims under 500.</label>
           </node>
         </node>
+        <node identifier="o-g-platform" x="20" y="720" w="1180" h="300" xsi:type="Container">
+          <label xml:lang="en">Platform</label>
+          <node identifier="o-database" x="660" y="750" w="150" h="55" xsi:type="Element" elementRef="ts-database">
+          </node>
+          <node identifier="o-k8s" x="160" y="830" w="580" h="150" xsi:type="Element" elementRef="n-k8s">
+            <node identifier="o-runtime" x="220" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-runtime">
+            </node>
+            <node identifier="o-batch" x="395" y="900" w="120" h="55" xsi:type="Element" elementRef="ss-batch">
+            </node>
+            <node identifier="o-postgres" x="540" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-postgres">
+            </node>
+          </node>
+          <node identifier="o-mainframe" x="860" y="830" w="300" h="150" xsi:type="Element" elementRef="n-mainframe">
+            <node identifier="o-cics" x="940" y="890" w="140" h="55" xsi:type="Element" elementRef="ss-cics">
+            </node>
+          </node>
+          <node identifier="o-backbone" x="40" y="960" w="120" h="45" xsi:type="Element" elementRef="cn-backbone">
+          </node>
+          <node identifier="o-hosting" x="200" y="750" w="150" h="55" xsi:type="Element" elementRef="ts-hosting">
+          </node>
+        </node>
         <node identifier="o-g-apps" x="20" y="360" w="1180" h="320" xsi:type="Container">
           <label xml:lang="en">Applications</label>
           <node identifier="o-as-claims" x="200" y="390" w="180" h="55" xsi:type="Element" elementRef="as-claims">
           </node>
           <node identifier="o-as-customer" x="460" y="390" w="180" h="55" xsi:type="Element" elementRef="as-customer">
           </node>
-          <node identifier="o-as-payment" x="800" y="390" w="150" h="55" xsi:type="Element" elementRef="as-payment">
+          <node identifier="o-as-payment" x="800" y="390" w="180" h="55" xsi:type="Element" elementRef="as-payment">
           </node>
           <node identifier="o-portal" x="40" y="500" w="150" h="55" xsi:type="Element" elementRef="ac-portal">
           </node>
-          <node identifier="o-ai-portal" x="40" y="600" w="150" h="50" xsi:type="Element" elementRef="ai-portal">
+          <node identifier="o-ai-portal" x="40" y="600" w="150" h="55" xsi:type="Element" elementRef="ai-portal">
           </node>
           <node identifier="o-engine" x="220" y="480" w="400" h="160" xsi:type="Element" elementRef="ac-engine">
             <style lineWidth="2">
@@ -534,13 +595,13 @@ for claims under 500.</label>
                 <color r="11" g="46" b="74" />
               </font>
             </style>
-            <node identifier="o-rules" x="240" y="560" w="160" h="55" xsi:type="Element" elementRef="af-rules">
+            <node identifier="o-host" x="240" y="490" w="150" h="55" xsi:type="Element" elementRef="ac-host">
             </node>
             <node identifier="o-calc" x="440" y="575" w="160" h="55" xsi:type="Element" elementRef="af-calc">
             </node>
             <node identifier="o-do-claim" x="450" y="490" w="150" h="50" xsi:type="Element" elementRef="do-claim">
             </node>
-            <node identifier="o-host" x="240" y="490" w="150" h="55" xsi:type="Element" elementRef="ac-host">
+            <node identifier="o-rules" x="240" y="560" w="160" h="55" xsi:type="Element" elementRef="af-rules">
             </node>
           </node>
           <node identifier="o-customer-hub" x="660" y="500" w="150" h="55" xsi:type="Element" elementRef="ac-customer">
@@ -553,27 +614,6 @@ for claims under 500.</label>
           <node identifier="o-do-customer" x="860" y="610" w="150" h="50" xsi:type="Element" elementRef="do-customer">
           </node>
           <node identifier="o-fraud" x="1030" y="610" w="150" h="50" xsi:type="Element" elementRef="ac-fraud">
-          </node>
-        </node>
-        <node identifier="o-g-platform" x="20" y="720" w="1180" h="300" xsi:type="Container">
-          <label xml:lang="en">Platform</label>
-          <node identifier="o-hosting" x="200" y="750" w="150" h="55" xsi:type="Element" elementRef="ts-hosting">
-          </node>
-          <node identifier="o-database" x="660" y="750" w="150" h="55" xsi:type="Element" elementRef="ts-database">
-          </node>
-          <node identifier="o-k8s" x="160" y="830" w="580" h="150" xsi:type="Element" elementRef="n-k8s">
-            <node identifier="o-runtime" x="220" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-runtime">
-            </node>
-            <node identifier="o-postgres" x="540" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-postgres">
-            </node>
-            <node identifier="o-batch" x="395" y="900" w="120" h="55" xsi:type="Element" elementRef="ss-batch">
-            </node>
-          </node>
-          <node identifier="o-mainframe" x="860" y="830" w="300" h="150" xsi:type="Element" elementRef="n-mainframe">
-            <node identifier="o-cics" x="940" y="890" w="140" h="55" xsi:type="Element" elementRef="ss-cics">
-            </node>
-          </node>
-          <node identifier="o-backbone" x="40" y="960" w="120" h="45" xsi:type="Element" elementRef="cn-backbone">
           </node>
         </node>
         <node identifier="o-zurich" x="1240" y="830" w="150" h="55" xsi:type="Element" elementRef="loc-zurich">
@@ -602,6 +642,30 @@ for claims under 500.</label>
           <label xml:lang="en">Edited in Archipelago (#127).</label>
         </node>
         <node identifier="o-intake" x="1195" y="330" w="15" h="15" xsi:type="Element" elementRef="j-intake">
+        </node>
+        <node identifier="copy-node-1" x="20" y="1060" w="760" h="140" xsi:type="Element" elementRef="copy-el-1">
+          <node identifier="copy-node-2" x="40" y="1110" w="120" h="55" xsi:type="Element" elementRef="copy-el-2">
+          </node>
+          <node identifier="copy-node-3" x="233" y="1110" w="120" h="55" xsi:type="Element" elementRef="copy-el-3">
+          </node>
+          <node identifier="copy-node-4" x="360" y="1130" w="15" h="15" xsi:type="Element" elementRef="copy-el-4">
+          </node>
+          <node identifier="copy-node-5" x="427" y="1112" w="120" h="50" xsi:type="Element" elementRef="copy-el-5">
+          </node>
+          <node identifier="copy-node-6" x="620" y="1110" w="120" h="55" xsi:type="Element" elementRef="copy-el-6">
+          </node>
+        </node>
+        <node identifier="special-node-1" x="1240" y="1060" w="170" h="60" xsi:type="Element" elementRef="g-settle">
+          <style>
+            <fillColor r="255" g="233" b="168" />
+          </style>
+        </node>
+        <node identifier="special-node-2" x="1240" y="1180" w="170" h="60" xsi:type="Element" elementRef="r-rules">
+          <style>
+            <font size="12" style="bold">
+              <color r="90" g="30" b="140" />
+            </font>
+          </style>
         </node>
         <connection identifier="c-cust-ins" xsi:type="Relationship" relationshipRef="r-cust-ins" source="o-customer" target="o-insurant">
         </connection>
@@ -658,8 +722,8 @@ for claims under 500.</label>
         <connection identifier="c-engine-req" xsi:type="Relationship" relationshipRef="r-engine-req" source="o-engine" target="o-req">
         </connection>
         <connection identifier="c-calc-pay" xsi:type="Relationship" relationshipRef="r-calc-pay" source="o-calc" target="o-as-payment">
-          <bendpoint x="520" y="480" />
-          <bendpoint x="875" y="475" />
+          <bendpoint x="525" y="480" />
+          <bendpoint x="885" y="475" />
         </connection>
         <connection identifier="c-cust-as" xsi:type="Relationship" relationshipRef="r-cust-as" source="o-customer-hub" target="o-as-customer">
           <bendpoint x="715" y="470" />
@@ -730,6 +794,22 @@ for claims under 500.</label>
         </connection>
         <connection identifier="c-k8s-batch" xsi:type="Relationship" relationshipRef="r-k8s-batch" source="o-k8s" target="o-batch">
         </connection>
+        <connection identifier="copy-conn-1" xsi:type="Relationship" relationshipRef="copy-rel-1" source="copy-node-2" target="copy-node-3">
+        </connection>
+        <connection identifier="copy-conn-2" xsi:type="Relationship" relationshipRef="copy-rel-2" source="copy-node-3" target="copy-node-4">
+        </connection>
+        <connection identifier="copy-conn-3" xsi:type="Relationship" relationshipRef="copy-rel-3" source="copy-node-4" target="copy-node-5">
+        </connection>
+        <connection identifier="copy-conn-4" xsi:type="Relationship" relationshipRef="copy-rel-4" source="copy-node-4" target="copy-node-6">
+          <bendpoint x="680" y="1180" />
+        </connection>
+        <connection identifier="copy-conn-5" xsi:type="Relationship" relationshipRef="copy-rel-5" source="copy-node-5" target="copy-node-6">
+        </connection>
+        <connection identifier="special-conn-1" xsi:type="Relationship" relationshipRef="r-req-goal" source="special-node-2" target="special-node-1">
+          <style lineWidth="2">
+            <lineColor r="140" g="30" b="90" />
+          </style>
+        </connection>
       </view>
       <view identifier="v-scratch" xsi:type="Diagram" viewpoint="Business Process Cooperation">
         <name xml:lang="en">Claim intake (draft)</name>
@@ -752,6 +832,14 @@ for claims under 500.</label>
         </node>
         <node identifier="o-s-serve" x="760" y="300" w="15" h="15" xsi:type="Element" elementRef="j-serve">
         </node>
+        <node identifier="again-node-1" x="40" y="560" w="580" h="150" xsi:type="Element" elementRef="n-k8s">
+          <node identifier="again-node-2" x="100" y="610" w="150" h="55" xsi:type="Element" elementRef="ss-runtime">
+          </node>
+          <node identifier="again-node-3" x="275" y="630" w="120" h="55" xsi:type="Element" elementRef="ss-batch">
+          </node>
+          <node identifier="again-node-4" x="420" y="610" w="150" h="55" xsi:type="Element" elementRef="ss-postgres">
+          </node>
+        </node>
         <connection identifier="c-s-engine-intake" xsi:type="Relationship" relationshipRef="r-s-engine-intake" source="o-s-engine" target="o-s-intake">
         </connection>
         <connection identifier="c-s-intake-valuate" xsi:type="Relationship" relationshipRef="r-s-intake-valuate" source="o-s-intake" target="o-s-valuate">
@@ -765,6 +853,10 @@ for claims under 500.</label>
         <connection identifier="c-s-event-check" xsi:type="Relationship" relationshipRef="r-s-event-check" source="o-s-event" target="o-s-check">
         </connection>
         <connection identifier="c-s-intake-serve" xsi:type="Relationship" relationshipRef="r-s-intake-serve" source="o-s-intake" target="o-s-serve">
+        </connection>
+        <connection identifier="again-conn-1" xsi:type="Relationship" relationshipRef="r-k8s-runtime" source="again-node-1" target="again-node-2">
+        </connection>
+        <connection identifier="again-conn-2" xsi:type="Relationship" relationshipRef="r-k8s-batch" source="again-node-1" target="again-node-3">
         </connection>
       </view>
     </diagrams>

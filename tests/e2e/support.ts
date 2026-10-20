@@ -43,12 +43,34 @@ export interface AppFixtures {
   consoleErrors: string[]
   /** Set to true in a test that provokes an error on purpose. */
   allowConsoleErrors: boolean
+  /**
+   * Keep the view editor's grid and guide snapping (#136), on by default as in
+   * Archi. Off unless a journey asks: the others drag shapes to the pixel, and
+   * snapping would move where they land. Set only when nothing is stored, so a
+   * journey that changes the preference and reloads keeps its own.
+   */
+  snapping: boolean
 }
+
+/** `GRID_STORAGE_KEY` in `src/ui/views/grid-preferences.ts`. */
+const GRID_STORAGE_KEY = 'archipelago.view-grid'
 
 export const test = base.extend<AppFixtures>({
   allowConsoleErrors: [false, { option: true }],
+  snapping: [false, { option: true }],
 
-  page: async ({ page }, use) => {
+  page: async ({ page, snapping }, use) => {
+    if (!snapping) {
+      await page.addInitScript((key) => {
+        try {
+          if (localStorage.getItem(key) === null) {
+            localStorage.setItem(key, JSON.stringify({ snap: false, guides: false }))
+          }
+        } catch {
+          // A journey that blocks storage gets Archi's defaults, as a user would.
+        }
+      }, GRID_STORAGE_KEY)
+    }
     // The File System Access API opens a *native* picker, which no browser
     // automation can drive. Hiding it puts Chromium on the download and
     // <input type=file> path that Firefox and Safari use anyway, so the file

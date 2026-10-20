@@ -3,7 +3,7 @@ import type { Locator, Page } from '@playwright/test'
 import { test, expect, importWithNothingToReport, startEmpty } from './support'
 
 /**
- * Journey 19 — a view's appearance, edited from the selection panel, and the
+ * Journey 20 — a view's appearance, edited from the selection panel, and the
  * format painter (#135), in a real browser: a fill typed for two shapes at once
  * is drawn on both and undone in one step, the browser's own colour picker sets
  * a fill, the painter paints one shape's look onto another with a press, Reset

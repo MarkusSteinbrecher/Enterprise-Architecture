@@ -24,6 +24,9 @@ git-friendly files are what LeanIX does not give you. Concept reference: §5.3.
 | `fixtures/archi-images.archimate`          | a model with an image in each place Archi allows one, as Archi 5.10 saved it |
 | `default-sizes.ts`                         | the size Archi draws a shape at when the file does not say                |
 | `fixtures/archi-coverage.{archimate,xml}`  | every `.archimate` edge case, and Archi 5.10's (XSD-invalid) export of it |
+| `fixtures/view-objects.archimate`          | a note, a group, a view reference and two legends, as Archi 5.10 saved them (#134) |
+| `fixtures/view-objects-edited.*`           | those edited here, and Archi's save and export of our file: the #127 oracle for #134 |
+| `legend-feature.ts`                        | a legend's options in Archi's own `legend` feature spelling, read as Archi reads it |
 | `problems.ts`                              | structured import problems                                                |
 
 ## Shared folders (#147)
@@ -41,8 +44,13 @@ The point is git. Two exports of the same model must be byte-identical, and a
 one-field edit must produce a one-line diff. So keys are sorted at every depth,
 arrays are sorted by id rather than by insertion order (Map iteration order is an
 implementation detail), absent and empty values are omitted rather than written
-as `null`, and the file ends with a newline. Bend-points are the one array kept
-in written order, because their order is the route.
+as `null`, and the file ends with a newline. Two arrays keep an order of their
+own, because the order means something: bend-points, whose order is the route,
+and a view's nodes, written in drawing order (a parent, then its children in
+their order, then the next sibling), because a container's children are drawn
+later over earlier and that order is the z-order (#136). The tree walk writes
+one order whatever `view.nodes` holds, so the file is still a function of the
+drawing.
 
 Reading migrates. A file from an older schema is read at the current version,
 with an `info` problem (`json.schema-upgraded`) saying the next save writes the
@@ -83,8 +91,11 @@ includes the View and Model schemas; CI runs it in its own job.
 The mapping decisions:
 
 - **Nodes.** `Element` → element node, `Container` → group, `Label` → note, or a
-  view reference when it carries a `<viewRef>`. Connections are `Relationship`
-  or `Line`. The format places nodes absolutely; we place them relative to their
+  view reference when it carries a `<viewRef>`. The format has no legend (#134):
+  Archi's own export writes one as a `Label` with no text, and Archi's import
+  makes such a label a plain note, so ours does the same and carries the legend
+  in `archipelago.style` (below), with a warning (`exchange.legend-carried`).
+  Connections are `Relationship` or `Line`. The format places nodes absolutely; we place them relative to their
   parent, so the boundary converts both ways. Bend-points are absolute on both
   sides.
 - **What the format cannot hold is repaired on the way out, with a problem.** A
@@ -109,6 +120,13 @@ The mapping decisions:
   and the property keeps a copy, because Archi does not (its import reads bold
   and italic only), so without the copy an underline is lost for good after a
   pass through Archi (#135). The reader holds a style both name once.
+- **A legend travels there too** (#134): its options as `"legend"`, in the
+  spelling of Archi's own feature (`display=15,rows=15,offset=0,color=1,sort=1`),
+  and its name. Both readers turn the empty note back into a legend, and fail
+  closed: a note that has text by now (typed in another tool), or a value this
+  build would not write, stays a note, and the entry is reported
+  (`exchange.carried-unreadable`). A shape that already is a legend in Archi's
+  save keeps Archi's own options.
 - **Ours or Archi's, value by value (#138).** Archi keeps `archipelago.style`,
   and when it exports the model again it writes its whole computed style on
   every object, beside ours. So the marker cannot vouch for a whole `<style>`:
@@ -442,6 +460,17 @@ specialization no imported concept uses. Any zip not named `.archimate`, such
 as a `.docx`, is named as an archive, not as an Archi model
 (`file.archive-unrecognised`).
 
+**Legends (#134).** Archi 5.10 saves a legend as a note carrying a `legend`
+feature (`IDiagramModelNote.FEATURE_LEGEND`), named "Legend", and it lists
+nothing in the file: its entries are worked out from the view as it is drawn
+(`LegendGraphics.update`). The reader makes such a note a `legend` node with the
+feature's options, read by Archi's own rules (`legend-feature.ts`: each key found
+anywhere in the value, its default when missing, numbers clamped), and says so
+when the value is not one Archi would write (`archimate.legend-options-malformed`).
+The first `legend` feature is the one read, as Archi reads it; a second, or
+text on a legend, which Archi keeps but neither draws nor offers a field for, is
+reported as view content. A plain note's `name` is still unread content.
+
 ### A model saved with images (#97)
 
 Archi saves a model that holds an image as a zip archive under the same
@@ -493,6 +522,14 @@ holds that for one edited view, and every editor slice extends it.
   `placement` puts them: a new element inside a group, so nested in it, another
   new element, and elements the model held, one of them drawn twice. They are
   connected through the connect menu.
+- Copy and paste (#137) add three pastes, each made as the canvas makes them.
+  Handle Claim, pasted into the landscape that draws it, comes back as copies:
+  new elements named " (copy)" and new relationships among them, with its
+  nesting kept. A Paste Special in the landscape draws the goal and its
+  requirement a second time. The Kubernetes cluster, pasted into `v-scratch`,
+  draws the same elements and relationships again, the lines that its nesting
+  hides included. Archi's save must hold each pasted shape, what it draws, its
+  parent and its lines.
 - Archi's command line cannot run its validator. The test runs Archi's check
   as `validity.ts` carries it (Archi's matrix and junction rules, ADR 0009)
   over Archi's save, and requires no relationship to fail it.
@@ -570,3 +607,20 @@ Archipelago again, from the `archipelago.style` Archi kept
 | A font with no size comes back sized (#135) | The same: `addFont` sets the height only when the file gives one, so a line given only a font colour is saved with the default font's size. Explained only where we wrote a `<font>` and no size, and only for the measured size, 12. |
 | An alpha one byte off | The format holds a percent, and Archi reads it as `round(a × 255 / 100)`. |
 | Connections Archi added | `addNestedConnections` draws every relationship between a shape and the element shape it sits in. Archi hides them when drawing (#96). Its exporter leaves them out again (`XMLModelExporter.isNestedConnection`), and it also leaves out one we drew on purpose between nested shapes. |
+| A legend opens as an empty note (#134) | `XMLModelImporter` makes a `Label` with no `viewRef` and no children a plain note, never a legend, and Archi's own exporter writes its legends as such labels. Archipelago carries the legend in `archipelago.style`, so our readers of Archi's save and of its re-export read it back as a legend. Explained only where Archi's value is that empty note. |
+
+**Notes, groups, view references and legends (#134)** have an oracle of their
+own, so the editor slices that extend the claims one do not regenerate the same
+files: `src/test/edited-view-objects.ts` edits `fixtures/view-objects.archimate`
+(Archi's save of one of each, with two legends) through the store, and
+`src/io/view-objects-roundtrip.test.ts` holds Archi's save and export of our
+file to it. Archi's import gives every note, group and legend it makes a left
+text alignment, which is where Archipelago draws their text anyway; that is the
+one difference the test allows when it reads the save back with the carried
+style applied.
+
+```sh
+npx vite-node scripts/fixtures/build-edited-view-objects.ts
+scripts/fixtures/archi-roundtrip.sh src/io/fixtures/view-objects-edited.xml \
+  src/io/fixtures/view-objects-edited.archi.archimate src/io/fixtures/view-objects-edited.archi.xml
+```

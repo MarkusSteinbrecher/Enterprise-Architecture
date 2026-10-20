@@ -31,7 +31,9 @@ import {
   type Tool,
 } from '@/ui/views/create'
 import { withDrop } from '@/ui/views/drop'
+import { copySelection, nextOffset, pasteInto, type MintKind } from '@/ui/views/clipboard'
 import { magicEdit, magicMenu } from '@/ui/views/magic'
+import { align, distribute, matchSize, reorder } from '@/ui/views/arrange'
 import { moveSelection, resizeNode } from '@/ui/views/edit'
 import { nestingEdit, nestingFor, withNewElement } from '@/ui/views/nesting'
 
@@ -267,8 +269,72 @@ export function editedClaims(): Workspace {
     batch,
   )
 
+  arranged(store, view)
   scratchView(store)
+  pastes(store)
   return store.snapshot()
+}
+
+/**
+ * Layout aids (#136), each the editor's own operation as one command, with
+ * the selection in the order it was made, so its last id is the primary.
+ * Align and distribute in the claim-handling process, match size in the
+ * applications, and the drawing order changed in four containers, so Archi
+ * has to keep each container's children in the order written.
+ */
+function arranged(store: ModelStore, view: string) {
+  const arrange = (change: (v: View) => View) => {
+    const before = store.view(view)
+    if (store.updateView(view, change) === before) throw new Error('an arrangement changed nothing')
+  }
+  // Valuate (50 high) to the middle of Accept (55 high): 52.5, floored to 52 as draw2d floors.
+  arrange((v) => align(v, ['o-valuate', 'o-register', 'o-pay', 'o-accept'], 'middle'))
+  // The four steps of the process, evenly spaced between the first and the last.
+  arrange((v) => distribute(v, ['o-register', 'o-accept', 'o-valuate', 'o-pay'], 'horizontal'))
+  arrange((v) => matchSize(v, ['o-as-payment', 'o-as-claims'], 'width'))
+  arrange((v) => matchSize(v, ['o-ai-portal', 'o-portal'], 'height'))
+  // Drawing order: within the engine, the cluster, the platform group and the view itself.
+  arrange((v) => reorder(v, ['o-rules'], 'front'))
+  arrange((v) => reorder(v, ['o-host'], 'back'))
+  arrange((v) => reorder(v, ['o-batch'], 'backward'))
+  arrange((v) => reorder(v, ['o-backbone', 'o-hosting'], 'front'))
+  arrange((v) => reorder(v, ['o-g-apps'], 'forward'))
+}
+
+/**
+ * Copy and paste (#137), as the canvas does them: a copy of the selection, and
+ * a paste where the canvas was pressed, one command each. Archi's rule decides
+ * what each paste draws. In the landscape, which draws the process, Paste makes
+ * copies, and Paste Special draws the goal and its requirement again. In the
+ * scratch view, which draws none of the cluster, Paste draws it again. Ids are
+ * minted in order under a name for each paste, so every run makes the same ones.
+ */
+function pastes(store: ModelStore) {
+  const paste = (
+    name: string,
+    from: string,
+    selected: string[],
+    into: string,
+    pressed: Point,
+    special: boolean,
+  ) => {
+    const snapshot = copySelection(store.view(from)!, selected, store)
+    if (!snapshot) throw new Error(`copying ${selected} copied nothing`)
+    const counts: Record<MintKind, number> = { node: 0, conn: 0, el: 0, rel: 0 }
+    // The canvas's own paste (`ViewScreen`'s `pasteHere`), so the oracle holds its wiring.
+    const made = pasteInto(store, into, snapshot, {
+      offset: nextOffset(snapshot, { x: 0, y: 0 }, pressed),
+      special,
+      mint: (kind) => `${name}-${kind}-${++counts[kind]}`,
+    })
+    if (!made) throw new Error(`pasting ${selected} into ${into} pasted nothing`)
+  }
+  // Handle Claim, its five shapes and the five lines among them: copies.
+  paste('copy', 'v-landscape', ['o-handle'], 'v-landscape', { x: 20, y: 1060 }, false)
+  // The goal and its requirement, and the line between them: drawn again.
+  paste('special', 'v-landscape', ['o-goal', 'o-req'], 'v-landscape', { x: 1240, y: 1060 }, true)
+  // The cluster, what is nested in it, and the line the nesting hides: drawn again.
+  paste('again', 'v-landscape', ['o-k8s'], 'v-scratch', { x: 40, y: 560 }, false)
 }
 
 /**
