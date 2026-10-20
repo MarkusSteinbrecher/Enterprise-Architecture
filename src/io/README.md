@@ -105,6 +105,10 @@ The mapping decisions:
   record of what each `<style>` we wrote says, field by field
   (`{"fontColor":"#000000"}`). Without it, an explicit override that happens to
   equal Archi's default (black text) would be dropped on our own round trip.
+  An underline goes in both: `<style>` says it, for any tool that holds one,
+  and the property keeps a copy, because Archi does not (its import reads bold
+  and italic only), so without the copy an underline is lost for good after a
+  pass through Archi (#135). The reader holds a style both name once.
 - **Ours or Archi's, value by value (#138).** Archi keeps `archipelago.style`,
   and when it exports the model again it writes its whole computed style on
   every object, beside ours. So the marker cannot vouch for a whole `<style>`:
@@ -518,32 +522,51 @@ holds that for one edited view, and every editor slice extends it.
   `extra`. Anything our reader reports about Archi's save fails the test, since
   it would otherwise be left out of the comparison.
 
+**Appearance (#135)** has an oracle of its own, so it does not move when
+another slice regenerates the claims fixture: `src/test/edited-appearance.ts`
+edits the claims landscape with the selection panel's operations and the
+format painter (fills on a multi-selection, an alpha, fonts, every style,
+alignments, positions, a line's colour and width, resets, and painted formats,
+an absence included), `scripts/fixtures/build-edited-appearance.ts` writes
+`fixtures/appearance-edited.xml`, and Archi saves and exports it as
+`appearance-edited.archi.archimate` and `appearance-edited.archi.xml`.
+`archi-appearance.test.ts` holds Archi's save to it with the same reasons, and
+also reads the save back with `archipelago.style`: everything Archi keeps but
+does not draw must come back.
+
 To re-run after an editor or writer change:
 
 ```sh
 npx vite-node scripts/fixtures/build-edited-claims.ts
 scripts/fixtures/archi-roundtrip.sh src/io/fixtures/claims-edited.xml \
   src/io/fixtures/claims-edited.archi.archimate src/io/fixtures/claims-edited.archi.xml
+npx vite-node scripts/fixtures/build-edited-appearance.ts
+scripts/fixtures/archi-roundtrip.sh src/io/fixtures/appearance-edited.xml \
+  src/io/fixtures/appearance-edited.archi.archimate src/io/fixtures/appearance-edited.archi.xml
 ```
 
 `export-with-archi.sh` runs both, after re-saving the claims model they start
 from.
 
 **What Archi changes, and why.** The test requires every difference to have one
-of five reasons, each read from Archi 5.10's `XMLModelImporter` with `javap`,
+of six reasons, each read from Archi 5.10's `XMLModelImporter` with `javap`,
 and it pins which drawing has which reason. Each reason checks the value Archi
 produced, not only the field: for a field Archi was not told, its import can
 only give its own default, so any other value is still a difference.
 
 **Not everything opens as drawn.** The exchange format cannot carry text
-alignment, text position, strikethrough or a shape's line width. Archi shows its
-own default for each, so a centred group title is left-aligned in Archi. Only a
-native `.archimate` writer could carry them.
+alignment, text position, strikethrough or a shape's line width, and Archi
+holds no underline. Archi shows its own default for each, so a centred group
+title is left-aligned in Archi. Only a native `.archimate` writer could carry
+them. All but the shape's line width come back when Archi's save is opened in
+Archipelago again, from the `archipelago.style` Archi kept
+(`archi-appearance.test.ts`).
 
 | Difference | Reason |
 |---|---|
-| Text alignment, text position, strikethrough | The format has no attribute for them. `archipelago.style` carries them, and Archi keeps that property without drawing it, so the oracle removes it before reading Archi's save. Explained only where Archi's value is its default for that kind: left for groups and notes, centre for element shapes (measured from the save). |
+| Text alignment, text position, strikethrough, underline | The format has no attribute for the first three, and Archi has no underline. `archipelago.style` carries them, and Archi keeps that property without drawing it, so the oracle removes it before reading Archi's save. Explained only where Archi's value is its default for that kind: left for groups and notes, centre for element shapes (measured from the save). |
 | A shape's line width is gone | `addNodeStyle` reads fill, line colour and font only. `addConnectionStyle` does read `lineWidth`, so a connection's must survive. |
 | A font with no name comes back named | `addFont` starts from the user's default view font (`FontFactory.getDefaultUserViewFontData`). Explained only where we wrote a `<font>`: a size, a colour, or a style the format can say. |
+| A font with no size comes back sized (#135) | The same: `addFont` sets the height only when the file gives one, so a line given only a font colour is saved with the default font's size. Explained only where we wrote a `<font>` and no size. |
 | An alpha one byte off | The format holds a percent, and Archi reads it as `round(a × 255 / 100)`. |
 | Connections Archi added | `addNestedConnections` draws every relationship between a shape and the element shape it sits in. Archi hides them when drawing (#96). Its exporter leaves them out again (`XMLModelExporter.isNestedConnection`), and it also leaves out one we drew on purpose between nested shapes. |

@@ -67,5 +67,9 @@ cd "$DIR/../../.."
 npx vite-node scripts/fixtures/build-edited-claims.ts
 ARCHI="$ARCHI" scripts/fixtures/archi-roundtrip.sh "$DIR/claims-edited.xml" \
   "$DIR/claims-edited.archi.archimate" "$DIR/claims-edited.archi.xml"
+# The same for an edited appearance (#135), an oracle of its own.
+npx vite-node scripts/fixtures/build-edited-appearance.ts
+ARCHI="$ARCHI" scripts/fixtures/archi-roundtrip.sh "$DIR/appearance-edited.xml" \
+  "$DIR/appearance-edited.archi.archimate" "$DIR/appearance-edited.archi.xml"
 # A model saved with images, which Archi saves as a zip archive (#97).
 ARCHI="$ARCHI" scripts/fixtures/archive-with-archi.sh

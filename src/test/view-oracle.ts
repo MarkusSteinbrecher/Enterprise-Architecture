@@ -51,11 +51,12 @@ export interface ArchiSave {
 
 /**
  * Read Archi's save as Archi itself sees it. Archipelago carries what the
- * exchange format cannot say (text alignment and position, strikethrough) in
- * the `archipelago.style` view property; Archi keeps that property and draws
- * none of it, so it is removed before reading, or the comparison would credit
- * Archi with what only Archipelago reads. If Archi ever spells the property
- * differently, the removal misses it, so its absence afterwards is checked.
+ * exchange format cannot say (text alignment and position, strikethrough), and
+ * a copy of the underline Archi does not hold, in the `archipelago.style` view
+ * property; Archi keeps that property and draws none of it, so it is removed
+ * before reading, or the comparison would credit Archi with what only
+ * Archipelago reads. If Archi ever spells the property differently, the
+ * removal misses it, so its absence afterwards is checked.
  */
 export function readArchiSave(archimate: string): ArchiSave {
   const key = STYLE_KEY.replace(/\./g, '\\.')
@@ -398,7 +399,7 @@ export function explainDifference(
     if (!node || !(node.kind in defaults)) return undefined
     return difference.archi === defaults[node.kind] ? CARRIED_ONLY : undefined
   }
-  if (field === 'appearance.fontStyle' && onlyStrikethroughLost(difference)) return CARRIED_ONLY
+  if (field === 'appearance.fontStyle' && onlyCarriedStylesLost(difference)) return CARRIED_ONLY
   // A line's label position (#133): Archi's import leaves textPosition at its
   // default, the middle, which our reader of its save holds as no value.
   if (field === 'appearance.labelPosition' && mine && !node && difference.archi === undefined) {
@@ -414,6 +415,14 @@ export function explainDifference(
     wroteFont(mine?.appearance)
   ) {
     return DEFAULT_FONT_NAME
+  }
+  if (
+    field === 'appearance.fontSize' &&
+    difference.ours === undefined &&
+    typeof difference.archi === 'number' &&
+    wroteFont(mine?.appearance)
+  ) {
+    return DEFAULT_FONT_SIZE
   }
   if (
     (field === 'appearance.fillColor' || field === 'appearance.lineColor') &&
@@ -442,7 +451,9 @@ const ARCHI_TEXT_POSITION: Partial<Record<ViewNodeKind, string | undefined>> = {
 }
 
 export const CARRIED_ONLY =
-  'The exchange format has no text alignment, text position, strikethrough or label position. Archipelago carries them in archipelago.style, which Archi keeps and does not draw, so Archi shows its own default: the text visibly moves.'
+  'The exchange format has no text alignment, text position, strikethrough or label position, and Archi has no underline (XMLModelImporter.addFont reads bold and italic only). Archipelago carries them in archipelago.style, which Archi keeps and does not draw, so Archi shows its own default: the text visibly moves.'
+export const DEFAULT_FONT_SIZE =
+  "A <font> with no size takes the size of the user's default view font, as it takes its name: XMLModelImporter.addFont starts from FontFactory.getDefaultUserViewFontData and sets the height only when the file gives one (#135). Archi draws the same size; its save pins it."
 export const NODE_LINE_WIDTH =
   "Archi's exchange import does not read a shape's lineWidth: XMLModelImporter.addNodeStyle reads fillColor, lineColor and font only (addConnectionStyle does read it)."
 export const DEFAULT_FONT_NAME =
@@ -476,11 +487,14 @@ function wroteFont(appearance: Appearance | undefined): boolean {
   )
 }
 
-function onlyStrikethroughLost({ ours, archi }: ViewDifference): boolean {
+/** The styles only archipelago.style takes through Archi. */
+const CARRIED_STYLES: readonly string[] = ['strikethrough', 'underline']
+
+function onlyCarriedStylesLost({ ours, archi }: ViewDifference): boolean {
   const a = (ours as string[] | undefined) ?? []
   const b = (archi as string[] | undefined) ?? []
-  const kept = a.filter((style) => style !== 'strikethrough')
-  return a.includes('strikethrough') && JSON.stringify(kept) === JSON.stringify(b)
+  const kept = a.filter((style) => !CARRIED_STYLES.includes(style))
+  return JSON.stringify(kept) === JSON.stringify(b)
 }
 
 /** Called on two values that differ: the same colour, with alphas that are the same whole percent. */
