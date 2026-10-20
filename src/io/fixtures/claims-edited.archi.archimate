@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="Claims platform" id="m-claims" version="5.0.0">
-  <folder name="Strategy" id="id-b47f315f63344a4a920165b4c8b89642" type="strategy"/>
-  <folder name="Business" id="id-af651bdc25f348ea8dd825932ab17b0a" type="business">
-    <folder name="Customer-facing" id="id-bd118e8c56524893b73ee167ae4d9e53">
+  <folder name="Strategy" id="id-5578411f76e2425da63fe865bd7124bd" type="strategy"/>
+  <folder name="Business" id="id-d4966c981560493698a74db2a4e3ae04" type="business">
+    <folder name="Customer-facing" id="id-3838ad3800ed41cb969555b3c3657b7e">
       <element xsi:type="archimate:BusinessActor" name="Customer" id="ba-customer">
         <documentation>A policy holder making a claim.</documentation>
       </element>
@@ -21,10 +21,10 @@
     <element xsi:type="archimate:BusinessEvent" name="Claim received" id="be-claim-in"/>
     <element xsi:type="archimate:BusinessProcess" name="Check cover" id="bp-check-cover"/>
   </folder>
-  <folder name="Application" id="id-8cdd2a197ce04eb9896b9912e15cdcf8" type="application">
-    <folder name="Claims applications" id="id-120ff413598c49bf994f5e20df3a4005">
-      <folder name="Legacy" id="id-fee84c26202a44ce876bd906da5cc269">
-        <folder name="Host-based" id="id-82452b732a98402b8d687566fe766174">
+  <folder name="Application" id="id-b4efbf83f3834181a04e1e66588e31a9" type="application">
+    <folder name="Claims applications" id="id-0b33a693800144639536f02e535ecee7">
+      <folder name="Legacy" id="id-e5356e4cf9414352ab17170b7bc50e99">
+        <folder name="Host-based" id="id-12c82cbe9eda4b3d817db9a09887f8d6">
           <element xsi:type="archimate:ApplicationComponent" name="Policy Host" id="ac-host"/>
         </folder>
         <element xsi:type="archimate:ApplicationComponent" name="Legacy CRM" id="ac-crm"/>
@@ -46,7 +46,7 @@
     <element xsi:type="archimate:ApplicationComponent" name="Fraud Detection" id="ac-fraud"/>
     <element xsi:type="archimate:ApplicationService" name="Claim Intake" id="as-intake"/>
   </folder>
-  <folder name="Technology &amp; Physical" id="id-8b154c4a5d6840f7b21bf7e019b93681" type="technology">
+  <folder name="Technology &amp; Physical" id="id-d1655ce34b4a410885841cae14f91226" type="technology">
     <element xsi:type="archimate:Node" name="Kubernetes Cluster" id="n-k8s"/>
     <element xsi:type="archimate:SystemSoftware" name="Claims Runtime" id="ss-runtime"/>
     <element xsi:type="archimate:SystemSoftware" name="PostgreSQL" id="ss-postgres"/>
@@ -58,21 +58,21 @@
     <element xsi:type="archimate:Equipment" name="Mail Scanner" id="eq-scanner"/>
     <element xsi:type="archimate:SystemSoftware" name="Claims Batch" id="ss-batch"/>
   </folder>
-  <folder name="Motivation" id="id-b60ab845da4e4e3baa9f3cf0fbdd8ef6" type="motivation">
+  <folder name="Motivation" id="id-2629b2886f6d4328b39853672d800bf8" type="motivation">
     <element xsi:type="archimate:Goal" name="Settle claims within five days" id="g-settle"/>
     <element xsi:type="archimate:Requirement" name="Assessment is rules-driven" id="r-rules"/>
   </folder>
-  <folder name="Implementation &amp; Migration" id="id-0bba75d9459641fbaafd06adaa198589" type="implementation_migration">
+  <folder name="Implementation &amp; Migration" id="id-cbbfd953d5404e0ea4f73a408976a683" type="implementation_migration">
     <element xsi:type="archimate:WorkPackage" name="Rules engine rollout" id="wp-rollout"/>
   </folder>
-  <folder name="Other" id="id-47f8a50e41544daeab1fade65c83fe92" type="other">
+  <folder name="Other" id="id-bd53391675d448c1946afaaf3709abca" type="other">
     <element xsi:type="archimate:Location" name="Zurich data centre" id="loc-zurich"/>
     <element xsi:type="archimate:Junction" name="Junction" id="j-split" type="or"/>
     <element xsi:type="archimate:Junction" id="j-intake"/>
     <element xsi:type="archimate:Junction" id="j-serve"/>
   </folder>
-  <folder name="Relations" id="id-d3d73677dbd941cba23ac18880c5e61e" type="relations">
-    <folder name="Serving" id="id-43f52853854f4045824fd45e78da8639">
+  <folder name="Relations" id="id-b307eedc0bf243acbb6fa08ff01af212" type="relations">
+    <folder name="Serving" id="id-49d2486551004980b761e282cb159442">
       <element xsi:type="archimate:ServingRelationship" id="r-ins-reg" source="bs-registration" target="br-insurant"/>
       <element xsi:type="archimate:ServingRelationship" id="r-ins-info" source="bs-information" target="br-insurant"/>
       <element xsi:type="archimate:ServingRelationship" id="r-ins-pay" source="bs-payment" target="br-insurant"/>
@@ -140,8 +140,8 @@
     <element xsi:type="archimate:TriggeringRelationship" id="r-s-event-check" source="be-claim-in" target="bp-check-cover"/>
     <element xsi:type="archimate:ServingRelationship" id="r-s-intake-serve" source="as-intake" target="j-serve"/>
   </folder>
-  <folder name="Views" id="id-f92c7debc25b49caa6c68e0a91221096" type="diagrams">
-    <folder name="Landscapes" id="id-8d33dcd6ee6743238f0b954c33ea1c11">
+  <folder name="Views" id="id-687310d5baf14f02bb05b8379ab8da58" type="diagrams">
+    <folder name="Landscapes" id="id-81a19f43e0304d3faf6d2aa800305423">
       <element xsi:type="archimate:ArchimateDiagramModel" name="Target state (to do)" id="v-empty"/>
       <element xsi:type="archimate:ArchimateDiagramModel" name="Claims landscape" id="v-landscape" viewpoint="layered">
         <child xsi:type="archimate:Group" id="o-g-business" name="Business" textAlignment="1" fillColor="#fff5d6">
@@ -178,16 +178,16 @@
             <sourceConnection xsi:type="archimate:Connection" id="c-handle-reg" source="o-handle" target="o-reg-svc" archimateRelationship="r-handle-reg"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-handle-pay" source="o-handle" target="o-pay-svc" archimateRelationship="r-handle-pay"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-handle-claim" source="o-handle" target="o-claim-bo" archimateRelationship="r-handle-claim"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-29d6884c79464bd1a805d9288c1ca4de" source="o-handle" target="o-register" archimateRelationship="r-handle-register"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-a4138caf17f945d0b471d77d384a8393" source="o-handle" target="o-accept" archimateRelationship="r-handle-accept"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-5c3e84db50174924b2a4d1e7c6caecf8" source="o-handle" target="o-valuate" archimateRelationship="r-handle-valuate"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-d4925110a84b4308ba39c990f37f3ced" source="o-handle" target="o-pay" archimateRelationship="r-handle-pay2"/>
-            <child xsi:type="archimate:DiagramObject" id="o-register" targetConnections="c-damage-register c-intake-register id-29d6884c79464bd1a805d9288c1ca4de" archimateElement="bp-register">
+            <sourceConnection xsi:type="archimate:Connection" id="id-4be1b1c3e9654ba1964ae55a23a07e10" source="o-handle" target="o-register" archimateRelationship="r-handle-register"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-0d217afbca934e7281c51847cde946ee" source="o-handle" target="o-accept" archimateRelationship="r-handle-accept"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-9d9d2fd685f340a187a349110f9f30b3" source="o-handle" target="o-valuate" archimateRelationship="r-handle-valuate"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-2e0374cf3a02497f808bfde3b8981370" source="o-handle" target="o-pay" archimateRelationship="r-handle-pay2"/>
+            <child xsi:type="archimate:DiagramObject" id="o-register" targetConnections="c-damage-register c-intake-register id-4be1b1c3e9654ba1964ae55a23a07e10" archimateElement="bp-register">
               <bounds x="20" y="50" width="120" height="55"/>
               <sourceConnection xsi:type="archimate:Connection" id="c-register-accept" source="o-register" target="o-accept" archimateRelationship="r-register-accept"/>
             </child>
-            <child xsi:type="archimate:DiagramObject" id="o-accept" targetConnections="c-register-accept id-a4138caf17f945d0b471d77d384a8393" archimateElement="bp-accept">
-              <bounds x="180" y="50" width="120" height="55"/>
+            <child xsi:type="archimate:DiagramObject" id="o-accept" targetConnections="c-register-accept id-0d217afbca934e7281c51847cde946ee" archimateElement="bp-accept">
+              <bounds x="213" y="50" width="120" height="55"/>
               <sourceConnection xsi:type="archimate:Connection" id="c-accept-split" source="o-accept" target="o-split" archimateRelationship="r-accept-split"/>
             </child>
             <child xsi:type="archimate:DiagramObject" id="o-split" targetConnections="c-accept-split c-note-split" archimateElement="j-split">
@@ -197,11 +197,11 @@
                 <bendpoint startX="313" startY="43" endY="43"/>
               </sourceConnection>
             </child>
-            <child xsi:type="archimate:DiagramObject" id="o-valuate" targetConnections="c-split-valuate c-fraud-valuate c-intake-valuate id-5c3e84db50174924b2a4d1e7c6caecf8" archimateElement="bp-valuate">
-              <bounds x="400" y="30" width="120" height="50"/>
+            <child xsi:type="archimate:DiagramObject" id="o-valuate" targetConnections="c-split-valuate c-fraud-valuate c-intake-valuate id-9d9d2fd685f340a187a349110f9f30b3" archimateElement="bp-valuate">
+              <bounds x="407" y="52" width="120" height="50"/>
               <sourceConnection xsi:type="archimate:Connection" id="c-valuate-pay" source="o-valuate" target="o-pay" archimateRelationship="r-valuate-pay"/>
             </child>
-            <child xsi:type="archimate:DiagramObject" id="o-pay" targetConnections="c-split-pay c-valuate-pay c-asp-pay id-d4925110a84b4308ba39c990f37f3ced" archimateElement="bp-pay">
+            <child xsi:type="archimate:DiagramObject" id="o-pay" targetConnections="c-split-pay c-valuate-pay c-asp-pay id-2e0374cf3a02497f808bfde3b8981370" archimateElement="bp-pay">
               <bounds x="600" y="50" width="120" height="55"/>
             </child>
           </child>
@@ -215,6 +215,57 @@
 for claims under 500.</content>
           </child>
         </child>
+        <child xsi:type="archimate:Group" id="o-g-platform" name="Platform" textAlignment="1">
+          <bounds x="20" y="720" width="1180" height="300"/>
+          <child xsi:type="archimate:DiagramObject" id="o-database" targetConnections="c-pg-db" archimateElement="ts-database">
+            <bounds x="640" y="30" width="150" height="55"/>
+            <sourceConnection xsi:type="archimate:Connection" id="c-db-customer" source="o-database" target="o-customer-hub" archimateRelationship="r-db-customer"/>
+          </child>
+          <child xsi:type="archimate:DiagramObject" id="o-k8s" targetConnections="c-net-k8s c-zurich-k8s" archimateElement="n-k8s">
+            <bounds x="140" y="110" width="580" height="150"/>
+            <sourceConnection xsi:type="archimate:Connection" id="c-k8s-runtime" source="o-k8s" target="o-runtime" archimateRelationship="r-k8s-runtime"/>
+            <sourceConnection xsi:type="archimate:Connection" id="c-k8s-hosting" source="o-k8s" target="o-hosting" archimateRelationship="r-k8s-hosting"/>
+            <sourceConnection xsi:type="archimate:Connection" id="c-k8s-batch" source="o-k8s" target="o-batch" archimateRelationship="r-k8s-batch"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-474eb45483554ec5bc86c429d82a0a84" source="o-k8s" target="o-postgres" archimateRelationship="r-k8s-pg"/>
+            <child xsi:type="archimate:DiagramObject" id="o-runtime" targetConnections="c-k8s-runtime" archimateElement="ss-runtime">
+              <bounds x="60" y="50" width="150" height="55"/>
+            </child>
+            <child xsi:type="archimate:DiagramObject" id="o-batch" targetConnections="c-k8s-batch" archimateElement="ss-batch">
+              <bounds x="235" y="70" width="120" height="55"/>
+            </child>
+            <child xsi:type="archimate:DiagramObject" id="o-postgres" targetConnections="id-474eb45483554ec5bc86c429d82a0a84" archimateElement="ss-postgres">
+              <bounds x="380" y="50" width="150" height="55"/>
+              <sourceConnection xsi:type="archimate:Connection" id="c-pg-db" source="o-postgres" target="o-database" archimateRelationship="r-pg-db"/>
+            </child>
+          </child>
+          <child xsi:type="archimate:DiagramObject" id="o-mainframe" targetConnections="c-net-mf" archimateElement="n-mainframe">
+            <bounds x="840" y="110" width="300" height="150"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-ba6fc769ade44073bedf6e59b10c7d00" source="o-mainframe" target="o-cics" archimateRelationship="r-mf-cics"/>
+            <child xsi:type="archimate:DiagramObject" id="o-cics" targetConnections="id-ba6fc769ade44073bedf6e59b10c7d00" archimateElement="ss-cics">
+              <bounds x="80" y="60" width="140" height="55"/>
+              <sourceConnection xsi:type="archimate:Connection" id="c-cics-host" source="o-cics" target="o-host" archimateRelationship="r-cics-host"/>
+            </child>
+          </child>
+          <child xsi:type="archimate:DiagramObject" id="o-backbone" targetConnections="c-scanner-net" archimateElement="cn-backbone">
+            <bounds x="20" y="240" width="120" height="45"/>
+            <sourceConnection xsi:type="archimate:Connection" id="c-net-k8s" source="o-backbone" target="o-k8s" archimateRelationship="r-net-k8s"/>
+            <sourceConnection xsi:type="archimate:Connection" id="c-net-mf" source="o-backbone" target="o-mainframe" archimateRelationship="r-net-mf">
+              <bendpoint startY="28" endX="-910" endY="105"/>
+              <bendpoint startX="910" startY="28" endY="105"/>
+            </sourceConnection>
+          </child>
+          <child xsi:type="archimate:DiagramObject" id="o-hosting" targetConnections="c-k8s-hosting" archimateElement="ts-hosting">
+            <bounds x="180" y="30" width="150" height="55"/>
+            <sourceConnection xsi:type="archimate:Connection" id="c-hosting-engine" source="o-hosting" target="o-engine" archimateRelationship="r-hosting-engine">
+              <bendpoint startY="-77" endX="-145" endY="140"/>
+              <bendpoint startX="145" startY="-77" endY="140"/>
+            </sourceConnection>
+            <sourceConnection xsi:type="archimate:Connection" id="c-hosting-portal" source="o-hosting" target="o-portal" archimateRelationship="r-hosting-portal">
+              <bendpoint startX="-95" endX="65" endY="250"/>
+              <bendpoint startX="-160" endY="250"/>
+            </sourceConnection>
+          </child>
+        </child>
         <child xsi:type="archimate:Group" id="o-g-apps" name="Applications" textAlignment="1">
           <bounds x="20" y="360" width="1180" height="320"/>
           <child xsi:type="archimate:DiagramObject" id="o-as-claims" targetConnections="c-engine-as" archimateElement="as-claims">
@@ -226,7 +277,7 @@ for claims under 500.</content>
             <sourceConnection xsi:type="archimate:Connection" id="c-asc-handle" source="o-as-customer" target="o-handle" archimateRelationship="r-asc-info"/>
           </child>
           <child xsi:type="archimate:DiagramObject" id="o-as-payment" targetConnections="c-calc-pay c-hub-payment" archimateElement="as-payment">
-            <bounds x="780" y="30" width="150" height="55"/>
+            <bounds x="780" y="30" width="180" height="55"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-asp-pay" source="o-as-payment" target="o-pay" archimateRelationship="r-asp-pay"/>
           </child>
           <child xsi:type="archimate:DiagramObject" id="o-portal" targetConnections="c-hosting-portal" archimateElement="ac-portal">
@@ -235,7 +286,7 @@ for claims under 500.</content>
             <sourceConnection xsi:type="archimate:Connection" id="c-portal-engine" source="o-portal" target="o-engine" archimateRelationship="r-portal-engine"/>
           </child>
           <child xsi:type="archimate:DiagramObject" id="o-ai-portal" targetConnections="c-portal-ai" archimateElement="ai-portal">
-            <bounds x="20" y="240" width="150" height="50"/>
+            <bounds x="20" y="240" width="150" height="55"/>
           </child>
           <child xsi:type="archimate:DiagramObject" id="o-engine" targetConnections="c-portal-engine c-hosting-engine c-wp-engine" font="1|Arial|11.0|1|COCOA|1|" fontColor="#0b2e4a" lineColor="#1d5c8c" fillColor="#c9e7f7" archimateElement="ac-engine">
             <bounds x="200" y="120" width="400" height="160"/>
@@ -245,16 +296,17 @@ for claims under 500.</content>
             </sourceConnection>
             <sourceConnection xsi:type="archimate:Connection" id="c-engine-req" source="o-engine" target="o-req" archimateRelationship="r-engine-req"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-engine-host" source="o-engine" target="o-host" archimateRelationship="r-engine-host"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-37112a7bfe5c425880957876912522f8" source="o-engine" target="o-rules" archimateRelationship="r-engine-rules"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-788d0d22449d4f1ba82189d21d25f573" source="o-engine" target="o-calc" archimateRelationship="r-engine-calc"/>
-            <child xsi:type="archimate:DiagramObject" id="o-rules" targetConnections="id-37112a7bfe5c425880957876912522f8" archimateElement="af-rules">
-              <bounds x="20" y="80" width="160" height="55"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-2323de3917ef4a2b8f7e90b919bee7d9" source="o-engine" target="o-calc" archimateRelationship="r-engine-calc"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-42f19249c20647ca8a967ca266839c44" source="o-engine" target="o-rules" archimateRelationship="r-engine-rules"/>
+            <child xsi:type="archimate:DiagramObject" id="o-host" targetConnections="c-cics-host c-engine-host" archimateElement="ac-host">
+              <bounds x="20" y="10" width="150" height="55"/>
+              <sourceConnection xsi:type="archimate:Connection" id="c-host-crm" source="o-host" target="o-crm" archimateRelationship="r-host-crm"/>
             </child>
-            <child xsi:type="archimate:DiagramObject" id="o-calc" targetConnections="id-788d0d22449d4f1ba82189d21d25f573" archimateElement="af-calc">
+            <child xsi:type="archimate:DiagramObject" id="o-calc" targetConnections="id-2323de3917ef4a2b8f7e90b919bee7d9" archimateElement="af-calc">
               <bounds x="220" y="95" width="160" height="55"/>
               <sourceConnection xsi:type="archimate:Connection" id="c-calc-pay" source="o-calc" target="o-as-payment" archimateRelationship="r-calc-pay">
-                <bendpoint startY="-122" endX="-355" endY="63"/>
-                <bendpoint startX="355" startY="-127" endY="58"/>
+                <bendpoint startX="5" startY="-122" endX="-365" endY="63"/>
+                <bendpoint startX="365" startY="-127" endX="-5" endY="58"/>
               </sourceConnection>
               <sourceConnection xsi:type="archimate:Connection" id="c-calc-customer" source="o-calc" target="o-do-customer" archimateRelationship="r-calc-customer"/>
             </child>
@@ -262,9 +314,8 @@ for claims under 500.</content>
               <bounds x="230" y="10" width="150" height="50"/>
               <sourceConnection xsi:type="archimate:Connection" id="c-claim-bo" source="o-do-claim" target="o-claim-bo" archimateRelationship="r-claim-bo"/>
             </child>
-            <child xsi:type="archimate:DiagramObject" id="o-host" targetConnections="c-cics-host c-engine-host" archimateElement="ac-host">
-              <bounds x="20" y="10" width="150" height="55"/>
-              <sourceConnection xsi:type="archimate:Connection" id="c-host-crm" source="o-host" target="o-crm" archimateRelationship="r-host-crm"/>
+            <child xsi:type="archimate:DiagramObject" id="o-rules" targetConnections="id-42f19249c20647ca8a967ca266839c44" archimateElement="af-rules">
+              <bounds x="20" y="80" width="160" height="55"/>
             </child>
           </child>
           <child xsi:type="archimate:DiagramObject" id="o-customer-hub" targetConnections="c-crm-cust c-db-customer" archimateElement="ac-customer">
@@ -287,57 +338,6 @@ for claims under 500.</content>
           <child xsi:type="archimate:DiagramObject" id="o-fraud" targetConnections="c-note-fraud" archimateElement="ac-fraud">
             <bounds x="1010" y="250" width="150" height="50"/>
             <sourceConnection xsi:type="archimate:Connection" id="c-fraud-valuate" source="o-fraud" target="o-valuate" archimateRelationship="r-fraud-valuate"/>
-          </child>
-        </child>
-        <child xsi:type="archimate:Group" id="o-g-platform" name="Platform" textAlignment="1">
-          <bounds x="20" y="720" width="1180" height="300"/>
-          <child xsi:type="archimate:DiagramObject" id="o-hosting" targetConnections="c-k8s-hosting" archimateElement="ts-hosting">
-            <bounds x="180" y="30" width="150" height="55"/>
-            <sourceConnection xsi:type="archimate:Connection" id="c-hosting-engine" source="o-hosting" target="o-engine" archimateRelationship="r-hosting-engine">
-              <bendpoint startY="-77" endX="-145" endY="140"/>
-              <bendpoint startX="145" startY="-77" endY="140"/>
-            </sourceConnection>
-            <sourceConnection xsi:type="archimate:Connection" id="c-hosting-portal" source="o-hosting" target="o-portal" archimateRelationship="r-hosting-portal">
-              <bendpoint startX="-95" endX="65" endY="250"/>
-              <bendpoint startX="-160" endY="250"/>
-            </sourceConnection>
-          </child>
-          <child xsi:type="archimate:DiagramObject" id="o-database" targetConnections="c-pg-db" archimateElement="ts-database">
-            <bounds x="640" y="30" width="150" height="55"/>
-            <sourceConnection xsi:type="archimate:Connection" id="c-db-customer" source="o-database" target="o-customer-hub" archimateRelationship="r-db-customer"/>
-          </child>
-          <child xsi:type="archimate:DiagramObject" id="o-k8s" targetConnections="c-net-k8s c-zurich-k8s" archimateElement="n-k8s">
-            <bounds x="140" y="110" width="580" height="150"/>
-            <sourceConnection xsi:type="archimate:Connection" id="c-k8s-runtime" source="o-k8s" target="o-runtime" archimateRelationship="r-k8s-runtime"/>
-            <sourceConnection xsi:type="archimate:Connection" id="c-k8s-hosting" source="o-k8s" target="o-hosting" archimateRelationship="r-k8s-hosting"/>
-            <sourceConnection xsi:type="archimate:Connection" id="c-k8s-batch" source="o-k8s" target="o-batch" archimateRelationship="r-k8s-batch"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-61022d4f51ce4c4aac337157cb145a7f" source="o-k8s" target="o-postgres" archimateRelationship="r-k8s-pg"/>
-            <child xsi:type="archimate:DiagramObject" id="o-runtime" targetConnections="c-k8s-runtime" archimateElement="ss-runtime">
-              <bounds x="60" y="50" width="150" height="55"/>
-            </child>
-            <child xsi:type="archimate:DiagramObject" id="o-postgres" targetConnections="id-61022d4f51ce4c4aac337157cb145a7f" archimateElement="ss-postgres">
-              <bounds x="380" y="50" width="150" height="55"/>
-              <sourceConnection xsi:type="archimate:Connection" id="c-pg-db" source="o-postgres" target="o-database" archimateRelationship="r-pg-db"/>
-            </child>
-            <child xsi:type="archimate:DiagramObject" id="o-batch" targetConnections="c-k8s-batch" archimateElement="ss-batch">
-              <bounds x="235" y="70" width="120" height="55"/>
-            </child>
-          </child>
-          <child xsi:type="archimate:DiagramObject" id="o-mainframe" targetConnections="c-net-mf" archimateElement="n-mainframe">
-            <bounds x="840" y="110" width="300" height="150"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-4f84127f39124d79a9177de9226480d7" source="o-mainframe" target="o-cics" archimateRelationship="r-mf-cics"/>
-            <child xsi:type="archimate:DiagramObject" id="o-cics" targetConnections="id-4f84127f39124d79a9177de9226480d7" archimateElement="ss-cics">
-              <bounds x="80" y="60" width="140" height="55"/>
-              <sourceConnection xsi:type="archimate:Connection" id="c-cics-host" source="o-cics" target="o-host" archimateRelationship="r-cics-host"/>
-            </child>
-          </child>
-          <child xsi:type="archimate:DiagramObject" id="o-backbone" targetConnections="c-scanner-net" archimateElement="cn-backbone">
-            <bounds x="20" y="240" width="120" height="45"/>
-            <sourceConnection xsi:type="archimate:Connection" id="c-net-k8s" source="o-backbone" target="o-k8s" archimateRelationship="r-net-k8s"/>
-            <sourceConnection xsi:type="archimate:Connection" id="c-net-mf" source="o-backbone" target="o-mainframe" archimateRelationship="r-net-mf">
-              <bendpoint startY="28" endX="-910" endY="105"/>
-              <bendpoint startX="910" startY="28" endY="105"/>
-            </sourceConnection>
           </child>
         </child>
         <child xsi:type="archimate:DiagramObject" id="o-zurich" archimateElement="loc-zurich">
@@ -377,7 +377,7 @@ for claims under 500.</content>
         <property key="archipelago.style" value="[{&quot;id&quot;:&quot;c-crm-cust&quot;,&quot;labelPosition&quot;:&quot;source&quot;},{&quot;id&quot;:&quot;c-note-split&quot;,&quot;literal&quot;:{&quot;lineColor&quot;:&quot;#999999&quot;}},{&quot;id&quot;:&quot;c-pay-ins&quot;,&quot;literal&quot;:{&quot;lineColor&quot;:&quot;#7a7a7a&quot;}},{&quot;id&quot;:&quot;c-req-goal&quot;,&quot;literal&quot;:{&quot;lineColor&quot;:&quot;#8c1e5a&quot;,&quot;lineWidth&quot;:2}},{&quot;id&quot;:&quot;o-crm&quot;,&quot;literal&quot;:{&quot;fillColor&quot;:&quot;#e0e0e0a1&quot;}},{&quot;id&quot;:&quot;o-engine&quot;,&quot;literal&quot;:{&quot;fillColor&quot;:&quot;#c9e7f7&quot;,&quot;fontColor&quot;:&quot;#0b2e4a&quot;,&quot;fontName&quot;:&quot;Arial&quot;,&quot;fontSize&quot;:11,&quot;fontStyle&quot;:[&quot;bold&quot;],&quot;lineColor&quot;:&quot;#1d5c8c&quot;,&quot;lineWidth&quot;:2}},{&quot;id&quot;:&quot;o-g-apps&quot;,&quot;textAlignment&quot;:&quot;center&quot;},{&quot;id&quot;:&quot;o-g-business&quot;,&quot;literal&quot;:{&quot;fillColor&quot;:&quot;#fff5d6&quot;},&quot;textAlignment&quot;:&quot;center&quot;},{&quot;id&quot;:&quot;o-g-platform&quot;,&quot;textAlignment&quot;:&quot;center&quot;},{&quot;id&quot;:&quot;o-goal&quot;,&quot;literal&quot;:{&quot;fillColor&quot;:&quot;#ffe9a8&quot;}},{&quot;id&quot;:&quot;o-handle&quot;,&quot;textAlignment&quot;:&quot;left&quot;},{&quot;id&quot;:&quot;o-note-biz&quot;,&quot;textAlignment&quot;:&quot;center&quot;},{&quot;id&quot;:&quot;o-req&quot;,&quot;literal&quot;:{&quot;fontColor&quot;:&quot;#5a1e8c&quot;,&quot;fontSize&quot;:12,&quot;fontStyle&quot;:[&quot;bold&quot;]}},{&quot;id&quot;:&quot;o-rollout&quot;,&quot;strikethrough&quot;:true,&quot;textAlignment&quot;:&quot;right&quot;}]"/>
       </element>
     </folder>
-    <folder name="Drafts" id="id-2c5f69f994194142ab88e445bc09b82d">
+    <folder name="Drafts" id="id-2eb18ce7620a482e862a43ea46c29656">
       <element xsi:type="archimate:ArchimateDiagramModel" name="Claim intake (draft)" id="v-scratch" viewpoint="business_process_cooperation">
         <child xsi:type="archimate:Group" id="o-s-group" name="Intake" textAlignment="1">
           <bounds x="40" y="40" width="400" height="140"/>

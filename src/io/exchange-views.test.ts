@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { absoluteBounds, validate, type View, type Workspace } from '@/model'
+import { absoluteBounds, drawingOrder, validate, type View, type Workspace } from '@/model'
 import { drawnWorkspace } from '@/test/fixtures'
 import { toCanonicalJson } from './canonical-json'
 import { exportExchange, importExchangeXml } from './exchange-format'
@@ -186,6 +186,18 @@ describe('our own views through the exchange format (#76)', () => {
       textPosition: 'top',
     })
     expect(toCanonicalJson(back)).toBe(toCanonicalJson(workspace))
+  })
+
+  it('keeps each container’s children in drawing order, whatever their ids (#136)', () => {
+    const workspace = drawnWorkspace()
+    const landscape = view(workspace, 'view-landscape')
+    // The group's children, and the top level, each in the reverse of id order.
+    landscape.nodes = [...landscape.nodes].reverse()
+    const order = (w: Workspace) => drawingOrder(view(w, 'view-landscape')).map((n) => n.id)
+    expect(order(workspace)).toEqual(['n-ref', 'n-k8s', 'g-claims', 'n-proc', 'n-note', 'n-app'])
+    const { xml, problems } = exportExchange(workspace)
+    expect(problems).toEqual([])
+    expect(order(read(xml))).toEqual(order(workspace))
   })
 
   it('writes absolute coordinates, as the format requires', () => {

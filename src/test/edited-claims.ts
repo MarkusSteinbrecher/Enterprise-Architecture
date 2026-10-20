@@ -32,6 +32,7 @@ import {
 } from '@/ui/views/create'
 import { withDrop } from '@/ui/views/drop'
 import { magicEdit, magicMenu } from '@/ui/views/magic'
+import { align, distribute, matchSize, reorder } from '@/ui/views/arrange'
 import { moveSelection, resizeNode } from '@/ui/views/edit'
 import { nestingEdit, nestingFor, withNewElement } from '@/ui/views/nesting'
 
@@ -267,8 +268,35 @@ export function editedClaims(): Workspace {
     batch,
   )
 
+  arranged(store, view)
   scratchView(store)
   return store.snapshot()
+}
+
+/**
+ * Layout aids (#136), each the editor's own operation as one command, with
+ * the selection in the order it was made, so its last id is the primary.
+ * Align and distribute in the claim-handling process, match size in the
+ * applications, and the drawing order changed in four containers, so Archi
+ * has to keep each container's children in the order written.
+ */
+function arranged(store: ModelStore, view: string) {
+  const arrange = (change: (v: View) => View) => {
+    const before = store.view(view)
+    if (store.updateView(view, change) === before) throw new Error('an arrangement changed nothing')
+  }
+  // Valuate (50 high) to the middle of Accept (55 high): 52.5, floored to 52 as draw2d floors.
+  arrange((v) => align(v, ['o-valuate', 'o-register', 'o-pay', 'o-accept'], 'middle'))
+  // The four steps of the process, evenly spaced between the first and the last.
+  arrange((v) => distribute(v, ['o-register', 'o-accept', 'o-valuate', 'o-pay'], 'horizontal'))
+  arrange((v) => matchSize(v, ['o-as-payment', 'o-as-claims'], 'width'))
+  arrange((v) => matchSize(v, ['o-ai-portal', 'o-portal'], 'height'))
+  // Drawing order: within the engine, the cluster, the platform group and the view itself.
+  arrange((v) => reorder(v, ['o-rules'], 'front'))
+  arrange((v) => reorder(v, ['o-host'], 'back'))
+  arrange((v) => reorder(v, ['o-batch'], 'backward'))
+  arrange((v) => reorder(v, ['o-backbone', 'o-hosting'], 'front'))
+  arrange((v) => reorder(v, ['o-g-apps'], 'forward'))
 }
 
 /**

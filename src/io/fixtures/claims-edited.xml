@@ -498,11 +498,11 @@
           <node identifier="o-handle" x="200" y="150" w="760" h="140" xsi:type="Element" elementRef="bp-handle">
             <node identifier="o-register" x="220" y="200" w="120" h="55" xsi:type="Element" elementRef="bp-register">
             </node>
-            <node identifier="o-accept" x="380" y="200" w="120" h="55" xsi:type="Element" elementRef="bp-accept">
+            <node identifier="o-accept" x="413" y="200" w="120" h="55" xsi:type="Element" elementRef="bp-accept">
             </node>
             <node identifier="o-split" x="540" y="220" w="15" h="15" xsi:type="Element" elementRef="j-split">
             </node>
-            <node identifier="o-valuate" x="600" y="180" w="120" h="50" xsi:type="Element" elementRef="bp-valuate">
+            <node identifier="o-valuate" x="607" y="202" w="120" h="50" xsi:type="Element" elementRef="bp-valuate">
             </node>
             <node identifier="o-pay" x="800" y="200" w="120" h="55" xsi:type="Element" elementRef="bp-pay">
             </node>
@@ -514,17 +514,38 @@
 for claims under 500.</label>
           </node>
         </node>
+        <node identifier="o-g-platform" x="20" y="720" w="1180" h="300" xsi:type="Container">
+          <label xml:lang="en">Platform</label>
+          <node identifier="o-database" x="660" y="750" w="150" h="55" xsi:type="Element" elementRef="ts-database">
+          </node>
+          <node identifier="o-k8s" x="160" y="830" w="580" h="150" xsi:type="Element" elementRef="n-k8s">
+            <node identifier="o-runtime" x="220" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-runtime">
+            </node>
+            <node identifier="o-batch" x="395" y="900" w="120" h="55" xsi:type="Element" elementRef="ss-batch">
+            </node>
+            <node identifier="o-postgres" x="540" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-postgres">
+            </node>
+          </node>
+          <node identifier="o-mainframe" x="860" y="830" w="300" h="150" xsi:type="Element" elementRef="n-mainframe">
+            <node identifier="o-cics" x="940" y="890" w="140" h="55" xsi:type="Element" elementRef="ss-cics">
+            </node>
+          </node>
+          <node identifier="o-backbone" x="40" y="960" w="120" h="45" xsi:type="Element" elementRef="cn-backbone">
+          </node>
+          <node identifier="o-hosting" x="200" y="750" w="150" h="55" xsi:type="Element" elementRef="ts-hosting">
+          </node>
+        </node>
         <node identifier="o-g-apps" x="20" y="360" w="1180" h="320" xsi:type="Container">
           <label xml:lang="en">Applications</label>
           <node identifier="o-as-claims" x="200" y="390" w="180" h="55" xsi:type="Element" elementRef="as-claims">
           </node>
           <node identifier="o-as-customer" x="460" y="390" w="180" h="55" xsi:type="Element" elementRef="as-customer">
           </node>
-          <node identifier="o-as-payment" x="800" y="390" w="150" h="55" xsi:type="Element" elementRef="as-payment">
+          <node identifier="o-as-payment" x="800" y="390" w="180" h="55" xsi:type="Element" elementRef="as-payment">
           </node>
           <node identifier="o-portal" x="40" y="500" w="150" h="55" xsi:type="Element" elementRef="ac-portal">
           </node>
-          <node identifier="o-ai-portal" x="40" y="600" w="150" h="50" xsi:type="Element" elementRef="ai-portal">
+          <node identifier="o-ai-portal" x="40" y="600" w="150" h="55" xsi:type="Element" elementRef="ai-portal">
           </node>
           <node identifier="o-engine" x="220" y="480" w="400" h="160" xsi:type="Element" elementRef="ac-engine">
             <style lineWidth="2">
@@ -534,13 +555,13 @@ for claims under 500.</label>
                 <color r="11" g="46" b="74" />
               </font>
             </style>
-            <node identifier="o-rules" x="240" y="560" w="160" h="55" xsi:type="Element" elementRef="af-rules">
+            <node identifier="o-host" x="240" y="490" w="150" h="55" xsi:type="Element" elementRef="ac-host">
             </node>
             <node identifier="o-calc" x="440" y="575" w="160" h="55" xsi:type="Element" elementRef="af-calc">
             </node>
             <node identifier="o-do-claim" x="450" y="490" w="150" h="50" xsi:type="Element" elementRef="do-claim">
             </node>
-            <node identifier="o-host" x="240" y="490" w="150" h="55" xsi:type="Element" elementRef="ac-host">
+            <node identifier="o-rules" x="240" y="560" w="160" h="55" xsi:type="Element" elementRef="af-rules">
             </node>
           </node>
           <node identifier="o-customer-hub" x="660" y="500" w="150" h="55" xsi:type="Element" elementRef="ac-customer">
@@ -553,27 +574,6 @@ for claims under 500.</label>
           <node identifier="o-do-customer" x="860" y="610" w="150" h="50" xsi:type="Element" elementRef="do-customer">
           </node>
           <node identifier="o-fraud" x="1030" y="610" w="150" h="50" xsi:type="Element" elementRef="ac-fraud">
-          </node>
-        </node>
-        <node identifier="o-g-platform" x="20" y="720" w="1180" h="300" xsi:type="Container">
-          <label xml:lang="en">Platform</label>
-          <node identifier="o-hosting" x="200" y="750" w="150" h="55" xsi:type="Element" elementRef="ts-hosting">
-          </node>
-          <node identifier="o-database" x="660" y="750" w="150" h="55" xsi:type="Element" elementRef="ts-database">
-          </node>
-          <node identifier="o-k8s" x="160" y="830" w="580" h="150" xsi:type="Element" elementRef="n-k8s">
-            <node identifier="o-runtime" x="220" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-runtime">
-            </node>
-            <node identifier="o-postgres" x="540" y="880" w="150" h="55" xsi:type="Element" elementRef="ss-postgres">
-            </node>
-            <node identifier="o-batch" x="395" y="900" w="120" h="55" xsi:type="Element" elementRef="ss-batch">
-            </node>
-          </node>
-          <node identifier="o-mainframe" x="860" y="830" w="300" h="150" xsi:type="Element" elementRef="n-mainframe">
-            <node identifier="o-cics" x="940" y="890" w="140" h="55" xsi:type="Element" elementRef="ss-cics">
-            </node>
-          </node>
-          <node identifier="o-backbone" x="40" y="960" w="120" h="45" xsi:type="Element" elementRef="cn-backbone">
           </node>
         </node>
         <node identifier="o-zurich" x="1240" y="830" w="150" h="55" xsi:type="Element" elementRef="loc-zurich">
@@ -658,8 +658,8 @@ for claims under 500.</label>
         <connection identifier="c-engine-req" xsi:type="Relationship" relationshipRef="r-engine-req" source="o-engine" target="o-req">
         </connection>
         <connection identifier="c-calc-pay" xsi:type="Relationship" relationshipRef="r-calc-pay" source="o-calc" target="o-as-payment">
-          <bendpoint x="520" y="480" />
-          <bendpoint x="875" y="475" />
+          <bendpoint x="525" y="480" />
+          <bendpoint x="885" y="475" />
         </connection>
         <connection identifier="c-cust-as" xsi:type="Relationship" relationshipRef="r-cust-as" source="o-customer-hub" target="o-as-customer">
           <bendpoint x="715" y="470" />

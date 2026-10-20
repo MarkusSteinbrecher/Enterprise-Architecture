@@ -1,6 +1,7 @@
 import {
   SCHEMA_VERSION,
   DEFAULT_TAG_GROUP,
+  drawingOrder,
   type Element,
   type Folder,
   type Relationship,
@@ -330,12 +331,13 @@ export function drawnWorkspace(): Workspace {
     ],
   }
 
-  // In canonical order (everything by id), so a workspace read back from its
-  // own canonical JSON compares equal to this one, arrays included.
+  // In canonical order (by id; a view's nodes in drawing order, #136), so a
+  // workspace read back from its own canonical JSON compares equal to this one,
+  // arrays included.
   const byId = (a: { id: string }, b: { id: string }) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
   const views = [detail, landscape].map((view) => ({
     ...view,
-    nodes: [...view.nodes].sort(byId),
+    nodes: drawingOrder({ ...view, nodes: [...view.nodes].sort(byId) }),
     connections: [...view.connections].sort(byId),
   }))
   return { ...base, elements, relationships, folders: [...folders].sort(byId), views }

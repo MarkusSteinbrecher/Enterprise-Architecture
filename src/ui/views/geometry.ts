@@ -1,4 +1,5 @@
 import {
+  childrenByParent,
   nestedConnections,
   type Bounds,
   type Point,
@@ -48,34 +49,10 @@ export function absoluteIndex(view: View): Map<string, Bounds> {
 
 /**
  * Child nodes per parent id, in drawing order; `undefined` holds the top level.
- *
- * A node whose ancestor chain is broken — a parent missing from the view, or a
- * parent cycle — is drawn at the top level at its absolute position rather than
- * vanishing: hiding part of someone's diagram would be silent loss. The view
- * validator reports the broken chain itself.
+ * The model's rule (`childrenByParent`), so the canvas draws the order the
+ * writers keep (#136); a broken ancestor chain is drawn at the top level.
  */
-export function childrenIndex(view: View): Map<string | undefined, ViewNode[]> {
-  const byId = new Map(view.nodes.map((node) => [node.id, node]))
-  const sound = (node: ViewNode): boolean => {
-    const seen = new Set([node.id])
-    let parent = node.parent
-    while (parent !== undefined) {
-      const next = byId.get(parent)
-      if (!next || seen.has(parent)) return false
-      seen.add(parent)
-      parent = next.parent
-    }
-    return true
-  }
-  const out = new Map<string | undefined, ViewNode[]>()
-  for (const node of view.nodes) {
-    const parent = sound(node) ? node.parent : undefined
-    const list = out.get(parent)
-    if (list) list.push(node)
-    else out.set(parent, [node])
-  }
-  return out
-}
+export const childrenIndex = childrenByParent
 
 /**
  * Where the line from the centre of `box` toward `toward` leaves the box: Archi's
