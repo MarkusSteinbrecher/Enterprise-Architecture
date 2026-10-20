@@ -293,8 +293,11 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const [exportError, setExportError] = useState<string | null>(null)
   /** The palette tool the next press on the canvas places (#130). */
   const [tool, setTool] = useState<Tool | null>(null)
-  /** The format the painter picked up (#135): while held, a press on a drawing paints it. */
-  const [painter, setPainter] = useState<Format | null>(null)
+  /**
+   * The format the painter picked up (#135), and the drawing it came from:
+   * while held, a press on a drawing paints it.
+   */
+  const [painter, setPainter] = useState<{ format: Format; source: string } | null>(null)
   /** The node whose name is being typed on the canvas. */
   const [editing, setEditing] = useState<string | null>(null)
   /** The element whose deletion from the model is waiting on confirmation. */
@@ -1118,10 +1121,14 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       ids={ids}
       editable={editable}
       isJunction={isJunction}
-      painting={painter !== null}
-      onPainter={(format) => {
-        if (format) setTool(null)
-        setPainter(format)
+      painterSource={painter?.source ?? null}
+      onPainter={(picked) => {
+        setPainter(picked)
+        if (!picked) return
+        setTool(null)
+        // As arm() does: the canvas takes the next press, and Escape there puts
+        // the painter down. Left on the button, Escape reached nothing (#186 review).
+        canvas.current?.focus()
       }}
       onDone={release}
     />
@@ -1391,7 +1398,8 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
               // Archi's format painter (#135): a press on a shape or a line paints
               // it, one command each, and selects nothing; anywhere else does nothing.
               const at = node ?? hit
-              if (at) store.updateView(view.id, (v) => paintFormat(v, at, painter, isJunction))
+              if (at)
+                store.updateView(view.id, (v) => paintFormat(v, at, painter.format, isJunction))
               return
             }
             if (linking && single) {

@@ -411,7 +411,7 @@ export function explainDifference(
   if (
     field === 'appearance.fontName' &&
     difference.ours === undefined &&
-    typeof difference.archi === 'string' &&
+    difference.archi === ARCHI_DEFAULT_FONT.name &&
     wroteFont(mine?.appearance)
   ) {
     return DEFAULT_FONT_NAME
@@ -419,7 +419,7 @@ export function explainDifference(
   if (
     field === 'appearance.fontSize' &&
     difference.ours === undefined &&
-    typeof difference.archi === 'number' &&
+    difference.archi === ARCHI_DEFAULT_FONT.size &&
     wroteFont(mine?.appearance)
   ) {
     return DEFAULT_FONT_SIZE
@@ -450,8 +450,17 @@ const ARCHI_TEXT_POSITION: Partial<Record<ViewNodeKind, string | undefined>> = {
   element: undefined,
 }
 
+/**
+ * The user's default view font that Archi gave every `<font>` naming no font or
+ * no size: measured from both oracle saves (`font="1|Lucida Grande|12.0|…"`),
+ * made with Archi 5.10.0 on macOS. It is the machine's font, so a save made on
+ * another platform names another one, and the reasons below then fail and say
+ * so, rather than explaining any font at all (#186 review).
+ */
+const ARCHI_DEFAULT_FONT = { name: 'Lucida Grande', size: 12 } as const
+
 export const CARRIED_ONLY =
-  'The exchange format has no text alignment, text position, strikethrough or label position, and Archi has no underline (XMLModelImporter.addFont reads bold and italic only). Archipelago carries them in archipelago.style, which Archi keeps and does not draw, so Archi shows its own default: the text visibly moves.'
+  'The exchange format has no text alignment, text position, strikethrough or label position, and Archi has no underline (XMLModelImporter.addFont reads bold and italic only). Archipelago carries them in archipelago.style, which Archi keeps and does not draw, so Archi shows its own default for each: text and a line’s label move to where Archi puts them, and an underline or strikethrough is not drawn.'
 export const DEFAULT_FONT_SIZE =
   "A <font> with no size takes the size of the user's default view font, as it takes its name: XMLModelImporter.addFont starts from FontFactory.getDefaultUserViewFontData and sets the height only when the file gives one (#135). Archi draws the same size; its save pins it."
 export const NODE_LINE_WIDTH =

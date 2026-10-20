@@ -263,6 +263,8 @@ describe('compareViews against Archi’s save (#127)', () => {
         node.appearance = { ...node.appearance, fontSize: 12, ...(fontName ? { fontName } : {}) }
       })
     expect(unexplained(sized(), sized('Lucida Grande'))).toEqual([])
+    // Archi names one font, its default view font: any other is not its doing.
+    expect(unexplained(sized(), sized('Comic Sans MS'))).toEqual(['o-goal appearance.fontName'])
   })
 
   it('explains a font size only on a drawing we wrote a font for (#135)', () => {
@@ -283,6 +285,8 @@ describe('compareViews against Archi’s save (#127)', () => {
         }
       })
     expect(unexplained(coloured(), coloured(12)).filter((d) => d.endsWith('fontSize'))).toEqual([])
+    // Archi gives one size, its default view font's: any other is not its doing.
+    expect(unexplained(coloured(), coloured(72))).toEqual(['o-goal appearance.fontSize'])
     // And a size we did write, changed, is never Archi's default.
     expect(unexplained(coloured(14), coloured(12))).toEqual(['o-goal appearance.fontSize'])
   })

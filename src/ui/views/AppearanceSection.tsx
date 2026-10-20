@@ -39,7 +39,7 @@ export function DrawingAppearance({
   ids,
   editable,
   isJunction,
-  painting,
+  painterSource,
   onPainter,
   onDone,
 }: {
@@ -49,10 +49,10 @@ export function DrawingAppearance({
   ids: readonly string[]
   editable: boolean
   isJunction: (elementId: string) => boolean
-  /** The format painter holds a format. */
-  painting: boolean
-  /** Pick up a format, or put the painter down with `null`. */
-  onPainter: (format: Format | null) => void
+  /** The drawing the format painter picked its format up from, or `null` when it holds none. */
+  painterSource: string | null
+  /** Pick up a drawing's format, or put the painter down with `null`. */
+  onPainter: (picked: { format: Format; source: string } | null) => void
   /** An action ended that removed the control holding focus: focus goes back to the canvas. */
   onDone: () => void
 }) {
@@ -65,6 +65,8 @@ export function DrawingAppearance({
   if (!only) return null
   const edit = (change: (v: View) => View) => store.updateView(view.id, change)
   const source = drawings.length === 1 && canPaint(only, isJunction) ? only : undefined
+  // Pressed only on the drawing it holds the format of: on any other, the
+  // button picks that one's format up instead (#186 review).
   return (
     <AppearanceSection
       drawings={drawings}
@@ -79,8 +81,12 @@ export function DrawingAppearance({
       }}
       painter={
         source && {
-          painting,
-          toggle: () => onPainter(painting ? null : (pickUpFormat(source, isJunction) ?? null)),
+          painting: painterSource === source.id,
+          toggle: () => {
+            const format =
+              painterSource === source.id ? undefined : pickUpFormat(source, isJunction)
+            onPainter(format ? { format, source: source.id } : null)
+          },
         }
       }
     />

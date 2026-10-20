@@ -288,6 +288,23 @@ describe('reset to default (#135)', () => {
     expect(canonical(store.snapshot())).toBe(canonical(expected))
   })
 
+  it('resets every override on several shapes as one command, and one undo gives each its own back', async () => {
+    const { select, user, button, store, dispatch, appearance } = harness()
+    const engine = appearance('o-engine')
+    const crm = appearance('o-crm')
+    // Both overridden, and differently, so each undo has its own to restore.
+    expect(engine?.fillColor).toBe('#c9e7f7')
+    expect(crm).toEqual({ fillColor: '#e0e0e0a1' })
+    await select('o-engine', 'o-crm')
+    await user.click(button('Reset all'))
+    expect(dispatch).toHaveBeenCalledTimes(1)
+    expect(appearance('o-engine')).toBeUndefined()
+    expect(appearance('o-crm')).toBeUndefined()
+    act(() => void store.undo())
+    expect(appearance('o-engine')).toEqual(engine)
+    expect(appearance('o-crm')).toEqual(crm)
+  })
+
   it('gives focus to the field it reset, and to the canvas after a reset of everything', async () => {
     const { select, user, button, field } = harness()
     await select('o-engine')
@@ -444,12 +461,14 @@ describe('the format painter (#135)', () => {
     expect(dispatch).not.toHaveBeenCalled()
   })
 
-  it('stops on Escape, and a press then selects again', async () => {
+  it('stops on Escape pressed straight after the pick-up, and a press then selects again', async () => {
     const { select, user, button, nodeEl, dispatch } = harness()
     await select('o-engine')
     await user.click(button('Format painter'))
     expect(screen.getByRole('status')).toBeInTheDocument()
-    ;(document.querySelector('.view-screen__canvas') as HTMLElement).focus()
+    // The pick-up hands focus to the canvas, where Escape is handled; nothing
+    // here moves it by hand (#186 review: on the button, Escape reached nothing).
+    expect(document.querySelector('.view-screen__canvas')).toHaveFocus()
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('status')).toBeNull()
     // The selection is kept: Escape put the painter down, nothing else.
@@ -459,6 +478,25 @@ describe('the format painter (#135)', () => {
     expect(screen.getAllByTestId('selection').map((s) => s.getAttribute('data-selected'))).toEqual([
       'o-goal',
     ])
+  })
+
+  it('shows itself pressed only on the drawing it holds the format of, and picks up another’s there', async () => {
+    const { select, user, button, nodeEl, go, view, appearance, dispatch } = harness()
+    await select('o-engine')
+    await user.click(button('Format painter'))
+    expect(screen.getByRole('status')).toBeInTheDocument()
+    // The model tree selects another drawing while the painter is held.
+    const goal = view().nodes.find((n) => n.id === 'o-goal')!
+    if (goal.kind !== 'element') throw new Error('o-goal draws no element')
+    go(`/view/${LANDSCAPE}?element=${goal.element}`)
+    expect(button('Format painter')).toHaveAttribute('aria-pressed', 'false')
+    // Pressed there, it picks up the goal's format, which is none, and keeps painting.
+    await user.click(button('Format painter'))
+    expect(button('Format painter')).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('status')).toBeInTheDocument()
+    await click(user, nodeEl('o-crm'), AT['o-crm'])
+    expect(dispatch).toHaveBeenCalledTimes(1)
+    expect(appearance('o-crm')).toBeUndefined()
   })
 
   it('stops on Done, which gives focus back to the canvas', async () => {

@@ -3,7 +3,7 @@ import type { Locator, Page } from '@playwright/test'
 import { test, expect, importWithNothingToReport, startEmpty } from './support'
 
 /**
- * Journey 17 — a view's appearance, edited from the selection panel, and the
+ * Journey 19 — a view's appearance, edited from the selection panel, and the
  * format painter (#135), in a real browser: a fill typed for two shapes at once
  * is drawn on both and undone in one step, the browser's own colour picker sets
  * a fill, the painter paints one shape's look onto another with a press, Reset
@@ -71,7 +71,10 @@ function persistedAppearance(page: Page, node: string): Promise<unknown> {
             undefined,
           )
           const view = newest?.workspace.views.find((v) => v.id === 'v-landscape')
-          resolve(view?.nodes.find((n) => n.id === id)?.appearance ?? 'none')
+          // Distinct values for a node that is not there and one with no override,
+          // so neither can pass for the other (#186 review).
+          const node = view?.nodes.find((n) => n.id === id)
+          resolve(node ? (node.appearance ?? 'no override') : 'no such node')
         }
       }
     })
@@ -143,6 +146,12 @@ test('a fill set for two shapes at once is one undo, the painter paints with a p
   await expect(page.getByRole('status')).toContainText('Format painter')
   await press(canvas, 'o-portal')
   await expect.poll(() => fillOf(canvas, 'o-portal')).toBe(engineFill)
+  // Stored, before anything takes it away: the reset below is then a change
+  // the store has to see, not an absence an early snapshot already had.
+  const stored = { timeout: 15_000 }
+  await expect
+    .poll(() => persistedAppearance(page, 'o-portal'), stored)
+    .toMatchObject({ fillColor: engineFill })
   await page.getByRole('status').getByRole('button', { name: 'Done' }).click()
   await expect(page.getByRole('status')).toHaveCount(0)
   await expect(page.locator('.view-screen__canvas')).toBeFocused()
@@ -154,8 +163,7 @@ test('a fill set for two shapes at once is one undo, the painter paints with a p
 
   // The picked fill is part of the model: it is there after a reload, and the
   // reset shape has no override.
-  const stored = { timeout: 15_000 }
-  await expect.poll(() => persistedAppearance(page, 'o-portal'), stored).toBe('none')
+  await expect.poll(() => persistedAppearance(page, 'o-portal'), stored).toBe('no override')
   await expect
     .poll(() => persistedAppearance(page, 'o-customer'), stored)
     .toEqual({
