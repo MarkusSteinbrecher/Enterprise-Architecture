@@ -12,6 +12,7 @@ import {
   clipboardFor,
   copySelection,
   nextOffset,
+  pasteInto,
   pasteSnapshot,
   pastesCopies,
   type MintKind,
@@ -161,26 +162,10 @@ describe('reference or copy (#137, needsNewArchimateConcepts)', () => {
     expect(pastesCopies(snapshot, view(store, EMPTY), store, false)).toBe(true)
   })
 
-  it('makes copies in another workspace', () => {
-    const store = claims()
-    const other = claims()
-    other.replaceWorkspace({ ...other.snapshot(), id: 'ws-other' }, { markClean: true })
-    expect(other.id).not.toBe(store.id)
-    // The same elements are in the other model, and its empty view draws none of them.
-    expect(pastesCopies(copy(store, ['o-handle']), view(other, EMPTY), other, false)).toBe(true)
-  })
-
   describe('Paste Special, with Archi’s default (always a reference)', () => {
     it('draws the same elements again even where they are drawn', () => {
       const store = claims()
       expect(pastesCopies(copy(store, ['o-handle']), view(store), store, true)).toBe(false)
-    })
-
-    it('still makes copies in another workspace', () => {
-      const store = claims()
-      const other = claims()
-      other.replaceWorkspace({ ...other.snapshot(), id: 'ws-other' }, { markClean: true })
-      expect(pastesCopies(copy(store, ['o-handle']), view(other), other, true)).toBe(true)
     })
 
     it('makes copies when a copied element has left the model, where Archi would draw nothing', () => {
@@ -190,6 +175,56 @@ describe('reference or copy (#137, needsNewArchimateConcepts)', () => {
       store.removeElement('g-settle')
       expect(pastesCopies(snapshot, view(store), store, true)).toBe(true)
     })
+  })
+})
+
+describe('a paste into another workspace (#137 review)', () => {
+  const OFFSET = { x: 10, y: 10 }
+  /**
+   * The clipboard belongs to the store, and Open file, Import and Load demo
+   * keep the store and replace its workspace. So a copy can meet another model.
+   */
+  function reopened() {
+    const store = claims()
+    const snapshot = copy(store, ['o-handle'])
+    // Before the switch the same paste is made, so the refusal below is the switch's.
+    expect(
+      pasteSnapshot(snapshot, view(store), store, {
+        offset: OFFSET,
+        special: false,
+        mint: counter(),
+      }),
+    ).toBeDefined()
+    store.replaceWorkspace({ ...store.snapshot(), id: 'ws-other' }, { markClean: true })
+    expect(store.id).toBe('ws-other')
+    return { store, snapshot }
+  }
+
+  it('is refused whole, Paste and Paste Special alike, though the same elements are there', () => {
+    const { store, snapshot } = reopened()
+    for (const special of [false, true]) {
+      for (const target of [LANDSCAPE, EMPTY]) {
+        expect(
+          pasteSnapshot(snapshot, view(store, target), store, {
+            offset: OFFSET,
+            special,
+            mint: counter(),
+          }),
+          `${target} special=${special}`,
+        ).toBeUndefined()
+      }
+    }
+  })
+
+  it('dispatches nothing, so the other workspace is left as it was', () => {
+    const { store, snapshot } = reopened()
+    const before = toCanonicalJson(store.snapshot())
+    const dispatch = vi.spyOn(store, 'dispatch')
+    expect(
+      pasteInto(store, EMPTY, snapshot, { offset: OFFSET, special: false, mint: counter() }),
+    ).toBeUndefined()
+    expect(dispatch).not.toHaveBeenCalled()
+    expect(toCanonicalJson(store.snapshot())).toBe(before)
   })
 })
 
@@ -306,6 +341,8 @@ describe('pasting (#137, CopySnapshot.getPasteCommand)', () => {
     const { folder, ...original } = store.relationship('r-register-accept')!
     expect(folder).toBe('somewhere')
     expect(accept).toEqual({ ...original, id: 'rel-new-1', source: 'el-new-2', target: 'el-new-3' })
+    // A deep copy, as the element's: its properties are its own.
+    expect(accept.properties).not.toBe(original.properties)
     const connection = pasted.view.connections.find((c) => c.id === 'conn-new-1')!
     expect(connection).toMatchObject({
       kind: 'relationship',
@@ -496,26 +533,67 @@ describe('one paste is one command (#137)', () => {
     ] as const) {
       const store = claims()
       const before = toCanonicalJson(store.snapshot())
-      const pasted = pasteSnapshot(
-        copy(store, ['o-handle', 'o-goal']),
-        view(store, target),
-        store,
-        {
-          offset: { x: 10, y: 10 },
-          special,
-          mint: counter(),
-        },
-      )!
       const dispatch = vi.spyOn(store, 'dispatch')
-      store.updateViewAdding(target, () => pasted.view, {
-        elements: pasted.elements,
-        relationships: pasted.relationships,
-      })
+      const pasted = pasteInto(store, target, copy(store, ['o-handle', 'o-goal']), {
+        offset: { x: 10, y: 10 },
+        special,
+        mint: counter(),
+      })!
       expect(dispatch).toHaveBeenCalledTimes(1)
+      // Everything the paste made is in the store: the drawings, the copies and their relationships.
+      expect(store.view(target)).toBe(pasted.view)
+      for (const e of pasted.elements) expect(store.element(e.id)).toBe(e)
+      for (const r of pasted.relationships) expect(store.relationship(r.id)).toBe(r)
       expect(toCanonicalJson(store.snapshot())).not.toBe(before)
       store.undo()
       expect(toCanonicalJson(store.snapshot())).toBe(before)
     }
+  })
+})
+
+describe('pasting into the store (#137)', () => {
+  it('adds the copies’ relationships with them, as one command', () => {
+    const store = claims()
+    const relationships = store.relationshipList().length
+    const pasted = pasteInto(store, LANDSCAPE, copy(store, ['o-handle']), {
+      offset: { x: 10, y: 10 },
+      special: false,
+      mint: counter(),
+    })!
+    expect(pasted.relationships).toHaveLength(5)
+    expect(store.relationshipList()).toHaveLength(relationships + 5)
+    // Every connection draws a relationship the model holds.
+    for (const c of view(store).connections) {
+      if (c.kind === 'relationship') expect(store.relationship(c.relationship), c.id).toBeDefined()
+    }
+  })
+
+  it('dispatches nothing for a view that is not there', () => {
+    const store = claims()
+    const dispatch = vi.spyOn(store, 'dispatch')
+    expect(
+      pasteInto(store, 'v-gone', copy(store, ['o-handle']), {
+        offset: { x: 10, y: 10 },
+        special: false,
+        mint: counter(),
+      }),
+    ).toBeUndefined()
+    expect(dispatch).not.toHaveBeenCalled()
+  })
+
+  it('dispatches nothing when nothing pastes', () => {
+    const store = claims()
+    const snapshot = copy(store, ['o-ref-data'])
+    store.removeView('v-data')
+    const dispatch = vi.spyOn(store, 'dispatch')
+    expect(
+      pasteInto(store, LANDSCAPE, snapshot, {
+        offset: { x: 10, y: 10 },
+        special: false,
+        mint: counter(),
+      }),
+    ).toBeUndefined()
+    expect(dispatch).not.toHaveBeenCalled()
   })
 })
 

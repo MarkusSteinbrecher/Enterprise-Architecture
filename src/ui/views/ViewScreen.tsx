@@ -93,7 +93,7 @@ import {
   clipboardFor,
   copySelection,
   nextOffset,
-  pasteSnapshot,
+  pasteInto,
   type ClipboardChord,
   type Snapshot,
 } from './clipboard'
@@ -1093,13 +1093,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
    * afterwards, as Archi selects them. `undefined` when nothing pastes.
    */
   const pasteHere = (snapshot: Snapshot, offset: Point, special: boolean) => {
-    const made = pasteSnapshot(snapshot, view, store, { offset, special, mint: newId })
+    const made = pasteInto(store, view.id, snapshot, { offset, special, mint: newId })
     if (!made) return undefined
     auto.current = false
-    store.updateViewAdding(view.id, () => made.view, {
-      elements: made.elements,
-      relationships: made.relationships,
-    })
     choose([...made.pasted], made.view)
     return made
   }
@@ -1334,7 +1330,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           aria-label={`View ${view.name}`}
           aria-description={
             editable
-              ? 'Drag shapes to move them, drag empty space to select, arrow keys to nudge. Drag from a selected shape’s connect handle to another shape to connect them. Delete removes from the view with everything inside; Shift+Delete keeps what is inside. Space and drag to pan. Command+C copies the selected shapes, Command+V pastes them where you last clicked, Shift+Command+V draws the same elements again, and Command+D duplicates.'
+              ? 'Drag shapes to move them, drag empty space to select, arrow keys to nudge. Drag from a selected shape’s connect handle to another shape to connect them. Delete removes from the view with everything inside; Shift+Delete keeps what is inside. Space and drag to pan. Command or Ctrl+C copies the selected shapes, Command or Ctrl+V pastes them where you last clicked, with Shift it draws the same elements again, and Command or Ctrl+D duplicates.'
               : undefined
           }
           onKeyDown={(event) => {

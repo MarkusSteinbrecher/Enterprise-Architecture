@@ -47,6 +47,16 @@ describe('copy and paste on the canvas (#137)', () => {
     const element = pasted[0]!.kind === 'element' ? store.element(pasted[0]!.element) : undefined
     expect(element?.name).toBe('Handle Claim (copy)')
     expect(selectedIds()).toEqual([pasted[0]!.id])
+    // Each pasted line draws a new relationship that the model now holds.
+    const lines = view().connections.slice(before.connections.length)
+    expect(lines).toHaveLength(5)
+    for (const line of lines) {
+      const id = line.kind === 'relationship' ? line.relationship : undefined
+      expect(id && store.relationship(id), line.id).toBeDefined()
+      expect(
+        before.connections.some((c) => c.kind === 'relationship' && c.relationship === id),
+      ).toBe(false)
+    }
 
     act(() => void store.undo())
     expect(toCanonicalJson(store.snapshot())).toBe(file)
@@ -192,6 +202,14 @@ describe('copy and paste on the canvas (#137)', () => {
     // The duplicate is drawn to the right of everything else, so the drawing has grown.
     expect(added(before, view())).toHaveLength(1)
     expect(drawn()).toBe(fitted)
+  })
+
+  it('names the chords for every platform in the canvas’s description', () => {
+    const { surface } = setup()
+    const description = surface.getAttribute('aria-description') ?? ''
+    for (const chord of ['Command or Ctrl+C', 'Command or Ctrl+V', 'Command or Ctrl+D']) {
+      expect(description).toContain(chord)
+    }
   })
 
   it('does nothing in a tab that only reads the model', async () => {

@@ -7,6 +7,7 @@ import {
   type ViewConnection,
   type ViewNode,
 } from '@/model'
+import type { ModelStore } from '@/store/model-store'
 import { absoluteIndex } from './geometry'
 import { topSelected, withDescendants } from './edit'
 
@@ -28,7 +29,14 @@ import { topSelected, withDescendants } from './edit'
  * of copies makes.
  */
 export interface Snapshot {
-  /** The workspace copied from. A paste into another one makes copies. */
+  /**
+   * The workspace copied from. A paste into another one is refused: the
+   * clipboard belongs to the store, which outlives an Open file or an Import,
+   * and copies made from another model would carry Archi's same-model
+   * ` (copy)` and lose the typing of their properties (`propertyTypes`) and
+   * the registration of their tags (`tagGroups`). Pasting across models
+   * properly is not built yet.
+   */
   readonly workspace: string
   /**
    * Every copied shape, in the source view's order. A shape's descendants come
@@ -133,16 +141,17 @@ export function nextOffset(snapshot: Snapshot, last: Point, pressed: Point | nul
  * drawing the same ones again. It is decided once for the whole paste, as
  * `CopySnapshot.getPasteCommand` does.
  *
- * Paste (`needsNewArchimateConcepts`) makes copies when the paste goes into
- * another workspace, when any copied concept has left the model, or when any
- * is already drawn in the target view. Otherwise it draws them again.
+ * Paste (`needsNewArchimateConcepts`) makes copies when any copied concept
+ * has left the model, or when any is already drawn in the target view.
+ * Otherwise it draws them again. Archi also makes copies for a paste into
+ * another model; here such a paste is refused before this is asked (see
+ * `Snapshot.workspace`).
  *
  * Paste Special, with Archi's default `pasteSpecialBehavior` (0, "Always paste
- * a reference to copied element"), draws them again unless the paste goes into
- * another workspace. Archi 5.10 does that even when a copied concept has left
- * the model, and the drawing then points at nothing. Here that case makes
- * copies, as Paste does: a drawing of a missing element is what `validate`
- * rejects.
+ * a reference to copied element"), draws them again. Archi 5.10 does that even
+ * when a copied concept has left the model, and the drawing then points at
+ * nothing. Here that case makes copies, as Paste does: a drawing of a missing
+ * element is what `validate` rejects.
  */
 export function pastesCopies(
   snapshot: Snapshot,
@@ -150,7 +159,6 @@ export function pastesCopies(
   model: PasteModel,
   special: boolean,
 ): boolean {
-  if (snapshot.workspace !== model.id) return true
   const gone =
     [...snapshot.elements.keys()].some((id) => !model.element(id)) ||
     [...snapshot.relationships.keys()].some((id) => !model.relationship(id))
@@ -202,7 +210,8 @@ export interface Paste {
  * A view reference pastes only when the view it points to still exists
  * (`isValidPasteComponent`). A shape that does not paste takes what is nested
  * in it along, and so does a connection with an end that does not paste.
- * Returns `undefined` when nothing pastes.
+ * Returns `undefined` when nothing pastes, and for a snapshot copied from
+ * another workspace, which is refused whole (see `Snapshot.workspace`).
  */
 export function pasteSnapshot(
   snapshot: Snapshot,
@@ -210,6 +219,7 @@ export function pasteSnapshot(
   model: PasteModel,
   { offset, special, mint }: PasteOptions,
 ): Paste | undefined {
+  if (snapshot.workspace !== model.id) return undefined
   const copies = pastesCopies(snapshot, view, model, special)
   const byId = new Map(snapshot.nodes.map((node) => [node.id, node]))
   const decided = new Map<string, boolean>()
@@ -306,6 +316,31 @@ export function pasteSnapshot(
     relationships,
     pasted: nodes.filter((node) => node.parent === undefined).map((node) => node.id),
   }
+}
+
+/**
+ * Paste `snapshot` into the store's view `viewId` as one command: the copies
+ * the paste makes, if any, and the drawings, added together, so one undo takes
+ * them all away. The canvas and the Archi oracle's fixture (`edited-claims.ts`)
+ * both paste through this, so the oracle holds the canvas's own wiring.
+ * `undefined`, and nothing dispatched, when the view is not there or nothing
+ * pastes.
+ */
+export function pasteInto(
+  store: PasteModel & Pick<ModelStore, 'updateViewAdding'>,
+  viewId: string,
+  snapshot: Snapshot,
+  options: PasteOptions,
+): Paste | undefined {
+  const view = store.view(viewId)
+  if (!view) return undefined
+  const made = pasteSnapshot(snapshot, view, store, options)
+  if (!made) return undefined
+  store.updateViewAdding(viewId, () => made.view, {
+    elements: made.elements,
+    relationships: made.relationships,
+  })
+  return made
 }
 
 export type ClipboardChord = 'copy' | 'paste' | 'paste-special' | 'duplicate'

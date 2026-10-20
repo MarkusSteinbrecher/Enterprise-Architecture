@@ -31,7 +31,7 @@ import {
   type Tool,
 } from '@/ui/views/create'
 import { withDrop } from '@/ui/views/drop'
-import { copySelection, nextOffset, pasteSnapshot, type MintKind } from '@/ui/views/clipboard'
+import { copySelection, nextOffset, pasteInto, type MintKind } from '@/ui/views/clipboard'
 import { magicEdit, magicMenu } from '@/ui/views/magic'
 import { moveSelection, resizeNode } from '@/ui/views/edit'
 import { nestingEdit, nestingFor, withNewElement } from '@/ui/views/nesting'
@@ -293,16 +293,13 @@ function pastes(store: ModelStore) {
     const snapshot = copySelection(store.view(from)!, selected, store)
     if (!snapshot) throw new Error(`copying ${selected} copied nothing`)
     const counts: Record<MintKind, number> = { node: 0, conn: 0, el: 0, rel: 0 }
-    const made = pasteSnapshot(snapshot, store.view(into)!, store, {
+    // The canvas's own paste (`ViewScreen`'s `pasteHere`), so the oracle holds its wiring.
+    const made = pasteInto(store, into, snapshot, {
       offset: nextOffset(snapshot, { x: 0, y: 0 }, pressed),
       special,
       mint: (kind) => `${name}-${kind}-${++counts[kind]}`,
     })
     if (!made) throw new Error(`pasting ${selected} into ${into} pasted nothing`)
-    store.updateViewAdding(into, () => made.view, {
-      elements: made.elements,
-      relationships: made.relationships,
-    })
   }
   // Handle Claim, its five shapes and the five lines among them: copies.
   paste('copy', 'v-landscape', ['o-handle'], 'v-landscape', { x: 20, y: 1060 }, false)
