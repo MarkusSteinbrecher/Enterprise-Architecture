@@ -124,6 +124,25 @@
   pointer-events: none;
 }
 
+/* The primary selection, which align and match go by (#136): heavier, as Archi
+   draws its handles solid. */
+.view-screen__selection--primary {
+  stroke-width: 3;
+}
+
+/* Grid and alignment guides (#136): hairlines, under and over the drawing. */
+.view-screen__grid-line {
+  fill: none;
+  stroke: var(--bd);
+  stroke-width: 1;
+}
+
+.view-screen__guide {
+  stroke: var(--accent2);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
 /* Editing (#128): in the tab that holds the model a drag moves shapes and an
    empty-canvas drag selects, so the pan cursor gives way; Space still pans. */
 .view-screen__canvas--edit,
@@ -756,4 +775,86 @@
 
 .view-palette--collapsed .view-palette__guide::after {
   content: none;
+}
+
+/* Layout aids (#136): a row under the bar, there whatever is selected, so the
+   canvas never changes height under a press. */
+.view-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--bd);
+}
+
+.view-tools__group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.view-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--bd2);
+  color: var(--ink2);
+}
+
+.view-tool svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+
+.view-tool .view-tool__fill {
+  fill: currentColor;
+}
+
+.view-tool:hover:not([aria-disabled='true']) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.view-tool[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.view-toggle {
+  height: 27px;
+  padding: 0 9px;
+  background: transparent;
+  border: 1px solid var(--bd2);
+  color: var(--ink2);
+  font: 400 11.5px/1 var(--font-ui);
+}
+
+.view-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.view-toggle[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+
+.view-tools__size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 4px;
+}
+
+.view-tools__size-input {
+  width: 7.5ch;
+  font: 400 11.5px/1 var(--font-mono);
 }

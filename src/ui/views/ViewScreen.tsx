@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   VIEWPOINTS,
@@ -91,6 +91,10 @@ import {
   straightened,
 } from './bendpoints'
 import { InlineName } from './InlineName'
+import { ArrangeBar, type ArrangeAction } from './ArrangeBar'
+import { align, arrangeable, canMatch, canReorder, distribute, matchSize, reorder } from './arrange'
+import { GUIDE_THRESHOLD, snapMove, snapResize, type Guide, type SnapSettings } from './snap'
+import { readGridPreferences, writeGridPreferences, type GridPreferences } from './grid-preferences'
 import {
   clipboardChord,
   clipboardFor,
@@ -166,6 +170,8 @@ function writePaletteCollapsed(collapsed: boolean) {
 const CLICK_SLOP = 3
 const NONE: string[] = []
 const ZOOM_STEP = 1.2
+/** Below this many screen pixels between lines the grid is a grey wash, so it is not drawn. */
+const MIN_GRID_SPACING = 4
 /** A drag this close to the canvas edge scrolls the view, faster the closer it gets. */
 const EDGE = 24
 const EDGE_SPEED = 12
@@ -300,6 +306,18 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   }, [refocus])
   const release = () => setRefocus((n) => n + 1)
   const [exportError, setExportError] = useState<string | null>(null)
+  /** The grid and snapping this viewer chose (#136): a preference, kept in localStorage. */
+  const [grid, setGrid] = useState(readGridPreferences)
+  const changeGrid = useCallback((change: Partial<GridPreferences>) => {
+    setGrid((current) => {
+      const next = { ...current, ...change }
+      writeGridPreferences(next)
+      return next
+    })
+  }, [])
+  /** The alignment guides a drag in progress is snapped to. */
+  const [guides, setGuides] = useState<Guide[]>([])
+  const gridPattern = useId()
   /** The palette tool the next press on the canvas places (#130). */
   const [tool, setTool] = useState<Tool | null>(null)
   /** The node whose name is being typed on the canvas. */
@@ -602,18 +620,55 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
    * before a release can be handled; building on the store's is simply the
    * honest base for a command whose `before` is the store's.
    */
-  const outcome = useCallback(
-    (base: View, g: Extract<Gesture, { kind: 'move' | 'resize' }>, client: Point): View => {
+  const snapping = useCallback(
+    (): SnapSettings => ({
+      grid: grid.snap ? grid.size : null,
+      guides: grid.guides,
+      threshold: GUIDE_THRESHOLD / vpRef.current.zoom,
+    }),
+    [grid],
+  )
+  const arranged = useCallback(
+    (
+      base: View,
+      g: Extract<Gesture, { kind: 'move' | 'resize' }>,
+      client: Point,
+    ): { view: View; guides: Guide[] } => {
       const at = toView(client)
-      const dx = Math.round(at.x - g.from.x)
-      const dy = Math.round(at.y - g.from.y)
       if (g.kind === 'move') {
-        return moveSelection(base, g.ids, dx, dy, { into: dropFor(base, g, client) })
+        // Snapped as Archi snaps (#136): the shape under the pointer, in the container it goes into.
+        const into = dropFor(base, g, client)
+        const snap = snapMove(
+          base,
+          g.ids,
+          g.node,
+          into,
+          at.x - g.from.x,
+          at.y - g.from.y,
+          snapping(),
+        )
+        const view = moveSelection(base, g.ids, Math.round(snap.dx), Math.round(snap.dy), { into })
+        return { view, guides: snap.guides }
       }
       const node = base.nodes.find((n) => n.id === g.node)
-      return node ? resizeNode(base, g.node, resized(node.bounds, g.handle, dx, dy)) : base
+      if (!node) return { view: base, guides: [] }
+      const dx = Math.round(at.x - g.from.x)
+      const dy = Math.round(at.y - g.from.y)
+      const snap = snapResize(
+        base,
+        g.node,
+        g.handle,
+        resized(node.bounds, g.handle, dx, dy),
+        snapping(),
+      )
+      return { view: resizeNode(base, g.node, snap.bounds), guides: snap.guides }
     },
-    [toView, dropFor],
+    [toView, dropFor, snapping],
+  )
+  const outcome = useCallback(
+    (base: View, g: Extract<Gesture, { kind: 'move' | 'resize' }>, client: Point): View =>
+      arranged(base, g, client).view,
+    [arranged],
   )
 
   /** `base` with the dragged bend-point at `client`: a new one, or one moved (#133). */
@@ -652,7 +707,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         })
         return
       }
-      setPreview(outcome(view, g, client))
+      const next = arranged(view, g, client)
+      setPreview(next.view)
+      setGuides(next.guides)
       if (g.kind === 'move') {
         // Outlined only when the drop would change where the selection lives.
         const into = dropFor(view, g, client)
@@ -662,7 +719,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         setDropInto(into !== undefined && !(parents.size === 1 && parents.has(into)) ? into : null)
       }
     },
-    [view, bounds, toView, outcome, dropFor, bent],
+    [view, bounds, toView, arranged, dropFor, bent],
   )
 
   /** Scroll while a drag rests near the canvas edge, carrying the gesture along. */
@@ -722,6 +779,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     setLasso(null)
     setDropInto(null)
     setRubber(null)
+    setGuides([])
   }
 
   /** Select one connection, and no shape. */
@@ -1009,6 +1067,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     setLasso(null)
     setDropInto(null)
     setRubber(null)
+    setGuides([])
     if (!g) return
     if (g.kind === 'place') {
       // Where the press was, as Archi places on a click; a drag does not size it yet.
@@ -1110,6 +1169,38 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         : moveSelection(current, ids, dx, dy),
     )
     nudgeRun.current = after ? { ...next, last: after } : null
+  }
+
+  /** Whether an arrange action would change anything for the selection (#136). */
+  const applies = (action: ArrangeAction): boolean => {
+    switch (action.kind) {
+      case 'align':
+        return arrangeable(view, selected, 2) !== undefined
+      case 'distribute':
+        return arrangeable(view, selected, 3) !== undefined
+      case 'match':
+        return canMatch(view, selected)
+      case 'order':
+        return canReorder(view, selected, action.order)
+    }
+  }
+
+  /** An arrange action, as one command; the selection stays, so the next one applies to it too. */
+  const arrangeSelection = (action: ArrangeAction) => {
+    auto.current = false
+    const ids = [...selected]
+    store.updateView(view.id, (current) => {
+      switch (action.kind) {
+        case 'align':
+          return align(current, ids, action.alignment)
+        case 'distribute':
+          return distribute(current, ids, action.axis)
+        case 'match':
+          return matchSize(current, ids, action.dimension)
+        case 'order':
+          return reorder(current, ids, action.order)
+      }
+    })
   }
 
   /**
@@ -1327,6 +1418,14 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           </button>
         </div>
       </header>
+      {editable && (
+        <ArrangeBar
+          grid={grid}
+          onGrid={changeGrid}
+          applies={applies}
+          onArrange={arrangeSelection}
+        />
+      )}
       {exportError && (
         <p role="alert" className="view-screen__error">
           PNG export failed: {exportError}
@@ -1592,6 +1691,32 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
           ) : (
             <svg ref={drawingRef} className="view-screen__svg" data-testid="view-canvas">
               <g transform={`translate(${vp.x} ${vp.y}) scale(${vp.zoom})`}>
+                {/* The grid (#136), under the drawing and outside it, so no export draws it. */}
+                {editable && grid.visible && grid.size * vp.zoom >= MIN_GRID_SPACING && (
+                  <g data-testid="grid">
+                    <defs>
+                      <pattern
+                        id={gridPattern}
+                        width={grid.size}
+                        height={grid.size}
+                        patternUnits="userSpaceOnUse"
+                      >
+                        <path
+                          className="view-screen__grid-line"
+                          d={`M${grid.size},0L0,0L0,${grid.size}`}
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      </pattern>
+                    </defs>
+                    <rect
+                      x={-vp.x / vp.zoom}
+                      y={-vp.y / vp.zoom}
+                      width={size.width / vp.zoom}
+                      height={size.height / vp.zoom}
+                      fill={`url(#${gridPattern})`}
+                    />
+                  </g>
+                )}
                 <ViewDrawing view={shown} bounds={bounds} children={children} lookups={lookups} />
                 {/* Lines are thin; a wider, invisible stroke over each is what a press finds. */}
                 <g data-testid="line-hits">
@@ -1670,14 +1795,31 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
                     vectorEffect="non-scaling-stroke"
                   />
                 )}
-                {selected.map((id) => {
+                {guides.map((guide, i) => (
+                  <line
+                    key={i}
+                    className="view-screen__guide"
+                    data-testid="guide"
+                    data-axis={guide.axis}
+                    data-at={guide.at}
+                    x1={guide.axis === 'x' ? guide.at : guide.from}
+                    y1={guide.axis === 'x' ? guide.from : guide.at}
+                    x2={guide.axis === 'x' ? guide.at : guide.to}
+                    y2={guide.axis === 'x' ? guide.to : guide.at}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ))}
+                {selected.map((id, i) => {
                   const b = bounds.get(id)
+                  // The primary selection, which align and match go by, as Archi marks it (#136).
+                  const primary = selected.length > 1 && i === selected.length - 1
                   return b ? (
                     <rect
                       key={id}
-                      className="view-screen__selection"
+                      className={`view-screen__selection${primary ? ' view-screen__selection--primary' : ''}`}
                       data-testid="selection"
                       data-selected={id}
+                      data-primary={primary || undefined}
                       {...box(b, 2)}
                       vectorEffect="non-scaling-stroke"
                     />

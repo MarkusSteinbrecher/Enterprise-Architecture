@@ -1,6 +1,7 @@
 import {
   DEFAULT_LEGEND_OPTIONS,
   FONT_STYLES,
+  drawingOrder,
   TEXT_ALIGNMENTS,
   TEXT_POSITIONS,
   isFolderRoot,
@@ -28,10 +29,15 @@ import { asArray, byId, emptyToUndefined, isRecord, prune, readProperties } from
 /**
  * Hand-drawn views and folders in canonical JSON (#75, ADR 0004).
  *
- * Writing: views, nodes, connections and folders are each sorted by id, so the
- * file does not depend on the order anything was drawn in. Bend-points are the
- * exception — their order *is* the route — and font styles are written in
- * declaration order, so `[italic, bold]` and `[bold, italic]` are one file.
+ * Writing: views, connections and folders are each sorted by id, so the file
+ * does not depend on the order anything was made in. Nodes are written in
+ * drawing order instead (`drawingOrder`): a container's children are drawn in
+ * their order, later over earlier, so that order is the z-order (#136), and
+ * sorting by id would lose it. The order of nodes under *different* parents
+ * means nothing, and the tree walk writes one order for it whatever
+ * `view.nodes` holds. Bend-points keep their order too — their order *is* the
+ * route — and font styles are written in declaration order, so
+ * `[italic, bold]` and `[bold, italic]` are one file.
  *
  * Reading: every reference is checked against what the file actually contains,
  * and anything that cannot be carried is dropped with a problem saying so —
@@ -49,7 +55,7 @@ export function canonicalView(view: View): Record<string, unknown> {
     router: view.router,
     folder: view.folder,
     properties: emptyToUndefined(view.properties),
-    nodes: [...view.nodes].sort(byId).map(canonicalNode),
+    nodes: drawingOrder(view).map(canonicalNode),
     connections: [...view.connections].sort(byId).map(canonicalConnection),
   })
 }

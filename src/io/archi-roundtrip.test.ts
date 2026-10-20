@@ -7,7 +7,7 @@ import archiSaveInput from './fixtures/claims-edited.archi.archimate.input-sha25
 import archiExport from './fixtures/claims-edited.archi.xml?raw'
 import { exportExchange, importExchangeXml } from './exchange-format'
 import { importArchimate } from './archimate-native'
-import { validate, type Workspace } from '@/model'
+import { absoluteBounds, childrenByParent, validate, type Bounds, type Workspace } from '@/model'
 import { editedClaims } from '@/test/edited-claims'
 import {
   ALPHA_PERCENT,
@@ -111,6 +111,14 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
         'c-engine-host extra',
         'o-batch extra',
         'c-k8s-batch extra',
+        // Arranged (#136): aligned, distributed, matched, and drawn in another order.
+        'o-valuate bounds',
+        'o-accept bounds',
+        'o-as-payment bounds',
+        'o-ai-portal bounds',
+        'o-engine order',
+        'o-g-platform order',
+        'v-landscape order',
       ]),
     )
     // o-k8s grew to the left, and its children stayed where they were drawn (#128).
@@ -165,6 +173,42 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
       ),
     }
     expect(invalid(mixed).map((f) => f.subjectId)).toContain('r-intake-valuate')
+  })
+
+  it('keeps an aligned, distributed, matched and z-ordered view as it was arranged (#136)', () => {
+    const order = (w: Workspace, parent: string | undefined) =>
+      childrenByParent(w.views.find((v) => v.id === 'v-landscape')!)
+        .get(parent)!
+        .map((n) => n.id)
+    // Ours first, so the comparison is not of two empty lists; then Archi's save, the same.
+    const reordered: [string | undefined, string[]][] = [
+      ['o-engine', ['o-host', 'o-calc', 'o-do-claim', 'o-rules']],
+      ['o-k8s', ['o-runtime', 'o-batch', 'o-postgres']],
+      ['o-g-platform', ['o-database', 'o-k8s', 'o-mainframe', 'o-backbone', 'o-hosting']],
+    ]
+    for (const [parent, ids] of reordered) {
+      expect(order(ours, parent), parent).toEqual(ids)
+      expect(order(archi, parent), parent).toEqual(ids)
+    }
+    expect(order(ours, undefined).slice(0, 3)).toEqual(['o-g-business', 'o-g-platform', 'o-g-apps'])
+    expect(order(archi, undefined)).toEqual(order(ours, undefined))
+    // And every drawing where the arrangement put it.
+    const at = (w: Workspace, id: string) =>
+      absoluteBounds(
+        w.views.find((v) => v.id === 'v-landscape')!,
+        id,
+      )
+    const placed: [string, Partial<Bounds>][] = [
+      // In the process at (200, 150). Floored to the pixel, as draw2d floors: Accept's middle is at 52.5.
+      ['o-valuate', { x: 200 + 407, y: 150 + 52 }],
+      ['o-accept', { x: 200 + 213 }],
+      ['o-as-payment', { width: 180 }],
+      ['o-ai-portal', { height: 55 }],
+    ]
+    for (const [id, bounds] of placed) {
+      expect(at(ours, id), id).toMatchObject(bounds)
+      expect(at(archi, id), id).toEqual(at(ours, id))
+    }
   })
 
   it('keeps what each nesting meant: the relationship chosen, its connection, and the nesting (#131)', () => {
@@ -284,16 +328,17 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
       'special-node-2 → special-node-1: r-req-goal Realization r-rules → g-settle',
     ])
     // Paste into a view that drew none of the cluster: drawn again, with what is
-    // nested in it and the line the nesting hides.
+    // nested in it and the line the nesting hides. In the cluster's drawing order,
+    // which the arrangement (#136) changed by sending Claims Batch backward.
     expect(shapes(ours, 'v-scratch', 'again')).toEqual([
       'again-node-1 in the view: n-k8s Node “Kubernetes Cluster”',
       'again-node-2 in again-node-1: ss-runtime SystemSoftware “Claims Runtime”',
-      'again-node-3 in again-node-1: ss-postgres SystemSoftware “PostgreSQL”',
-      'again-node-4 in again-node-1: ss-batch SystemSoftware “Claims Batch”',
+      'again-node-3 in again-node-1: ss-batch SystemSoftware “Claims Batch”',
+      'again-node-4 in again-node-1: ss-postgres SystemSoftware “PostgreSQL”',
     ])
     expect(lines(ours, 'v-scratch', 'again')).toEqual([
       'again-node-1 → again-node-2: r-k8s-runtime Composition n-k8s → ss-runtime',
-      'again-node-1 → again-node-4: r-k8s-batch Composition n-k8s → ss-batch',
+      'again-node-1 → again-node-3: r-k8s-batch Composition n-k8s → ss-batch',
     ])
     for (const [viewId, name] of [
       ['v-landscape', 'copy'],
@@ -365,7 +410,7 @@ describe('an edited view, saved by Archipelago and by Archi after it (#127)', ()
         'relationship r-k8s-pg o-k8s → o-postgres: nested connection',
         'relationship r-mf-cics o-mainframe → o-cics: nested connection',
         // Pasted (#137): the cluster drawn again, and Archi adds the same line for it.
-        'relationship r-k8s-pg again-node-1 → again-node-3: nested connection',
+        'relationship r-k8s-pg again-node-1 → again-node-4: nested connection',
       ].sort(),
     )
   })

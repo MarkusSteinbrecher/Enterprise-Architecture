@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import Ajv2020 from 'ajv/dist/2020'
 import addFormats from 'ajv-formats'
-import { SCHEMA_VERSION, type View, type Workspace } from '@/model'
+import { SCHEMA_VERSION, drawingOrder, type View, type Workspace } from '@/model'
 import { drawnWorkspace } from '@/test/fixtures'
 import { fromCanonicalJson, toCanonicalJson } from './canonical-json'
 import { buildWorkspaceJsonSchema } from './json-schema'
@@ -37,6 +37,8 @@ function landscape(workspace: Workspace | undefined): View | undefined {
   return workspace?.views.find((v) => v.id === 'view-landscape')
 }
 
+const box = { x: 0, y: 0, width: 40, height: 20 }
+
 function codes(problems: readonly { code: string }[]): string[] {
   return problems.map((p) => p.code)
 }
@@ -57,18 +59,69 @@ describe('views and folders in canonical JSON (#75)', () => {
     expect(toCanonicalJson(restored)).toBe(first)
   })
 
-  it('writes the same bytes whatever order things were drawn and filed in', () => {
+  it('writes the same bytes whatever order things were made and filed in', () => {
     const workspace = drawnWorkspace()
+    // Every nested node moved ahead of every top-level one: each parent's
+    // children keep their order, so the drawing is the same, and so is the file.
+    const nestedFirst = (nodes: View['nodes']) => [
+      ...nodes.filter((node) => node.parent !== undefined),
+      ...nodes.filter((node) => node.parent === undefined),
+    ]
     const shuffled: Workspace = {
       ...workspace,
       views: [...workspace.views].reverse().map((view) => ({
         ...view,
-        nodes: [...view.nodes].reverse(),
+        nodes: nestedFirst(view.nodes),
         connections: [...view.connections].reverse(),
       })),
       folders: [...workspace.folders].reverse(),
     }
+    expect(shuffled.views.find((v) => v.id === 'view-landscape')!.nodes[0]!.parent).toBeDefined()
     expect(toCanonicalJson(shuffled)).toBe(toCanonicalJson(workspace))
+  })
+
+  it('keeps each container’s children in drawing order, because the order is the z-order (#136)', () => {
+    const workspace = drawnWorkspace()
+    const before = toCanonicalJson(workspace)
+    // n-note is drawn over n-app in the group; sent behind it, the file says so.
+    const swapped = structuredClone(workspace)
+    const nodes = landscape(swapped)!.nodes
+    const app = nodes.findIndex((n) => n.id === 'n-app')
+    const note = nodes.findIndex((n) => n.id === 'n-note')
+    ;[nodes[app], nodes[note]] = [nodes[note]!, nodes[app]!]
+    const after = toCanonicalJson(swapped)
+    expect(after).not.toBe(before)
+
+    const order = (w: Workspace | undefined) => drawingOrder(landscape(w)!).map((node) => node.id)
+    expect(order(workspace)).toEqual(['g-claims', 'n-app', 'n-note', 'n-proc', 'n-k8s', 'n-ref'])
+    const restored = read(after)
+    expect(order(restored)).toEqual(['g-claims', 'n-note', 'n-app', 'n-proc', 'n-k8s', 'n-ref'])
+    // export → import → export, byte for byte (ADR 0004).
+    expect(toCanonicalJson(restored)).toBe(after)
+  })
+
+  it('writes a node whose nesting is broken, once, where it is drawn', () => {
+    const workspace = drawnWorkspace()
+    const nodes = landscape(workspace)!.nodes
+    // A dangling parent and a two-node cycle: each is drawn at the top level, so written there.
+    nodes.push(
+      { id: 'n-lost', kind: 'note', text: 'lost', parent: 'nowhere', bounds: box },
+      { id: 'n-loop-a', kind: 'note', text: 'a', parent: 'n-loop-b', bounds: box },
+      { id: 'n-loop-b', kind: 'note', text: 'b', parent: 'n-loop-a', bounds: box },
+    )
+    const raw = JSON.parse(toCanonicalJson(workspace))
+    const written = landscapeRaw(raw, 'nodes').map((node) => (node as { id: string }).id)
+    expect(written).toEqual([
+      'g-claims',
+      'n-app',
+      'n-note',
+      'n-proc',
+      'n-k8s',
+      'n-ref',
+      'n-lost',
+      'n-loop-a',
+      'n-loop-b',
+    ])
   })
 
   it('keeps bend-points in route order, because the order is the route', () => {

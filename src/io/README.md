@@ -44,8 +44,13 @@ The point is git. Two exports of the same model must be byte-identical, and a
 one-field edit must produce a one-line diff. So keys are sorted at every depth,
 arrays are sorted by id rather than by insertion order (Map iteration order is an
 implementation detail), absent and empty values are omitted rather than written
-as `null`, and the file ends with a newline. Bend-points are the one array kept
-in written order, because their order is the route.
+as `null`, and the file ends with a newline. Two arrays keep an order of their
+own, because the order means something: bend-points, whose order is the route,
+and a view's nodes, written in drawing order (a parent, then its children in
+their order, then the next sibling), because a container's children are drawn
+later over earlier and that order is the z-order (#136). The tree walk writes
+one order whatever `view.nodes` holds, so the file is still a function of the
+drawing.
 
 Reading migrates. A file from an older schema is read at the current version,
 with an `info` problem (`json.schema-upgraded`) saying the next save writes the
