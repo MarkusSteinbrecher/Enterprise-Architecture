@@ -24,7 +24,8 @@ export function ImportDialog() {
 }
 
 function ImportDialogBody() {
-  const { lastImport, importFile, openFile, cancelImport, canPickFiles } = useFileWorkspace()
+  const { lastImport, importFile, reportImportFailure, openFile, cancelImport, canPickFiles } =
+    useFileWorkspace()
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -74,9 +75,17 @@ function ImportDialogBody() {
               const file = event.target.files?.[0]
               if (!file) return
               setBusy(true)
-              await importFile(file)
-              setBusy(false)
-              event.target.value = ''
+              // Reading can reject: a sync client may replace or remove the file
+              // between the pick and the read (#52). Without this the buttons
+              // stayed disabled for the life of the dialog, and nothing said why.
+              try {
+                await importFile(file)
+              } catch (error) {
+                reportImportFailure(error)
+              } finally {
+                setBusy(false)
+                event.target.value = ''
+              }
             }}
           />
           <button

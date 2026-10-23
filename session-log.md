@@ -1,5 +1,12 @@
 # Session Log
 
+## 2026-10-23 — #52: the import dialog's read failure, PR open
+
+- **Branch `feat/52-import-error-path`.** Nothing merged.
+- **Fix:** `ImportDialog` wraps `importFile` in `try … catch … finally`. The catch reports the error through a new context call, `reportImportFailure`, as a `file.unreadable` problem in the existing report. The finally re-enables the buttons and clears the input.
+- **`unreadableFile(error)`** in `src/io/file-system.ts` builds that problem, and `openWorkspaceFile` now uses it too. It reads `.message` off a `DOMException`, which is not an `Error` in jsdom.
+- **Test:** `files.test.tsx` uploads a `File` whose `arrayBuffer()` and `text()` reject (the reader now calls `arrayBuffer()`, not the `text()` the issue names). Removing the finally fails it (button disabled). Removing the catch fails it (no report, unhandled rejection). So does the original code.
+
 ## 2026-10-23 — Reviewed and merged #201, #202, #203; #200 and #204 merged
 
 - **#200 (#195) and #204 (#198) merged** after their review fixes. Branches deleted.
@@ -60,6 +67,10 @@
 - **#197, finding 5:** the drawn-scale test pins each check's count (unused relations 4,997, viewpoint 100, nesting 2,400), derived from the fixture's layout.
 - **#197, findings 6 and 7:** `CheckGroup` memoises its rows' targets on the revision, which the screen passes down, and its own revision subscription is gone. A test counts `findingTarget` calls.
 - **Every guard was removed in turn, and a test failed.**
+- **Review (same session, code layer in a fresh agent), two findings, both fixed:**
+  - the test did not cover the input reset, which is what lets the same file be picked again; it now asserts the value is cleared;
+  - the catch called any throw "could not be read". A failed `arrayBuffer()`/`getFile()` now throws `FileReadError`, and `importFailure` maps it to `file.unreadable` and anything else to `import.failed`. The picker path uses it too.
+- **Each guard removed in turn** (7 probes, including the reset alone), and a test failed each time. CLAUDE.md: two lines sharpened (`2513cc7`).
 - **Open:** the sponsor reviews and merges.
 
 ## 2026-10-23 — #199 and #197 merged; worktrees cleaned up

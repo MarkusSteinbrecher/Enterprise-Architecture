@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import {
+  importFailure,
   loadDemoWorkspace,
   openWorkspaceFile,
   readWorkspaceFile,
@@ -152,6 +153,7 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
       importFile,
       loadDemo,
       shared,
+      reportImportFailure: (error: unknown) => setLastImport(importFailure(error)),
       startImport: () => {
         setLastImport(undefined)
         setImporting(true)
