@@ -1,5 +1,16 @@
 # Session Log
 
+## 2026-10-23 — Review of #197 (validator): changes requested
+
+- **Port verified** with `javap` against all eight checkers and `Validator.validate`, with no divergence. All criteria are met except a repeat click on a folder finding.
+- **Three blocking findings, each small:**
+  - the fact sheet's Delete dialog deletes after the role becomes reader;
+  - a second click on a folder finding does not reopen a closed tree;
+  - the reused canvas dialog says "No other view draws it." on the fact sheet.
+- **Not blocking:** centring on `?node=`/`?line=` is untested; the scale test's `> 0` bound; `findingTarget` is recomputed per row; a redundant revision subscription.
+- **Harvested:** #198 (store refuses commands in a reader tab); a CLAUDE.md line on reader switches; a review-skill note on reused dialogs (`2f374ee`).
+- **Open:** fix findings 1–3, rebase on `main` (`session-log.md` conflict), then re-review.
+
 ## 2026-10-23 — M3: the validator (#193), PR open
 
 - **Branch `feat/193-validator`.** Nothing merged.
