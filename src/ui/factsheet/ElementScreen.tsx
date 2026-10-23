@@ -304,9 +304,15 @@ export function ElementScreen() {
           <DocumentationSection
             documentation={element.documentation}
             editing={editing}
-            onChange={(documentation) =>
-              store.updateElement(element.id, (draft) => ({ ...draft, documentation }))
-            }
+            onChange={(value) => {
+              if (value === (element.documentation ?? '')) return
+              store.updateElement(element.id, (draft) => {
+                // Cleared is absent, as on an element never documented (#171).
+                if (value === '') delete draft.documentation
+                else draft.documentation = value
+                return draft
+              })
+            }}
           />
           <LifecycleSection
             type={element.type}

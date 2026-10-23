@@ -9,7 +9,7 @@ import {
   type DragEvent,
   type KeyboardEvent,
 } from 'react'
-import { matchPath, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, matchPath, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { destinationRoot, findRelationshipType, type Folder, type FolderDestination } from '@/model'
 import { newId, useModelSelector, useModelStore, useModelStoreContext } from '@/store'
@@ -107,6 +107,8 @@ export function ModelTree({ id }: { id?: string }) {
     (s) => (viewId === undefined ? undefined : s.view(viewId)?.viewpoint),
     [viewId],
   )
+  const modelName = useModelSelector((s) => s.name)
+  const onModel = useLocation().pathname === '/model'
 
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set())
   const [query, setQuery] = useState('')
@@ -570,6 +572,22 @@ export function ModelTree({ id }: { id?: string }) {
           }
         }}
       />
+      {/*
+        The model itself, at the top as in Archi's tree (#171). A link beside the
+        tree rather than a row in it: its nine groups stay the tree's top level,
+        so its keyboard and drag behaviour are untouched.
+      */}
+      <Link
+        to="/model"
+        className={`tree__row tree__row--root model-tree__model${onModel ? ' tree__row--selected' : ''}`}
+        aria-current={onModel ? 'page' : undefined}
+        title="The model’s name and documentation"
+      >
+        <span className="tree__code" aria-hidden="true">
+          MDL
+        </span>
+        <span className="tree__name">{modelName}</span>
+      </Link>
       {filtering && (
         <div className="model-tree__count">
           {rows.filter((row) => row.item.kind !== 'root').length} shown

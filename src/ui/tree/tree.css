@@ -179,3 +179,21 @@
   border: 1px solid var(--accent);
   font: 400 12.5px/1 var(--font-ui);
 }
+
+/* The model's own entry above the tree (#171): a row in look, a link in kind. */
+.model-tree__model {
+  margin: 0 0 2px;
+  padding-left: 6px;
+  cursor: pointer;
+}
+
+/* Outranks the global `a:hover` underline: it is a row, not a link in text. */
+.model-tree__model:link,
+.model-tree__model:hover {
+  text-decoration: none;
+}
+
+.model-tree__model:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}

@@ -45,6 +45,8 @@ export type Command =
   | { kind: 'update-folder'; before: Folder; after: Folder }
   | { kind: 'remove-folder'; folder: Folder }
   | { kind: 'rename-workspace'; before: string; after: string }
+  /** The model's own documentation (#171); absent is undocumented, never `''`. */
+  | { kind: 'document-workspace'; before?: string; after?: string }
   | { kind: 'batch'; commands: Command[] }
 
 /** An applied command, as the fact sheet's HISTORY section reads it. */
@@ -95,6 +97,7 @@ export function commandSubjects(command: Command): string[] {
     case 'remove-folder':
       return [command.folder.id]
     case 'rename-workspace':
+    case 'document-workspace':
       return []
     case 'batch':
       return command.commands.flatMap(commandSubjects)
@@ -137,6 +140,10 @@ export function describeCommand(command: Command): string {
       return `Deleted folder “${command.folder.name}”`
     case 'rename-workspace':
       return `Renamed workspace to “${command.after}”`
+    case 'document-workspace':
+      return command.after === undefined
+        ? 'Cleared the workspace documentation'
+        : 'Edited the workspace documentation'
     case 'batch': {
       const [first, second] = command.commands
       if (command.commands.length === 1 && first) return describeCommand(first)
@@ -278,8 +285,19 @@ export function invert(command: Command): Command {
       return { kind: 'add-folder', folder: command.folder }
     case 'rename-workspace':
       return { kind: 'rename-workspace', before: command.after, after: command.before }
+    case 'document-workspace':
+      return documentWorkspace(command.after, command.before)
     case 'batch':
       // Undo a batch back to front, so ordering constraints hold in reverse.
       return { kind: 'batch', commands: [...command.commands].reverse().map(invert) }
+  }
+}
+
+/** Built so an absent side stays absent: `exactOptionalPropertyTypes` holds the line. */
+export function documentWorkspace(before: string | undefined, after: string | undefined): Command {
+  return {
+    kind: 'document-workspace',
+    ...(before !== undefined ? { before } : {}),
+    ...(after !== undefined ? { after } : {}),
   }
 }

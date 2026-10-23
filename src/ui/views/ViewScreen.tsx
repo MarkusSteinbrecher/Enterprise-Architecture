@@ -2026,10 +2026,22 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         )}
         {panelLine && (
           <LinePanel
+            // Keyed on the line, so a field's typing never carries to the next one (CLAUDE.md).
+            key={panelLine.id}
             connection={panelLine}
             view={view}
             store={store}
             editable={editable}
+            onDocument={(relationship, value) => {
+              if (value === (store.relationship(relationship)?.documentation ?? '')) return
+              store.updateRelationship(relationship, (r) => {
+                // Cleared is absent, as on a relationship never documented (#171).
+                if (value === '') delete r.documentation
+                else r.documentation = value
+                return r
+              })
+            }}
+            onDone={release}
             onRemove={() => {
               store.removeConnection(view.id, panelLine.id)
               setPicked({ nodes: [] })
@@ -2420,13 +2432,16 @@ function PanelTextField({
 /**
  * A selected connection: what it draws, and Archi's two ways to remove it.
  * Remove from view leaves the relationship in the model; Delete from model
- * takes it out of every view, after saying which (#129).
+ * takes it out of every view, after saying which (#129). A relationship's
+ * documentation is edited here, as in Archi's Properties view (#171).
  */
 function LinePanel({
   connection,
   view,
   store,
   editable,
+  onDocument,
+  onDone,
   onRemove,
   onDelete,
   onClose,
@@ -2438,6 +2453,10 @@ function LinePanel({
   view: View
   store: ModelStore
   editable: boolean
+  /** Commit a relationship's documentation; `''` clears it. */
+  onDocument: (relationship: string, value: string) => void
+  /** Hand focus back to the canvas, once a field's Enter or Escape is done. */
+  onDone: () => void
   onRemove: () => void
   onDelete: (relationship: string) => void
   onClose: () => void
@@ -2462,6 +2481,7 @@ function LinePanel({
     connection.kind === 'relationship' ? store.relationship(connection.relationship) : undefined
   const views = relationship ? store.viewsDrawingRelationship(relationship.id).length : 0
   const ghosted = ghostsIn(view, (id) => store.element(id)?.type).connections.has(connection.id)
+  const documentation = relationship?.documentation?.trim()
   return (
     <aside
       className="view-panel"
@@ -2487,6 +2507,22 @@ function LinePanel({
           </div>
         </div>
       )}
+      {relationship &&
+        (editable ? (
+          <PanelTextField
+            // Remounted when the stored value changes, so an undone edit shows.
+            key={`documentation ${relationship.documentation ?? ''}`}
+            label="Documentation"
+            multiline
+            value={relationship.documentation ?? ''}
+            onCommit={(value) => onDocument(relationship.id, value)}
+            onDone={onDone}
+          />
+        ) : documentation ? (
+          <p className="view-panel__text view-panel__text--pre">{relationship.documentation}</p>
+        ) : (
+          <p className="view-panel__text view-panel__text--empty">No documentation.</p>
+        ))}
       {editable && (
         <label className="view-panel__field">
           <span className="view-panel__stat-key">Label</span>

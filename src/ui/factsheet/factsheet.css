@@ -181,6 +181,11 @@
   flex: 1;
 }
 
+/* A sheet with no rail, as the model's (#171): the main column takes the width. */
+.sheet__body--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .sheet__main {
   padding: 20px 24px 40px;
   overflow-y: auto;

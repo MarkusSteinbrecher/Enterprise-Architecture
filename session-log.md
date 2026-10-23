@@ -1,18 +1,29 @@
 # Session Log
 
+## 2026-10-23 — Review of #192 (#171)
+
+- **Reviewed #192** (`/review-pr 192 high`) and approved it. All four criteria are met. 15 guards were broken one at a time, and each one fails a test except two on the new model sheet: the reader's disabled Edit button and the name field's undo key. Journey 21 passes on the PR's own build.
+- **Filed #195:** both fact sheets keep a reader out only through the Edit button, which no test covers, and edit mode survives a change to reader.
+- **Harvested:** one review-skill bullet (each control that writes has a reader case), committed on the PR branch.
+- **Next:** the sponsor merges #192. Then #195, alongside M3's first slice (#193, #194).
+
 ## 2026-10-23 — #194 viewpoint ghosting, PR open
 
 - **What:** a shape whose element the view's viewpoint refuses is drawn ghosted (`--ghost-opacity`, a new token, 0.4 ≈ Archi's alpha 100/255), and so is a line with such a shape at either end. The selection panel names the viewpoint. While that view is open, the model tree greys the refused elements and the relationships with one at an end. Nothing is stored, and the SVG/PNG export keeps the ghosting.
 - **Archi evidence** (Archi 5.10 `javap`, plus an `--html.createReport` run): drop from the tree has no viewpoint check; a connection ghosts when either end does; image export paints the same edit parts, ghosts included. The model and PNGs are in the side-session notes folder, `194-evidence/`.
-- **Changed:** `ui/views/ghosts.ts` (new), `ViewDrawing`, `ViewScreen` (panel notes; an SVG export failure now shows in the alert, as PNG's did), `export-view` (resolves the token, fails if it cannot), `tree-model.greyedBy`, `ModelTree`, `tokens.css`. Journey 21.
+- **Changed:** `ui/views/ghosts.ts` (new), `ViewDrawing`, `ViewScreen` (panel notes; an SVG export failure now shows in the alert, as PNG's did), `export-view` (resolves the token, fails if it cannot), `tree-model.greyedBy`, `ModelTree`, `tokens.css`. Journey 22.
 - **Open:** sponsor questions on the PR (guide text, the token, relationship greying in the tree).
 
-## 2026-10-23 — Guide links moved to Stein-Clankers (#191)
+## 2026-10-23 — Guide links (#191); #171 built (#192)
 
 - CI on `main` (`8ad1457`) is green; M2 is done.
 - **#191:** the guide's four ADR/UI-spec links now name `Stein-Clankers`, and `repo-links.test.ts` fails on any link to this repository under another owner (proven against the old file).
 - **Not done:** ticking #134–#137 on #74 (the session was refused issue edits); #187's review reply is still unposted, now moot since it merged.
-- **Next:** pick the first M3 slice under #74 and file its issues; #171 and #189 are still open.
+- **#171 → PR #192.** Sponsor decision: follow Archi (recorded on #171). A connection's panel on a diagram edits its relationship's documentation. A model entry above the model tree opens a `/model` sheet with the model's name and documentation, through a new `document-workspace` command. New e2e journey 21. Two questions are on the PR: the model entry sits above the tree rather than as its root, and the element fact sheet still stores `''` when its documentation is cleared.
+- **Sponsor's answers on #192:** the model entry above the tree is fine; element documentation is made consistent too (cleared is absent, and an unchanged field records nothing).
+- **Issue edits:** `Bash(gh issue edit:*)` is now allowed in the global settings, so sessions can tick tracking boxes. #134–#137 are ticked on #74.
+- **M3's first slice is filed:** #193 (validator: Archi 5.10's eight checks, with severities read from the `hammer` jar) and #194 (viewpoints: ghost disallowed concepts in a view and grey them in the tree, as Archi does by default). The two are independent.
+- **Next:** review and merge #192 (`/review-pr 192 high`); build #193 and #194, in parallel if wanted; #189 is still open.
 
 ## 2026-10-20 (wrap-up) — M2's four issues on `main`
 

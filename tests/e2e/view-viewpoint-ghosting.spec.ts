@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { test, expect, importWithNothingToReport, startEmpty } from './support'
 
 /**
- * Journey 21 — a viewpoint ghosts what it does not allow (#194). An imported
+ * Journey 22 — a viewpoint ghosts what it does not allow (#194). An imported
  * view is given Application Cooperation: Customer, a Business Actor, is drawn
  * ghosted, and so is its row in the model tree; Claims Portal, an Application
  * Component, is not. The SVG export carries the ghosting as a number. With the
