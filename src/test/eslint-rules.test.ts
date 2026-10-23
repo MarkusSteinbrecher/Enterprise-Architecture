@@ -153,16 +153,19 @@ async function matchesAnything(code: string): Promise<boolean> {
 }
 
 describe('a regex in toMatchObject (#177)', () => {
-  it('is the trap: a regex there passes against any value', () => {
-    // A RegExp has no own enumerable keys, so it is a subset of every value.
-    // If this ever fails, vitest has closed the trap and the rule can go.
-    // eslint-disable-next-line archipelago/regex-in-to-match-object -- the trap, demonstrated
-    expect({ message: 'something else' }).toMatchObject({ message: /zip64/ })
-    expect(() =>
-      expect({ message: 'something else' }).toMatchObject({
-        message: expect.stringMatching(/zip64/),
-      }),
-    ).toThrow()
+  it('is closed at run time where lint cannot see it: a regex there matches no string', () => {
+    // A RegExp has no own enumerable keys, so toMatchObject's subset check alone
+    // passes it against any value. `src/test/setup.ts`'s equality tester refuses
+    // it. A table row is what lint cannot follow, so the trap is set that way.
+    const rows: [RegExp][] = [[/zip64/], [new RegExp('zip64')]]
+    for (const [re] of rows) {
+      expect(() => expect({ message: 'something else' }).toMatchObject({ message: re })).toThrow()
+      expect(() => expect({ message: 'zip64 header' }).toMatchObject({ message: re })).toThrow()
+    }
+    // What a test means by it still passes, and a regex still equals itself.
+    expect({ message: 'zip64 header' }).toMatchObject({ message: expect.stringMatching(/zip64/) })
+    expect({ pattern: /zip64/ }).toEqual({ pattern: /zip64/ })
+    expect(() => expect({ pattern: /zip64/ }).toEqual({ pattern: /zip32/ })).toThrow()
   })
 
   it('rejects a regex literal in the expected value', async () => {

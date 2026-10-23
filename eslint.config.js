@@ -72,7 +72,11 @@ const OVERLAY_RULES = [
 //
 // What it cannot see without type information, which this config does not
 // load: a regex reached through a member (`patterns.zip`), a function's
-// return, an import, a parameter, a destructuring or a loop variable.
+// return, an import, a parameter (an `it.each` row), a destructuring or a
+// loop variable. Nor, without it: a regex written into the expected object
+// after it is declared, a getter, `globalThis.RegExp` or a template-literal
+// matcher name. An equality tester in `src/test/setup.ts` fails every one of
+// these at run time, so the rule is the early message, not the only guard.
 //
 // `eslint-rules.test.ts` fires this, the bypasses it catches and the gap.
 const REGEX_IN_TO_MATCH_OBJECT = {
