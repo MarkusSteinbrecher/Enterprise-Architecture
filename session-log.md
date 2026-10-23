@@ -1,11 +1,12 @@
 # Session Log
 
-## 2026-10-23 — Guide links moved to Stein-Clankers (#191)
+## 2026-10-23 — Guide links (#191); #171 built (#192)
 
 - CI on `main` (`8ad1457`) is green; M2 is done.
 - **#191:** the guide's four ADR/UI-spec links now name `Stein-Clankers`, and `repo-links.test.ts` fails on any link to this repository under another owner (proven against the old file).
 - **Not done:** ticking #134–#137 on #74 (the session was refused issue edits); #187's review reply is still unposted, now moot since it merged.
-- **Next:** pick the first M3 slice under #74 and file its issues; #171 and #189 are still open.
+- **#171 → PR #192.** Sponsor decision: follow Archi (recorded on #171). A connection's panel on a diagram edits its relationship's documentation. A model entry above the model tree opens a `/model` sheet with the model's name and documentation, through a new `document-workspace` command. New e2e journey 21. Two questions are on the PR: the model entry sits above the tree rather than as its root, and the element fact sheet still stores `''` when its documentation is cleared.
+- **Next:** review #192 (`/review-pr 192 high`); pick the first M3 slice under #74 and file its issues; #189 is still open.
 
 ## 2026-10-20 (wrap-up) — M2's four issues on `main`
 
