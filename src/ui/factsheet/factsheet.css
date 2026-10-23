@@ -74,6 +74,12 @@
   color: var(--ink2);
 }
 
+/* Counts are machine-readable, so they are set in mono (UI spec §2.1). */
+.sheet__counts {
+  font: 400 10.5px/1 var(--font-mono);
+  color: var(--ink2);
+}
+
 /* The type label opens its entry in the ArchiMate guide (#149). */
 .sheet__type--link {
   text-decoration: underline dotted var(--bd2);

@@ -1,5 +1,14 @@
 # Session Log
 
+## 2026-10-23 — #192's two review nits
+
+- **#192 merged** (`077c676`) before this session.
+- **Fixed the two untracked nits from its review**, on `fix/192-model-sheet-nits`:
+  - A test now renames the model in edit mode, undoes, and checks that the name field shows the undo. Removing `key={model.name}` fails it.
+  - The model sheet's counts are set in mono (`.sheet__counts`). The test reads the rule off `factsheet.css`, since Vitest loads no CSS. Reverting the class or the font fails it.
+- **Local lint note:** `npm run lint` reports 18 errors, all from stale worktrees under `.claude/worktrees/` (`elastic-khayyam-00d501`, `nervous-payne-ae68ca`). The repo's own files lint clean. Clean those worktrees up, or add `.claude/` to ESLint's ignores.
+- **Next:** merge the nits PR; #195; #193 and #194.
+
 ## 2026-10-23 — Review of #192 (#171)
 
 - **Reviewed #192** (`/review-pr 192 high`) and approved it. All four criteria are met. 15 guards were broken one at a time, and each one fails a test except two on the new model sheet: the reader's disabled Edit button and the name field's undo key. Journey 21 passes on the PR's own build.
