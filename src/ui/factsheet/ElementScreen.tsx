@@ -49,6 +49,11 @@ export function ElementScreen() {
   const [deleting, setDeleting] = useState(false)
   /** What was deleted from this fact sheet, for the notice that replaces it. */
   const [deleted, setDeleted] = useState<{ name: string; relations: number } | null>(null)
+  // A delete asked as a writer ends when the tab becomes a reader: a reader
+  // gets no dialog, and it does not reopen if the tab can write again.
+  useEffect(() => {
+    if (role === 'reader') setDeleting(false)
+  }, [role])
 
   const at = useMemo(() => Date.now(), [])
 
@@ -443,6 +448,7 @@ export function ElementScreen() {
         <DeleteElementDialog
           element={element}
           relations={view.relationships.length}
+          inView={false}
           elsewhere={store.viewsDrawing(element.id)}
           onConfirm={() => {
             setDeleted({

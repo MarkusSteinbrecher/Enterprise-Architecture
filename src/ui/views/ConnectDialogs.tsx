@@ -204,7 +204,13 @@ export interface DeleteElementDialogProps {
   element: Element
   /** How many relationships go with it. */
   relations: number
-  /** The views drawing it other than this one. */
+  /**
+   * Whether it is asked from a view that draws the element (the canvas) or from
+   * outside any view (the fact sheet, #193). "Also" and "other" are only true
+   * of the first.
+   */
+  inView: boolean
+  /** The views drawing it, other than this one when `inView`. */
   elsewhere: readonly View[]
   onConfirm: () => void
   onCancel: () => void
@@ -218,10 +224,12 @@ export interface DeleteElementDialogProps {
 export function DeleteElementDialog({
   element,
   relations,
+  inView,
   elsewhere,
   onConfirm,
   onCancel,
 }: DeleteElementDialogProps) {
+  const drawn = inView || elsewhere.length > 0
   const ref = useRef<HTMLDivElement>(null)
   useFocusTrap(ref)
   useEscape(onCancel)
@@ -238,13 +246,13 @@ export function DeleteElementDialog({
         <p className="connect-menu__text">
           {typeLabel(element.type)} “{element.name}” leaves the model
           {relations > 0
-            ? `, with its ${relations} relationship${relations === 1 ? '' : 's'},`
-            : ''}{' '}
-          and every view that draws it.
+            ? `, with its ${relations} relationship${relations === 1 ? '' : 's'}${drawn ? ',' : ''}`
+            : ''}
+          {drawn ? ' and every view that draws it.' : '.'}
         </p>
         {elsewhere.length > 0 ? (
           <div className="dialog__field">
-            <div className="dialog__label">Also drawn in</div>
+            <div className="dialog__label">{inView ? 'Also drawn in' : 'Drawn in'}</div>
             <ul className="connect-menu__views">
               {elsewhere.map((view) => (
                 <li key={view.id}>{view.name}</li>
@@ -252,7 +260,9 @@ export function DeleteElementDialog({
             </ul>
           </div>
         ) : (
-          <p className="connect-menu__text">No other view draws it.</p>
+          <p className="connect-menu__text">
+            {inView ? 'No other view draws it.' : 'No view draws it.'}
+          </p>
         )}
         <div className="dialog__actions">
           <button type="button" className="button" onClick={onCancel}>

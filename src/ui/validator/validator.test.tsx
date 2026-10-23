@@ -209,6 +209,26 @@ describe('the validator screen (#193)', () => {
       // Open for this visit; the remembered choice is the user's.
       expect(localStorage.getItem('archipelago.tree-open')).toBe('false')
     })
+
+    it('a folder again, after the tree was closed, opens the tree again', async () => {
+      localStorage.setItem('archipelago.tree-open', 'false')
+      const h = renderAt(everyKind())
+      await h.user.click(await screen.findByRole('button', { name: 'Validate' }))
+      const link = () => screen.getByRole('link', { name: /Folder "Lost" is inside "f-gone"/ })
+      await h.user.click(link())
+      expect(await screen.findByRole('tree', { name: 'Model tree' })).toBeInTheDocument()
+      await h.user.click(screen.getByRole('button', { name: /Model tree/ }))
+      expect(screen.queryByRole('tree', { name: 'Model tree' })).toBeNull()
+
+      // The same URL as before, so only the navigation itself is new.
+      await h.user.click(link())
+      expect(current.search).toBe('?folder=f-lost')
+      const tree = await screen.findByRole('tree', { name: 'Model tree' })
+      const row = within(tree)
+        .getAllByRole('treeitem')
+        .find((item) => item.querySelector('.tree__name')?.textContent === 'Lost')
+      expect(row).toHaveAttribute('aria-selected', 'true')
+    })
   })
 
   it('keeps the list when a finding has been opened and Back is pressed', async () => {
@@ -382,6 +402,83 @@ describe('deleting from the fact sheet', () => {
     sheet('reader')
     expect(screen.getByRole('heading', { name: 'Claim form' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Delete…' })).toBeNull()
+  })
+
+  it('says no view draws an element no view draws', async () => {
+    const { user } = renderAt(everyKind(), '/element/lonely')
+    await user.click(await screen.findByRole('button', { name: 'Delete…' }))
+    const dialog = screen.getByRole('dialog', { name: 'Delete element from the model' })
+    expect(dialog).toHaveTextContent('Business Object “Claim form” leaves the model.')
+    expect(dialog).toHaveTextContent('No view draws it.')
+    expect(dialog).not.toHaveTextContent(/other view|every view|Also/)
+  })
+
+  it('counts the relationships of an element no view draws, and nothing more', async () => {
+    const workspace = everyKind()
+    workspace.relationships.push(relationship('r-lonely', 'Association', 'lonely', 'app'))
+    const { user } = renderAt(workspace, '/element/lonely')
+    await user.click(await screen.findByRole('button', { name: 'Delete…' }))
+    const dialog = screen.getByRole('dialog', { name: 'Delete element from the model' })
+    expect(dialog).toHaveTextContent('“Claim form” leaves the model, with its 1 relationship.')
+  })
+
+  it('names every view that draws it, none of them "other"', async () => {
+    const { user } = renderAt(everyKind(), '/element/app')
+    await user.click(await screen.findByRole('button', { name: 'Delete…' }))
+    const dialog = screen.getByRole('dialog', { name: 'Delete element from the model' })
+    expect(dialog).toHaveTextContent(
+      /“Claims system” leaves the model, with its \d+ relationships, and every view that draws it\./,
+    )
+    expect(within(dialog).getByText('Drawn in')).toBeInTheDocument()
+    expect(
+      within(dialog)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Main', 'Nested'])
+    expect(dialog).not.toHaveTextContent(/Also|other view/)
+  })
+
+  describe('when the tab becomes a reader with the dialog open', () => {
+    function sheet() {
+      const store = new ModelStore(everyKind())
+      const ui = (role: TabRole) => (
+        <MemoryRouter initialEntries={['/element/lonely']}>
+          <ModelStoreContext.Provider
+            value={
+              { store, role, tabRole: 'writer', ready: true } as unknown as ModelStoreContextValue
+            }
+          >
+            <Routes>
+              <Route path="/element/:id" element={<ElementScreen />} />
+            </Routes>
+          </ModelStoreContext.Provider>
+        </MemoryRouter>
+      )
+      const result = render(ui('writer'))
+      return { store, user: userEvent.setup(), as: (role: TabRole) => result.rerender(ui(role)) }
+    }
+    const dialog = () => screen.queryByRole('dialog', { name: 'Delete element from the model' })
+
+    it('closes it, so a reader cannot delete', async () => {
+      const h = sheet()
+      await h.user.click(screen.getByRole('button', { name: 'Delete…' }))
+      expect(dialog()).toBeInTheDocument()
+      h.as('reader')
+      // Present first: the sheet is still there, as a reader's.
+      expect(screen.getByRole('heading', { name: 'Claim form' })).toBeInTheDocument()
+      expect(dialog()).toBeNull()
+      expect(screen.queryByRole('button', { name: 'Delete from model' })).toBeNull()
+      expect(h.store.element('lonely')).toBeDefined()
+    })
+
+    it('does not reopen it when the tab can write again', async () => {
+      const h = sheet()
+      await h.user.click(screen.getByRole('button', { name: 'Delete…' }))
+      h.as('reader')
+      h.as('writer')
+      expect(screen.getByRole('button', { name: 'Delete…' })).toBeInTheDocument()
+      expect(dialog()).toBeNull()
+    })
   })
 
   it('cancels without deleting', async () => {

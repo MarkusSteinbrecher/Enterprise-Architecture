@@ -2132,6 +2132,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         <DeleteElementDialog
           element={deletingElementValue}
           relations={store.relationshipsOf(deletingElementValue.id).length}
+          inView
           elsewhere={store
             .viewsDrawing(deletingElementValue.id)
             .filter((other) => other.id !== view.id)}

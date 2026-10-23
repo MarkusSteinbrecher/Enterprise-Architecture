@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Outlet, useSearchParams } from 'react-router-dom'
+import { Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import { usePalette } from '@/ui/palette/context'
 import { ModelTree } from '@/ui/tree/ModelTree'
 import { Header } from './Header'
@@ -44,11 +44,14 @@ export function AppShell() {
 
   // A link to a folder (`?folder=`, from the validator) is shown in the tree,
   // so it opens the tree for this visit without changing the remembered choice.
+  // Each following of the link opens it: the same link again, after the tree
+  // was closed, is a new navigation to the same URL (#193).
   const [params] = useSearchParams()
+  const { key: navigation } = useLocation()
   const linkedFolder = params.get('folder')
   useEffect(() => {
     if (linkedFolder !== null) setTreeOpen(true)
-  }, [linkedFolder])
+  }, [linkedFolder, navigation])
 
   return (
     <div className="shell">
