@@ -9,7 +9,13 @@
   - the reused canvas dialog says "No other view draws it." on the fact sheet.
 - **Not blocking:** centring on `?node=`/`?line=` is untested; the scale test's `> 0` bound; `findingTarget` is recomputed per row; a redundant revision subscription.
 - **Harvested:** #198 (store refuses commands in a reader tab); a CLAUDE.md line on reader switches; a review-skill note on reused dialogs (`2f374ee`).
-- **Open:** fix findings 1–3, rebase on `main` (`session-log.md` conflict), then re-review.
+- **Findings 1–3 fixed** (`Validator review fixes…`):
+  - the Delete dialog ends when the role becomes reader, and does not reopen;
+  - a folder finding opens the tree on every navigation;
+  - `DeleteElementDialog` takes `inView`, so the fact sheet says "Drawn in" and "No view draws it."
+- **Each fix was removed in turn, and a test failed.** The render guard `deleting && !readOnly` was dropped as redundant next to the effect, and CLAUDE.md's reader line now names the effect.
+- **Rebased on `main`.** All gates pass (2,032 tests, coverage, build). e2e passed 42/42 on the second run; the first run hit journey 16's known flake, which then passed 5/5.
+- **Open:** findings 4–7 (not blocking); the sponsor merges.
 
 ## 2026-10-23 — M3: the validator (#193), PR open
 
