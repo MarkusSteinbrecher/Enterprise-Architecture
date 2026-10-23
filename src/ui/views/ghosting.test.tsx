@@ -4,7 +4,7 @@ import { toCanonicalJson } from '@/io/canonical-json'
 import { absoluteBounds } from '@/model'
 import type { ModelStore } from '@/store'
 import { stubDownloads } from '@/test/downloads'
-import { LANDSCAPE, click, drag, drawnAt, drop, setup } from '@/test/view-editor'
+import { LANDSCAPE, click, drag, drawnAt, drop, setup, type User } from '@/test/view-editor'
 import { ELEMENT_DRAG_TYPE } from './create'
 import { buildViewSvg } from './export-view'
 import { GHOST_OPACITY } from './ViewDrawing'
@@ -36,6 +36,19 @@ const ghosts = (canvas: Element) =>
   )
 
 afterEach(() => document.documentElement.style.removeProperty('--ghost-opacity'))
+
+/** Select a line by a click on its hit path, and return its panel. */
+async function selectLine(user: User, canvas: Element, id: string) {
+  const hit = canvas.querySelector(`[data-line-hit="${id}"]`)!
+  const [a, b] = hit
+    .getAttribute('d')!
+    .slice(1)
+    .split('L')
+    .map((pair) => pair.split(',').map(Number) as [number, number])
+  await click(user, hit, { x: (a![0] + b![0]) / 2, y: (a![1] + b![1]) / 2 })
+  expect(screen.getByTestId('selection')).toHaveAttribute('data-selected', id)
+  return screen.getByRole('complementary', { name: /^Selected( line|: .* relationship)$/ })
+}
 
 describe('ghosting on the canvas (#194)', () => {
   it('ghosts a Business Actor under Application Cooperation, not an Application Component, and neither under None', async () => {
@@ -118,25 +131,37 @@ describe('a ghosted shape is still a shape (#194)', () => {
     expect(canvas.querySelector('[data-node="o-customer"]')).toBeNull()
   })
 
-  it('names the viewpoint in a ghosted line’s panel, and not in an allowed one’s', async () => {
+  it('names the viewpoint in a ghosted line’s panel, whichever end is refused, and not in an allowed one’s', async () => {
     const { user, canvas } = setup('writer', { prepare: withCooperation })
-    const selectLine = async (id: string) => {
-      const hit = canvas.querySelector(`[data-line-hit="${id}"]`)!
-      const [a, b] = hit
-        .getAttribute('d')!
-        .slice(1)
-        .split('L')
-        .map((pair) => pair.split(',').map(Number) as [number, number])
-      await click(user, hit, { x: (a![0] + b![0]) / 2, y: (a![1] + b![1]) / 2 })
-      expect(screen.getByTestId('selection')).toHaveAttribute('data-selected', id)
-      return screen.getByRole('complementary', { name: /^Selected: .* relationship$/ })
-    }
-    expect(await selectLine('c-hosting-engine')).toHaveTextContent(
-      'Ghosted: the Application Cooperation viewpoint does not allow an element at its end.',
-    )
-    const allowed = await selectLine('c-portal-engine')
+    const note =
+      'Ghosted: the Application Cooperation viewpoint does not allow an element at its end.'
+    // Technology Service → Claims Engine: the source is refused.
+    expect(await selectLine(user, canvas, 'c-hosting-engine')).toHaveTextContent(note)
+    // Claims Engine → a Requirement: the target is.
+    const toRequirement = await selectLine(user, canvas, 'c-engine-req')
+    expect(toRequirement).toHaveTextContent(/^Relationship.*Claims Engine → /)
+    expect(toRequirement).toHaveTextContent(note)
+    const allowed = await selectLine(user, canvas, 'c-portal-engine')
     expect(allowed).toHaveTextContent('Claims Portal → Claims Engine')
     expect(allowed).not.toHaveTextContent(/Ghosted/)
+  })
+
+  it('names no viewpoint in a plain line’s panel, which draws no concept, even from a ghosted shape', async () => {
+    const { user, canvas } = setup('writer', {
+      prepare: (s) => {
+        withCooperation(s)
+        s.updateView(LANDSCAPE, (v) => ({
+          ...v,
+          connections: [
+            ...v.connections,
+            { id: 'l-customer', kind: 'line', source: 'o-customer', target: 'o-portal' },
+          ],
+        }))
+      },
+    })
+    const panel = await selectLine(user, canvas, 'l-customer')
+    expect(panel).toHaveTextContent('Customer → Claims Portal')
+    expect(panel).not.toHaveTextContent(/Ghosted/)
   })
 })
 

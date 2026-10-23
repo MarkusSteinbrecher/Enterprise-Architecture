@@ -36,10 +36,13 @@ export function setup(
   {
     prepare,
     viewId = LANDSCAPE,
+    search = '',
     snapping = false,
   }: {
     prepare?: (store: ModelStore) => void
     viewId?: string
+    /** The query the view opens with, as a link writes it: `?node=`, `?line=`, `?element=`. */
+    search?: string
     /**
      * Keep the viewer's grid and guide snapping (#136), Archi's defaults when
      * nothing is stored. Off unless asked: the gesture tests measure a drag to
@@ -74,7 +77,7 @@ export function setup(
   const navigator: { current?: NavigateFunction } = {}
   render(
     <MemoryRouter
-      initialEntries={[`/view/${viewId}`]}
+      initialEntries={[`/view/${viewId}${search}`]}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
       <ModelStoreContext.Provider value={value}>

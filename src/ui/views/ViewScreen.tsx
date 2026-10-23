@@ -45,7 +45,7 @@ import {
   type Viewport,
 } from './geometry'
 import { buildViewSvg, rasterise, viewFileName } from './export-view'
-import { excludedBy, ghostsIn } from './ghosts'
+import { excludedBy } from './ghosts'
 import {
   HANDLES,
   dropTarget,
@@ -2516,7 +2516,21 @@ function LinePanel({
   const relationship =
     connection.kind === 'relationship' ? store.relationship(connection.relationship) : undefined
   const views = relationship ? store.viewsDrawingRelationship(relationship.id).length : 0
-  const ghosted = ghostsIn(view, (id) => store.element(id)?.type).connections.has(connection.id)
+  /**
+   * The viewpoint that ghosts this line, by `ghostsIn`'s rule: it refuses the
+   * element at either end of a relationship's line (#194). Asked of the two
+   * ends, not of the whole view, and named as the shape's panel names it.
+   */
+  const excluding = (() => {
+    if (connection.kind !== 'relationship') return undefined
+    for (const end of [connection.source, connection.target]) {
+      const node = view.nodes.find((n) => n.id === end)
+      const type = node?.kind === 'element' ? store.element(node.element)?.type : undefined
+      const viewpoint = type && excludedBy(view.viewpoint, type)
+      if (viewpoint) return viewpoint
+    }
+    return undefined
+  })()
   const documentation = relationship?.documentation?.trim()
   return (
     <aside
@@ -2530,9 +2544,9 @@ function LinePanel({
       <p className="view-panel__text">
         {nameOf(connection.source)} → {nameOf(connection.target)}
       </p>
-      {ghosted && (
+      {excluding && (
         <p className="view-panel__text view-panel__ghost">
-          Ghosted: the {view.viewpoint} viewpoint does not allow an element at its end.
+          Ghosted: the {excluding.name} viewpoint does not allow an element at its end.
         </p>
       )}
       {relationship && (
