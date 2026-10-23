@@ -1,5 +1,13 @@
 # Session Log
 
+## 2026-10-23 — Review of #196 (#194); #196 merged
+
+- **Reviewed #196** (`/review-pr 196 high`) and approved it (as a comment). All seven criteria are met. Archi's connection rule (`ViewpointManager.isAllowedDiagramModelComponent`) and its tree rule (`TreeViewpointFilterProvider.getTextColor`) were re-read with `javap` and match the PR. Archi's legend never consults the viewpoint. Five guards were re-probed, and each fails a test.
+- **Fixed finding 1 on the branch:** the tree's greying was asserted only as a class, and emptying the CSS rule left every test green. The ghosting journey now reads the name's computed colour against `--ink3` (`925b861`), and it fails with the rule emptied.
+- **Merged main into `feat/194`** (`3f66294`). #192 had taken Journey 21, so ghosting is **Journey 22**. Full checks and e2e were green, and the sponsor merged #196 (`0305715`).
+- **Harvested:** the review skill's rule that a token from a pure function is not a rendered token now adds that a class name is not the encoding either (`eca592a`).
+- **Open:** finding 2 (a nit: `LinePanel` names the viewpoint from the raw string and re-runs `ghostsIn` for the whole view). The sponsor questions on #196 (token, guide, relationship greying, one opacity, #193's viewpoint hint). #197 now conflicts with main.
+
 ## 2026-10-23 — #192's two review nits
 
 - **#192 merged** (`077c676`) before this session.
