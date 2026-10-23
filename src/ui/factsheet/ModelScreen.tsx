@@ -57,7 +57,7 @@ export function ModelScreen() {
               <div className="sheet__meta">
                 <span className="sheet__type">Model</span>
                 <span className="sheet__meta-divider" aria-hidden="true" />
-                <span className="sheet__type" data-testid="model-counts">
+                <span className="sheet__counts" data-testid="model-counts">
                   {model.elements} elements · {model.relationships} relationships · {model.views}{' '}
                   views
                 </span>

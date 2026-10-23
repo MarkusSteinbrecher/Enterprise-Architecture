@@ -1,5 +1,11 @@
 # Session Log
 
+## 2026-10-23 — #199 merged; main merged into #197
+
+- **Merged #199** (#192's nits, `d4c2467`) on green CI, and deleted `fix/192-model-sheet-nits`.
+- **Merged main into `feat/193-validator`:** the only conflict was this log, and both sides' entries are kept.
+- **Next:** the sponsor merges #197.
+
 ## 2026-10-23 — Review of #197 (validator): changes requested
 
 - **Port verified** with `javap` against all eight checkers and `Validator.validate`, with no divergence. All criteria are met except a repeat click on a folder finding.
@@ -37,6 +43,23 @@
   - The scale test runs the validator on 5,000 elements in about 15–30 ms.
   - e2e journey 23 (`validator.spec.ts`; numbered 21 until #192 and #196 took 21 and 22).
 - **Open:** sponsor questions are listed on the PR.
+
+## 2026-10-23 — Review of #196 (#194); #196 merged
+
+- **Reviewed #196** (`/review-pr 196 high`) and approved it (as a comment). All seven criteria are met. Archi's connection rule (`ViewpointManager.isAllowedDiagramModelComponent`) and its tree rule (`TreeViewpointFilterProvider.getTextColor`) were re-read with `javap` and match the PR. Archi's legend never consults the viewpoint. Five guards were re-probed, and each fails a test.
+- **Fixed finding 1 on the branch:** the tree's greying was asserted only as a class, and emptying the CSS rule left every test green. The ghosting journey now reads the name's computed colour against `--ink3` (`925b861`), and it fails with the rule emptied.
+- **Merged main into `feat/194`** (`3f66294`). #192 had taken Journey 21, so ghosting is **Journey 22**. Full checks and e2e were green, and the sponsor merged #196 (`0305715`).
+- **Harvested:** the review skill's rule that a token from a pure function is not a rendered token now adds that a class name is not the encoding either (`eca592a`).
+- **Open:** finding 2 (a nit: `LinePanel` names the viewpoint from the raw string and re-runs `ghostsIn` for the whole view). The sponsor questions on #196 (token, guide, relationship greying, one opacity, #193's viewpoint hint). #197 now conflicts with main.
+
+## 2026-10-23 — #192's two review nits
+
+- **#192 merged** (`077c676`) before this session.
+- **Fixed the two untracked nits from its review**, on `fix/192-model-sheet-nits`:
+  - A test now renames the model in edit mode, undoes, and checks that the name field shows the undo. Removing `key={model.name}` fails it.
+  - The model sheet's counts are set in mono (`.sheet__counts`). The test reads the rule off `factsheet.css`, since Vitest loads no CSS. Reverting the class or the font fails it.
+- **Local lint note:** `npm run lint` reports 18 errors, all from stale worktrees under `.claude/worktrees/` (`elastic-khayyam-00d501`, `nervous-payne-ae68ca`). The repo's own files lint clean. Clean those worktrees up, or add `.claude/` to ESLint's ignores.
+- **Next:** merge the nits PR; #195; #193 and #194.
 
 ## 2026-10-23 — Review of #192 (#171)
 
