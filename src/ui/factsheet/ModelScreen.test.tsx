@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -41,6 +43,40 @@ describe('the model tree’s model entry (#171)', () => {
     await user.type(name, 'Client engagement')
     await user.tab()
     expect(modelEntry()).toHaveTextContent('Client engagement')
+  })
+})
+
+describe('the model’s name (#171)', () => {
+  it('shows an undo in the field while editing, so the next blur cannot commit the old name (#88)', async () => {
+    renderApp(smallWorkspace(), { route: '/model' })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    const name = () => screen.getByRole('textbox', { name: 'Name' })
+    await user.clear(name())
+    await user.type(name(), 'Client engagement')
+    await user.tab()
+    expect(modelEntry()).toHaveTextContent('Client engagement')
+
+    await user.click(undoButton())
+    expect(modelEntry()).toHaveTextContent('ArchiSurance')
+    expect(name()).toHaveValue('ArchiSurance')
+    // Leaving the field again records nothing: there is nothing left to redo over.
+    await user.click(name())
+    await user.tab()
+    expect(redoButton()).toBeEnabled()
+  })
+})
+
+describe('the model’s counts (#171)', () => {
+  it('are set in mono, as machine-readable content is (UI spec §2.1)', () => {
+    renderApp(smallWorkspace(), { route: '/model' })
+    const counts = screen.getByTestId('model-counts')
+    expect(counts).toHaveTextContent(/^\d+ elements · \d+ relationships · \d+ views$/)
+    expect(counts).toHaveClass('sheet__counts')
+    // Vitest loads no CSS, so the rule is read off the stylesheet.
+    const css = readFileSync(join(process.cwd(), 'src', 'ui', 'factsheet', 'factsheet.css'), 'utf8')
+    const rule = /\.sheet__counts\s*\{([^}]*)\}/.exec(css)?.[1]
+    expect(rule).toMatch(/font:[^;]*var\(--font-mono\)/)
   })
 })
 
