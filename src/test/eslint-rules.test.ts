@@ -140,3 +140,144 @@ describe('the shared modal backdrop (#157)', () => {
     expect(results.some((r) => r.messages.some((m) => m.message.includes('ADR 0004')))).toBe(true)
   })
 })
+
+/** Does `npm run lint` reject this snippet for a regex in toMatchObject's expected value? */
+async function matchesAnything(code: string): Promise<boolean> {
+  const results = await eslint.lintText(code, { filePath: 'src/to-match-object-probe.test.ts' })
+  // A snippet that does not parse reports nothing, which would pass every `false` below.
+  const fatal = results.flatMap((result) => result.messages).find((message) => message.fatal)
+  if (fatal) throw new Error(`probe does not parse: ${fatal.message}`)
+  return results.some((result) =>
+    result.messages.some((message) => message.ruleId === 'archipelago/regex-in-to-match-object'),
+  )
+}
+
+describe('a regex in toMatchObject (#177)', () => {
+  it('is closed at run time where lint cannot see it: a regex there matches no string', () => {
+    // A RegExp has no own enumerable keys, so toMatchObject's subset check alone
+    // passes it against any value. `src/test/setup.ts`'s equality tester refuses
+    // it. A table row is what lint cannot follow, so the trap is set that way.
+    const rows: [RegExp][] = [[/zip64/], [new RegExp('zip64')]]
+    for (const [re] of rows) {
+      expect(() => expect({ message: 'something else' }).toMatchObject({ message: re })).toThrow()
+      expect(() => expect({ message: 'zip64 header' }).toMatchObject({ message: re })).toThrow()
+    }
+    // What a test means by it still passes, and a regex still equals itself.
+    expect({ message: 'zip64 header' }).toMatchObject({ message: expect.stringMatching(/zip64/) })
+    expect({ pattern: /zip64/ }).toEqual({ pattern: /zip64/ })
+    expect(() => expect({ pattern: /zip64/ }).toEqual({ pattern: /zip32/ })).toThrow()
+  })
+
+  it('rejects a regex literal in the expected value', async () => {
+    expect(await matchesAnything('expect(e).toMatchObject({ message: /zip64/ })')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject(/zip64/)')).toBe(true)
+  })
+
+  it('rejects one nested in objects and arrays, or behind a spread or a branch', async () => {
+    expect(await matchesAnything('expect(e).toMatchObject({ a: { b: /x/ } })')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject([{ a: 1 }, { a: /x/ }])')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject({ list: [1, /x/] })')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject({ ...{ a: /x/ } })')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject([, /x/])')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject([...[/x/]])')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject({ a: ok ? /x/ : "y" })')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject({ a: ok ? "y" : /x/ })')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject({ a: /x/ || "y" })')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject({ a: s ?? /x/ })')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject({ a: (s, /x/) })')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject({ a: /x/ satisfies RegExp })')).toBe(true)
+    expect(await matchesAnything('const re = /x/\nexpect(e).toMatchObject({ a: re! })')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject({ a: <RegExp>/x/ })')).toBe(true)
+    expect(await matchesAnything('expect(e).toMatchObject({ a: /x/ as unknown as string })')).toBe(
+      true,
+    )
+  })
+
+  it('rejects the matcher reached another way', async () => {
+    expect(await matchesAnything('expect(e).not.toMatchObject({ a: /x/ })')).toBe(true)
+    expect(await matchesAnything('await expect(p).resolves.toMatchObject({ a: /x/ })')).toBe(true)
+    expect(await matchesAnything("expect(e)['toMatchObject']({ a: /x/ })")).toBe(true)
+  })
+
+  it('rejects a regex built with RegExp, with or without new', async () => {
+    expect(await matchesAnything("expect(e).toMatchObject({ a: new RegExp('x') })")).toBe(true)
+    expect(await matchesAnything("expect(e).toMatchObject({ a: RegExp('x') })")).toBe(true)
+  })
+
+  it('rejects a regex held in a variable, or an expected object that holds one', async () => {
+    expect(await matchesAnything('const re = /x/\nexpect(e).toMatchObject({ a: re })')).toBe(true)
+    expect(
+      await matchesAnything("const re = new RegExp('x')\nexpect(e).toMatchObject({ a: re })"),
+    ).toBe(true)
+    expect(await matchesAnything('const want = { a: /x/ }\nexpect(e).toMatchObject(want)')).toBe(
+      true,
+    )
+    // Assigned later, and passed through a second variable.
+    expect(
+      await matchesAnything('let re\nre = /x/\nconst r2 = re\nexpect(e).toMatchObject({ a: r2 })'),
+    ).toBe(true)
+    // Each assignment that gives the variable the whole right-hand side.
+    for (const op of ['||=', '&&=', '??=']) {
+      expect(
+        await matchesAnything(`let re\nre ${op} /x/\nexpect(e).toMatchObject({ a: re })`),
+      ).toBe(true)
+    }
+    // Declared outside the test that uses it.
+    expect(
+      await matchesAnything(
+        "const re = /x/\nit('t', () => { expect(e).toMatchObject({ a: re }) })",
+      ),
+    ).toBe(true)
+  })
+
+  it('follows variables that refer to each other without looping', async () => {
+    expect(
+      await matchesAnything('let a\nlet b = a\na = b\nexpect(e).toMatchObject({ x: a })'),
+    ).toBe(false)
+  })
+
+  it('does not take a part of the right-hand side for the value', async () => {
+    // A compound assignment computes a new value; a destructuring takes one part.
+    expect(await matchesAnything('let s = "a"\ns += /x/\nexpect(e).toMatchObject({ a: s })')).toBe(
+      false,
+    )
+    expect(
+      await matchesAnything('const { n } = { n: 1, re: /x/ }\nexpect(e).toMatchObject({ a: n })'),
+    ).toBe(false)
+  })
+
+  it('allows expect.stringMatching, and a regex that is only an argument on the way', async () => {
+    expect(
+      await matchesAnything('expect(e).toMatchObject({ message: expect.stringMatching(/zip64/) })'),
+    ).toBe(false)
+    expect(
+      await matchesAnything(
+        'const re = /x/\nexpect(e).toMatchObject({ a: expect.stringMatching(re) })',
+      ),
+    ).toBe(false)
+    // The value here is a string; the regex only builds it.
+    expect(await matchesAnything("expect(e).toMatchObject({ a: s.replace(/a/, 'b') })")).toBe(false)
+    expect(await matchesAnything('expect(e).toMatchObject({ a: 1, b: "x" })')).toBe(false)
+    // The other matchers fail correctly on a regex, so this rule leaves them alone.
+    expect(await matchesAnything('expect(e).toEqual({ a: /x/ })')).toBe(false)
+    expect(await matchesAnything('expect(s).toMatch(/x/)')).toBe(false)
+  })
+
+  // The documented gap: following these needs type information, which the
+  // config does not load. Each is a regex the rule cannot see; if one starts
+  // failing, the rule has learned it, and its comment should say so.
+  it('cannot see a regex reached through a member, a call, an import or a parameter', async () => {
+    expect(
+      await matchesAnything('const p = { zip: /x/ }\nexpect(e).toMatchObject({ a: p.zip })'),
+    ).toBe(false)
+    expect(await matchesAnything('const f = () => /x/\nexpect(e).toMatchObject({ a: f() })')).toBe(
+      false,
+    )
+    expect(
+      await matchesAnything("import { re } from './re'\nexpect(e).toMatchObject({ a: re })"),
+    ).toBe(false)
+    expect(
+      await matchesAnything('export const t = (re: RegExp) => expect(e).toMatchObject({ a: re })'),
+    ).toBe(false)
+  })
+})

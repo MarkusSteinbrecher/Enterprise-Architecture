@@ -26,6 +26,23 @@
 - **Local note:** the main checkout's `node_modules` lacked `@vitest/coverage-v8`. Fixed with `npm ci`. Local `npm run lint` scans the parallel sessions' worktrees again, so use `npx eslint --ignore-pattern '.claude/**' .` until they are removed.
 - **Next:** review and merge this PR, then #198.
 
+## 2026-10-23 — #189: the workspace schema is served at its `$id`, PR open
+
+- **Branch `feat/189-serve-schema`.** Nothing merged.
+- **Copy:** `scripts/emit-schema.ts` runs after `emit-404` in `npm run build` and copies `design/archipelago-workspace.schema.json` to `dist/schema/`, unchanged.
+- **Check:** `scripts/check-published-schema.ts` runs last in the build. It works out the `dist/` path from `SCHEMA_ID` (origin and Pages base stripped, by `src/io/published-schema.ts`) and fails unless the file there is byte-identical to the design file. It refuses an `$id` that is not https on `*.github.io` or not under the base.
+- **Proven:** with the copy step removed, `npm run build` exits 1 with "…is missing, so … would 404". Each guard in `published-schema.ts` was removed in turn, and a test failed each time.
+- **Pages serves `.json` as `application/json; charset=utf-8`:** checked with `curl -I` on `pages.github.com/versions.json` and on rrradio's `discovery.json`, which is deployed with `actions/deploy-pages` as this repo is. GitHub's docs page on Pages MIME types now returns 404, so it is not cited.
+- **Open:** after the merge deploys, `curl -I` the `$id` URL to confirm 200 and the content type.
+
+## 2026-10-23 — #177: lint rejects a regex in toMatchObject, PR open
+
+- **Branch `feat/177-lint-tomatchobject-regex`.** Nothing merged.
+- **Rule `archipelago/regex-in-to-match-object`** (in `eslint.config.js`, a local plugin, because no selector fits): it walks only the positions that become part of `toMatchObject`'s expected value, so `{ a: s.replace(/a/, 'b') }` stays allowed. Catches a regex literal, `new RegExp`/`RegExp()`, nested objects and arrays, spreads, `?:`/`&&`/`||`/`??`, TS wrappers, and a regex or expected object held in a local variable.
+- **Gap, documented in the rule and pinned by a test:** a regex reached through a member, a call, an import, a parameter, a destructuring or a loop. These need type information.
+- **Proven:** every branch of the rule was removed in turn, and a test in `eslint-rules.test.ts` failed each time. A test also shows the trap itself on vitest 2.1.9.
+- **No existing hits** in `src` or `tests`. CLAUDE.md's acceptance-test bullet names the trap and the rule.
+
 ## 2026-10-23 — Review nits on #196 and #197, PR open
 
 - **Branch `fix/196-197-review-nits`.** Nothing merged.
