@@ -3,8 +3,11 @@ import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { ModelStore } from '@/store'
 import { smallWorkspace } from '@/test/fixtures'
-import { renderApp } from '@/test/render'
+import { renderApp, renderScreenAs } from '@/test/render'
+import { TakesFocusAsReader } from '@/test/takes-focus-as-reader'
+import { ModelScreen } from './ModelScreen'
 
 /**
  * The model's own sheet (#171), reached from the model tree's top entry as
@@ -109,5 +112,66 @@ describe('the model’s documentation (#171)', () => {
     await user.tab()
     await user.click(screen.getByRole('button', { name: 'Done' }))
     expect(screen.getByText('No documentation yet.')).toBeInTheDocument()
+  })
+})
+
+describe('as a reader (#195)', () => {
+  const sheet = (role: 'writer' | 'reader') =>
+    renderScreenAs(role, new ModelStore(smallWorkspace()), {
+      route: '/model',
+      path: '/model',
+      screen: <ModelScreen />,
+    })
+  const heading = () => screen.getByRole('heading', { level: 1, name: 'ArchiSurance' })
+
+  it('cannot open edit mode: Edit is disabled', () => {
+    sheet('reader')
+    expect(heading()).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled()
+  })
+
+  it('leaves edit mode when the tab becomes a reader, so no field is left', async () => {
+    const h = sheet('writer')
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Edit' }))
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument()
+    expect(docField()).toBeInTheDocument()
+    h.as('reader')
+    // Present first: the sheet is still there, as a reader's.
+    expect(heading()).toBeInTheDocument()
+    expect(screen.getByText(DOC)).toBeInTheDocument()
+    expect(screen.queryAllByRole('textbox')).toHaveLength(0)
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled()
+  })
+
+  it('writes nothing typed when focus moves in the commit that makes it a reader', async () => {
+    const store = new ModelStore(smallWorkspace())
+    const h = renderScreenAs('writer', store, {
+      route: '/model',
+      path: '/model',
+      screen: (
+        <>
+          <ModelScreen />
+          <TakesFocusAsReader />
+        </>
+      ),
+    })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.click(docField())
+    await user.type(docField(), ' And more.')
+    h.as('reader')
+    expect(screen.getByRole('button', { name: 'Elsewhere' })).toHaveFocus()
+    expect(heading()).toBeInTheDocument()
+    expect(store.documentation).toBe(DOC)
+    expect(store.dirty).toBe(0)
+  })
+
+  it('does not reopen edit mode when the tab can write again', async () => {
+    const h = sheet('writer')
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Edit' }))
+    h.as('reader')
+    h.as('writer')
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled()
+    expect(screen.queryAllByRole('textbox')).toHaveLength(0)
   })
 })
