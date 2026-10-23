@@ -42,6 +42,15 @@
 - **Gap, documented in the rule and pinned by a test:** a regex reached through a member, a call, an import, a parameter, a destructuring or a loop. These need type information.
 - **Proven:** every branch of the rule was removed in turn, and a test in `eslint-rules.test.ts` failed each time. A test also shows the trap itself on vitest 2.1.9.
 - **No existing hits** in `src` or `tests`. CLAUDE.md's acceptance-test bullet names the trap and the rule.
+
+## 2026-10-23 — Review nits on #196 and #197, PR open
+
+- **Branch `fix/196-197-review-nits`.** Nothing merged.
+- **#196, finding 2:** `LinePanel` asks `excludedBy` of the elements at the line's two ends, rather than `ghostsIn` over the whole view, and names the viewpoint as `SelectionPanel` does. The old test only had a refused *source*; new cases cover a refused target (Claims Engine → a Requirement) and a plain line from a ghosted shape.
+- **#197, finding 4:** `opening.test.tsx` opens the landscape with `?node=`, `?line=` and `?element=` on a sized canvas, and reads the subject's centre off the drawing's transform. The view-editor harness takes a `search`.
+- **#197, finding 5:** the drawn-scale test pins each check's count (unused relations 4,997, viewpoint 100, nesting 2,400), derived from the fixture's layout.
+- **#197, findings 6 and 7:** `CheckGroup` memoises its rows' targets on the revision, which the screen passes down, and its own revision subscription is gone. A test counts `findingTarget` calls.
+- **Every guard was removed in turn, and a test failed.**
 - **Open:** the sponsor reviews and merges.
 
 ## 2026-10-23 — #199 and #197 merged; worktrees cleaned up

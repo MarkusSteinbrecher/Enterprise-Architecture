@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { runValidator, type View, type Workspace } from '@/model'
+import { runValidator, type Finding, type View, type Workspace } from '@/model'
 import { syntheticWorkspace } from '@/test/fixtures'
 import { ModelStore } from './model-store'
 
@@ -103,12 +103,31 @@ describe('5,000-element workspace', () => {
 
   it('validates it drawn in views, with half the shapes nested, every check on (#193)', () => {
     const drawn = inViews(workspace)
-    let findings = 0
+    let findings: Finding[] = []
     const elapsed = ms(() => {
-      findings = runValidator(drawn).length
+      findings = runValidator(drawn)
     })
     expect(drawn.views.length).toBe(SIZE / 50)
-    expect(findings).toBeGreaterThan(0)
+    const byCheck = new Map<string, number>()
+    for (const { check, code } of findings)
+      byCheck.set(check ?? code, (byCheck.get(check ?? code) ?? 0) + 1)
+    // The 100 capabilities come first, so views 0 and 1 draw them and the 98
+    // views after draw the 4,900 applications.
+    const capabilities = SIZE / 50
+    const applications = SIZE - capabilities
+    const applicationViews = applications / 50
+    expect(Object.fromEntries(byCheck)).toEqual({
+      // Every realization reaches a capability, which no view of applications
+      // draws; and a flow is drawn except where it crosses from one view of
+      // applications to the next.
+      'unused-relations': applications + (applicationViews - 1),
+      // Application Cooperation refuses every capability.
+      viewpoint: capabilities,
+      // Each view nests the 24 even-indexed shapes after its first in its
+      // first, and no relationship joins them to it: an application flows
+      // only to the next, which is odd-indexed, and realizes only a capability.
+      nesting: (SIZE / 50) * 24,
+    })
     expect(elapsed).toBeLessThan(2_000)
   })
 })

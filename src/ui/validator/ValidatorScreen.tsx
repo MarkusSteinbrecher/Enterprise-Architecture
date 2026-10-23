@@ -151,7 +151,9 @@ export function ValidatorScreen() {
             ) : grouped.length === 0 ? (
               <p className="validator__empty">No problems found.</p>
             ) : (
-              grouped.map((section) => <SeveritySection key={section.severity} section={section} />)
+              grouped.map((section) => (
+                <SeveritySection key={section.severity} section={section} revision={revision} />
+              ))
             )}
           </div>
 
@@ -184,7 +186,7 @@ export function ValidatorScreen() {
   )
 }
 
-function SeveritySection({ section }: { section: Section }) {
+function SeveritySection({ section, revision }: { section: Section; revision: number }) {
   const id = `validator-${section.severity}`
   return (
     <section className="validator__section" aria-labelledby={id}>
@@ -193,17 +195,27 @@ function SeveritySection({ section }: { section: Section }) {
         <span className="validator__count mono">{section.count}</span>
       </h2>
       {section.groups.map((group) => (
-        <CheckGroup key={group.key} group={group} />
+        <CheckGroup key={group.key} group={group} revision={revision} />
       ))}
     </section>
   )
 }
 
-function CheckGroup({ group }: { group: Group }) {
+function CheckGroup({ group, revision }: { group: Group; revision: number }) {
   const store = useModelStore()
-  // Asked of the model as it is now: a subject deleted since the run has nowhere to open.
-  useModelSelector((s) => s.revision)
   const [shown, setShown] = useState(GROUP_PAGE)
+  /**
+   * Where each listed finding opens, asked of the model as it is now: a
+   * subject deleted since the run has nowhere to open. Once per model
+   * revision, not on every render, as a relationship's target searches the
+   * views that draw it.
+   */
+  const targets = useMemo(
+    () => group.findings.slice(0, shown).map((finding) => findingTarget(finding, store)),
+    // `revision` is the model changing inside `store`, which stays the same object.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [group, shown, store, revision],
+  )
   /**
    * "Show more" goes away once pressed, and focus with it: it moves to the
    * first finding it showed, where reading carries on.
@@ -231,7 +243,7 @@ function CheckGroup({ group }: { group: Group }) {
       </h3>
       <ul className="validator__list" ref={list}>
         {group.findings.slice(0, shown).map((finding, index) => {
-          const target = findingTarget(finding, store)
+          const target = targets[index]
           const kind = finding.subjectKind ? SUBJECT_LABELS[finding.subjectKind] : undefined
           const body = (
             <>
