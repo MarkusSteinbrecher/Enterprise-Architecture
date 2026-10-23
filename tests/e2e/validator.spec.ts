@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { test, expect, importWithNothingToReport, startEmpty } from './support'
 
 /**
- * Journey 21 — the validator, in a real browser (#193).
+ * Journey 23 — the validator, in a real browser (#193).
  *
  * Import the claims platform, validate, open an unused element from the list,
  * delete it from its fact sheet, and validate again: the finding is gone and

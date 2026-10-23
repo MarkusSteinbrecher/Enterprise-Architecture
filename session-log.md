@@ -14,7 +14,7 @@
   - a folder finding opens the tree on every navigation;
   - `DeleteElementDialog` takes `inView`, so the fact sheet says "Drawn in" and "No view draws it."
 - **Each fix was removed in turn, and a test failed.** The render guard `deleting && !readOnly` was dropped as redundant next to the effect, and CLAUDE.md's reader line now names the effect.
-- **Rebased on `main`.** All gates pass (2,032 tests, coverage, build). e2e passed 42/42 on the second run; the first run hit journey 16's known flake, which then passed 5/5.
+- **Rebased on `main`, twice:** #196 (#194) merged during the fixes, with two doc-comment conflicts. All gates pass on the final base (2,061 tests, coverage, build), and e2e 43 passed. On the first base, journey 16's known flake failed once and then passed 5/5. The validator journey is renumbered 23.
 - **Open:** findings 4–7 (not blocking); the sponsor merges.
 
 ## 2026-10-23 — M3: the validator (#193), PR open
@@ -35,7 +35,7 @@
   - `checks.test.ts` has a trip fixture and a near miss per check.
   - 44 guard-removal probes, each failing a test.
   - The scale test runs the validator on 5,000 elements in about 15–30 ms.
-  - e2e journey 21 (`validator.spec.ts`).
+  - e2e journey 23 (`validator.spec.ts`; numbered 21 until #192 and #196 took 21 and 22).
 - **Open:** sponsor questions are listed on the PR.
 
 ## 2026-10-23 — Review of #192 (#171)
