@@ -1,5 +1,15 @@
 # Session Log
 
+## 2026-10-23 — Review nits on #196 and #197, PR open
+
+- **Branch `fix/196-197-review-nits`.** Nothing merged.
+- **#196, finding 2:** `LinePanel` asks `excludedBy` of the elements at the line's two ends, rather than `ghostsIn` over the whole view, and names the viewpoint as `SelectionPanel` does. The old test only had a refused *source*; new cases cover a refused target (Claims Engine → a Requirement) and a plain line from a ghosted shape.
+- **#197, finding 4:** `opening.test.tsx` opens the landscape with `?node=`, `?line=` and `?element=` on a sized canvas, and reads the subject's centre off the drawing's transform. The view-editor harness takes a `search`.
+- **#197, finding 5:** the drawn-scale test pins each check's count (unused relations 4,997, viewpoint 100, nesting 2,400), derived from the fixture's layout.
+- **#197, findings 6 and 7:** `CheckGroup` memoises its rows' targets on the revision, which the screen passes down, and its own revision subscription is gone. A test counts `findingTarget` calls.
+- **Every guard was removed in turn, and a test failed.**
+- **Open:** the sponsor reviews and merges.
+
 ## 2026-10-23 — #199 and #197 merged; worktrees cleaned up
 
 - **Merged #199** (#192's nits, `d4c2467`) on green CI, and deleted `fix/192-model-sheet-nits`.
