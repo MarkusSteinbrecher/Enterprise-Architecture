@@ -67,6 +67,10 @@
 - **#197, finding 5:** the drawn-scale test pins each check's count (unused relations 4,997, viewpoint 100, nesting 2,400), derived from the fixture's layout.
 - **#197, findings 6 and 7:** `CheckGroup` memoises its rows' targets on the revision, which the screen passes down, and its own revision subscription is gone. A test counts `findingTarget` calls.
 - **Every guard was removed in turn, and a test failed.**
+- **Review (same session, code layer in a fresh agent), two findings, both fixed:**
+  - the test did not cover the input reset, which is what lets the same file be picked again; it now asserts the value is cleared;
+  - the catch called any throw "could not be read". A failed `arrayBuffer()`/`getFile()` now throws `FileReadError`, and `importFailure` maps it to `file.unreadable` and anything else to `import.failed`. The picker path uses it too.
+- **Each guard removed in turn** (7 probes, including the reset alone), and a test failed each time. CLAUDE.md: two lines sharpened (`2513cc7`).
 - **Open:** the sponsor reviews and merges.
 
 ## 2026-10-23 — #199 and #197 merged; worktrees cleaned up

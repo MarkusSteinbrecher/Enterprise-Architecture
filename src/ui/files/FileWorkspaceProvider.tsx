@@ -8,12 +8,12 @@ import {
   type ReactNode,
 } from 'react'
 import {
+  importFailure,
   loadDemoWorkspace,
   openWorkspaceFile,
   readWorkspaceFile,
   saveWorkspaceToFile,
   supportsFileSystemAccess,
-  unreadableFile,
   type ExportFormat,
   type ImportResult,
   type SaveFileHandle,
@@ -153,7 +153,7 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
       importFile,
       loadDemo,
       shared,
-      reportImportFailure: (error: unknown) => setLastImport(unreadableFile(error)),
+      reportImportFailure: (error: unknown) => setLastImport(importFailure(error)),
       startImport: () => {
         setLastImport(undefined)
         setImporting(true)

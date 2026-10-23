@@ -140,22 +140,26 @@ describe('import dialog', () => {
 
   it('reports a file that cannot be read and gives the buttons back (#52)', async () => {
     const { user, dialog } = await openDialog()
+    const input = within(dialog).getByLabelText<HTMLInputElement>('Choose a file to import')
     // What a sync client does by replacing the file between the pick and the read.
     const gone = new File(['{}'], 'synced.json', { type: 'application/json' })
     const rejection = () =>
       Promise.reject(new DOMException('The file changed.', 'NotReadableError'))
     Object.assign(gone, { arrayBuffer: rejection, text: rejection })
-    await user.upload(within(dialog).getByLabelText('Choose a file to import'), gone)
+    await user.upload(input, gone)
 
     const report = await waitFor(() => document.querySelector('.import-report') as HTMLElement)
     expect(
       within(report).getByText('The file could not be read: The file changed.'),
     ).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Choose a file…' })).toBeEnabled()
+    // Cleared, or picking the same file again once the sync client is done
+    // changes nothing, and a browser fires no `change` for it.
+    expect(input.value).toBe('')
 
-    // And the dialog still imports: the next pick goes through.
+    // And the dialog still imports.
     await user.upload(
-      within(dialog).getByLabelText('Choose a file to import'),
+      input,
       new File([exportExchangeXml(demo())], 'archisurance.xml', { type: 'application/xml' }),
     )
     await waitFor(() =>
