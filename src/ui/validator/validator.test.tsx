@@ -15,6 +15,7 @@ import {
 import { ElementScreen } from '@/ui/factsheet/ElementScreen'
 import { clean, element, line, main, relationship, shape } from '@/test/validator-fixtures'
 import { CHECKS_STORAGE_KEY } from './check-preferences'
+import type * as FindingTarget from './finding-target'
 import { findingTarget } from './finding-target'
 import { GROUP_PAGE } from './ValidatorScreen'
 
@@ -25,7 +26,7 @@ import { GROUP_PAGE } from './ValidatorScreen'
 
 // The real thing, counted: where a finding opens is asked once per model change (#197 review).
 vi.mock('./finding-target', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./finding-target')>()
+  const actual = await importOriginal<typeof FindingTarget>()
   return { ...actual, findingTarget: vi.fn(actual.findingTarget) }
 })
 
