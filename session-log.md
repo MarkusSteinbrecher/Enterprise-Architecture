@@ -18,7 +18,7 @@
 - **M3's first slice is filed:** #193 (validator: Archi 5.10's eight checks, with severities read from the `hammer` jar) and #194 (viewpoints: ghost disallowed concepts in a view and grey them in the tree, as Archi does by default). The two are independent.
 - **#193 and #194 built in two parallel sessions:** #194 → PR #196 (it copies Archi in every detail, with evidence from Archi's code and a `--html.createReport` run), #193 → PR #197 (10 sponsor questions, all answered "take your recommendations" and recorded on the PR; no code change needed). CI is green on #192, #196 and #197.
 - **At wrap-up:** the sponsor's `/review-pr … high` runs on #192, #196 and #197 were still going. Nothing from today is merged except #191.
-- **Branch to delete** (on `main`, checked): `chore/guide-links-owner`.
+- **Branch to delete:** `chore/guide-links-owner`. Its PR #191 is on `main`; its one later commit (a session-log entry) was carried to #192.
 - **Next:** act on the three reviews; merge #192, #196, #197 (merge `main` into each later one and re-verify first, since #196 and #197 both touch the tree and the canvas); then file M3's next slice from #74's "not filed yet" list; #189 is still open.
 
 ## 2026-10-20 (wrap-up) — M2's four issues on `main`
