@@ -1,4 +1,6 @@
 import {
+  NESTING_TYPES,
+  meansNesting,
   validateRelationshipBetween,
   type Element,
   type Relationship,
@@ -40,19 +42,8 @@ import type { ConnectModel } from './connect'
  *   arise.
  */
 
-/**
- * The relationship types a nesting can mean: Archi's `NEW_RELATIONS_TYPES`
- * default (`PreferenceInitializer`: bits 9, 8, 7, 6, 5 and 1), in the order of
- * `ConnectionPreferences.RELATION_KEYMAP`, which is the order Archi lists them.
- */
-export const NESTING_TYPES = [
-  'Composition',
-  'Aggregation',
-  'Access',
-  'Assignment',
-  'Realization',
-  'Specialization',
-] as const satisfies readonly RelationshipType[]
+/** The types a nesting can mean, from `@/model`'s one rule (`meansNesting`), which the validator shares. */
+export { NESTING_TYPES }
 
 export interface NestingOption {
   readonly type: RelationshipType
@@ -90,12 +81,8 @@ export function nestingOptions(
   child: Element,
 ): NestingOption[] | undefined {
   if (child.type === 'Junction') return undefined
-  const offered = new Set<RelationshipType>(NESTING_TYPES)
   for (const r of model.relationshipsOf(parent.id)) {
-    if (r.source === parent.id && r.target === child.id && offered.has(r.type)) return undefined
-    if (r.source === child.id && r.target === parent.id && r.type === 'Specialization') {
-      return undefined
-    }
+    if (meansNesting(r, parent.id, child.id)) return undefined
   }
   const options = NESTING_TYPES.filter(
     (type) => validateRelationshipBetween(model, parent, type, child).valid,

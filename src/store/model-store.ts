@@ -108,6 +108,7 @@ export class ModelStore {
   #history: CommandRecord[] = []
   #dirty = 0
   #version = 0
+  #revision = 0
   #listeners = new Set<StoreListener>()
   #author: string
   #historyLimit: number
@@ -136,6 +137,15 @@ export class ModelStore {
   /** Bumped on every change; the subscription key for React. */
   get version(): number {
     return this.#version
+  }
+
+  /**
+   * Bumped on every change to the model, and not on a save, which changes only
+   * what is unsaved. What the validator (#193) compares to say its last run
+   * is out of date: a save must not make it say so.
+   */
+  get revision(): number {
+    return this.#revision
   }
 
   /** Unsaved-change count behind the header's `LOCAL · n UNSAVED` indicator. */
@@ -844,7 +854,7 @@ export class ModelStore {
   markSaved(): void {
     if (this.#dirty === 0) return
     this.#dirty = 0
-    this.#bump()
+    this.#bump({ model: false })
   }
 
   /**
@@ -856,7 +866,7 @@ export class ModelStore {
     const next = Math.max(0, this.#dirty - count)
     if (next === this.#dirty) return
     this.#dirty = next
-    this.#bump()
+    this.#bump({ model: false })
   }
 
   /**
@@ -984,8 +994,9 @@ export class ModelStore {
     for (const view of this.#views.values()) this.#indexView(view)
   }
 
-  #bump(): void {
+  #bump({ model }: { model: boolean } = { model: true }): void {
     this.#version += 1
+    if (model) this.#revision += 1
     for (const listener of this.#listeners) listener()
   }
 

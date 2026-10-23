@@ -1,14 +1,10 @@
-import { findElementType, isElementType, typeLabel } from './element-types'
+import { isElementType, typeLabel } from './element-types'
 import {
   TYPE_SPECIFIC_ATTRIBUTES,
   isRelationshipType,
   misplacedAttributes,
 } from './relationship-types'
-import {
-  validateRelationshipBetween,
-  type RelationshipContext,
-  type RelationshipRef,
-} from './validity'
+import { checkModel, invalidRelations, runChecks, type CheckId, type CheckModel } from './checks'
 import { LIFECYCLE_PHASES } from './profile'
 import { parseLifecycleDate } from './lifecycle'
 import type { Workspace } from './workspace'
@@ -20,26 +16,71 @@ import { validateViewsAndFolders } from './validate-views'
  * import can report problems without refusing the file.
  */
 
-export type FindingSeverity = 'error' | 'warning'
+/** Archi's three issue types (`ErrorType`, `WarningType`, `AdviceType`), most severe first. */
+export type FindingSeverity = 'error' | 'warning' | 'advice'
+
+export const FINDING_SEVERITIES: readonly FindingSeverity[] = ['error', 'warning', 'advice']
+
+/** A view's shape is a `node`, its line a `connection`; both name their view in `viewId`. */
+export type FindingSubjectKind =
+  'element' | 'relationship' | 'view' | 'node' | 'connection' | 'folder' | 'workspace'
 
 export interface Finding {
   severity: FindingSeverity
   /** Stable machine code, e.g. `relationship.dangling-source`. */
   code: string
   message: string
-  /** Element, relationship, view or folder the finding concerns, when it has one. */
+  /** What the finding concerns, when it concerns one thing. */
   subjectId?: string
-  subjectKind?: 'element' | 'relationship' | 'view' | 'folder' | 'workspace'
+  subjectKind?: FindingSubjectKind
+  /** The view a `node` or `connection` subject is in. */
+  viewId?: string
+  /** The Archi check that found it (#193). Absent on Archipelago's own findings. */
+  check?: CheckId
 }
 
 export interface ValidationReport {
   findings: Finding[]
   errors: Finding[]
   warnings: Finding[]
+  advice: Finding[]
   valid: boolean
 }
 
+/**
+ * Whole-model validation as the importers and the tests ask it: Archipelago's
+ * own findings, and Archi's check for relationships ArchiMate does not allow.
+ */
 export function validate(workspace: Workspace): ValidationReport {
+  const model = checkModel(workspace)
+  return report([...integrityFindings(workspace, model), ...invalidRelations(model)])
+}
+
+/**
+ * The validator screen's run (#193): Archipelago's own findings, which cannot
+ * be switched off, then each of Archi's checks in `enabled`.
+ */
+export function runValidator(workspace: Workspace, enabled?: ReadonlySet<CheckId>): Finding[] {
+  const model = checkModel(workspace)
+  return [...integrityFindings(workspace, model), ...runChecks(workspace, enabled, model)]
+}
+
+function report(findings: Finding[]): ValidationReport {
+  const errors = findings.filter((f) => f.severity === 'error')
+  const warnings = findings.filter((f) => f.severity === 'warning')
+  const advice = findings.filter((f) => f.severity === 'advice')
+  return { findings, errors, warnings, advice, valid: errors.length === 0 }
+}
+
+/**
+ * Archipelago's own checks: what Archi's model cannot hold and ours can (a
+ * dangling reference, a duplicate id, an unparseable date), so no Archi
+ * check finds it.
+ */
+export function integrityFindings(
+  workspace: Workspace,
+  model: CheckModel = checkModel(workspace),
+): Finding[] {
   const findings: Finding[] = []
   const seenElementIds = new Set<string>()
   const seenRelationshipIds = new Set<string>()
@@ -112,8 +153,7 @@ export function validate(workspace: Workspace): ValidationReport {
   }
 
   // Indexed once: endpoint lookup is the hot path at 5,000 elements.
-  const elementsById = new Map(workspace.elements.map((element) => [element.id, element]))
-  const context = relationshipContext(workspace, elementsById)
+  const { elementsById } = model
 
   for (const relationship of workspace.relationships) {
     if (seenRelationshipIds.has(relationship.id)) {
@@ -180,21 +220,6 @@ export function validate(workspace: Workspace): ValidationReport {
         subjectKind: 'relationship',
       })
     }
-
-    if (findElementType(source.type) && findElementType(target.type)) {
-      // As Archi's validator: the matrix, and the junction rules in the model.
-      const result = validateRelationshipBetween(context, source, relationship.type, target)
-      if (!result.valid) {
-        findings.push({
-          severity: 'error',
-          code: 'relationship.invalid',
-          message:
-            `${relationship.type} from "${source.name}" to "${target.name}" is not permitted. ${result.reason ?? ''}`.trim(),
-          subjectId: relationship.id,
-          subjectKind: 'relationship',
-        })
-      }
-    }
   }
 
   validateViewsAndFolders(workspace, findings)
@@ -208,34 +233,5 @@ export function validate(workspace: Workspace): ValidationReport {
     })
   }
 
-  const errors = findings.filter((f) => f.severity === 'error')
-  const warnings = findings.filter((f) => f.severity === 'warning')
-  return { findings, errors, warnings, valid: errors.length === 0 }
-}
-
-/**
- * The model as the junction rules read it: only the elements and relationships
- * whose types are known, since the others are reported on their own.
- */
-function relationshipContext(
-  workspace: Workspace,
-  elementsById: ReadonlyMap<string, Workspace['elements'][number]>,
-): RelationshipContext {
-  const byElement = new Map<string, RelationshipRef[]>()
-  for (const relationship of workspace.relationships) {
-    if (!isRelationshipType(relationship.type)) continue
-    const ends = new Set([relationship.source, relationship.target])
-    for (const end of ends) {
-      const list = byElement.get(end)
-      if (list) list.push(relationship)
-      else byElement.set(end, [relationship])
-    }
-  }
-  return {
-    element: (id) => {
-      const element = elementsById.get(id)
-      return element && isElementType(element.type) ? element : undefined
-    },
-    relationshipsOf: (id) => byElement.get(id) ?? [],
-  }
+  return findings
 }

@@ -328,7 +328,10 @@ export interface View {
   id: string
   name: string
   documentation?: string
-  /** ArchiMate viewpoint name, as the exchange format spells it. What it refuses is drawn ghosted (#194). */
+  /**
+   * ArchiMate viewpoint name, as the exchange format spells it. What it refuses
+   * is drawn ghosted (#194), and the validator reports each such shape (#193).
+   */
   viewpoint?: string
   /** Absent means `manual`, Archi's default, so only `manhattan` is ever stored (#133). */
   router?: Exclude<ViewRouter, 'manual'>

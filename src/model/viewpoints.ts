@@ -19,7 +19,8 @@ import type { Layer } from './layers'
  * Junction and Grouping are allowed in every viewpoint, whatever the list says:
  * Archi's `Viewpoint.isAllowedConcept` adds them to every viewpoint (its
  * `defaultList`, read with `javap`). Elements of other types already in a view
- * are drawn ghosted (#194, `ui/views/ghosts.ts`), never removed.
+ * are drawn ghosted (#194, `ui/views/ghosts.ts`), never removed, and the
+ * validator's viewpoint check (#193) reports each such shape.
  */
 export interface Viewpoint {
   readonly id: string

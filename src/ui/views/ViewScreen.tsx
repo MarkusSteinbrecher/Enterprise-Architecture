@@ -262,15 +262,28 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const [viewport, setViewport] = useState<Viewport | null>(null)
   const requested = params.get('element')
   /**
+   * The shape (`?node=`) or line (`?line=`) to open selected, as the validator
+   * links to them (#193). Read once, as the view opens: an element can be
+   * drawn twice, so `?element=` cannot name one of its shapes.
+   */
+  const [opening] = useState(() => {
+    const node = view.nodes.find((n) => n.id === params.get('node'))
+    const line = view.connections.find((c) => c.id === params.get('line'))
+    return { node, line }
+  })
+  /**
    * What is selected: shapes, or one connection, never both. One state rather
    * than two, so no path can select a shape and leave a line selected beside
    * it (#142 review: the model tree's `?element=` did, and Delete then removed
    * the line).
    */
   const [picked, setPicked] = useState<{ nodes: string[] } | { line: string }>(() => {
-    const node = requested
-      ? view.nodes.find((n) => n.kind === 'element' && n.element === requested)
-      : undefined
+    if (opening.line) return { line: opening.line.id }
+    const node =
+      opening.node ??
+      (requested
+        ? view.nodes.find((n) => n.kind === 'element' && n.element === requested)
+        : undefined)
     return { nodes: node ? [node.id] : [] }
   })
   const selection = 'nodes' in picked ? picked.nodes : NONE
@@ -459,7 +472,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
    * the user, so an edit never makes the view jump; Fit hands it back.
    */
   const auto = useRef(true)
-  const [initialTarget] = useState(() => (requested ? (selection[0] ?? null) : null))
+  const [initialTarget] = useState(
+    () => opening.line?.source ?? opening.node?.id ?? (requested ? (selection[0] ?? null) : null),
+  )
   const steer = useCallback((next: Viewport | ((current: Viewport | null) => Viewport)) => {
     auto.current = false
     setViewport(next)
@@ -504,6 +519,26 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       )
     } else setViewport(fitted)
   }, [size, drawing, bounds, initialTarget])
+
+  /**
+   * `?node=` and `?line=` have done their work once the view is open: the URL
+   * goes back to saying what the tree reads, `?element=` for a shape.
+   */
+  useEffect(() => {
+    if (!params.has('node') && !params.has('line')) return
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        next.delete('node')
+        next.delete('line')
+        if (opening.node?.kind === 'element') next.set('element', opening.node.element)
+        return next
+      },
+      { replace: true },
+    )
+    // Only as the view opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   /**
    * The other direction: the tree selects an element by rewriting `?element=`.
@@ -2097,6 +2132,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         <DeleteElementDialog
           element={deletingElementValue}
           relations={store.relationshipsOf(deletingElementValue.id).length}
+          inView
           elsewhere={store
             .viewsDrawing(deletingElementValue.id)
             .filter((other) => other.id !== view.id)}

@@ -351,6 +351,8 @@ describe('removing and deleting an element (#130)', () => {
     await user.click(screen.getByRole('button', { name: 'Delete from model…' }))
     const dialog = screen.getByRole('dialog', { name: 'Delete element from the model' })
     expect(within(dialog).getByText('Claim data')).toBeInTheDocument()
+    // From the canvas the list is of the views other than this one (#193 review).
+    expect(within(dialog).getByText('Also drawn in')).toBeInTheDocument()
     expect(within(dialog).getByText(/relationships?,/)).toBeInTheDocument()
     expect(dispatch).not.toHaveBeenCalled()
 

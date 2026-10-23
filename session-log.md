@@ -1,5 +1,49 @@
 # Session Log
 
+## 2026-10-23 — #199 merged; main merged into #197
+
+- **Merged #199** (#192's nits, `d4c2467`) on green CI, and deleted `fix/192-model-sheet-nits`.
+- **Merged main into `feat/193-validator`:** the only conflict was this log, and both sides' entries are kept.
+- **Next:** the sponsor merges #197.
+
+## 2026-10-23 — Review of #197 (validator): changes requested
+
+- **Port verified** with `javap` against all eight checkers and `Validator.validate`, with no divergence. All criteria are met except a repeat click on a folder finding.
+- **Three blocking findings, each small:**
+  - the fact sheet's Delete dialog deletes after the role becomes reader;
+  - a second click on a folder finding does not reopen a closed tree;
+  - the reused canvas dialog says "No other view draws it." on the fact sheet.
+- **Not blocking:** centring on `?node=`/`?line=` is untested; the scale test's `> 0` bound; `findingTarget` is recomputed per row; a redundant revision subscription.
+- **Harvested:** #198 (store refuses commands in a reader tab); a CLAUDE.md line on reader switches; a review-skill note on reused dialogs (`2f374ee`).
+- **Findings 1–3 fixed** (`Validator review fixes…`):
+  - the Delete dialog ends when the role becomes reader, and does not reopen;
+  - a folder finding opens the tree on every navigation;
+  - `DeleteElementDialog` takes `inView`, so the fact sheet says "Drawn in" and "No view draws it."
+- **Each fix was removed in turn, and a test failed.** The render guard `deleting && !readOnly` was dropped as redundant next to the effect, and CLAUDE.md's reader line now names the effect.
+- **Rebased on `main`, twice:** #196 (#194) merged during the fixes, with two doc-comment conflicts. All gates pass on the final base (2,061 tests, coverage, build), and e2e 43 passed. On the first base, journey 16's known flake failed once and then passed 5/5. The validator journey is renumbered 23.
+- **Open:** findings 4–7 (not blocking); the sponsor merges.
+
+## 2026-10-23 — M3: the validator (#193), PR open
+
+- **Branch `feat/193-validator`.** Nothing merged.
+- **Model:**
+  - `src/model/checks.ts` ports Archi 5.10's eight `hammer` checkers, read with `javap`.
+  - `Finding` gains `advice`, `node`/`connection` subjects with a `viewId`, and a `check` tag.
+  - `validate()` keeps its contract; `runValidator(workspace, enabled)` is the screen's run.
+  - `src/model/nesting.ts` holds `meansNesting`, which the #131 prompt and the nesting check both call.
+  - The store gains `revision`, which moves on model changes and not on a save, so a save does not mark a run stale.
+- **UI:**
+  - `/validate`, reached from the left nav and the palette's "Validate model".
+  - Each check can be switched off, remembered in localStorage, all on when storage is blocked.
+  - Each finding opens its subject. The canvas reads `?node=` / `?line=`; the tree reveals `?folder=`.
+  - The fact sheet gains "Delete…", needed by the e2e journey.
+- **Evidence:**
+  - `checks.test.ts` has a trip fixture and a near miss per check.
+  - 44 guard-removal probes, each failing a test.
+  - The scale test runs the validator on 5,000 elements in about 15–30 ms.
+  - e2e journey 23 (`validator.spec.ts`; numbered 21 until #192 and #196 took 21 and 22).
+- **Open:** sponsor questions are listed on the PR.
+
 ## 2026-10-23 — Review of #196 (#194); #196 merged
 
 - **Reviewed #196** (`/review-pr 196 high`) and approved it (as a comment). All seven criteria are met. Archi's connection rule (`ViewpointManager.isAllowedDiagramModelComponent`) and its tree rule (`TreeViewpointFilterProvider.getTextColor`) were re-read with `javap` and match the PR. Archi's legend never consults the viewpoint. Five guards were re-probed, and each fails a test.

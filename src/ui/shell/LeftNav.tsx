@@ -72,6 +72,13 @@ export function LeftNav({ treeOpen, treeId, onToggleTree }: LeftNavProps) {
         <span className="nav__glyph" aria-hidden="true" />
         <span className="nav__text">Dependency graph</span>
       </NavLink>
+      <NavLink
+        to="/validate"
+        className={({ isActive }) => `nav__item${isActive ? ' nav__item--active' : ''}`}
+      >
+        <span className="nav__glyph" aria-hidden="true" />
+        <span className="nav__text">Validator</span>
+      </NavLink>
       <button
         type="button"
         className={`nav__item${treeOpen ? ' nav__item--active' : ''}`}

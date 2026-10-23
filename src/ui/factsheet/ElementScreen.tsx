@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   completenessDetail,
@@ -13,6 +13,7 @@ import { newId, useModelSelector, useModelStoreContext } from '@/store'
 import { TypeCodeBadge } from '@/ui/common/TypeCodeBadge'
 import { guideHref } from '@/ui/guide/connections'
 import { CompletenessRing } from '@/ui/common/meters'
+import { DeleteElementDialog } from '@/ui/views/ConnectDialogs'
 import { AddRelationDialog } from './AddRelationDialog'
 import { NeighbourhoodGraph } from './NeighbourhoodGraph'
 import {
@@ -45,6 +46,14 @@ export function ElementScreen() {
   const { store, role } = useModelStoreContext()
   const [editing, setEditing] = useState(false)
   const [addingRelation, setAddingRelation] = useState<RelationshipType | undefined>(undefined)
+  const [deleting, setDeleting] = useState(false)
+  /** What was deleted from this fact sheet, for the notice that replaces it. */
+  const [deleted, setDeleted] = useState<{ name: string; relations: number } | null>(null)
+  // A delete asked as a writer ends when the tab becomes a reader: a reader
+  // gets no dialog, and it does not reopen if the tab can write again.
+  useEffect(() => {
+    if (role === 'reader') setDeleting(false)
+  }, [role])
 
   const at = useMemo(() => Date.now(), [])
 
@@ -84,6 +93,7 @@ export function ElementScreen() {
     [id],
   )
 
+  if (!view && deleted) return <DeletedNotice {...deleted} />
   if (!view) {
     return (
       <div className="sheet">
@@ -264,6 +274,12 @@ export function ElementScreen() {
             >
               Trace in graph
             </button>
+            {!readOnly && (
+              // Archi's Delete in the model tree: the element, its relationships and every drawing of it (#193).
+              <button type="button" className="button" onClick={() => setDeleting(true)}>
+                Delete…
+              </button>
+            )}
             <button
               type="button"
               className="button button--primary"
@@ -428,6 +444,44 @@ export function ElementScreen() {
           }}
         />
       )}
+      {deleting && (
+        <DeleteElementDialog
+          element={element}
+          relations={view.relationships.length}
+          inView={false}
+          elsewhere={store.viewsDrawing(element.id)}
+          onConfirm={() => {
+            setDeleted({
+              name: element.name || typeLabel(element.type),
+              relations: view.relationships.length,
+            })
+            setDeleting(false)
+            store.removeElement(element.id)
+          }}
+          onCancel={() => setDeleting(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+/**
+ * What a fact sheet becomes once its element is deleted. The Delete button
+ * went with the sheet, so focus comes here, as the delete ends, rather than
+ * falling to the page.
+ */
+function DeletedNotice({ name, relations }: { name: string; relations: number }) {
+  const ref = useRef<HTMLParagraphElement>(null)
+  useEffect(() => {
+    ref.current?.focus()
+  }, [])
+  return (
+    <div className="sheet">
+      <p className="sheet__missing" tabIndex={-1} ref={ref} role="status">
+        “{name}” is deleted from the model
+        {relations > 0 ? `, with its ${relations} relationship${relations === 1 ? '' : 's'}` : ''}.
+        Undo brings it back.
+      </p>
     </div>
   )
 }
