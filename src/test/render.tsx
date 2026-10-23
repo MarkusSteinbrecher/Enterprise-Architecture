@@ -10,6 +10,8 @@ import {
   type TabRole,
 } from '@/store'
 import { App } from '@/app/App'
+import { FileWorkspaceProvider } from '@/ui/files/FileWorkspaceProvider'
+import { GlobalShortcutsProvider } from '@/ui/shell/GlobalShortcutsProvider'
 
 const FUTURE = { v7_startTransition: true, v7_relativeSplatPath: true } as const
 
@@ -36,7 +38,8 @@ export function renderApp(
  * re-renders with that role and keeps the store and the screen's own state,
  * as losing a shared folder's lock does (ADR 0010): `role` becomes `'reader'`
  * while `tabRole` stays `'writer'`, so the app shows the screen, not the
- * takeover page.
+ * takeover page. The role reaches the screen through the app's own
+ * `FileWorkspaceProvider`, which also tells the store (#198).
  */
 export function renderScreenAs(
   role: TabRole,
@@ -59,11 +62,15 @@ export function renderScreenAs(
     }
     return (
       <MemoryRouter initialEntries={[route]} future={FUTURE}>
-        <ModelStoreContext.Provider value={value}>
-          <Routes>
-            <Route path={path} element={screen} />
-          </Routes>
-        </ModelStoreContext.Provider>
+        <GlobalShortcutsProvider>
+          <ModelStoreContext.Provider value={value}>
+            <FileWorkspaceProvider>
+              <Routes>
+                <Route path={path} element={screen} />
+              </Routes>
+            </FileWorkspaceProvider>
+          </ModelStoreContext.Provider>
+        </GlobalShortcutsProvider>
       </MemoryRouter>
     )
   }

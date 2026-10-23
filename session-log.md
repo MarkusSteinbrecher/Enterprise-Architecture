@@ -1,5 +1,22 @@
 # Session Log
 
+## 2026-10-23 — Review of #200 (#195) and #204 (#198)
+
+- **Same-session review**, so less independent. The generic code-review layer ran in two fresh agents that saw only the code.
+- **#200, blocking:** a reader could still write through a sheet's Name or Documentation field. Edit mode ended in a passive effect, and a refused save's dialog takes focus in the commit that makes the tab a reader, blurring the still-mounted field into a write. **Fixed** (`77a5ad1`): the fields render on `editingOpen && !readOnly`, and a test with `TakesFocusAsReader` fails without it on each sheet. One add-relation assertion that could not fail was dropped. Checked in a real browser (Playwright): with nothing taking focus, React drops the removal blur, so the half-typed name is discarded, not written.
+- **#204, blocking:** `PanelTextField` saves typing on unmount. As a reader that throws in React's commit, which blanked the whole app. **Fixed** (`5679586`): the typing is dropped. The test also pins the provider's layout effect, since as a passive effect the cleanup wrote as a reader. The test file's claim that every screen has its guard was corrected: the canvas's inline name editor has none.
+- **Not blocking, left to the reader-switch sweep:** focus falls to `<body>` when a mode ends, so a user still typing can trigger single-letter shortcuts; the canvas's inline name editor outlives the switch; the view-editor harness renders without `FileWorkspaceProvider`.
+- **Harvested:** CLAUDE.md's reader line now asks a blur-committing field to render on the role, and forbids writing in an effect cleanup as a reader.
+
+## 2026-10-23 — #198: the store refuses a reader's writes, PR open
+
+- **Branch `feat/198-store-reader-guard`, on top of #200 (#195).** `ModelStore.setWritable`: while it is off, `dispatch`, `undo`, `redo`, `saveReport` and `registerTag` throw `ReadOnlyModelError` before anything changes; `replaceWorkspace` and the save marks stay open. `FileWorkspaceProvider` sets it from the same `editable` the screens read (tab lock and shared-folder lock), in a layout effect, so the guard holds before the first event a new role can see.
+- **Found by it:** the inventory's "+ Element" dialog outlived a switch to reader. Under load a shared-folder writer fences itself, and `shared-model.test.tsx` then clicked Create as a reader; before this change that wrote. Fixed with the same `role` effect as #195.
+- **Tests:** the store refuses every write, undo and redo, and nothing moves; a reader still loads. `reader-guard.test.tsx` renders a screen with no guard of its own through the real providers. Seven guards were removed in turn, and each removal fails a test. `renderScreenAs` now renders through `FileWorkspaceProvider`.
+- **CLAUDE.md:** the reader-switch line now says what the store guard covers, and why a screen still ends its own modes.
+- **Local note:** four parallel sessions pushed the load average to about 89, and 5 s timeouts failed tests in `ModelTree`, `connect` and `shared-model`. All pass once the machine is quiet.
+- **Open:** the canvas (`ViewScreen`) and the other dialogs have not been swept for modes that outlive the switch. With the store guard, they throw rather than write.
+
 ## 2026-10-23 — #195: fact sheets end edit mode for a reader, PR open
 
 - **Branch `feat/195-reader-edit-mode`.** Both fact sheets end what a writer opened when the role becomes reader, with an effect on `role`, as CLAUDE.md's reader-switch line says. On the element sheet that is edit mode, a relation being added (the same gap, found here) and #197's delete. On the model sheet it is edit mode. None of them reopens when the tab can write again.
