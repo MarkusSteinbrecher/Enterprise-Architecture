@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event'
 import { ModelStore } from '@/store'
 import { smallWorkspace } from '@/test/fixtures'
 import { renderApp, renderScreenAs } from '@/test/render'
+import { TakesFocusAsReader } from '@/test/takes-focus-as-reader'
 import { ModelScreen } from './ModelScreen'
 
 /**
@@ -140,6 +141,29 @@ describe('as a reader (#195)', () => {
     expect(screen.getByText(DOC)).toBeInTheDocument()
     expect(screen.queryAllByRole('textbox')).toHaveLength(0)
     expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled()
+  })
+
+  it('writes nothing typed when focus moves in the commit that makes it a reader', async () => {
+    const store = new ModelStore(smallWorkspace())
+    const h = renderScreenAs('writer', store, {
+      route: '/model',
+      path: '/model',
+      screen: (
+        <>
+          <ModelScreen />
+          <TakesFocusAsReader />
+        </>
+      ),
+    })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.click(docField())
+    await user.type(docField(), ' And more.')
+    h.as('reader')
+    expect(screen.getByRole('button', { name: 'Elsewhere' })).toHaveFocus()
+    expect(heading()).toBeInTheDocument()
+    expect(store.documentation).toBe(DOC)
+    expect(store.dirty).toBe(0)
   })
 
   it('does not reopen edit mode when the tab can write again', async () => {
