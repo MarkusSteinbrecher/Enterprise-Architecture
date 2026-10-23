@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { emptyWorkspace, type Element, type Relationship, type Workspace } from '@/model'
 import { exportExchange, importExchangeXml, toCanonicalJson } from '@/io'
 import { drawnWorkspace, smallWorkspace } from '@/test/fixtures'
-import { ModelStore } from './model-store'
+import { ModelStore, ReadOnlyModelError } from './model-store'
 
 /** One property declared `date` — a type `PropertyValue` cannot carry itself. */
 const TYPED_XML = `<?xml version="1.0" encoding="UTF-8"?>
@@ -467,5 +467,86 @@ describe('a workspace survives the store intact', () => {
 
     expect(exportExchange(s.snapshot()).xml).toContain('type="date"')
     expect(toCanonicalJson(s.snapshot())).toContain('"goLive": "date"')
+  })
+})
+
+describe('a reader tab (#198)', () => {
+  /** A store with something to undo and something to redo, then made a reader. */
+  function reader() {
+    const s = store()
+    s.addElement(NEW_APP)
+    s.rename('Renamed')
+    s.undo()
+    expect(s.canUndo).toBe(true)
+    expect(s.canRedo).toBe(true)
+    s.setWritable(false)
+    return s
+  }
+  /** Everything a refused write must leave alone. */
+  function state(s: ModelStore) {
+    return {
+      json: toCanonicalJson(s.snapshot()),
+      dirty: s.dirty,
+      history: s.history.length,
+      version: s.version,
+      revision: s.revision,
+      nextUndo: s.nextUndo?.id,
+      nextRedo: s.nextRedo?.id,
+    }
+  }
+
+  it('refuses every write, and nothing moves: model, dirty counter, history, version', () => {
+    const s = reader()
+    const before = state(s)
+    expect(() => s.addElement({ ...NEW_APP, id: 'app-other' })).toThrow(ReadOnlyModelError)
+    expect(() => s.updateElement('proc-claim', (e) => ({ ...e, name: 'X' }))).toThrow(
+      ReadOnlyModelError,
+    )
+    expect(() => s.removeElement('proc-claim')).toThrow(ReadOnlyModelError)
+    expect(() => s.addRelationship(NEW_REL)).toThrow(ReadOnlyModelError)
+    expect(() => s.rename('Another')).toThrow(ReadOnlyModelError)
+    expect(() => s.document('Changed')).toThrow(ReadOnlyModelError)
+    expect(() =>
+      s.transaction((draft) => draft.addElement({ ...NEW_APP, id: 'app-third' })),
+    ).toThrow(ReadOnlyModelError)
+    expect(() => s.saveReport({ id: 'rep-1', name: 'Apps', kind: 'portfolio' })).toThrow(
+      ReadOnlyModelError,
+    )
+    expect(() => s.registerTag('Brand new')).toThrow(ReadOnlyModelError)
+    expect(state(s)).toEqual(before)
+    expect(s.snapshot().reports).toEqual([])
+    expect(s.snapshot().tagGroups.flatMap((g) => g.tags.map((t) => t.name))).not.toContain(
+      'Brand new',
+    )
+  })
+
+  it('refuses undo and redo too, though each has a step to take', () => {
+    const s = reader()
+    const before = state(s)
+    expect(() => s.undo()).toThrow(ReadOnlyModelError)
+    expect(() => s.redo()).toThrow(ReadOnlyModelError)
+    expect(state(s)).toEqual(before)
+    expect(s.canUndo).toBe(true)
+    expect(s.canRedo).toBe(true)
+  })
+
+  it('still loads a workspace, which is how a reader follows the writer', () => {
+    const s = reader()
+    const next = emptyWorkspace('ws-next', 'The writer’s save')
+    s.replaceWorkspace(next, { markClean: true })
+    expect(s.name).toBe('The writer’s save')
+    expect(s.dirty).toBe(0)
+    expect(s.writable).toBe(false)
+  })
+
+  it('writes again once the tab can', () => {
+    const s = reader()
+    expect(s.writable).toBe(false)
+    s.setWritable(true)
+    expect(s.writable).toBe(true)
+    s.rename('Writable again')
+    expect(s.name).toBe('Writable again')
+    s.undo()
+    expect(s.name).toBe('ArchiSurance')
   })
 })

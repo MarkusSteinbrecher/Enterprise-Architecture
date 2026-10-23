@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { ElementType } from '@/model'
 import { newId, useModelSelector, useModelStoreContext } from '@/store'
@@ -26,6 +26,12 @@ export function InventoryScreen() {
   const location = useLocation()
   const state = useInventoryState()
   const [creating, setCreating] = useState(false)
+  // A new element asked as a writer ends when the tab becomes a reader, and
+  // does not reopen if the tab can write again. Its Create would be refused by
+  // the store (#198), losing the name typed.
+  useEffect(() => {
+    if (role === 'reader') setCreating(false)
+  }, [role])
 
   // Evaluated at today: the inventory is always "now", the graph has the slider.
   const at = useMemo(() => Date.now(), [])

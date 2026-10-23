@@ -3,8 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import claimsXml from '@/io/fixtures/claims-platform.xml?raw'
 import { importExchangeXml, loadDemoWorkspace } from '@/io'
+import { ModelStore } from '@/store'
 import { pressOutside } from '@/test/dialogs'
-import { renderApp } from '@/test/render'
+import { smallWorkspace } from '@/test/fixtures'
+import { renderApp, renderScreenAs } from '@/test/render'
+import { TakesFocusAsReader } from '@/test/takes-focus-as-reader'
+import { ElementScreen } from './ElementScreen'
 
 function demo() {
   return loadDemoWorkspace()
@@ -502,5 +506,92 @@ describe('the fixes from the #27 review', () => {
     // `role="img"` made the subtree presentational while it held up to seven
     // focusable nodes — tab stops announced as nothing.
     expect(within(graph).getAllByRole('button').length).toBeGreaterThan(0)
+  })
+})
+
+describe('as a reader (#195)', () => {
+  /** Assessed and tagged, so edit mode has text fields, selects and removable tags. */
+  const ENGINE = '/element/app-claims'
+  function sheet(role: 'writer' | 'reader') {
+    const store = new ModelStore(smallWorkspace())
+    const h = renderScreenAs(role, store, {
+      route: ENGINE,
+      path: '/element/:id',
+      screen: <ElementScreen />,
+    })
+    return { ...h, store, user: userEvent.setup() }
+  }
+  const heading = () => screen.getByRole('heading', { level: 1, name: 'Claim Handling Engine' })
+  /** Every control edit mode adds, by role. */
+  const fields = () => [
+    ...screen.queryAllByRole('textbox'),
+    ...screen.queryAllByRole('combobox'),
+    ...screen.queryAllByRole('spinbutton'),
+    ...screen.queryAllByRole('button', { name: /^Remove tag / }),
+    ...screen.queryAllByRole('button', { name: '+ Relation' }),
+  ]
+
+  it('cannot open edit mode: Edit is disabled', () => {
+    sheet('reader')
+    expect(heading()).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled()
+  })
+
+  it('leaves edit mode when the tab becomes a reader, so no field is left', async () => {
+    const h = sheet('writer')
+    await h.user.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove tag Core' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Time classification' })).toBeInTheDocument()
+    h.as('reader')
+    // Present first: the sheet is still there, as a reader's.
+    expect(heading()).toBeInTheDocument()
+    expect(screen.getByText('New rules-driven claim assessment platform.')).toBeInTheDocument()
+    expect(fields()).toEqual([])
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled()
+  })
+
+  it('does not reopen edit mode when the tab can write again', async () => {
+    const h = sheet('writer')
+    await h.user.click(screen.getByRole('button', { name: 'Edit' }))
+    h.as('reader')
+    h.as('writer')
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled()
+    expect(fields()).toEqual([])
+  })
+
+  it('closes a relation being added', async () => {
+    const h = sheet('writer')
+    await h.user.click(screen.getByRole('button', { name: 'Edit' }))
+    await h.user.click(screen.getByRole('button', { name: '+ Relation' }))
+    expect(screen.getByRole('dialog', { name: 'Add relation' })).toBeInTheDocument()
+    h.as('reader')
+    expect(heading()).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Add relation' })).toBeNull()
+  })
+
+  it('writes nothing typed when focus moves in the commit that makes it a reader', async () => {
+    const store = new ModelStore(smallWorkspace())
+    const h = renderScreenAs('writer', store, {
+      route: ENGINE,
+      path: '/element/:id',
+      screen: (
+        <>
+          <ElementScreen />
+          <TakesFocusAsReader />
+        </>
+      ),
+    })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    const name = screen.getByRole('textbox', { name: 'Name' })
+    await user.clear(name)
+    await user.type(name, 'Half typed')
+    expect(name).toHaveFocus()
+    h.as('reader')
+    expect(screen.getByRole('button', { name: 'Elsewhere' })).toHaveFocus()
+    expect(heading()).toBeInTheDocument()
+    expect(store.element('app-claims')?.name).toBe('Claim Handling Engine')
+    expect(store.dirty).toBe(0)
   })
 })
