@@ -3,9 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { emptyWorkspace } from '@/model'
 import { loadDemoWorkspace } from '@/io'
+import { ModelStore } from '@/store'
 import { pressOutside } from '@/test/dialogs'
-import { renderApp } from '@/test/render'
-import { syntheticWorkspace } from '@/test/fixtures'
+import { renderApp, renderScreenAs } from '@/test/render'
+import { smallWorkspace, syntheticWorkspace } from '@/test/fixtures'
+import { InventoryScreen } from './InventoryScreen'
 import { VIRTUALISE_ABOVE } from './InventoryTable'
 
 /** The fake viewport the virtualisation tests give the scroll container. */
@@ -405,5 +407,38 @@ describe('creating an element', () => {
     expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled()
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog', { name: 'New element' })).not.toBeInTheDocument()
+  })
+})
+
+describe('a new element, when the tab becomes a reader (#198)', () => {
+  function inventory() {
+    const store = new ModelStore(smallWorkspace())
+    const h = renderScreenAs('writer', store, {
+      route: '/inventory',
+      path: '/inventory',
+      screen: <InventoryScreen />,
+    })
+    return { ...h, store, user: userEvent.setup() }
+  }
+  const dialog = () => screen.queryByRole('dialog', { name: 'New element' })
+
+  it('closes, so a reader is not left with a Create the store refuses', async () => {
+    const h = inventory()
+    await h.user.click(screen.getByRole('button', { name: '+ Element' }))
+    expect(dialog()).toBeInTheDocument()
+    h.as('reader')
+    // Present first: the inventory is still there, as a reader's.
+    expect(screen.getByRole('heading', { name: 'Inventory' })).toBeInTheDocument()
+    expect(dialog()).toBeNull()
+    expect(screen.getByRole('button', { name: '+ Element' })).toBeDisabled()
+  })
+
+  it('does not reopen when the tab can write again', async () => {
+    const h = inventory()
+    await h.user.click(screen.getByRole('button', { name: '+ Element' }))
+    h.as('reader')
+    h.as('writer')
+    expect(screen.getByRole('button', { name: '+ Element' })).toBeEnabled()
+    expect(dialog()).toBeNull()
   })
 })
