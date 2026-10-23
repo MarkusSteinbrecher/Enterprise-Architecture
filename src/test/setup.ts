@@ -1,10 +1,21 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import { afterEach, expect } from 'vitest'
 
 afterEach(() => {
   cleanup()
 })
+
+// A regex expected where the actual value is not a regex never matches (#177).
+// `toMatchObject` compares by subset, and a RegExp has no own enumerable keys,
+// so without this `toMatchObject({ message: /x/ })` passes against any message.
+// Lint rejects the spellings it can see (`archipelago/regex-in-to-match-object`);
+// this fails the rest at run time: an `it.each` row, a loop variable, a
+// parameter, a member. `expect.stringMatching(re)` tests a string against one.
+expect.addEqualityTesters([
+  (actual: unknown, expected: unknown) =>
+    expected instanceof RegExp && !(actual instanceof RegExp) ? false : undefined,
+])
 
 // Node 25 ships a Web Storage global that shadows jsdom's `localStorage` with a
 // non-functional instance (it warns about --localstorage-file). Detect the broken
