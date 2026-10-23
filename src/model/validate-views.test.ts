@@ -27,8 +27,10 @@ describe('validating views and folders (#75)', () => {
     expect(findings[0]).toMatchObject({
       severity: 'error',
       code: 'view.connection-mismatch',
-      subjectId: 'view-landscape',
-      subjectKind: 'view',
+      // The line itself, so the validator can open the view with it selected (#193).
+      subjectId: 'c-serving',
+      subjectKind: 'connection',
+      viewId: 'view-landscape',
     })
   })
 

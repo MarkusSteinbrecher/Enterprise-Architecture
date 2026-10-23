@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { runValidator, type View, type Workspace } from '@/model'
 import { syntheticWorkspace } from '@/test/fixtures'
 import { ModelStore } from './model-store'
 
@@ -89,4 +90,67 @@ describe('5,000-element workspace', () => {
     expect(health).toBeLessThanOrEqual(100)
     expect(elapsed).toBeLessThan(2_000)
   })
+
+  it('validates the whole workspace, every check on (#193)', () => {
+    let findings = 0
+    const elapsed = ms(() => {
+      findings = runValidator(workspace).length
+    })
+    // No view draws anything, so every element and relationship is unused.
+    expect(findings).toBe(workspace.elements.length + workspace.relationships.length)
+    expect(elapsed).toBeLessThan(2_000)
+  })
+
+  it('validates it drawn in views, with half the shapes nested, every check on (#193)', () => {
+    const drawn = inViews(workspace)
+    let findings = 0
+    const elapsed = ms(() => {
+      findings = runValidator(drawn).length
+    })
+    expect(drawn.views.length).toBe(SIZE / 50)
+    expect(findings).toBeGreaterThan(0)
+    expect(elapsed).toBeLessThan(2_000)
+  })
 })
+
+/**
+ * The synthetic workspace drawn 50 elements to a view, each relationship drawn
+ * where both ends are, and every other shape nested in the view's first: the
+ * view-based checks walk every shape and line.
+ */
+function inViews(workspace: Workspace): Workspace {
+  const views: View[] = []
+  const viewOf = new Map<string, number>()
+  workspace.elements.forEach((element, index) => {
+    const at = Math.floor(index / 50)
+    viewOf.set(element.id, at)
+    const view = (views[at] ??= {
+      id: `v-${at}`,
+      name: `View ${at}`,
+      viewpoint: 'Application Cooperation',
+      properties: {},
+      nodes: [],
+      connections: [],
+    })
+    const first = view.nodes[0]?.id
+    view.nodes.push({
+      id: `n-${element.id}`,
+      kind: 'element',
+      element: element.id,
+      bounds: { x: index * 10, y: 0, width: 120, height: 55 },
+      ...(first && index % 2 === 0 ? { parent: first } : {}),
+    })
+  })
+  for (const relationship of workspace.relationships) {
+    const at = viewOf.get(relationship.source)
+    if (at === undefined || at !== viewOf.get(relationship.target)) continue
+    views[at]!.connections.push({
+      id: `c-${relationship.id}`,
+      kind: 'relationship',
+      relationship: relationship.id,
+      source: `n-${relationship.source}`,
+      target: `n-${relationship.target}`,
+    })
+  }
+  return { ...workspace, views }
+}

@@ -8,6 +8,8 @@ import { ModelScreen } from '@/ui/factsheet/ModelScreen'
 import { GraphScreen } from '@/ui/graph/GraphScreen'
 import { ViewScreen } from '@/ui/views/ViewScreen'
 import { GuideScreen } from '@/ui/guide/GuideScreen'
+import { ValidatorScreen } from '@/ui/validator/ValidatorScreen'
+import { ValidatorProvider } from '@/ui/validator/ValidatorProvider'
 import { PaletteProvider } from '@/ui/palette/PaletteProvider'
 import { FileWorkspaceProvider } from '@/ui/files/FileWorkspaceProvider'
 import { GlobalShortcutsProvider } from '@/ui/shell/GlobalShortcutsProvider'
@@ -48,13 +50,15 @@ export function App() {
   return (
     <GlobalShortcutsProvider>
       <FileWorkspaceProvider>
-        <PaletteProvider>
-          <AppRoutes />
-          <ImportDialog />
-          <SaveNotice />
-          <SharedSaveDialog />
-          <DivergedNotice />
-        </PaletteProvider>
+        <ValidatorProvider>
+          <PaletteProvider>
+            <AppRoutes />
+            <ImportDialog />
+            <SaveNotice />
+            <SharedSaveDialog />
+            <DivergedNotice />
+          </PaletteProvider>
+        </ValidatorProvider>
       </FileWorkspaceProvider>
     </GlobalShortcutsProvider>
   )
@@ -95,6 +99,7 @@ function AppRoutes() {
         <Route path="/model" element={<ModelScreen />} />
         <Route path="/graph" element={<GraphScreen />} />
         <Route path="/view/:id" element={<KeyedViewScreen />} />
+        <Route path="/validate" element={<ValidatorScreen />} />
         <Route path="/guide" element={<GuideScreen />} />
         <Route path="/folder" element={<SharedFolderScreen />} />
         <Route path="*" element={<Navigate to="/inventory" replace />} />

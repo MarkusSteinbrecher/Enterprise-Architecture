@@ -6,6 +6,7 @@ import { useCreateView } from '@/ui/views/use-create-view'
 import { useSaveWorkspace } from '@/ui/shell/use-save-workspace'
 import { useUndoRedo } from '@/ui/shell/use-undo-redo'
 import { useGlobalShortcut } from '@/ui/shell/global-shortcuts'
+import { useValidator } from '@/ui/validator/context'
 import { CommandPalette, type PaletteAction } from './CommandPalette'
 import { PaletteContext } from './context'
 
@@ -25,6 +26,7 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
   const { undoLabel, redoLabel, undo, redo } = useUndoRedo()
   const { role } = useModelStoreContext()
   const createView = useCreateView()
+  const { validate } = useValidator()
   const [screenActions, setScreenActions] = useState<PaletteAction[]>([])
 
   const openPalette = useCallback(() => setOpen(true), [])
@@ -34,6 +36,16 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
     () => [
       { id: 'inventory', label: 'Go to inventory', glyph: 'IN', run: () => navigate('/inventory') },
       { id: 'graph', label: 'Go to graph', glyph: 'GR', run: () => navigate('/graph') },
+      // As the validator's own button does: run now, then show the list (#193).
+      {
+        id: 'validate',
+        label: 'Validate model',
+        glyph: 'VA',
+        run: () => {
+          validate()
+          navigate('/validate')
+        },
+      },
       { id: 'theme', label: 'Toggle theme', glyph: 'TH', run: () => void toggleTheme() },
       // Through the one owner, not a second copy of it. This action used to
       // inline the download and the `markSaved()` — the header's bug, reproduced
@@ -50,7 +62,18 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
         : []),
       ...screenActions,
     ],
-    [navigate, saveFile, undoLabel, redoLabel, undo, redo, role, createView, screenActions],
+    [
+      navigate,
+      validate,
+      saveFile,
+      undoLabel,
+      redoLabel,
+      undo,
+      redo,
+      role,
+      createView,
+      screenActions,
+    ],
   )
 
   const goToGraph = useCallback(() => navigate('/graph'), [navigate])

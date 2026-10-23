@@ -84,22 +84,22 @@ function validateView(
     if (node.parent === undefined) continue
     if (!nodesById.has(node.parent)) {
       findings.push(
-        viewFinding(
-          'error',
+        nodeFinding(
           'view.dangling-parent',
           `In view "${view.name}", node "${node.id}" is nested in "${node.parent}", which is not in the view.`,
           view,
+          node.id,
         ),
       )
       continue
     }
     if (inParentCycle(node.id, nodesById)) {
       findings.push(
-        viewFinding(
-          'error',
+        nodeFinding(
           'view.nesting-cycle',
           `In view "${view.name}", node "${node.id}" is nested inside itself.`,
           view,
+          node.id,
         ),
       )
     }
@@ -147,14 +147,14 @@ function validateView(
       continue
     }
     if (!drawsRelationshipEnds(relationship, source, target)) {
-      findings.push(
-        viewFinding(
-          'error',
-          'view.connection-mismatch',
-          `In view "${view.name}", connection "${connection.id}" draws ${relationship.type} relationship "${relationship.id}" between nodes that do not show its source and target elements.`,
-          view,
-        ),
-      )
+      findings.push({
+        severity: 'error',
+        code: 'view.connection-mismatch',
+        message: `In view "${view.name}", connection "${connection.id}" draws ${relationship.type} relationship "${relationship.id}" between nodes that do not show its source and target elements.`,
+        subjectId: connection.id,
+        subjectKind: 'connection',
+        viewId: view.id,
+      })
     }
   }
 }
@@ -302,6 +302,18 @@ function viewFinding(
   view: View,
 ): Finding {
   return { severity, code, message, subjectId: view.id, subjectKind: 'view' }
+}
+
+/** A finding about one node, which the validator opens selected (#193). */
+function nodeFinding(code: string, message: string, view: View, nodeId: string): Finding {
+  return {
+    severity: 'error',
+    code,
+    message,
+    subjectId: nodeId,
+    subjectKind: 'node',
+    viewId: view.id,
+  }
 }
 
 function folderFinding(

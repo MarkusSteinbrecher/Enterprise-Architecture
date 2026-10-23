@@ -302,6 +302,29 @@ describe('save state and history', () => {
     expect(s.dirty).toBe(0)
   })
 
+  it('moves its revision with every change to the model and with no save (#193)', () => {
+    const s = store()
+    const at = () => s.revision
+    const start = at()
+    s.addElement(NEW_APP)
+    expect(at()).toBe(start + 1)
+    s.undo()
+    expect(at()).toBe(start + 2)
+    s.redo()
+    expect(at()).toBe(start + 3)
+    // Each save on its own: a save changes what is unsaved, never the model.
+    const version = s.version
+    s.markSaved()
+    expect(s.version).toBe(version + 1)
+    expect(at()).toBe(start + 3)
+    s.updateElement('app-portal', (element) => ({ ...element, name: 'Portal' }))
+    s.markSavedThrough(1)
+    expect(s.dirty).toBe(0)
+    expect(at()).toBe(start + 4)
+    s.replaceWorkspace(s.snapshot(), { markClean: true })
+    expect(at()).toBe(start + 5)
+  })
+
   it('records a readable history entry per change', () => {
     const s = store()
     s.addElement(NEW_APP)

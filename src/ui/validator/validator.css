@@ -1,0 +1,219 @@
+/*
+ * Validator (#193). A reading page like the guide: tokens only, square corners,
+ * hairline borders (CLAUDE.md). Mono for codes, counts, severities and subject
+ * kinds; Space Grotesk for the messages. Severity is said in words, not in the
+ * lifecycle or TIME ramps, which are the report legend.
+ */
+
+.validator {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--paper);
+}
+
+.validator__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 32px 48px;
+}
+
+.validator :focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.validator__header {
+  border-bottom: 1px solid var(--bd);
+  padding-bottom: 16px;
+}
+
+.validator__title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 8px 0 10px;
+}
+
+.validator__title {
+  font: 600 24px/1.15 var(--font-ui);
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.validator__lead {
+  font: 400 13.5px/1.65 var(--font-ui);
+  color: var(--ink2);
+  max-width: 68ch;
+  margin: 0 0 10px;
+}
+
+.validator__summary {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink2);
+  margin: 0;
+}
+
+.validator__stale {
+  font: 400 12.5px/1.6 var(--font-ui);
+  color: var(--ink);
+  border-left: 2px solid var(--accent);
+  background: var(--surface);
+  padding: 4px 10px;
+  margin: 10px 0 0;
+  max-width: 68ch;
+}
+
+.validator__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 238px;
+  gap: 32px;
+  padding-top: 8px;
+}
+
+.validator__empty {
+  font: 400 13.5px/1.65 var(--font-ui);
+  color: var(--ink2);
+  margin: 18px 0;
+}
+
+/* ── Results ────────────────────────────────────────────────────────────── */
+
+.validator__section {
+  padding: 18px 0 6px;
+  border-bottom: 1px solid var(--bd);
+}
+
+.validator__h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font: 600 18px/1.2 var(--font-ui);
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+
+.validator__group {
+  margin-bottom: 14px;
+}
+
+.validator__h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font: 600 13.5px/1.3 var(--font-ui);
+  margin: 0 0 6px;
+}
+
+.validator__count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink2);
+}
+
+.validator__source {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+
+.validator__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--bd);
+}
+
+.validator__finding {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--bd);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+a.validator__finding:hover {
+  background: var(--panel);
+}
+
+.validator__finding--inert {
+  color: var(--ink2);
+}
+
+.validator__message {
+  font: 400 12.5px/1.5 var(--font-ui);
+}
+
+.validator__meta {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--ink3);
+}
+
+.validator__more {
+  margin-top: 6px;
+}
+
+/* ── Checks ─────────────────────────────────────────────────────────────── */
+
+.validator__checks {
+  padding-top: 18px;
+}
+
+.validator__checks-title {
+  margin: 0 0 10px;
+}
+
+.validator__check-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.validator__check {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font: 400 12.5px/1.4 var(--font-ui);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+/* Square, as every control is (CLAUDE.md): the native box is rounded. */
+.validator__check input {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  padding: 2px;
+  border: 1px solid var(--bd2);
+  background: var(--surface);
+  background-clip: content-box;
+}
+
+/* A filled square inside the box: no shadow, which only the command palette has. */
+.validator__check input:checked {
+  border-color: var(--accent);
+  background-color: var(--accent);
+}
+
+.validator__check-severity {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+
+.validator__check-note {
+  font: 400 11.5px/1.6 var(--font-ui);
+  color: var(--ink3);
+  margin: 10px 0 0;
+}

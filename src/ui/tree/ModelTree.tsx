@@ -73,6 +73,9 @@ interface RouteSubject {
 function useRouteSubject(): RouteSubject {
   const { pathname } = useLocation()
   const [params] = useSearchParams()
+  // A folder has no screen of its own: the validator links to one with `?folder=` (#193).
+  const folder = params.get('folder')
+  if (folder !== null) return { selectedKey: itemKey('folder', folder), viewId: undefined }
   const element = matchPath('/element/:id', pathname)?.params.id
   if (element !== undefined) return { selectedKey: itemKey('element', element), viewId: undefined }
   const view = matchPath('/view/:id', pathname)?.params.id
