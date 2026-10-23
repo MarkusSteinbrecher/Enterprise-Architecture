@@ -51,21 +51,21 @@ export const WORKS = {
 export const ADRS = {
   '0001': {
     title: 'ADR 0001: ArchiMate 3.2 as base metamodel with a portfolio-profile overlay',
-    href: 'https://github.com/MarkusSteinbrecher/Enterprise-Architecture/blob/main/design/decisions/0001-archimate-core-portfolio-overlay.md',
+    href: 'https://github.com/Stein-Clankers/Enterprise-Architecture/blob/main/design/decisions/0001-archimate-core-portfolio-overlay.md',
   },
   '0009': {
     title: "ADR 0009: Relationship validity is Archi's matrix, with Archi's junction rules",
-    href: 'https://github.com/MarkusSteinbrecher/Enterprise-Architecture/blob/main/design/decisions/0009-relationship-validity-from-archi.md',
+    href: 'https://github.com/Stein-Clankers/Enterprise-Architecture/blob/main/design/decisions/0009-relationship-validity-from-archi.md',
   },
   '0011': {
     title: 'ADR 0011: Stay on ArchiMate 3.2 until Archi supports ArchiMate 4',
-    href: 'https://github.com/MarkusSteinbrecher/Enterprise-Architecture/blob/main/design/decisions/0011-stay-on-archimate-3-2.md',
+    href: 'https://github.com/Stein-Clankers/Enterprise-Architecture/blob/main/design/decisions/0011-stay-on-archimate-3-2.md',
   },
 } as const
 
 export const UI_SPEC = {
   title: 'UI spec',
-  href: 'https://github.com/MarkusSteinbrecher/Enterprise-Architecture/blob/main/design/specs/open-ea-repository-ui-spec.md',
+  href: 'https://github.com/Stein-Clankers/Enterprise-Architecture/blob/main/design/specs/open-ea-repository-ui-spec.md',
 } as const
 
 export type Citation =
