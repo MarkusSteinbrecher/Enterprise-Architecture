@@ -7,9 +7,11 @@ import { UI_FAMILY } from '@/ui/notation/text'
  *
  * The canvas already *is* SVG drawn by the notation components (ADR 0006), so
  * the export is the drawing itself, cloned: no second renderer to drift from
- * what is on screen. Two things make the clone stand alone: every `var(--…)`
- * is resolved to the concrete colour of the current theme, and the font
- * variables become concrete families.
+ * what is on screen. Three things make the clone stand alone: every `var(--…)`
+ * is resolved to the concrete colour of the current theme, the font variables
+ * become concrete families, and a ghosted concept's opacity token (#194)
+ * becomes its number. Ghosting is exported, as Archi's image export does: it
+ * paints the same figures the editor does, ghosts included.
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -59,12 +61,31 @@ export function buildViewSvg(drawing: SVGGElement, area: Bounds, title: string):
       const value = el.getAttribute(name)
       if (value?.includes('var(')) el.setAttribute(name, resolve(value))
     }
+    const opacity = el.getAttribute('opacity')
+    if (opacity?.includes('var(')) el.setAttribute('opacity', resolveToken(opacity))
     const family = el.getAttribute('font-family')
     if (family?.includes('var(--font-ui)')) el.setAttribute('font-family', UI_FAMILY)
     else if (family?.includes('var(--font-mono)')) el.setAttribute('font-family', MONO_FAMILY)
   }
   root.append(clone)
   return { svg: new XMLSerializer().serializeToString(root), width, height }
+}
+
+/**
+ * A token that is a bare number (`var(--ghost-opacity)`), as the page defines
+ * it. A standalone file has no tokens, and a value it cannot read draws at full
+ * opacity, so a token the page does not define fails the export rather than
+ * losing the ghosting from the file without a word.
+ */
+function resolveToken(value: string): string {
+  const name = /^var\((--[\w-]+)\)$/.exec(value.trim())?.[1]
+  const resolved = name
+    ? getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+    : ''
+  if (resolved === '' || Number.isNaN(Number(resolved))) {
+    throw new Error(`The export cannot resolve ${value}.`)
+  }
+  return resolved
 }
 
 /** Turns SVG markup into something a canvas can draw; injectable so the failure paths can be tested. */

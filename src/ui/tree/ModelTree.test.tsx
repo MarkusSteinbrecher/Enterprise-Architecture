@@ -1,13 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import claimsXml from '@/io/fixtures/claims-platform.xml?raw'
 import { importExchangeXml } from '@/io'
-import type { Workspace } from '@/model'
+import { viewpointAllows, type Workspace } from '@/model'
 import { drawnWorkspace, syntheticWorkspace } from '@/test/fixtures'
 import { renderApp } from '@/test/render'
 import { TREE_OPEN_STORAGE_KEY } from '@/ui/shell/AppShell'
+import { ELEMENT_DRAG_TYPE } from '@/ui/views/create'
 import { TREE_VIRTUALISE_ABOVE } from './ModelTree'
+import { relationshipLabel } from './tree-model'
 
 function claims(): Workspace {
   const result = importExchangeXml(claimsXml, 'claims-platform.xml')
@@ -413,5 +415,128 @@ describe('at 5,000 elements', () => {
     expect(activeRow()).toHaveAttribute('aria-level', '2')
     expect(within(tree()).getAllByRole('treeitem').length).toBeLessThan(TREE_VIRTUALISE_ABOVE)
     expect(row('Application 42')).toHaveAttribute('aria-selected', 'true')
+  })
+})
+
+describe('greyed by the open view’s viewpoint (#194)', () => {
+  const COOPERATION = 'Application Cooperation'
+
+  /** The claims model with its landscape drawn from Application Cooperation. */
+  function cooperation(): Workspace {
+    const workspace = claims()
+    workspace.views.find((v) => v.id === 'v-landscape')!.viewpoint = COOPERATION
+    return workspace
+  }
+
+  /** Open every group and folder, so every row is drawn. */
+  async function expandAll(user: ReturnType<typeof userEvent.setup>) {
+    for (;;) {
+      const closed = within(tree())
+        .queryAllByRole('treeitem')
+        .find((el) => el.getAttribute('aria-expanded') === 'false')
+      if (!closed) return
+      await user.click(closed.querySelector('.tree__caret')!)
+    }
+  }
+
+  const rowsOf = (kind: string) =>
+    within(tree())
+      .queryAllByRole('treeitem')
+      .filter((el) => el.dataset.kind === kind)
+  const names = (rows: HTMLElement[]) =>
+    rows.map((el) => el.querySelector('.tree__name')!.textContent!).sort()
+  const greyedRows = () =>
+    within(tree())
+      .queryAllByRole('treeitem')
+      .filter((el) => el.classList.contains('tree__row--greyed'))
+
+  it('greys exactly the elements the viewpoint refuses, and the relationships with one at an end', async () => {
+    const workspace = cooperation()
+    renderApp(workspace, { route: '/view/v-landscape' })
+    const user = userEvent.setup()
+    await screen.findByTestId('view-canvas')
+    await expandAll(user)
+    const elements = rowsOf('element')
+    expect(elements).toHaveLength(workspace.elements.length)
+
+    const type = new Map(workspace.elements.map((e) => [e.id, e.type]))
+    const refused = (id: string) => {
+      const t = type.get(id)
+      return t !== undefined && !viewpointAllows(COOPERATION, t)
+    }
+    expect(names(elements.filter((el) => el.classList.contains('tree__row--greyed')))).toEqual(
+      workspace.elements
+        .filter((e) => refused(e.id))
+        .map((e) => e.name)
+        .sort(),
+    )
+    const nameOf = (id: string) => workspace.elements.find((e) => e.id === id)?.name
+    expect(
+      names(rowsOf('relationship').filter((el) => el.classList.contains('tree__row--greyed'))),
+    ).toEqual(
+      workspace.relationships
+        .filter((r) => refused(r.source) || refused(r.target))
+        .map((r) => relationshipLabel(r, nameOf))
+        .sort(),
+    )
+    // And by name: a Business Actor is greyed and says why; an Application Component is not.
+    expect(row('Customer', 'element')).toHaveClass('tree__row--greyed')
+    expect(row('Customer', 'element')).toHaveAttribute(
+      'title',
+      'Not allowed by the Application Cooperation viewpoint',
+    )
+    expect(row('Claims Portal', 'element')).not.toHaveClass('tree__row--greyed')
+    expect(row('Claims landscape', 'view')).not.toHaveClass('tree__row--greyed')
+  })
+
+  it('greys nothing on any other screen, or on a view without a viewpoint', async () => {
+    for (const route of ['/inventory', '/element/ba-customer', '/view/v-data']) {
+      renderApp(cooperation(), { route })
+      const user = userEvent.setup()
+      await expandAll(user)
+      expect(row('Customer', 'element')).toBeInTheDocument()
+      expect(greyedRows()).toEqual([])
+      cleanup()
+    }
+  })
+
+  it('stops greying once the view is left for another screen', async () => {
+    renderApp(cooperation(), { route: '/view/v-landscape' })
+    const user = userEvent.setup()
+    await screen.findByTestId('view-canvas')
+    await expandAll(user)
+    expect(row('Customer', 'element')).toHaveClass('tree__row--greyed')
+    await user.click(screen.getByRole('link', { name: /^Inventory/ }))
+    expect(await screen.findByRole('heading', { name: /Inventory/ })).toBeInTheDocument()
+    expect(row('Customer', 'element')).toBeInTheDocument()
+    expect(greyedRows()).toEqual([])
+  })
+
+  it('re-greys when the open view’s viewpoint changes', async () => {
+    renderApp(claims(), { route: '/view/v-landscape' })
+    const user = userEvent.setup()
+    await screen.findByTestId('view-canvas')
+    await expandAll(user)
+    expect(row('Customer', 'element')).not.toHaveClass('tree__row--greyed')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Viewpoint' }), COOPERATION)
+    expect(row('Customer', 'element')).toHaveClass('tree__row--greyed')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Viewpoint' }), 'None')
+    expect(row('Customer', 'element')).toBeInTheDocument()
+    expect(greyedRows()).toEqual([])
+  })
+
+  it('still drags a greyed row onto the view, as Archi does', async () => {
+    renderApp(cooperation(), { route: '/view/v-landscape' })
+    const user = userEvent.setup()
+    await screen.findByTestId('view-canvas')
+    await expandAll(user)
+    const customer = row('Customer', 'element')
+    expect(customer).toHaveClass('tree__row--greyed')
+    expect(customer).toHaveAttribute('draggable', 'true')
+    const data = new Map<string, string>()
+    fireEvent.dragStart(customer, {
+      dataTransfer: { effectAllowed: '', setData: (k: string, v: string) => data.set(k, v) },
+    })
+    expect(data.get(ELEMENT_DRAG_TYPE)).toBe('ba-customer')
   })
 })

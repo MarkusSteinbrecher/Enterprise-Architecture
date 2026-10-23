@@ -5,6 +5,7 @@ import {
   elementFolderRoot,
   isWithinFolder,
   typeLabel,
+  viewpointAllows,
   type Element,
   type FileableKind,
   type Folder,
@@ -362,4 +363,21 @@ function kindNoun(item: TreeItem): string {
 /** The store's name for a tree item's kind; `undefined` for a group. */
 export function fileableKind(item: TreeItem): FileableKind | undefined {
   return item.kind === 'root' ? undefined : item.kind
+}
+
+/**
+ * Is this row greyed while a view with `viewpoint` is open (#194)? As Archi
+ * 5.10's `TreeViewpointFilterProvider.getTextColor`: an element of a type the
+ * viewpoint refuses, and a relationship with such an element at either end.
+ * An end that is a relationship is allowed, as no viewpoint restricts those.
+ * With no view open there is no viewpoint, and nothing is greyed.
+ */
+export function greyedBy(index: TreeIndex, item: TreeItem, viewpoint: string | undefined): boolean {
+  if (item.kind === 'element') return !viewpointAllows(viewpoint, item.element.type)
+  if (item.kind !== 'relationship') return false
+  const refused = (end: string) => {
+    const other = index.byKey.get(itemKey('element', end))
+    return other?.kind === 'element' && !viewpointAllows(viewpoint, other.element.type)
+  }
+  return refused(item.relationship.source) || refused(item.relationship.target)
 }

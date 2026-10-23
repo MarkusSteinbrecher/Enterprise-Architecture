@@ -23,6 +23,7 @@ import {
   relationshipLabel,
 } from '@/ui/notation'
 import { connectionRoute } from './geometry'
+import { ghostsIn } from './ghosts'
 
 /**
  * A hand-drawn view as SVG (#79), drawn with the #77 notation. Pure: it renders
@@ -40,7 +41,15 @@ import { connectionRoute } from './geometry'
  * Every node `<g>` carries `data-node` (and `data-parent` when it is nested)
  * and every connection `data-connection`: the canvas finds what was clicked
  * through them, and the tests and the export count them.
+ *
+ * What the view's viewpoint does not allow is drawn ghosted (#194, `ghostsIn`):
+ * the whole node or line at `--ghost-opacity`, marked `data-ghost`. It is
+ * worked out here, from the view as drawn, so the canvas and the image export
+ * ghost the same things, as Archi's do.
  */
+
+/** Ghosted concepts are drawn at this opacity, a token (`tokens.css`); the export resolves it. */
+export const GHOST_OPACITY = 'var(--ghost-opacity)'
 
 export interface DrawingLookups {
   element(id: string): { type: ElementType; name: string; junctionKind?: JunctionKind } | undefined
@@ -72,6 +81,7 @@ export const ViewDrawing = memo(function ViewDrawing({
   }
   visit(undefined)
   const hidden = nestedConnections(view)
+  const ghosts = ghostsIn(view, (id) => lookups.element(id)?.type)
   // A legend lists what the view draws (#134), so it is worked out from the view
   // it is drawn in, the preview mid-gesture included.
   const legendLookups = {
@@ -86,6 +96,7 @@ export const ViewDrawing = memo(function ViewDrawing({
             key={node.id}
             node={node}
             at={bounds.get(node.id) ?? node.bounds}
+            ghost={ghosts.nodes.has(node.id)}
             element={node.kind === 'element' ? lookups.element(node.element) : undefined}
             viewName={node.kind === 'view-ref' ? lookups.viewName(node.view) : undefined}
             entries={
@@ -104,6 +115,7 @@ export const ViewDrawing = memo(function ViewDrawing({
               key={connection.id}
               connection={connection}
               points={points}
+              ghost={ghosts.connections.has(connection.id)}
               relationship={
                 connection.kind === 'relationship'
                   ? lookups.relationship(connection.relationship)
@@ -144,12 +156,14 @@ const DrawnNode = memo(
   function DrawnNode({
     node,
     at,
+    ghost,
     element,
     viewName,
     entries,
   }: {
     node: ViewNode
     at: Bounds
+    ghost: boolean
     element: ResolvedElement
     viewName: string | undefined
     entries: readonly LegendEntry[] | undefined
@@ -159,6 +173,8 @@ const DrawnNode = memo(
         data-node={node.id}
         data-kind={node.kind}
         data-parent={node.parent}
+        data-ghost={ghost || undefined}
+        opacity={ghost ? GHOST_OPACITY : undefined}
         transform={`translate(${at.x} ${at.y})`}
       >
         <NodeBody
@@ -175,6 +191,7 @@ const DrawnNode = memo(
   (a, b) =>
     a.node === b.node &&
     sameBox(a.at, b.at) &&
+    a.ghost === b.ghost &&
     a.element === b.element &&
     a.viewName === b.viewName &&
     sameEntries(a.entries, b.entries),
@@ -184,16 +201,19 @@ const DrawnConnection = memo(
   function DrawnConnection({
     connection,
     points,
+    ghost,
     relationship,
   }: {
     connection: ViewConnection
     points: Point[]
+    ghost: boolean
     relationship: ResolvedRelationship
   }) {
+    const ghosted = ghost ? { 'data-ghost': true, opacity: GHOST_OPACITY } : {}
     if (connection.kind === 'relationship' && relationship) {
       const label = relationshipLabel(relationship)
       return (
-        <g data-connection={connection.id}>
+        <g data-connection={connection.id} {...ghosted}>
           <RelationshipLine
             type={relationship.type}
             points={points}
@@ -210,7 +230,7 @@ const DrawnConnection = memo(
     // A plain line, or a relationship that is no longer in the model.
     const missing = connection.kind === 'relationship'
     return (
-      <g data-connection={connection.id} data-missing={missing || undefined}>
+      <g data-connection={connection.id} data-missing={missing || undefined} {...ghosted}>
         <path
           d={`M${points.map((p) => `${p.x},${p.y}`).join('L')}`}
           fill="none"
@@ -224,6 +244,7 @@ const DrawnConnection = memo(
   (a, b) =>
     a.connection === b.connection &&
     a.relationship === b.relationship &&
+    a.ghost === b.ghost &&
     a.points.length === b.points.length &&
     a.points.every((p, i) => p.x === b.points[i]!.x && p.y === b.points[i]!.y),
 )

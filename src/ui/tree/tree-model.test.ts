@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { Folder, Workspace } from '@/model'
-import { drawnWorkspace } from '@/test/fixtures'
+import { drawnWorkspace, smallWorkspace } from '@/test/fixtures'
 import {
   ancestorKeys,
   buildTree,
   destinationOf,
+  greyedBy,
   itemKey,
   moveRefusal,
   visibleRows,
@@ -207,5 +208,54 @@ describe('moving', () => {
     const view = index.byKey.get(itemKey('view', 'view-landscape'))!
     expect(moveRefusal(index, view, { root: 'views' })).toBeUndefined()
     expect(moveRefusal(index, view, { root: 'relations' })).toMatch(/belongs under Views/)
+  })
+})
+
+describe('greyed by the open view’s viewpoint (#194)', () => {
+  /**
+   * The small workspace under Application Cooperation: the engine and its data
+   * object are allowed; the capability, the process and the node are not. Two
+   * associations end on a relationship, which no viewpoint restricts.
+   */
+  function greyed(viewpoint: string | undefined): string[] {
+    const workspace = smallWorkspace()
+    workspace.relationships.push(
+      {
+        id: 'rel-app-to-rel',
+        type: 'Association',
+        source: 'app-claims',
+        target: 'rel-app-obj',
+        properties: {},
+      },
+      {
+        id: 'rel-proc-to-rel',
+        type: 'Association',
+        source: 'proc-claim',
+        target: 'rel-app-obj',
+        properties: {},
+      },
+    )
+    const index = tree(workspace)
+    return [...index.byKey.values()]
+      .filter((item) => greyedBy(index, item, viewpoint))
+      .map((item) => item.id)
+      .sort()
+  }
+
+  it('greys an element the viewpoint refuses, and a relationship with one at its source or its target', () => {
+    const refused = ['cap-claim', 'proc-claim', 'tec-k8s']
+    const withARefusedEnd = [
+      'rel-app-proc', // Engine → process: the target.
+      'rel-k8s-app', // Node → engine: the source.
+      'rel-proc-cap', // Process → capability: both.
+      'rel-proc-to-rel', // Process → a relationship: the source.
+    ]
+    expect(greyed('Application Cooperation')).toEqual([...refused, ...withARefusedEnd].sort())
+  })
+
+  it('greys nothing with no viewpoint, as on every screen but an open view', () => {
+    const index = tree(smallWorkspace())
+    expect(index.byKey.has(itemKey('element', 'proc-claim'))).toBe(true)
+    expect(greyed(undefined)).toEqual([])
   })
 })

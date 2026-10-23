@@ -45,6 +45,7 @@ import {
   type Viewport,
 } from './geometry'
 import { buildViewSvg, rasterise, viewFileName } from './export-view'
+import { excludedBy, ghostsIn } from './ghosts'
 import {
   HANDLES,
   dropTarget,
@@ -308,7 +309,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
     if (refocus) canvas.current?.focus()
   }, [refocus])
   const release = () => setRefocus((n) => n + 1)
-  const [exportError, setExportError] = useState<string | null>(null)
+  const [exportError, setExportError] = useState<{ format: 'SVG' | 'PNG'; reason: string } | null>(
+    null,
+  )
   /** The grid and snapping this viewer chose (#136): a preference, kept in localStorage. */
   const [grid, setGrid] = useState(readGridPreferences)
   const changeGrid = useCallback((change: Partial<GridPreferences>) => {
@@ -1256,11 +1259,16 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   const exportSvg = () => {
     const g = drawingRef.current?.querySelector<SVGGElement>('[data-view-drawing]')
     if (!g || !drawing) return
-    downloadText(
-      viewFileName(view.name, 'svg'),
-      buildViewSvg(g, drawing, view.name).svg,
-      'image/svg+xml',
-    )
+    setExportError(null)
+    try {
+      downloadText(
+        viewFileName(view.name, 'svg'),
+        buildViewSvg(g, drawing, view.name).svg,
+        'image/svg+xml',
+      )
+    } catch (error) {
+      setExportError({ format: 'SVG', reason: reasonOf(error) })
+    }
   }
 
   const exportPng = async () => {
@@ -1273,7 +1281,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
         await rasterise(buildViewSvg(g, drawing, view.name)),
       )
     } catch (error) {
-      setExportError(error instanceof Error ? error.message : String(error))
+      setExportError({ format: 'PNG', reason: reasonOf(error) })
     }
   }
 
@@ -1460,7 +1468,7 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
       )}
       {exportError && (
         <p role="alert" className="view-screen__error">
-          PNG export failed: {exportError}
+          {exportError.format} export failed: {exportError.reason}
         </p>
       )}
 
@@ -2120,6 +2128,9 @@ function ViewCanvas({ view, store }: { view: View; store: ModelStore }) {
   )
 }
 
+/** Why an export failed, in words the alert can show. */
+const reasonOf = (error: unknown) => (error instanceof Error ? error.message : String(error))
+
 /** A handle's index from its data attribute, or `null` for none. */
 function index(value: string | null | undefined): number | null {
   if (value === null || value === undefined) return null
@@ -2190,6 +2201,7 @@ function SelectionPanel({
     const relations = store.outgoing(element.id).length + store.incoming(element.id).length
     const views = store.viewsDrawing(element.id).length
     const documentation = element.documentation?.trim()
+    const excluding = excludedBy(view.viewpoint, element.type)
     return (
       <aside className="view-panel" aria-label={`Selected: ${element.name}`}>
         <div className="view-panel__head">
@@ -2199,6 +2211,12 @@ function SelectionPanel({
             <div className="view-panel__type">{typeLabel(element.type)}</div>
           </div>
         </div>
+        {excluding && (
+          // Why it is drawn ghosted (#194), naming the viewpoint, as the drawing cannot.
+          <p className="view-panel__text view-panel__ghost">
+            Ghosted: the {excluding.name} viewpoint does not allow this element.
+          </p>
+        )}
         <div className="view-panel__stats">
           <div className="view-panel__stat">
             <div className="view-panel__stat-key">Relations</div>
@@ -2462,6 +2480,7 @@ function LinePanel({
   const relationship =
     connection.kind === 'relationship' ? store.relationship(connection.relationship) : undefined
   const views = relationship ? store.viewsDrawingRelationship(relationship.id).length : 0
+  const ghosted = ghostsIn(view, (id) => store.element(id)?.type).connections.has(connection.id)
   const documentation = relationship?.documentation?.trim()
   return (
     <aside
@@ -2475,6 +2494,11 @@ function LinePanel({
       <p className="view-panel__text">
         {nameOf(connection.source)} → {nameOf(connection.target)}
       </p>
+      {ghosted && (
+        <p className="view-panel__text view-panel__ghost">
+          Ghosted: the {view.viewpoint} viewpoint does not allow an element at its end.
+        </p>
+      )}
       {relationship && (
         <div className="view-panel__stats view-panel__stats--one">
           <div className="view-panel__stat">
