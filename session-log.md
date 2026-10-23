@@ -1,5 +1,14 @@
 # Session Log
 
+## 2026-10-23 — #198: the store refuses a reader's writes, PR open
+
+- **Branch `feat/198-store-reader-guard`, on top of #200 (#195).** `ModelStore.setWritable`: while it is off, `dispatch`, `undo`, `redo`, `saveReport` and `registerTag` throw `ReadOnlyModelError` before anything changes; `replaceWorkspace` and the save marks stay open. `FileWorkspaceProvider` sets it from the same `editable` the screens read (tab lock and shared-folder lock), in a layout effect, so the guard holds before the first event a new role can see.
+- **Found by it:** the inventory's "+ Element" dialog outlived a switch to reader. Under load a shared-folder writer fences itself, and `shared-model.test.tsx` then clicked Create as a reader; before this change that wrote. Fixed with the same `role` effect as #195.
+- **Tests:** the store refuses every write, undo and redo, and nothing moves; a reader still loads. `reader-guard.test.tsx` renders a screen with no guard of its own through the real providers. Seven guards were removed in turn, and each removal fails a test. `renderScreenAs` now renders through `FileWorkspaceProvider`.
+- **CLAUDE.md:** the reader-switch line now says what the store guard covers, and why a screen still ends its own modes.
+- **Local note:** four parallel sessions pushed the load average to about 89, and 5 s timeouts failed tests in `ModelTree`, `connect` and `shared-model`. All pass once the machine is quiet.
+- **Open:** the canvas (`ViewScreen`) and the other dialogs have not been swept for modes that outlive the switch. With the store guard, they throw rather than write.
+
 ## 2026-10-23 — #195: fact sheets end edit mode for a reader, PR open
 
 - **Branch `feat/195-reader-edit-mode`.** Both fact sheets end what a writer opened when the role becomes reader, with an effect on `role`, as CLAUDE.md's reader-switch line says. On the element sheet that is edit mode, a relation being added (the same gap, found here) and #197's delete. On the model sheet it is edit mode. None of them reopens when the tab can write again.
