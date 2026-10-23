@@ -49,10 +49,14 @@ export function ElementScreen() {
   const [deleting, setDeleting] = useState(false)
   /** What was deleted from this fact sheet, for the notice that replaces it. */
   const [deleted, setDeleted] = useState<{ name: string; relations: number } | null>(null)
-  // A delete asked as a writer ends when the tab becomes a reader: a reader
-  // gets no dialog, and it does not reopen if the tab can write again.
+  // Whatever was opened as a writer ends when the tab becomes a reader: edit
+  // mode, a relation being added, a delete. A reader gets no field and no
+  // dialog, and none reopens if the tab can write again (#195).
   useEffect(() => {
-    if (role === 'reader') setDeleting(false)
+    if (role !== 'reader') return
+    setEditing(false)
+    setAddingRelation(undefined)
+    setDeleting(false)
   }, [role])
 
   const at = useMemo(() => Date.now(), [])

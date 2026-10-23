@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useModelSelector, useModelStoreContext } from '@/store'
 import { DocumentationSection } from './sections'
 import './factsheet.css'
@@ -15,6 +15,11 @@ import './factsheet.css'
 export function ModelScreen() {
   const { store, role } = useModelStoreContext()
   const [editing, setEditing] = useState(false)
+  // Edit mode opened as a writer ends when the tab becomes a reader, and does
+  // not reopen if the tab can write again (#195).
+  useEffect(() => {
+    if (role === 'reader') setEditing(false)
+  }, [role])
   const model = useModelSelector((s) => ({
     id: s.id,
     name: s.name,

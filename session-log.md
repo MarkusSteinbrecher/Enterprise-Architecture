@@ -1,5 +1,14 @@
 # Session Log
 
+## 2026-10-23 — #195: fact sheets end edit mode for a reader, PR open
+
+- **Branch `feat/195-reader-edit-mode`.** Both fact sheets end what a writer opened when the role becomes reader, with an effect on `role`, as CLAUDE.md's reader-switch line says. On the element sheet that is edit mode, a relation being added (the same gap, found here) and #197's delete. On the model sheet it is edit mode. None of them reopens when the tab can write again.
+- **Tests:** a reader render (Edit is disabled) and a switch to reader mid-edit, for each sheet, plus the add-relation dialog. `renderScreenAs` (`src/test/render.tsx`) renders one screen with the role in the test's hands. Each of the five guards was removed in turn, and each removal fails a test.
+- **Not done:** the "every route as a reader" harness, which the issue lists as "consider". #198 makes the store the one guard, and that covers the next screen better than a sweep of controls.
+- **Running in parallel**, each in its own worktree: #52, #189, #177 and the non-blocking #196/#197 findings.
+- **Local note:** the main checkout's `node_modules` lacked `@vitest/coverage-v8`. Fixed with `npm ci`. Local `npm run lint` scans the parallel sessions' worktrees again, so use `npx eslint --ignore-pattern '.claude/**' .` until they are removed.
+- **Next:** review and merge this PR, then #198.
+
 ## 2026-10-23 — #199 and #197 merged; worktrees cleaned up
 
 - **Merged #199** (#192's nits, `d4c2467`) on green CI, and deleted `fix/192-model-sheet-nits`.
