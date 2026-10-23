@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/emit-404.ts",
+    "build": "tsc -b && vite build && node scripts/emit-404.ts && node scripts/emit-schema.ts && vite-node scripts/check-published-schema.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

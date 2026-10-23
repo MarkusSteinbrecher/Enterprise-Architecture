@@ -44,15 +44,24 @@ export function ElementScreen() {
   const navigate = useNavigate()
   const location = useLocation()
   const { store, role } = useModelStoreContext()
-  const [editing, setEditing] = useState(false)
+  const readOnly = role === 'reader'
+  const [editingOpen, setEditing] = useState(false)
+  // A reader gets no field in the very commit the role changes: anything that
+  // takes focus in that commit (a refused save's dialog) would otherwise blur a
+  // field still on screen, and its blur commits what was typed (#195 review).
+  const editing = editingOpen && !readOnly
   const [addingRelation, setAddingRelation] = useState<RelationshipType | undefined>(undefined)
   const [deleting, setDeleting] = useState(false)
   /** What was deleted from this fact sheet, for the notice that replaces it. */
   const [deleted, setDeleted] = useState<{ name: string; relations: number } | null>(null)
-  // A delete asked as a writer ends when the tab becomes a reader: a reader
-  // gets no dialog, and it does not reopen if the tab can write again.
+  // Whatever was opened as a writer ends when the tab becomes a reader, and
+  // none of it reopens if the tab can write again: edit mode, a relation being
+  // added, a delete (#195).
   useEffect(() => {
-    if (role === 'reader') setDeleting(false)
+    if (role !== 'reader') return
+    setEditing(false)
+    setAddingRelation(undefined)
+    setDeleting(false)
   }, [role])
 
   const at = useMemo(() => Date.now(), [])
@@ -107,7 +116,6 @@ export function ElementScreen() {
 
   const { element, entries, completeness, history } = view
   const phase = deriveLifecyclePhase(element.profile?.lifecycle, at)
-  const readOnly = role === 'reader'
   // The breadcrumb returns to the inventory with the filters the user arrived with.
   const backToInventory = `/inventory${(location.state as { fromInventory?: string } | null)?.fromInventory ?? ''}`
 

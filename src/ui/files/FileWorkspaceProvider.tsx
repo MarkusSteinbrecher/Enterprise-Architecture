@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import {
   loadDemoWorkspace,
   openWorkspaceFile,
@@ -170,6 +178,10 @@ export function FileWorkspaceProvider({ children }: { children: ReactNode }) {
   // Within, a model in a shared folder is read-only unless this tab holds its
   // lock (ADR 0010). The tab's own lock still decides the takeover screen.
   const editable = role === 'writer' && (!shared.shared || shared.shared.phase === 'writer')
+  // The store holds the same line as the screens, so a screen that misses its
+  // own guard still cannot write (#198). A layout effect, so it holds before
+  // the first event the new role can see.
+  useLayoutEffect(() => store.setWritable(editable), [store, editable])
   const storeContext = useMemo(
     () => ({ ...outer, role: editable ? ('writer' as const) : ('reader' as const) }),
     [outer, editable],

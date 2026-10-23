@@ -57,6 +57,10 @@ import { newId } from './ids'
  *    undo/redo and the dirty counter cannot drift from what the user did.
  * 3. **Subscribers see a version, not a diff.** The store is mutable by design;
  *    React reads through `useModelSelector`, which recomputes on version change.
+ *
+ * And one guard: **a reader tab writes nothing** (#198). While `writable` is
+ * false, every write throws before it changes anything, so a screen that misses
+ * its own reader guard cannot write.
  */
 
 export interface StoreListener {
@@ -86,6 +90,18 @@ export interface ModelStoreOptions {
 
 const DEFAULT_HISTORY_LIMIT = 200
 
+/**
+ * A write to a store whose tab is a reader (#198). It throws rather than doing
+ * nothing so a missed reader guard in the UI shows up, in a test or the console,
+ * instead of looking like an edit that took.
+ */
+export class ReadOnlyModelError extends Error {
+  constructor(what: string) {
+    super(`This tab is a reader, so the model cannot change (${what})`)
+    this.name = 'ReadOnlyModelError'
+  }
+}
+
 export class ModelStore {
   // Assigned by `#adopt` from the constructor; the initialisers are here only
   // because TypeScript cannot see a definite assignment through a method call.
@@ -110,6 +126,7 @@ export class ModelStore {
   #version = 0
   #revision = 0
   #listeners = new Set<StoreListener>()
+  #writable = true
   #author: string
   #historyLimit: number
 
@@ -151,6 +168,11 @@ export class ModelStore {
   /** Unsaved-change count behind the header's `LOCAL · n UNSAVED` indicator. */
   get dirty(): number {
     return this.#dirty
+  }
+
+  /** False while the tab is a reader: every write throws (#198). */
+  get writable(): boolean {
+    return this.#writable
   }
 
   get elementCount(): number {
@@ -387,6 +409,7 @@ export class ModelStore {
    * This is the only write path into the model.
    */
   dispatch(command: Command): CommandRecord {
+    this.#assertWritable(command.kind)
     this.#applyCommand(command)
     const record: CommandRecord = {
       id: newId('cmd'),
@@ -831,6 +854,7 @@ export class ModelStore {
   }
 
   undo(): CommandRecord | undefined {
+    this.#assertWritable('undo')
     const record = this.#undo.pop()
     if (!record) return undefined
     this.#applyCommand(invert(record.command))
@@ -841,6 +865,7 @@ export class ModelStore {
   }
 
   redo(): CommandRecord | undefined {
+    this.#assertWritable('redo')
     const record = this.#redo.pop()
     if (!record) return undefined
     this.#applyCommand(record.command)
@@ -848,6 +873,16 @@ export class ModelStore {
     this.#dirty += 1
     this.#bump()
     return record
+  }
+
+  /**
+   * Whether this tab may change the model. The file provider sets it from the
+   * same role the screens read: the tab's writer lock and, in a shared folder,
+   * the folder's lock (ADR 0010). Loading a workspace (`replaceWorkspace`) stays
+   * open to a reader, which is how it follows the writer's saves.
+   */
+  setWritable(writable: boolean): void {
+    this.#writable = writable
   }
 
   /** Called after a successful file save: the model and the file now agree. */
@@ -904,6 +939,7 @@ export class ModelStore {
    * filtered by it, each chip painted in the neutral fallback.
    */
   registerTag(tag: string): boolean {
+    this.#assertWritable('register-tag')
     const name = tag.trim()
     if (!name) return false
     if (this.#tagGroups.some((group) => group.tags.some((t) => t.name === name))) return false
@@ -918,6 +954,7 @@ export class ModelStore {
   }
 
   saveReport(report: ReportDefinition): void {
+    this.#assertWritable('save-report')
     const index = this.#reports.findIndex((r) => r.id === report.id)
     if (index >= 0) this.#reports[index] = report
     else this.#reports.push(report)
@@ -926,6 +963,10 @@ export class ModelStore {
   }
 
   // ── Internals ──────────────────────────────────────────────────────────────
+
+  #assertWritable(what: string): void {
+    if (!this.#writable) throw new ReadOnlyModelError(what)
+  }
 
   #resolve(ids: Set<string> | undefined): Relationship[] {
     if (!ids || ids.size === 0) return []
