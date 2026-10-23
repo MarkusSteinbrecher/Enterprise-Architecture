@@ -9,7 +9,7 @@ import {
   workspaceFileName,
   type ExportFormat,
 } from './file-download'
-import { problem, type ImportResult } from './problems'
+import { failed, problem, type ImportResult } from './problems'
 
 /**
  * Files are the source of truth (concept §5.2). This module is how a model
@@ -130,20 +130,21 @@ export async function openWorkspaceFile(): Promise<OpenedFile | undefined> {
     return { result: await readWorkspaceFile(file), handle, fileName: file.name }
   } catch (error) {
     if (isAbort(error)) return undefined
-    return {
-      result: {
-        ok: false,
-        problems: [
-          problem(
-            'error',
-            'file.unreadable',
-            `The file could not be read: ${error instanceof Error ? error.message : String(error)}`,
-          ),
-        ],
-      },
-      fileName: '',
-    }
+    return { result: unreadableFile(error), fileName: '' }
   }
+}
+
+/**
+ * What a read that threw reports. Reading a file the user picked can still fail:
+ * a sync client may have replaced or removed it between the pick and the read
+ * (#52).
+ */
+export function unreadableFile(error: unknown): ImportResult {
+  // A failed `file.arrayBuffer()` rejects with a `DOMException`, which is not an
+  // `Error` everywhere (jsdom's is not).
+  const message =
+    error instanceof Error || error instanceof DOMException ? error.message : String(error)
+  return failed([problem('error', 'file.unreadable', `The file could not be read: ${message}`)])
 }
 
 /**

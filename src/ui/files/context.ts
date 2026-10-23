@@ -15,6 +15,8 @@ export interface FileWorkspaceContextValue {
   save: (format?: ExportFormat, options?: { reuseHandle?: boolean }) => Promise<SaveOutcome>
   openFile: () => Promise<void>
   importFile: (file: File) => Promise<void>
+  /** Show an import that threw in the import report, as a `file.unreadable` problem. */
+  reportImportFailure: (error: unknown) => void
   loadDemo: () => void
   startImport: () => void
   cancelImport: () => void
