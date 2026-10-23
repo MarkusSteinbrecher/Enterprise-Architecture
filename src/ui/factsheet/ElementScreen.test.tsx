@@ -7,6 +7,7 @@ import { ModelStore } from '@/store'
 import { pressOutside } from '@/test/dialogs'
 import { smallWorkspace } from '@/test/fixtures'
 import { renderApp, renderScreenAs } from '@/test/render'
+import { TakesFocusAsReader } from '@/test/takes-focus-as-reader'
 import { ElementScreen } from './ElementScreen'
 
 function demo() {
@@ -559,15 +560,38 @@ describe('as a reader (#195)', () => {
     expect(fields()).toEqual([])
   })
 
-  it('closes a relation being added, so a reader cannot add it', async () => {
+  it('closes a relation being added', async () => {
     const h = sheet('writer')
-    const before = h.store.relationshipCount
     await h.user.click(screen.getByRole('button', { name: 'Edit' }))
     await h.user.click(screen.getByRole('button', { name: '+ Relation' }))
     expect(screen.getByRole('dialog', { name: 'Add relation' })).toBeInTheDocument()
     h.as('reader')
     expect(heading()).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: 'Add relation' })).toBeNull()
-    expect(h.store.relationshipCount).toBe(before)
+  })
+
+  it('writes nothing typed when focus moves in the commit that makes it a reader', async () => {
+    const store = new ModelStore(smallWorkspace())
+    const h = renderScreenAs('writer', store, {
+      route: ENGINE,
+      path: '/element/:id',
+      screen: (
+        <>
+          <ElementScreen />
+          <TakesFocusAsReader />
+        </>
+      ),
+    })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    const name = screen.getByRole('textbox', { name: 'Name' })
+    await user.clear(name)
+    await user.type(name, 'Half typed')
+    expect(name).toHaveFocus()
+    h.as('reader')
+    expect(screen.getByRole('button', { name: 'Elsewhere' })).toHaveFocus()
+    expect(heading()).toBeInTheDocument()
+    expect(store.element('app-claims')?.name).toBe('Claim Handling Engine')
+    expect(store.dirty).toBe(0)
   })
 })

@@ -14,12 +14,15 @@ import './factsheet.css'
  */
 export function ModelScreen() {
   const { store, role } = useModelStoreContext()
-  const [editing, setEditing] = useState(false)
-  // Edit mode opened as a writer ends when the tab becomes a reader, and does
-  // not reopen if the tab can write again (#195).
+  const readOnly = role === 'reader'
+  const [editingOpen, setEditing] = useState(false)
+  // A reader gets no field in the very commit the role changes, so nothing that
+  // takes focus then can blur one into a write; and edit mode opened as a
+  // writer ends, so it does not reopen if the tab can write again (#195).
+  const editing = editingOpen && !readOnly
   useEffect(() => {
-    if (role === 'reader') setEditing(false)
-  }, [role])
+    if (readOnly) setEditing(false)
+  }, [readOnly])
   const model = useModelSelector((s) => ({
     id: s.id,
     name: s.name,
@@ -28,7 +31,6 @@ export function ModelScreen() {
     relationships: s.relationshipCount,
     views: s.viewCount,
   }))
-  const readOnly = role === 'reader'
 
   return (
     <div className="sheet">
