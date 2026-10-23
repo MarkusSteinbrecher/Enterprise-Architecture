@@ -15,12 +15,20 @@ import {
 import { ElementScreen } from '@/ui/factsheet/ElementScreen'
 import { clean, element, line, main, relationship, shape } from '@/test/validator-fixtures'
 import { CHECKS_STORAGE_KEY } from './check-preferences'
+import type * as FindingTarget from './finding-target'
+import { findingTarget } from './finding-target'
 import { GROUP_PAGE } from './ValidatorScreen'
 
 /**
  * The validator screen (#193), in the whole app: Validate, the list, each
  * finding opening its subject, the stale mark, and the checks switched off.
  */
+
+// The real thing, counted: where a finding opens is asked once per model change (#197 review).
+vi.mock('./finding-target', async (importOriginal) => {
+  const actual = await importOriginal<typeof FindingTarget>()
+  return { ...actual, findingTarget: vi.fn(actual.findingTarget) }
+})
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -277,6 +285,22 @@ describe('the validator screen (#193)', () => {
       expect(screen.getByText('"Claim form" is not used in a view.')).toBeInTheDocument()
       expect(screen.queryByRole('link', { name: /"Claim form" is not used/ })).toBeNull()
       expect(screen.getByText(/no longer in the model/)).toBeInTheDocument()
+    })
+
+    it('asks where its findings open once per model change, not on every render', async () => {
+      const { user, store } = renderAt(everyKind())
+      await user.click(await screen.findByRole('button', { name: 'Validate' }))
+      const rows = document.querySelectorAll('.validator__finding').length
+      expect(rows).toBe(7)
+      vi.mocked(findingTarget).mockClear()
+      // Switching a check re-renders the list and leaves the model as it is.
+      await user.click(checkbox('Unused elements'))
+      expect(screen.getByRole('status')).toHaveTextContent('The checks have changed since this run')
+      expect(findingTarget).not.toHaveBeenCalled()
+      // A change to the model asks again, once for each row listed.
+      act(() => store().updateElement('lonely', (e) => ({ ...e, name: 'Claim form v2' })))
+      expect(screen.getByRole('status')).toHaveTextContent('The model has changed since this run')
+      expect(findingTarget).toHaveBeenCalledTimes(rows)
     })
 
     it('of another workspace is never shown', async () => {

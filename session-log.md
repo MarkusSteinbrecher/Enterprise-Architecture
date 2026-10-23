@@ -7,6 +7,15 @@
 - **`unreadableFile(error)`** in `src/io/file-system.ts` builds that problem, and `openWorkspaceFile` now uses it too. It reads `.message` off a `DOMException`, which is not an `Error` in jsdom.
 - **Test:** `files.test.tsx` uploads a `File` whose `arrayBuffer()` and `text()` reject (the reader now calls `arrayBuffer()`, not the `text()` the issue names). Removing the finally fails it (button disabled). Removing the catch fails it (no report, unhandled rejection). So does the original code.
 
+## 2026-10-23 — Reviewed and merged #201, #202, #203; #200 and #204 merged
+
+- **#200 (#195) and #204 (#198) merged** after their review fixes. Branches deleted.
+- **#201 (#189), schema served at its `$id`:** the criteria are met. Fixed on the branch: a test now runs the build's check script, since deleting its `process.exit(1)` had left everything green. Not blocking: the check accepts any `*.github.io` owner.
+- **#202 (#177), regex in `toMatchObject`:** the rule is sound, but CLAUDE.md said "lint rejects it" while an `it.each` row or a loop variable passes lint and still matches anything. Fixed on the branch: an equality tester in `src/test/setup.ts` fails the trap at run time wherever lint cannot see it, and CLAUDE.md and the rule's comment say what each layer catches.
+- **#203, review nits from #196 and #197:** no bugs. Not blocking: `LinePanel` restates `ghostsIn`'s line rule rather than sharing one function.
+- The generic code-review layer ran in fresh agents for all five PRs. Each merge followed green CI, and the session log was re-merged from main between merges.
+- **Open:** #205 (#52) is awaiting review. The reader-switch sweep is proposed as a session card. The merged branches and their sessions' worktrees are still there.
+
 ## 2026-10-23 — Review of #200 (#195) and #204 (#198)
 
 - **Same-session review**, so less independent. The generic code-review layer ran in two fresh agents that saw only the code.
@@ -49,6 +58,15 @@
 - **Gap, documented in the rule and pinned by a test:** a regex reached through a member, a call, an import, a parameter, a destructuring or a loop. These need type information.
 - **Proven:** every branch of the rule was removed in turn, and a test in `eslint-rules.test.ts` failed each time. A test also shows the trap itself on vitest 2.1.9.
 - **No existing hits** in `src` or `tests`. CLAUDE.md's acceptance-test bullet names the trap and the rule.
+
+## 2026-10-23 — Review nits on #196 and #197, PR open
+
+- **Branch `fix/196-197-review-nits`.** Nothing merged.
+- **#196, finding 2:** `LinePanel` asks `excludedBy` of the elements at the line's two ends, rather than `ghostsIn` over the whole view, and names the viewpoint as `SelectionPanel` does. The old test only had a refused *source*; new cases cover a refused target (Claims Engine → a Requirement) and a plain line from a ghosted shape.
+- **#197, finding 4:** `opening.test.tsx` opens the landscape with `?node=`, `?line=` and `?element=` on a sized canvas, and reads the subject's centre off the drawing's transform. The view-editor harness takes a `search`.
+- **#197, finding 5:** the drawn-scale test pins each check's count (unused relations 4,997, viewpoint 100, nesting 2,400), derived from the fixture's layout.
+- **#197, findings 6 and 7:** `CheckGroup` memoises its rows' targets on the revision, which the screen passes down, and its own revision subscription is gone. A test counts `findingTarget` calls.
+- **Every guard was removed in turn, and a test failed.**
 - **Open:** the sponsor reviews and merges.
 
 ## 2026-10-23 — #199 and #197 merged; worktrees cleaned up
