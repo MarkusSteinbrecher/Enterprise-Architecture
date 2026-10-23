@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -86,6 +87,29 @@ describe('the check the build runs on dist/ (#189)', () => {
       ),
     ).toThrow(/not a GitHub Pages URL/)
   })
+
+  /** Runs the build's own check script against `dist`, as `npm run build` runs it. */
+  function runCheck() {
+    return spawnSync('npx', ['vite-node', 'scripts/check-published-schema.ts'], {
+      cwd: process.cwd(),
+      env: { ...process.env, SCHEMA_CHECK_DIST: dist },
+      encoding: 'utf8',
+    })
+  }
+
+  it('fails the build when the file is missing: the script exits non-zero', () => {
+    place('index.html', '<div id="root"></div>')
+    const run = runCheck()
+    expect(run.stderr).toContain('archipelago-workspace.schema.json is missing')
+    expect(run.status).toBe(1)
+  }, 30_000)
+
+  it('lets the build pass when the file is there', () => {
+    place('schema/archipelago-workspace.schema.json', readFileSync(DESIGN))
+    const run = runCheck()
+    expect(run.stdout).toContain('dist/ serves')
+    expect(run.status).toBe(0)
+  }, 30_000)
 
   it('runs as the last step of npm run build, after the copy', () => {
     const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')) as {

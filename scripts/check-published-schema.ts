@@ -7,8 +7,10 @@ import { join } from 'node:path'
 import { SCHEMA_ID } from '../src/io/json-schema'
 import { publishedSchemaProblem } from '../src/io/published-schema'
 
+// `SCHEMA_CHECK_DIST` points the check at another build, so a test can run
+// this script itself and see it fail the build (#201 review).
 const problem = publishedSchemaProblem(
-  join(process.cwd(), 'dist'),
+  process.env.SCHEMA_CHECK_DIST ?? join(process.cwd(), 'dist'),
   SCHEMA_ID,
   join(process.cwd(), 'design', 'archipelago-workspace.schema.json'),
 )
