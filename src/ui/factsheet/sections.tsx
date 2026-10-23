@@ -53,10 +53,12 @@ export function SectionHeading({ label, note }: { label: string; note?: string }
 export function DocumentationSection({
   documentation,
   editing,
+  placeholder = 'What is this element, and why does it exist?',
   onChange,
 }: {
   documentation: string | undefined
   editing: boolean
+  placeholder?: string
   onChange: (value: string) => void
 }) {
   return (
@@ -71,7 +73,7 @@ export function DocumentationSection({
           defaultValue={documentation ?? ''}
           onBlur={(event) => onChange(event.target.value)}
           aria-label="Documentation"
-          placeholder="What is this element, and why does it exist?"
+          placeholder={placeholder}
         />
       ) : (
         <p className={`sheet__doc${documentation ? '' : ' sheet__doc--empty'}`}>

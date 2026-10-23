@@ -239,6 +239,38 @@ describe('undo and redo', () => {
     s.undo()
     expect(s.name).toBe('ArchiSurance')
   })
+
+  it('documents the workspace as one command, and undo/redo restores the text (#171)', () => {
+    const before = s.documentation
+    expect(before).toBe('A small insurance landscape for tests.')
+    s.document('Claims handling, as run today.')
+    expect(s.documentation).toBe('Claims handling, as run today.')
+    expect(s.snapshot().documentation).toBe('Claims handling, as run today.')
+    expect(s.dirty).toBe(1)
+    s.undo()
+    expect(s.documentation).toBe(before)
+    s.redo()
+    expect(s.documentation).toBe('Claims handling, as run today.')
+  })
+
+  it('clears the workspace documentation to absent, not to an empty string (#171)', () => {
+    s.document('')
+    expect(s.documentation).toBeUndefined()
+    expect('documentation' in s.snapshot()).toBe(false)
+    s.undo()
+    expect(s.documentation).toBe('A small insurance landscape for tests.')
+    // And from absent back to written, through the same command.
+    s.redo()
+    s.document('Written again.')
+    s.undo()
+    expect('documentation' in s.snapshot()).toBe(false)
+  })
+
+  it('records nothing when the workspace documentation does not change (#171)', () => {
+    s.document('A small insurance landscape for tests.')
+    expect(s.dirty).toBe(0)
+    expect(s.canUndo).toBe(false)
+  })
 })
 
 describe('save state and history', () => {
