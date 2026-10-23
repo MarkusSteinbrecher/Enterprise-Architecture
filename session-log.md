@@ -1,5 +1,14 @@
 # Session Log
 
+## 2026-10-23 — #177: lint rejects a regex in toMatchObject, PR open
+
+- **Branch `feat/177-lint-tomatchobject-regex`.** Nothing merged.
+- **Rule `archipelago/regex-in-to-match-object`** (in `eslint.config.js`, a local plugin, because no selector fits): it walks only the positions that become part of `toMatchObject`'s expected value, so `{ a: s.replace(/a/, 'b') }` stays allowed. Catches a regex literal, `new RegExp`/`RegExp()`, nested objects and arrays, spreads, `?:`/`&&`/`||`/`??`, TS wrappers, and a regex or expected object held in a local variable.
+- **Gap, documented in the rule and pinned by a test:** a regex reached through a member, a call, an import, a parameter, a destructuring or a loop. These need type information.
+- **Proven:** every branch of the rule was removed in turn, and a test in `eslint-rules.test.ts` failed each time. A test also shows the trap itself on vitest 2.1.9.
+- **No existing hits** in `src` or `tests`. CLAUDE.md's acceptance-test bullet names the trap and the rule.
+- **Open:** the sponsor reviews and merges.
+
 ## 2026-10-23 — #199 and #197 merged; worktrees cleaned up
 
 - **Merged #199** (#192's nits, `d4c2467`) on green CI, and deleted `fix/192-model-sheet-nits`.
