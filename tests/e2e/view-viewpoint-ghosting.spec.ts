@@ -34,6 +34,19 @@ test('a viewpoint ghosts a disallowed shape and greys its tree row; None draws i
   await expect(customer).toBeVisible()
   await expect(customer).toHaveCSS('opacity', '1')
   await expect(customerRow).not.toHaveClass(/tree__row--greyed/)
+  // The greying is a colour, so it is read as the browser computes it: the class
+  // alone passes with the stylesheet rule gone. `--ink3` must differ from the
+  // name's own colour, or the check below could not tell greyed from not.
+  const customerName = customerRow.locator('.tree__name')
+  const plain = await customerName.evaluate((el) => getComputedStyle(el).color)
+  const grey = await page.evaluate(() => {
+    const probe = document.body.appendChild(document.createElement('span'))
+    probe.style.color = 'var(--ink3)'
+    const colour = getComputedStyle(probe).color
+    probe.remove()
+    return colour
+  })
+  expect(grey).not.toBe(plain)
 
   // Application Cooperation: Customer ghosted, at the token's opacity; Claims Portal not.
   const viewpoint = page.getByRole('combobox', { name: 'Viewpoint' })
@@ -44,6 +57,7 @@ test('a viewpoint ghosts a disallowed shape and greys its tree row; None draws i
   await expect(portal).toHaveCSS('opacity', '1')
   await expect(portal).not.toHaveAttribute('data-ghost')
   await expect(customerRow).toHaveClass(/tree__row--greyed/)
+  await expect(customerName).toHaveCSS('color', grey)
 
   // The export writes the ghosting as a number, not as a token a file cannot resolve.
   const download = page.waitForEvent('download')
@@ -62,5 +76,6 @@ test('a viewpoint ghosts a disallowed shape and greys its tree row; None draws i
   await expect(canvas.locator('[data-ghost]')).toHaveCount(0)
   await expect(customerRow).toBeVisible()
   await expect(customerRow).not.toHaveClass(/tree__row--greyed/)
+  await expect(customerName).toHaveCSS('color', plain)
   await expect(page.locator('.view-screen').getByRole('alert')).toHaveCount(0)
 })
