@@ -32,6 +32,7 @@ import {
 import {
   commandSubjects,
   describeCommand,
+  documentWorkspace,
   invert,
   type Command,
   type CommandRecord,
@@ -125,6 +126,11 @@ export class ModelStore {
 
   get name(): string {
     return this.#name
+  }
+
+  /** The model's own documentation (Archi's "Purpose"), absent when there is none. */
+  get documentation(): string | undefined {
+    return this.#documentation
   }
 
   /** Bumped on every change; the subscription key for React. */
@@ -807,6 +813,13 @@ export class ModelStore {
     this.dispatch({ kind: 'rename-workspace', before: this.#name, after: name })
   }
 
+  /** Sets the model's documentation; `''` clears it, so it is absent rather than empty (#171). */
+  document(documentation: string): void {
+    const after = documentation === '' ? undefined : documentation
+    if (after === this.#documentation) return
+    this.dispatch(documentWorkspace(this.#documentation, after))
+  }
+
   undo(): CommandRecord | undefined {
     const record = this.#undo.pop()
     if (!record) return undefined
@@ -1023,6 +1036,9 @@ export class ModelStore {
         break
       case 'rename-workspace':
         this.#name = command.after
+        break
+      case 'document-workspace':
+        this.#documentation = command.after
         break
       case 'batch':
         for (const inner of command.commands) this.#applyCommand(inner)

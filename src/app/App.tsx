@@ -4,6 +4,7 @@ import { useModelSelector, useModelStoreContext } from '@/store'
 import { AppShell } from '@/ui/shell/AppShell'
 import { InventoryScreen } from '@/ui/inventory/InventoryScreen'
 import { ElementScreen } from '@/ui/factsheet/ElementScreen'
+import { ModelScreen } from '@/ui/factsheet/ModelScreen'
 import { GraphScreen } from '@/ui/graph/GraphScreen'
 import { ViewScreen } from '@/ui/views/ViewScreen'
 import { GuideScreen } from '@/ui/guide/GuideScreen'
@@ -91,6 +92,7 @@ function AppRoutes() {
         <Route path="/" element={<Navigate to="/inventory" replace />} />
         <Route path="/inventory" element={<InventoryScreen />} />
         <Route path="/element/:id" element={<KeyedElementScreen />} />
+        <Route path="/model" element={<ModelScreen />} />
         <Route path="/graph" element={<GraphScreen />} />
         <Route path="/view/:id" element={<KeyedViewScreen />} />
         <Route path="/guide" element={<GuideScreen />} />
