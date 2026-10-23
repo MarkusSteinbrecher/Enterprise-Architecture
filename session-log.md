@@ -1,5 +1,12 @@
 # Session Log
 
+## 2026-10-23 — Guide links moved to Stein-Clankers (#191)
+
+- CI on `main` (`8ad1457`) is green; M2 is done.
+- **#191:** the guide's four ADR/UI-spec links now name `Stein-Clankers`, and `repo-links.test.ts` fails on any link to this repository under another owner (proven against the old file).
+- **Not done:** ticking #134–#137 on #74 (the session was refused issue edits); #187's review reply is still unposted, now moot since it merged.
+- **Next:** pick the first M3 slice under #74 and file its issues; #171 and #189 are still open.
+
 ## 2026-10-20 (wrap-up) — M2's four issues on `main`
 
 - **On `main`:** #184 (repo move), #185 (#137 copy/paste), #187 (#134 notes, groups, legends, view refs), #190 (review harvest), #188 (#136 grid/align/z-order) and #186 (#135 appearance/format painter), merged by the sponsor in that order. #134–#137 are closed. CI on `d950f14` (the #186 merge) was still running at wrap-up, so check it first next session.
