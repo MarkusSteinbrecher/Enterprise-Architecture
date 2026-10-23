@@ -2422,8 +2422,9 @@ function PanelTextField({
 }) {
   /** What is typed and not yet committed, or `null` when the field holds the stored value. */
   const pending = useRef<string | null>(null)
-  const latest = useRef({ onCommit, value })
-  latest.current = { onCommit, value }
+  const { store } = useModelStoreContext()
+  const latest = useRef({ onCommit, value, store })
+  latest.current = { onCommit, value, store }
   const input = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
   const commit = () => {
     const typed = pending.current
@@ -2435,7 +2436,16 @@ function PanelTextField({
     // the old one back rather than leaving the slip on show.
     if (input.current) input.current.value = latest.current.value
   }
-  useEffect(() => () => commit(), [])
+  // Typing still pending when the field goes is committed, unless the field
+  // goes because the tab became a reader: the store refuses that write, and a
+  // throw here, in React's commit, would take the whole app down (#198). What
+  // was typed is dropped, as a fact sheet's field drops it (#195).
+  useEffect(
+    () => () => {
+      if (latest.current.store.writable) commit()
+    },
+    [],
+  )
   const props = {
     ref: input,
     className: `view-panel__input${multiline ? ' view-panel__input--multiline' : ''}`,
