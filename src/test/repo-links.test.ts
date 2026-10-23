@@ -18,16 +18,22 @@ const read = (path: string) => readFileSync(join(root, path), 'utf8')
 const REPO_LINK = /Enterprise-Architecture\/(?:blob|tree)\/main\/([^'"`)\s#?]+)/g
 /** A relative Markdown link; `../` climbs out of the repo into GitHub's own pages. */
 const RELATIVE_LINK = /\]\((?!https?:|#|\.\.\/)([^)#\s]+)\)/g
+/** Where the repository lives since #184; GitHub redirects the old owner, for now. */
+const OWNER = 'Stein-Clankers'
+const OWNED_LINK = /github\.com\/([^/'"`)\s]+)\/Enterprise-Architecture\b/g
 const INDEX = 'design/decisions/README.md'
 const INDEX_LINK = /\]\(([0-9]{4}-[^)]+\.md)\)/g
 
-/** Every repository path linked from `src` files and the README. */
-function repoLinks(): { from: string; path: string }[] {
-  // Untracked files too, so a link in a file not yet committed is checked locally.
-  const sources = git('ls-files', '--cached', '--others', '--exclude-standard')
+/** The `src` files and the README, untracked ones too, so a link not yet committed is checked locally. */
+function linkSources(): string[] {
+  return git('ls-files', '--cached', '--others', '--exclude-standard')
     .split('\n')
     .filter((f) => /^src\/.*\.(ts|tsx)$/.test(f) || f === 'README.md')
-  return sources.flatMap((from) => {
+}
+
+/** Every repository path linked from `src` files and the README. */
+function repoLinks(): { from: string; path: string }[] {
+  return linkSources().flatMap((from) => {
     const text = read(from)
     const relative = from === 'README.md' ? [...text.matchAll(RELATIVE_LINK)] : []
     return [...text.matchAll(REPO_LINK), ...relative].map((m) => ({ from, path: m[1]! }))
@@ -49,6 +55,15 @@ describe('links into the repository resolve', () => {
 
   it('links only to files the branch carries', () => {
     expect(repoLinks().filter((l) => !exists(l.path))).toEqual([])
+  })
+
+  it('links to the repository under its current owner', () => {
+    const owners = linkSources().flatMap((from) =>
+      [...read(from).matchAll(OWNED_LINK)].map((m) => ({ from, owner: m[1]! })),
+    )
+    // Name one, so a pattern that matched nothing cannot pass.
+    expect(owners).toContainEqual({ from: 'src/ui/guide/sources.ts', owner: OWNER })
+    expect(owners.filter((o) => o.owner !== OWNER)).toEqual([])
   })
 
   it('indexes every ADR, and every index entry is a file', () => {
