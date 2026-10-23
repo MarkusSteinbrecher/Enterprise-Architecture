@@ -1,5 +1,26 @@
 # Session Log
 
+## 2026-10-23 — M3: the validator (#193), PR open
+
+- **Branch `feat/193-validator`.** Nothing merged.
+- **Model:**
+  - `src/model/checks.ts` ports Archi 5.10's eight `hammer` checkers, read with `javap`.
+  - `Finding` gains `advice`, `node`/`connection` subjects with a `viewId`, and a `check` tag.
+  - `validate()` keeps its contract; `runValidator(workspace, enabled)` is the screen's run.
+  - `src/model/nesting.ts` holds `meansNesting`, which the #131 prompt and the nesting check both call.
+  - The store gains `revision`, which moves on model changes and not on a save, so a save does not mark a run stale.
+- **UI:**
+  - `/validate`, reached from the left nav and the palette's "Validate model".
+  - Each check can be switched off, remembered in localStorage, all on when storage is blocked.
+  - Each finding opens its subject. The canvas reads `?node=` / `?line=`; the tree reveals `?folder=`.
+  - The fact sheet gains "Delete…", needed by the e2e journey.
+- **Evidence:**
+  - `checks.test.ts` has a trip fixture and a near miss per check.
+  - 44 guard-removal probes, each failing a test.
+  - The scale test runs the validator on 5,000 elements in about 15–30 ms.
+  - e2e journey 21 (`validator.spec.ts`).
+- **Open:** sponsor questions are listed on the PR.
+
 ## 2026-10-23 — Review of #192 (#171)
 
 - **Reviewed #192** (`/review-pr 192 high`) and approved it. All four criteria are met. 15 guards were broken one at a time, and each one fails a test except two on the new model sheet: the reader's disabled Edit button and the name field's undo key. Journey 21 passes on the PR's own build.

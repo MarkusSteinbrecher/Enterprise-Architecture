@@ -183,8 +183,9 @@ function label(element: Element): string {
   return element.name.trim() ? element.name : typeLabel(element.type)
 }
 
+/** A relationship as Archi labels it: its name in quotes, or what it joins when it has none. */
 function relationshipLabel(model: CheckModel, relationship: Relationship): string {
-  if (relationship.name?.trim()) return relationship.name
+  if (relationship.name?.trim()) return `"${relationship.name}"`
   const source = model.elementsById.get(relationship.source)
   const target = model.elementsById.get(relationship.target)
   return `${relationship.type} from "${source ? label(source) : relationship.source}" to "${target ? label(target) : relationship.target}"`
@@ -257,7 +258,7 @@ export function unusedRelations(model: CheckModel): Finding[] {
       finding(
         'unused-relations',
         'relationship.unused',
-        `"${relationshipLabel(model, relationship)}" is not used in a view.`,
+        `${relationshipLabel(model, relationship)} is not used in a view.`,
         { subjectId: relationship.id, subjectKind: 'relationship' },
       ),
     )

@@ -20,8 +20,10 @@ UI reference: `design/specs/open-ea-repository-ui-spec.md` §3.1, §2.2.
 | `views.ts` | pure view operations: node removal with lifting, absolute bounds |
 | `legend.ts` | what a legend lists, worked out from its view as Archi does (#134) |
 | `migrate.ts` | bringing a stored workspace from an earlier schema forward |
-| `validate.ts` | whole-model validation |
+| `validate.ts` | whole-model validation: Archipelago's integrity findings, and the validator's run |
 | `validate-views.ts` | referential integrity of views and folders |
+| `checks.ts` | Archi 5.10's eight validator checks (#193) |
+| `nesting.ts` | what nesting one shape in another can mean: the prompt's and the validator's one rule |
 | `folders.ts` | where things may be filed: each kind's group, no folder inside itself |
 
 ## Element types
@@ -153,3 +155,46 @@ can refuse a drop before the store would.
 
 Saved report definitions were called `ViewDefinition` and stored under `views`
 in schema 1; schema 2 renamed them `ReportDefinition`, stored under `reports`.
+
+## Validation (#193)
+
+Two kinds of finding, each a `Finding` with a severity (`error`, `warning`
+or `advice`, Archi's three issue types), a stable `code`, and the subject it
+concerns: an element, relationship, view, folder, or a view's shape (`node`)
+or line (`connection`), which also names its `viewId`.
+
+- **Archipelago's own** (`integrityFindings` in `validate.ts`, with
+  `validate-views.ts`): what a file can get wrong that Archi's model cannot
+  hold, such as a dangling reference, a duplicate id or an unparseable date.
+  They always run and carry no `check`.
+- **Archi's eight checks** (`checks.ts`), ported from the bytecode of each
+  `*Checker` in `com.archimatetool.hammer` 5.10 and tagged with their
+  `CheckId`. Each can be switched off, as on Archi's Validator preference
+  page; all are on by default. Their severities are Archi's: invalid
+  relations and junctions are errors; duplicates, unused elements, unused
+  relations and viewpoint concepts are warnings; empty views and nesting are
+  advice.
+
+`validate()` is what the importers and tests ask: Archipelago's findings plus
+Archi's invalid-relations check, as before #193. `runValidator(workspace,
+enabled)` is the validator screen's run: Archipelago's findings plus each
+enabled check. Archi's command line has no validator, so nothing here is
+diffed against Archi's output; `checks.test.ts` has a fixture per check that
+trips it alone, and a near miss for each that trips nothing.
+
+Where the port follows Archi rather than the obvious reading:
+
+- **Duplicates** compare the name exactly (no trimming, case counts) and the
+  type exactly; two unnamed elements of one type are duplicates, and two
+  junctions never are.
+- **Junctions** count every relationship's type, a Grouping's containment
+  included, which `validateRelationshipBetween` lets through. So a junction
+  inside a Grouping can trip the junction check and no other.
+- **Viewpoints** report element shapes only. Archi 5.10 has a message for a
+  relationship but never reaches it.
+- **Empty views** are views with no node at all: one holding only a note is
+  not empty.
+- **Nesting** asks `meansNesting`, the rule the canvas's nesting prompt asks
+  (#131). A line drawn between the two shapes that does not mean the nesting
+  reports it; otherwise a nesting-type relationship either way round in the
+  model means it is not reported.

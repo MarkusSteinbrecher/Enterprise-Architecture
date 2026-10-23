@@ -71,7 +71,7 @@ test('opens a relationship no view draws on its source, and an empty view on the
 
   await page
     .getByRole('link', {
-      name: /"Composition from "Kubernetes Cluster" to "PostgreSQL"" is not used/,
+      name: /^Composition from "Kubernetes Cluster" to "PostgreSQL" is not used/,
     })
     .click()
   await expect(page.getByRole('heading', { name: 'Kubernetes Cluster', exact: true })).toBeVisible()

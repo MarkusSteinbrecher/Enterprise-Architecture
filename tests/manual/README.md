@@ -15,6 +15,7 @@ user-facing flow **works**; the Playwright specs in [`../e2e/`](../e2e) verify t
 | Archi model import                            | [`archimate-import.md`](archimate-import.md) | `../e2e/archimate-import.spec.ts` |
 | The ArchiMate guide                           | [`guide.md`](guide.md)                       | `../e2e/guide.spec.ts`            |
 | Shared folder, two machines (#147)            | [`shared-folder.md`](shared-folder.md)       | `../e2e/shared-folder.spec.ts`    |
+| The validator and its problems list (#193)    | [`validator.md`](validator.md)               | `../e2e/validator.spec.ts`        |
 
 The scripts cover the same ground as the specs on purpose, plus the parts a machine cannot
 judge: whether the wrong thing flashed on screen, whether a message reads as alarming,

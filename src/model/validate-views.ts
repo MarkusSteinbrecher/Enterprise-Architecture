@@ -16,7 +16,7 @@ import {
  *
  * The store's commands keep a workspace consistent as it is edited; these checks
  * are for what arrives from outside — a hand-edited file, an agent's write, an
- * import from a tool with looser rules — and for the validator view in M3.
+ * import from a tool with looser rules — and for the validator screen (#193).
  */
 export function validateViewsAndFolders(workspace: Workspace, findings: Finding[]): void {
   const elementsById = new Map(workspace.elements.map((element) => [element.id, element]))

@@ -37,7 +37,7 @@ afterEach(() => {
  * - relationship not drawn: a Serving from the system to the role (Archi, warning);
  * - view: "Blank", with nothing in it (Archi, advice);
  * - shape: the process nested in the system in "Nested", which no nesting
- *   relationship backs (Archi, advice);
+ *   relationship backs, and which "Nested" also draws on its own (Archi, advice);
  * - line: Main draws the system's Serving between the clerk and the process,
  *   which are not its ends (Archipelago, error);
  * - folder: "Lost", inside a folder that is not in the model (Archipelago, error).
@@ -59,7 +59,12 @@ function everyKind(): Workspace {
       id: 'view-nest',
       name: 'Nested',
       properties: {},
-      nodes: [shape('m-app', 'app'), shape('m-process', 'process', 'm-app')],
+      // The process twice: the finding is the second shape's, which `?element=` cannot name.
+      nodes: [
+        shape('m-process-top', 'process'),
+        shape('m-app', 'app'),
+        shape('m-process', 'process', 'm-app'),
+      ],
       connections: [],
     },
   )
@@ -156,7 +161,7 @@ describe('the validator screen (#193)', () => {
     })
 
     it('a relationship no view draws, on the fact sheet of its source', async () => {
-      await open(/"Serving from "Claims system" to "Claims handler"" is not used/)
+      await open(/^Serving from "Claims system" to "Claims handler" is not used/)
       expect(await screen.findByRole('heading', { name: 'Claims system' })).toBeInTheDocument()
       expect(current.pathname).toBe('/element/app')
     })

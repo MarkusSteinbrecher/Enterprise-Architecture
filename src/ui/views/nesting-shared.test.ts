@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { emptyWorkspace, nestedElements, checkModel, type Workspace } from '@/model'
+import type * as Nesting from '@/model/nesting'
 import { ModelStore } from '@/store/model-store'
 import { nestingOptions } from './nesting'
 
@@ -13,7 +14,7 @@ import { nestingOptions } from './nesting'
 const rule = vi.hoisted(() => ({ widened: false }))
 
 vi.mock('@/model/nesting', async (importOriginal) => {
-  const real = await importOriginal<typeof import('@/model/nesting')>()
+  const real = await importOriginal<typeof Nesting>()
   return {
     ...real,
     // Widened: any relationship at all means the nesting.

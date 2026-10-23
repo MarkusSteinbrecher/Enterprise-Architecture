@@ -83,6 +83,21 @@ describe("Archi's eight checks (#193)", () => {
       ])
     })
 
+    it('leaves a relationship between elements of types ArchiMate does not have to Archipelago', () => {
+      const workspace = clean()
+      workspace.elements.push(
+        { ...element('x1', 'BusinessObject', 'One'), type: 'Gadget' as ElementType },
+        { ...element('x2', 'BusinessObject', 'Two'), type: 'Gadget' as ElementType },
+      )
+      workspace.relationships.push(relationship('r-x', 'Serving', 'x1', 'x2'))
+      main(workspace).nodes.push(shape('n-x1', 'x1'), shape('n-x2', 'x2'))
+      main(workspace).connections.push(line('c-x', 'r-x', 'n-x1', 'n-x2'))
+      expect(runValidator(workspace).map((f) => f.code)).toEqual([
+        'element.unknown-type',
+        'element.unknown-type',
+      ])
+    })
+
     it('is the check validate() has always run, so the importers still see it', () => {
       const workspace = clean()
       workspace.relationships.push(relationship('r-bad', 'Composition', 'actor', 'app'))
@@ -275,6 +290,18 @@ describe("Archi's eight checks (#193)", () => {
       ])
     })
 
+    it('names an unnamed relationship by what it joins, and a named one by its name', () => {
+      const workspace = clean()
+      workspace.relationships.push(relationship('r-hidden', 'Serving', 'app', 'role'), {
+        ...relationship('r-named', 'Serving', 'app', 'actor'),
+        name: 'Self-service',
+      })
+      expect(findingsOf(workspace, 'unused-relations').map((f) => f.message)).toEqual([
+        'Serving from "Claims system" to "Claims handler" is not used in a view.',
+        '"Self-service" is not used in a view.',
+      ])
+    })
+
     it('does not report a relationship whose only line the nesting hides', () => {
       // c-assign joins the clerk to the role nested in it: hidden on the canvas (#96), drawn all the same.
       expect(main(clean()).connections.map((c) => c.id)).toContain('c-assign')
@@ -331,6 +358,15 @@ describe("Archi's eight checks (#193)", () => {
       })
       expect(workspace.views[1]!.nodes).toHaveLength(3)
       expect(findingsOf(workspace, 'viewpoint')).toEqual([])
+    })
+
+    it('leaves a shape of a type ArchiMate does not have to Archipelago’s own finding', () => {
+      const workspace = organization(shape('o-odd', 'odd'))
+      workspace.elements.push({
+        ...element('odd', 'BusinessObject', 'Odd'),
+        type: 'Gadget' as ElementType,
+      })
+      expect(runValidator(workspace).map((f) => f.code)).toEqual(['element.unknown-type'])
     })
 
     it('never reports a relationship, though Archi has a message for one', () => {
