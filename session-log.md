@@ -1,10 +1,12 @@
 # Session Log
 
-## 2026-10-23 — #199 merged; main merged into #197
+## 2026-10-23 — #199 and #197 merged; worktrees cleaned up
 
 - **Merged #199** (#192's nits, `d4c2467`) on green CI, and deleted `fix/192-model-sheet-nits`.
 - **Merged main into `feat/193-validator`:** the only conflict was this log, and both sides' entries are kept.
-- **Next:** the sponsor merges #197.
+- **Merged #197** (the validator, #193, `e8a913e`) on green CI, and deleted `feat/193-validator`.
+- **Removed both stale worktrees** (`nervous-payne-ae68ca`, `elastic-khayyam-00d501`); neither held unmerged work. `npm run lint` is clean locally again.
+- **Next:** #195; finding 2 on #196 and findings 4–7 on #197 (neither blocking).
 
 ## 2026-10-23 — Review of #197 (validator): changes requested
 
