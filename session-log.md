@@ -1,5 +1,12 @@
 # Session Log
 
+## 2026-10-23 — Review of #192 (#171)
+
+- **Reviewed #192** (`/review-pr 192 high`) and approved it. All four criteria are met. 15 guards were broken one at a time, and each one fails a test except two on the new model sheet: the reader's disabled Edit button and the name field's undo key. Journey 21 passes on the PR's own build.
+- **Filed #195:** both fact sheets keep a reader out only through the Edit button, which no test covers, and edit mode survives a change to reader.
+- **Harvested:** one review-skill bullet (each control that writes has a reader case), committed on the PR branch.
+- **Next:** the sponsor merges #192. Then #195, alongside M3's first slice (#193, #194).
+
 ## 2026-10-23 — Guide links (#191); #171 built (#192)
 
 - CI on `main` (`8ad1457`) is green; M2 is done.
