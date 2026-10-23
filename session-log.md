@@ -16,7 +16,10 @@
 - **Sponsor's answers on #192:** the model entry above the tree is fine; element documentation is made consistent too (cleared is absent, and an unchanged field records nothing).
 - **Issue edits:** `Bash(gh issue edit:*)` is now allowed in the global settings, so sessions can tick tracking boxes. #134–#137 are ticked on #74.
 - **M3's first slice is filed:** #193 (validator: Archi 5.10's eight checks, with severities read from the `hammer` jar) and #194 (viewpoints: ghost disallowed concepts in a view and grey them in the tree, as Archi does by default). The two are independent.
-- **Next:** review and merge #192 (`/review-pr 192 high`); build #193 and #194, in parallel if wanted; #189 is still open.
+- **#193 and #194 built in two parallel sessions:** #194 → PR #196 (it copies Archi in every detail, with evidence from Archi's code and a `--html.createReport` run), #193 → PR #197 (10 sponsor questions, all answered "take your recommendations" and recorded on the PR; no code change needed). CI is green on #192, #196 and #197.
+- **At wrap-up:** the sponsor's `/review-pr … high` runs on #192, #196 and #197 were still going. Nothing from today is merged except #191.
+- **Branch to delete** (on `main`, checked): `chore/guide-links-owner`.
+- **Next:** act on the three reviews; merge #192, #196, #197 (merge `main` into each later one and re-verify first, since #196 and #197 both touch the tree and the canvas); then file M3's next slice from #74's "not filed yet" list; #189 is still open.
 
 ## 2026-10-20 (wrap-up) — M2's four issues on `main`
 
