@@ -1,5 +1,14 @@
 # Session Log
 
+## 2026-10-23 — Reviewed and merged #201, #202, #203; #200 and #204 merged
+
+- **#200 (#195) and #204 (#198) merged** after their review fixes. Branches deleted.
+- **#201 (#189), schema served at its `$id`:** the criteria are met. Fixed on the branch: a test now runs the build's check script, since deleting its `process.exit(1)` had left everything green. Not blocking: the check accepts any `*.github.io` owner.
+- **#202 (#177), regex in `toMatchObject`:** the rule is sound, but CLAUDE.md said "lint rejects it" while an `it.each` row or a loop variable passes lint and still matches anything. Fixed on the branch: an equality tester in `src/test/setup.ts` fails the trap at run time wherever lint cannot see it, and CLAUDE.md and the rule's comment say what each layer catches.
+- **#203, review nits from #196 and #197:** no bugs. Not blocking: `LinePanel` restates `ghostsIn`'s line rule rather than sharing one function.
+- The generic code-review layer ran in fresh agents for all five PRs. Each merge followed green CI, and the session log was re-merged from main between merges.
+- **Open:** #205 (#52) is awaiting review. The reader-switch sweep is proposed as a session card. The merged branches and their sessions' worktrees are still there.
+
 ## 2026-10-23 — Review of #200 (#195) and #204 (#198)
 
 - **Same-session review**, so less independent. The generic code-review layer ran in two fresh agents that saw only the code.
