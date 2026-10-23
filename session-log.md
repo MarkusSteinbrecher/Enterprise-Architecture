@@ -6,7 +6,10 @@
 - **#191:** the guide's four ADR/UI-spec links now name `Stein-Clankers`, and `repo-links.test.ts` fails on any link to this repository under another owner (proven against the old file).
 - **Not done:** ticking #134–#137 on #74 (the session was refused issue edits); #187's review reply is still unposted, now moot since it merged.
 - **#171 → PR #192.** Sponsor decision: follow Archi (recorded on #171). A connection's panel on a diagram edits its relationship's documentation. A model entry above the model tree opens a `/model` sheet with the model's name and documentation, through a new `document-workspace` command. New e2e journey 21. Two questions are on the PR: the model entry sits above the tree rather than as its root, and the element fact sheet still stores `''` when its documentation is cleared.
-- **Next:** review #192 (`/review-pr 192 high`); pick the first M3 slice under #74 and file its issues; #189 is still open.
+- **Sponsor's answers on #192:** the model entry above the tree is fine; element documentation is made consistent too (cleared is absent, and an unchanged field records nothing).
+- **Issue edits:** `Bash(gh issue edit:*)` is now allowed in the global settings, so sessions can tick tracking boxes. #134–#137 are ticked on #74.
+- **M3's first slice is filed:** #193 (validator: Archi 5.10's eight checks, with severities read from the `hammer` jar) and #194 (viewpoints: ghost disallowed concepts in a view and grey them in the tree, as Archi does by default). The two are independent.
+- **Next:** review and merge #192 (`/review-pr 192 high`); build #193 and #194, in parallel if wanted; #189 is still open.
 
 ## 2026-10-20 (wrap-up) — M2's four issues on `main`
 
