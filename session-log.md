@@ -1,5 +1,12 @@
 # Session Log
 
+## 2026-10-23 — #194 viewpoint ghosting, PR open
+
+- **What:** a shape whose element the view's viewpoint refuses is drawn ghosted (`--ghost-opacity`, a new token, 0.4 ≈ Archi's alpha 100/255), and so is a line with such a shape at either end. The selection panel names the viewpoint. While that view is open, the model tree greys the refused elements and the relationships with one at an end. Nothing is stored, and the SVG/PNG export keeps the ghosting.
+- **Archi evidence** (Archi 5.10 `javap`, plus an `--html.createReport` run): drop from the tree has no viewpoint check; a connection ghosts when either end does; image export paints the same edit parts, ghosts included. The model and PNGs are in the side-session notes folder, `194-evidence/`.
+- **Changed:** `ui/views/ghosts.ts` (new), `ViewDrawing`, `ViewScreen` (panel notes; an SVG export failure now shows in the alert, as PNG's did), `export-view` (resolves the token, fails if it cannot), `tree-model.greyedBy`, `ModelTree`, `tokens.css`. Journey 21.
+- **Open:** sponsor questions on the PR (guide text, the token, relationship greying in the tree).
+
 ## 2026-10-23 — Guide links moved to Stein-Clankers (#191)
 
 - CI on `main` (`8ad1457`) is green; M2 is done.

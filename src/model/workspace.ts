@@ -328,7 +328,7 @@ export interface View {
   id: string
   name: string
   documentation?: string
-  /** ArchiMate viewpoint name, as the exchange format spells it. Enforced in M3. */
+  /** ArchiMate viewpoint name, as the exchange format spells it. What it refuses is drawn ghosted (#194). */
   viewpoint?: string
   /** Absent means `manual`, Archi's default, so only `manhattan` is ever stored (#133). */
   router?: Exclude<ViewRouter, 'manual'>

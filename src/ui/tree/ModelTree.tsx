@@ -22,6 +22,7 @@ import {
   buildTree,
   destinationOf,
   fileableKind,
+  greyedBy,
   itemKey,
   moveRefusal,
   visibleRows,
@@ -53,6 +54,10 @@ import './tree.css'
  *
  * Views are made, renamed and deleted here too (#130), and an element row
  * dragged onto an open view's canvas draws that element there.
+ *
+ * While a view with a viewpoint is open, what the viewpoint does not allow is
+ * greyed (#194, `greyedBy`), as in Archi. A greyed row still drags onto the
+ * canvas, as Archi's does, and draws a ghosted shape there.
  */
 
 const ROW_HEIGHT = 26
@@ -98,6 +103,10 @@ export function ModelTree({ id }: { id?: string }) {
     }),
   )
   const { selectedKey, viewId } = useRouteSubject()
+  const viewpoint = useModelSelector(
+    (s) => (viewId === undefined ? undefined : s.view(viewId)?.viewpoint),
+    [viewId],
+  )
 
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set())
   const [query, setQuery] = useState('')
@@ -435,6 +444,11 @@ export function ModelTree({ id }: { id?: string }) {
     if (row.key === cut) classes.push('tree__row--cut')
     if (row.key === dropKey) classes.push('tree__row--drop')
     if (item.kind === 'root') classes.push('tree__row--root')
+    const greyed = greyedBy(index, item, viewpoint)
+    if (greyed) classes.push('tree__row--greyed')
+    const title = [rowTitle(item), greyed && `Not allowed by the ${viewpoint} viewpoint`]
+      .filter(Boolean)
+      .join(' · ')
     return (
       <div
         key={row.key}
@@ -447,7 +461,7 @@ export function ModelTree({ id }: { id?: string }) {
         aria-selected={row.key === selectedKey}
         className={classes.join(' ')}
         style={{ ...style, paddingLeft: 6 + (row.level - 1) * 14 }}
-        title={rowTitle(item)}
+        title={title || undefined}
         data-kind={item.kind}
         onClick={() => {
           setActive(row.key)

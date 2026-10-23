@@ -119,6 +119,11 @@
   opacity: 0.45;
 }
 
+/* Not allowed by the open view's viewpoint (#194): the name greyed, as Archi greys it. */
+.tree__row--greyed .tree__name {
+  color: var(--ink3);
+}
+
 .tree__row--drop {
   outline: 1px dashed var(--accent);
   outline-offset: -1px;

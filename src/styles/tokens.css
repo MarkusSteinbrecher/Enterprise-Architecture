@@ -72,6 +72,14 @@
 
   /* The one shadow in the app (command palette). */
   --shadow-palette: 0 24px 60px -20px rgba(0, 0, 0, 0.45);
+
+  /*
+   * Ours, not the handoff's (#194): a concept the view's viewpoint does not
+   * allow is drawn at this opacity. Archi 5.10 draws it at alpha 100 of 255
+   * (`AbstractDiagramModelObjectFigure.getAlpha`), which this rounds. Not a
+   * colour, so the theme does not change it.
+   */
+  --ghost-opacity: 0.4;
 }
 
 [data-theme='dark'] {

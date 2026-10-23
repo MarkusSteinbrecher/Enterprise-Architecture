@@ -363,6 +363,12 @@
   white-space: pre-wrap;
 }
 
+/* Why the selection is drawn ghosted (#194), set off by a hairline rule. */
+.view-panel__ghost {
+  padding-left: 8px;
+  border-left: 1px solid var(--bd2);
+}
+
 /* A setting of the selection, labelled as the stats are (#133). */
 .view-panel__field {
   display: flex;
